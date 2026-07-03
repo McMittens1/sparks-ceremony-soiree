@@ -462,10 +462,14 @@ function Home() {
       </section>
 
       {/* ============ FINAL CTA ============ */}
-      <section className="relative py-24 text-center border-t border-accent/20 overflow-hidden">
+      <section className="relative py-32 text-center border-t border-accent/20 overflow-hidden">
+        <div aria-hidden className="absolute inset-0 -z-10">
+          <img src={eng10.url} alt="" className="h-full w-full object-cover object-center opacity-20" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background via-background/70 to-background" />
+        </div>
         <div className="relative mx-auto max-w-2xl px-6">
           <Reveal>
-            <p className="text-[10px] uppercase tracking-[0.4em] text-accent">See you at the barn</p>
+            <p className="text-[10px] uppercase tracking-[0.4em] text-accent">See you soon</p>
           </Reveal>
           <SplitText as="h2" text="Won't be the same without you." className="mt-6 editorial-heading text-5xl sm:text-7xl block" stagger={65} />
           <Reveal delay={400}>
@@ -484,6 +488,7 @@ function Home() {
           </Reveal>
         </div>
       </section>
+
 
       <PhotoUploadModal open={uploadOpen} onClose={() => setUploadOpen(false)} />
     </div>
