@@ -131,11 +131,8 @@ function Home() {
       </section>
 
 
-      {/* ============ KINETIC MARQUEES ============ */}
-      <div className="my-16 space-y-1">
-        <Marquee items={["Sparks' Barn", "October 10, 2026", "Louisville · Nebraska", "Geovanni & Addison", "Diez de Octubre"]} />
-        <Marquee items={["Two hearts", "One barn", "Golden hour", "Vows at dusk", "MMXXVI"]} reverse />
-      </div>
+
+
 
       {/* ============ COUNTDOWN ============ */}
       <section className="mx-auto max-w-[1600px] px-6 lg:px-12 py-16">
@@ -186,11 +183,7 @@ function Home() {
 
       {/* ============ DETAILS ============ */}
       <section id="details" className="relative py-32 bg-primary text-primary-foreground overflow-hidden grain">
-        <div className="absolute inset-0 opacity-[0.05] pointer-events-none flex items-center">
-          <Parallax speed={0.35} className="w-full">
-            <div className="whitespace-nowrap text-[20vw] font-serif italic text-primary-foreground">10 · 10 · 26</div>
-          </Parallax>
-        </div>
+
         <div className="mx-auto max-w-[1600px] px-6 lg:px-12 relative">
           <Reveal>
             <p className="text-[10px] uppercase tracking-[0.4em] text-accent">03 / The Day</p>
