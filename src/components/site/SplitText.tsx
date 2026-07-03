@@ -29,9 +29,9 @@ export function SplitText({ text, className = "", as: As = "h2", by = "word", de
 
   const units = by === "word" ? text.split(/(\s+)/) : Array.from(text);
 
-  // @ts-expect-error dynamic element
+  const Tag = As as unknown as "div";
   return (
-    <As ref={ref} className={`split-text ${className}`} aria-label={text}>
+    <Tag ref={ref as React.RefObject<HTMLDivElement>} className={`split-text ${className}`} aria-label={text}>
       {units.map((u, i) => {
         if (/^\s+$/.test(u)) return <span key={i}>{u}</span>;
         return (
