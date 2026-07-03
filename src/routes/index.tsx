@@ -185,9 +185,11 @@ function Home() {
       </section>
 
       {/* ============ DETAILS ============ */}
-      <section id="details" className="relative py-32 bg-primary text-primary-foreground overflow-hidden">
-        <div className="absolute inset-0 opacity-[0.04] pointer-events-none flex items-center">
-          <div className="whitespace-nowrap text-[20vw] font-serif italic text-primary-foreground">10 · 10 · 26</div>
+      <section id="details" className="relative py-32 bg-primary text-primary-foreground overflow-hidden grain">
+        <div className="absolute inset-0 opacity-[0.05] pointer-events-none flex items-center">
+          <Parallax speed={0.35} className="w-full">
+            <div className="whitespace-nowrap text-[20vw] font-serif italic text-primary-foreground">10 · 10 · 26</div>
+          </Parallax>
         </div>
         <div className="mx-auto max-w-[1600px] px-6 lg:px-12 relative">
           <Reveal>
