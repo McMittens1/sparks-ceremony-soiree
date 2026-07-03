@@ -264,7 +264,7 @@ function Home() {
               <Reveal variant="mask">
                 <div className="aspect-[16/10] overflow-hidden">
                   <Parallax speed={-0.12} className="h-full w-full">
-                    <img src={interior} alt="Barn interior" className="h-full w-full object-cover scale-110" />
+                    <img src={eng82.url} alt="Geovanni and Addison" className="h-full w-full object-cover scale-110" />
                   </Parallax>
                 </div>
               </Reveal>
