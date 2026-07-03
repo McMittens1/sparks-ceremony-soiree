@@ -14,6 +14,8 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { LanguageProvider } from "@/i18n/context";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
+import { ScrollProgress } from "@/components/site/ScrollProgress";
+import { Cursor } from "@/components/site/Cursor";
 
 function NotFoundComponent() {
   return (
@@ -100,6 +102,8 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
+        <ScrollProgress />
+        <Cursor />
         <div className="min-h-screen flex flex-col">
           <Header />
           <main className="flex-1"><Outlet /></main>
