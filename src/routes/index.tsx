@@ -11,9 +11,20 @@ import { Parallax } from "@/components/site/Parallax";
 import { SplitText } from "@/components/site/SplitText";
 import { Magnetic } from "@/components/site/Magnetic";
 import { listApprovedPhotos, type GalleryPhoto } from "@/lib/photos.functions";
-import hero from "@/assets/hero-barn.jpg";
-import florals from "@/assets/florals.jpg";
 import interior from "@/assets/barn-interior.jpg";
+import eng74 from "@/assets/engagement/Geo_AddiEngagement-74.jpg.asset.json";
+import eng06 from "@/assets/engagement/Geo_AddiEngagement-06.jpg.asset.json";
+import eng94 from "@/assets/engagement/Geo_AddiEngagement-94.jpg.asset.json";
+import eng82 from "@/assets/engagement/Geo_AddiEngagement-82.jpg.asset.json";
+import eng75 from "@/assets/engagement/Geo_AddiEngagement-75.jpg.asset.json";
+import eng27 from "@/assets/engagement/Geo_AddiEngagement-27.jpg.asset.json";
+import eng19 from "@/assets/engagement/Geo_AddiEngagement-19.jpg.asset.json";
+import eng15 from "@/assets/engagement/Geo_AddiEngagement-15.jpg.asset.json";
+import eng13 from "@/assets/engagement/Geo_AddiEngagement-13.jpg.asset.json";
+import eng10 from "@/assets/engagement/Geo_AddiEngagement-10.jpg.asset.json";
+const hero = eng74.url;
+const florals = eng06.url;
+const engagementStrip = [eng94, eng82, eng75, eng27, eng19, eng15, eng13, eng10];
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -76,7 +87,7 @@ function Home() {
           <div className="col-span-12 lg:col-span-6 relative z-10 order-2 lg:order-1">
             <div className="relative aspect-[4/5] w-full overflow-hidden shadow-2xl animate-rise">
               <div ref={heroImgRef} className="absolute inset-0 transition-transform duration-500 ease-out will-change-transform">
-                <img src={hero} alt="Sparks' Barn at golden hour" className="h-full w-full object-cover" />
+                <img src={hero} alt="Geovanni and Addison" className="h-full w-full object-cover" />
               </div>
               <div className="absolute inset-0 bg-gradient-to-t from-foreground/25 via-transparent to-transparent" />
             </div>
@@ -165,7 +176,7 @@ function Home() {
           <Reveal variant="mask" delay={80}>
             <div className="aspect-[4/5] overflow-hidden">
               <Parallax speed={-0.15} className="h-full w-full">
-                <img src={florals} alt="Florals" className="h-full w-full object-cover grayscale hover:grayscale-0 transition-all duration-1000 scale-110" />
+                <img src={florals} alt="Geovanni and Addison" className="h-full w-full object-cover transition-all duration-1000 scale-110" />
               </Parallax>
             </div>
           </Reveal>
@@ -179,6 +190,25 @@ function Home() {
               </Reveal>
             ))}
           </div>
+        </div>
+      </section>
+
+
+      {/* ============ ENGAGEMENT STRIP ============ */}
+      <section aria-label="Engagement photos" className="py-16 border-t border-accent/20 overflow-hidden">
+        <div className="mx-auto max-w-[1600px] px-6 lg:px-12">
+          <Reveal>
+            <p className="text-[10px] uppercase tracking-[0.4em] text-accent">Engagement · MMXXV</p>
+          </Reveal>
+        </div>
+        <div className="mt-8 flex gap-4 overflow-x-auto snap-x snap-mandatory px-6 lg:px-12 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {engagementStrip.map((img, i) => (
+            <Reveal key={i} variant="scale" delay={i * 60}>
+              <div className="snap-start shrink-0 w-[70vw] sm:w-[38vw] lg:w-[26vw] aspect-[3/4] overflow-hidden group">
+                <img src={img.url} alt="Geovanni and Addison" loading="lazy" className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+              </div>
+            </Reveal>
+          ))}
         </div>
       </section>
 
