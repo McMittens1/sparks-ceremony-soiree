@@ -16,17 +16,19 @@ function diff(target: number) {
 export function Countdown() {
   const t = useT();
   const target = new Date(SITE.eventDate).getTime();
-  const [tick, setTick] = useState(() => diff(target));
+  const [tick, setTick] = useState<ReturnType<typeof diff> | null>(null);
   useEffect(() => {
+    setTick(diff(target));
     const id = setInterval(() => setTick(diff(target)), 1000);
     return () => clearInterval(id);
   }, [target]);
-  const items: [number, string][] = [
-    [tick.d, t.home.days],
-    [tick.h, t.home.hours],
-    [tick.m, t.home.minutes],
-    [tick.s, t.home.seconds],
+  const items: [number | null, string][] = [
+    [tick?.d ?? null, t.home.days],
+    [tick?.h ?? null, t.home.hours],
+    [tick?.m ?? null, t.home.minutes],
+    [tick?.s ?? null, t.home.seconds],
   ];
+
   return (
     <div className="grid grid-cols-4 gap-3 sm:gap-6 max-w-xl mx-auto">
       {items.map(([n, label]) => (
