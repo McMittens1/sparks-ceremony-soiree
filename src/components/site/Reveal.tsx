@@ -1,8 +1,17 @@
 import { useEffect, useRef, type ReactNode } from "react";
 
-export function Reveal({ children, delay = 0, as: As = "div", className = "" }: {
+type Variant = "up" | "left" | "right" | "blur" | "scale" | "mask";
+
+export function Reveal({
+  children,
+  delay = 0,
+  variant = "up",
+  as: As = "div",
+  className = "",
+}: {
   children: ReactNode;
   delay?: number;
+  variant?: Variant;
   as?: keyof React.JSX.IntrinsicElements;
   className?: string;
 }) {
@@ -29,5 +38,5 @@ export function Reveal({ children, delay = 0, as: As = "div", className = "" }: 
     return () => io.disconnect();
   }, [delay]);
   // @ts-expect-error dynamic element
-  return <As ref={ref} className={`reveal ${className}`}>{children}</As>;
+  return <As ref={ref} className={`reveal reveal-${variant} ${className}`}>{children}</As>;
 }
