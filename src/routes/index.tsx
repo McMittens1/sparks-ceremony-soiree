@@ -193,6 +193,26 @@ function Home() {
             <p className="mt-6 max-w-xl text-primary-foreground/80 text-lg font-serif italic">{t.details.lead}</p>
           </Reveal>
 
+          {/* Integrated date lockup — draws itself in on scroll */}
+          <Reveal variant="up" delay={280}>
+            <div className="mt-16 flex items-end gap-6 sm:gap-10 border-t border-primary-foreground/15 pt-10">
+              {[
+                { n: "10", cap: "Sat" },
+                { n: "10", cap: "Oct" },
+                { n: "26", cap: "MMXXVI" },
+              ].map((d, i) => (
+                <div key={i} className="flex items-end gap-6 sm:gap-10">
+                  <div className="text-center">
+                    <div className="editorial-heading text-primary-foreground text-[18vw] sm:text-[10vw] leading-[0.8]">{d.n}</div>
+                    <div className="mt-2 text-[10px] uppercase tracking-[0.4em] text-accent">{d.cap}</div>
+                  </div>
+                  {i < 2 && <span className="editorial-heading text-primary-foreground/40 text-[10vw] sm:text-[6vw] pb-6">·</span>}
+                </div>
+              ))}
+            </div>
+            <div className="draw-line mt-4 h-px bg-accent origin-left" />
+          </Reveal>
+
           <div className="mt-20 grid gap-16 lg:grid-cols-12">
             <div className="lg:col-span-5">
               <Reveal>
