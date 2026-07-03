@@ -4,7 +4,6 @@ import { useServerFn } from "@tanstack/react-start";
 import { useT } from "@/i18n/context";
 import { SITE } from "@/lib/site";
 import { Reveal } from "@/components/site/Reveal";
-import { Marquee } from "@/components/site/Marquee";
 import { Countdown } from "@/components/site/Countdown";
 import { PhotoUploadModal } from "@/components/site/PhotoUploadModal";
 import { Parallax } from "@/components/site/Parallax";

@@ -16,6 +16,7 @@ import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { ScrollProgress } from "@/components/site/ScrollProgress";
 import { Cursor } from "@/components/site/Cursor";
+import { SectionRail } from "@/components/site/SectionRail";
 
 function NotFoundComponent() {
   return (
