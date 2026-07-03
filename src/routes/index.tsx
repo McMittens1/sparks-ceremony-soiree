@@ -245,17 +245,20 @@ function Home() {
       <section id="party" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-32">
         <Reveal>
           <p className="text-[10px] uppercase tracking-[0.4em] text-accent">04 / Wedding Party</p>
-          <h2 className="mt-4 editorial-heading text-6xl sm:text-8xl">{t.party.title}</h2>
+        </Reveal>
+        <SplitText as="h2" text={t.party.title} className="mt-4 editorial-heading text-6xl sm:text-8xl block" stagger={70} />
+        <Reveal delay={200}>
           <p className="mt-6 max-w-xl text-foreground/70 text-lg font-serif italic">{t.party.lead}</p>
         </Reveal>
         <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {["Maid of Honor", "Best Man", "Bridesmaids", "Groomsmen"].map((role, i) => (
-            <Reveal key={role} delay={i * 80}>
-              <div className="aspect-[4/5] bg-accent/10 flex items-end p-6 border border-accent/20 group hover:border-primary transition-colors">
-                <div>
+            <Reveal key={role} variant="scale" delay={i * 100}>
+              <div className="relative aspect-[4/5] bg-accent/10 flex items-end p-6 border border-accent/20 group hover:border-primary transition-all overflow-hidden hover:-translate-y-1 duration-500">
+                <div className="absolute inset-0 bg-primary translate-y-full group-hover:translate-y-0 transition-transform duration-700 ease-out" />
+                <div className="relative">
                   <p className="text-[10px] uppercase tracking-[0.3em] text-accent">{String(i + 1).padStart(2, "0")}</p>
-                  <p className="mt-2 font-serif italic text-2xl text-primary">{role}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">To be announced</p>
+                  <p className="mt-2 font-serif italic text-2xl text-primary group-hover:text-primary-foreground transition-colors">{role}</p>
+                  <p className="mt-1 text-xs text-muted-foreground group-hover:text-primary-foreground/70 transition-colors">To be announced</p>
                 </div>
               </div>
             </Reveal>
@@ -269,11 +272,14 @@ function Home() {
           <div className="lg:col-span-5">
             <Reveal>
               <p className="text-[10px] uppercase tracking-[0.4em] text-accent">05 / Getting There</p>
-              <h2 className="mt-4 editorial-heading text-6xl sm:text-7xl">{t.travel.title}</h2>
+            </Reveal>
+            <SplitText as="h2" text={t.travel.title} className="mt-4 editorial-heading text-6xl sm:text-7xl block" stagger={60} />
+            <Reveal delay={180}>
               <p className="mt-6 text-foreground/70 font-serif italic text-lg">{t.travel.lead}</p>
             </Reveal>
             <div className="mt-12 space-y-10">
-              <Reveal>
+              <Reveal variant="left">
+
                 <div>
                   <p className="text-[10px] uppercase tracking-[0.3em] text-accent">{t.travel.hotelsTitle}</p>
                   <p className="mt-3 text-foreground/80 leading-relaxed">{t.travel.hotelsBody}</p>
