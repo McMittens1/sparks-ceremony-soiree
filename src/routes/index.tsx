@@ -11,7 +11,7 @@ import { Parallax } from "@/components/site/Parallax";
 import { SplitText } from "@/components/site/SplitText";
 import { Magnetic } from "@/components/site/Magnetic";
 import { listApprovedPhotos, type GalleryPhoto } from "@/lib/photos.functions";
-import interior from "@/assets/barn-interior.jpg";
+
 import eng74 from "@/assets/engagement/Geo_AddiEngagement-74.jpg.asset.json";
 import eng06 from "@/assets/engagement/Geo_AddiEngagement-06.jpg.asset.json";
 import eng94 from "@/assets/engagement/Geo_AddiEngagement-94.jpg.asset.json";
