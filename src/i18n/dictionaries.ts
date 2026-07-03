@@ -170,7 +170,7 @@ const en: Dict = {
     approve: "Approve", reject: "Reject", noPhotos: "No photos in this tab.",
   },
   auth: { title: "Admin sign-in", email: "Email", password: "Password", submit: "Sign in", err: "Invalid email or password.", notAdmin: "This account isn't set up as an admin." },
-  footer: { made: "Made with love by Geo" },
+  footer: { made: "Made with love — 10.10.26" },
 };
 
 const es: Dict = {
@@ -285,7 +285,7 @@ const es: Dict = {
     approve: "Aprobar", reject: "Rechazar", noPhotos: "No hay fotos en esta pestaña.",
   },
   auth: { title: "Acceso admin", email: "Correo", password: "Contraseña", submit: "Entrar", err: "Correo o contraseña incorrectos.", notAdmin: "Esta cuenta no es administradora." },
-  footer: { made: "Hecho con amor por Geo" },
+  footer: { made: "Hecho con amor — 10.10.26" },
 };
 
 export const dictionaries: Record<Lang, Dict> = { en, es };

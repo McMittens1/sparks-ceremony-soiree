@@ -61,9 +61,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Geo & Partner · Sparks' Barn · October 10, 2026" },
+      { title: "Geovanni & Addison · Sparks' Barn · October 10, 2026" },
       { name: "description", content: "Our wedding at Sparks' Barn in Louisville, Nebraska — October 10, 2026. Details, travel, and RSVP." },
-      { property: "og:title", content: "Geo & Partner · Sparks' Barn · October 10, 2026" },
+      { property: "og:title", content: "Geovanni & Addison · Sparks' Barn · October 10, 2026" },
       { property: "og:description", content: "Join us for our wedding at Sparks' Barn in Louisville, Nebraska." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
