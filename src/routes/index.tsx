@@ -285,13 +285,13 @@ function Home() {
                   <p className="mt-3 text-foreground/80 leading-relaxed">{t.travel.hotelsBody}</p>
                 </div>
               </Reveal>
-              <Reveal>
+              <Reveal variant="left" delay={80}>
                 <div>
                   <p className="text-[10px] uppercase tracking-[0.3em] text-accent">{t.travel.parkingTitle}</p>
                   <p className="mt-3 text-foreground/80 leading-relaxed">{t.travel.parkingBody}</p>
                 </div>
               </Reveal>
-              <Reveal>
+              <Reveal variant="left" delay={160}>
                 <div>
                   <p className="text-[10px] uppercase tracking-[0.3em] text-accent">{t.travel.weatherTitle}</p>
                   <p className="mt-3 text-foreground/80 leading-relaxed">{t.travel.weatherAdvice}</p>
@@ -299,12 +299,12 @@ function Home() {
               </Reveal>
             </div>
           </div>
-          <Reveal delay={120}>
-            <div className="lg:col-span-7 lg:col-start-6 aspect-[4/3] overflow-hidden border border-accent/20">
+          <Reveal variant="right" delay={120}>
+            <div className="lg:col-span-7 lg:col-start-6 aspect-[4/3] overflow-hidden border border-accent/20 group">
               <iframe
                 src={SITE.mapEmbed}
                 title={t.travel.mapTitle}
-                className="w-full h-full grayscale"
+                className="w-full h-full grayscale group-hover:grayscale-0 transition-all duration-1000"
                 loading="lazy"
               />
             </div>
