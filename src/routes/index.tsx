@@ -11,7 +11,7 @@ import { Parallax } from "@/components/site/Parallax";
 import { SplitText } from "@/components/site/SplitText";
 import { Magnetic } from "@/components/site/Magnetic";
 import { listApprovedPhotos, type GalleryPhoto } from "@/lib/photos.functions";
-import interior from "@/assets/barn-interior.jpg";
+
 import eng74 from "@/assets/engagement/Geo_AddiEngagement-74.jpg.asset.json";
 import eng06 from "@/assets/engagement/Geo_AddiEngagement-06.jpg.asset.json";
 import eng94 from "@/assets/engagement/Geo_AddiEngagement-94.jpg.asset.json";
@@ -32,7 +32,7 @@ export const Route = createFileRoute("/")({
 
 const registryItems = [
   { name: "Zola", href: "https://zola.com", note: "Main registry — dishes, linens, the boring good stuff." },
-  { name: "Honeymoon Fund", href: "#", note: "A weekend somewhere warm after the barn cools down." },
+  { name: "Honeymoon Fund", href: "#", note: "A weekend somewhere warm after we say I do." },
   { name: "Local charity", href: "#", note: "In lieu of a gift, a Lincoln food bank we care about." },
 ];
 
@@ -264,7 +264,7 @@ function Home() {
               <Reveal variant="mask">
                 <div className="aspect-[16/10] overflow-hidden">
                   <Parallax speed={-0.12} className="h-full w-full">
-                    <img src={interior} alt="Barn interior" className="h-full w-full object-cover scale-110" />
+                    <img src={eng82.url} alt="Geovanni and Addison" className="h-full w-full object-cover scale-110" />
                   </Parallax>
                 </div>
               </Reveal>
@@ -286,29 +286,35 @@ function Home() {
       </section>
 
       {/* ============ WEDDING PARTY ============ */}
-      <section id="party" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-20">
-        <Reveal>
-          <p className="text-[10px] uppercase tracking-[0.4em] text-accent">04 / Wedding Party</p>
-        </Reveal>
-        <SplitText as="h2" text={t.party.title} className="mt-4 editorial-heading text-6xl sm:text-8xl block" stagger={70} />
-        <Reveal delay={200}>
-          <p className="mt-6 max-w-xl text-foreground/70 text-lg font-serif italic">{t.party.lead}</p>
-        </Reveal>
-        <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {["Maid of Honor", "Best Man", "Bridesmaids", "Groomsmen"].map((role, i) => (
-            <Reveal key={role} variant="scale" delay={i * 100}>
-              <div className="relative aspect-[4/5] bg-accent/10 flex items-end p-6 border border-accent/20 group hover:border-primary transition-all overflow-hidden hover:-translate-y-1 duration-500">
-                <div className="absolute inset-0 bg-primary translate-y-full group-hover:translate-y-0 transition-transform duration-700 ease-out" />
-                <div className="relative">
-                  <p className="text-[10px] uppercase tracking-[0.3em] text-accent">{String(i + 1).padStart(2, "0")}</p>
-                  <p className="mt-2 font-serif italic text-2xl text-primary group-hover:text-primary-foreground transition-colors">{role}</p>
-                  <p className="mt-1 text-xs text-muted-foreground group-hover:text-primary-foreground/70 transition-colors">To be announced</p>
-                </div>
+      <section id="party" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-20 border-t border-accent/20">
+        <div className="grid gap-12 lg:grid-cols-12 items-center">
+          <div className="lg:col-span-5">
+            <Reveal>
+              <p className="text-[10px] uppercase tracking-[0.4em] text-accent">04 / Wedding Party</p>
+            </Reveal>
+            <SplitText as="h2" text={t.party.title} className="mt-4 editorial-heading text-6xl sm:text-7xl block" stagger={70} />
+            <Reveal delay={200}>
+              <p className="mt-6 max-w-md text-foreground/70 text-lg font-serif italic">{t.party.lead}</p>
+            </Reveal>
+            <Reveal delay={280}>
+              <p className="mt-8 text-xs uppercase tracking-[0.35em] text-muted-foreground">Names to be announced</p>
+            </Reveal>
+          </div>
+          <div className="lg:col-span-7 grid grid-cols-2 gap-4">
+            <Reveal variant="mask" delay={100}>
+              <div className="aspect-[3/4] overflow-hidden">
+                <img src={eng15.url} alt="Geovanni and Addison" loading="lazy" className="h-full w-full object-cover transition-transform duration-1000 hover:scale-105" />
               </div>
             </Reveal>
-          ))}
+            <Reveal variant="mask" delay={220}>
+              <div className="aspect-[3/4] overflow-hidden mt-10">
+                <img src={eng27.url} alt="Geovanni and Addison" loading="lazy" className="h-full w-full object-cover transition-transform duration-1000 hover:scale-105" />
+              </div>
+            </Reveal>
+          </div>
         </div>
       </section>
+
 
       {/* ============ TRAVEL ============ */}
       <section id="travel" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-20 border-t border-accent/20">
@@ -456,10 +462,14 @@ function Home() {
       </section>
 
       {/* ============ FINAL CTA ============ */}
-      <section className="relative py-24 text-center border-t border-accent/20 overflow-hidden">
+      <section className="relative py-32 text-center border-t border-accent/20 overflow-hidden">
+        <div aria-hidden className="absolute inset-0 -z-10">
+          <img src={eng10.url} alt="" className="h-full w-full object-cover object-center opacity-20" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background via-background/70 to-background" />
+        </div>
         <div className="relative mx-auto max-w-2xl px-6">
           <Reveal>
-            <p className="text-[10px] uppercase tracking-[0.4em] text-accent">See you at the barn</p>
+            <p className="text-[10px] uppercase tracking-[0.4em] text-accent">See you soon</p>
           </Reveal>
           <SplitText as="h2" text="Won't be the same without you." className="mt-6 editorial-heading text-5xl sm:text-7xl block" stagger={65} />
           <Reveal delay={400}>
@@ -478,6 +488,7 @@ function Home() {
           </Reveal>
         </div>
       </section>
+
 
       <PhotoUploadModal open={uploadOpen} onClose={() => setUploadOpen(false)} />
     </div>

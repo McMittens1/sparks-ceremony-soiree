@@ -59,7 +59,7 @@ const en: Dict = {
   home: {
     kicker: "Save the date",
     title: "You are invited to",
-    dateLine: "October 10, 2026 · Sparks' Barn · Louisville, Nebraska",
+    dateLine: "October 10, 2026 · Louisville, Nebraska",
     intro: "One evening under string lights and open sky — a ceremony, a reception, and everyone we love in one room.",
     countdownLabel: "Until we say I do",
     days: "days", hours: "hours", minutes: "minutes", seconds: "seconds",
@@ -67,12 +67,12 @@ const en: Dict = {
   },
   story: {
     title: "Our Story",
-    lead: "How we got from a first hello to a barn in Nebraska.",
+    lead: "How we got from a first hello to forever.",
     timeline: [
       { year: "2019", body: "A mutual friend, a bad karaoke bar, one shared cab home." },
       { year: "2021", body: "Moved in together during a snowstorm. Nothing has felt off-schedule since." },
       { year: "2024", body: "A quiet proposal on a Tuesday, in the kitchen, over coffee." },
-      { year: "2026", body: "The barn, the people, the promise." },
+      { year: "2026", body: "You. Us. The promise." },
     ],
   },
   details: {
@@ -178,19 +178,19 @@ const es: Dict = {
   common: { language: "Idioma", loading: "Cargando…", required: "Requerido", submit: "Enviar", save: "Guardar", cancel: "Cancelar", back: "Atrás", close: "Cerrar" },
   home: {
     kicker: "Reserva la fecha", title: "Están invitados a",
-    dateLine: "10 de octubre de 2026 · Sparks' Barn · Louisville, Nebraska",
+    dateLine: "10 de octubre de 2026 · Louisville, Nebraska",
     intro: "Una tarde bajo luces cálidas y el cielo abierto — ceremonia, recepción y todos los que queremos en un solo lugar.",
     countdownLabel: "Para el gran día",
     days: "días", hours: "horas", minutes: "minutos", seconds: "segundos",
     rsvpCta: "Confirmar asistencia", detailsCta: "Ver los detalles",
   },
   story: {
-    title: "Nuestra historia", lead: "Del primer hola a un granero en Nebraska.",
+    title: "Nuestra historia", lead: "Del primer hola al para siempre.",
     timeline: [
       { year: "2019", body: "Un amigo en común, un karaoke malísimo, un taxi compartido a casa." },
       { year: "2021", body: "Nos mudamos juntos en plena tormenta de nieve. Todo cayó en su sitio." },
       { year: "2024", body: "Una propuesta tranquila un martes, en la cocina, con café." },
-      { year: "2026", body: "El granero, la gente, la promesa." },
+      { year: "2026", body: "Tú. Nosotros. La promesa." },
     ],
   },
   details: {
