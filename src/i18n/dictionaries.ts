@@ -59,7 +59,7 @@ const en: Dict = {
   home: {
     kicker: "Save the date",
     title: "You are invited to",
-    dateLine: "October 10, 2026 · Sparks' Barn · Louisville, Nebraska",
+    dateLine: "October 10, 2026 · Louisville, Nebraska",
     intro: "One evening under string lights and open sky — a ceremony, a reception, and everyone we love in one room.",
     countdownLabel: "Until we say I do",
     days: "days", hours: "hours", minutes: "minutes", seconds: "seconds",
@@ -67,12 +67,12 @@ const en: Dict = {
   },
   story: {
     title: "Our Story",
-    lead: "How we got from a first hello to a barn in Nebraska.",
+    lead: "How we got from a first hello to forever.",
     timeline: [
       { year: "2019", body: "A mutual friend, a bad karaoke bar, one shared cab home." },
       { year: "2021", body: "Moved in together during a snowstorm. Nothing has felt off-schedule since." },
       { year: "2024", body: "A quiet proposal on a Tuesday, in the kitchen, over coffee." },
-      { year: "2026", body: "The barn, the people, the promise." },
+      { year: "2026", body: "You. Us. The promise." },
     ],
   },
   details: {
