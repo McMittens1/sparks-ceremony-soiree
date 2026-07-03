@@ -32,7 +32,7 @@ export const Route = createFileRoute("/")({
 
 const registryItems = [
   { name: "Zola", href: "https://zola.com", note: "Main registry — dishes, linens, the boring good stuff." },
-  { name: "Honeymoon Fund", href: "#", note: "A weekend somewhere warm after the barn cools down." },
+  { name: "Honeymoon Fund", href: "#", note: "A weekend somewhere warm after we say I do." },
   { name: "Local charity", href: "#", note: "In lieu of a gift, a Lincoln food bank we care about." },
 ];
 
