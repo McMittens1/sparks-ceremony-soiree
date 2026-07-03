@@ -158,22 +158,24 @@ function Home() {
       <section id="story" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-32 border-t border-accent/20">
         <Reveal>
           <p className="text-[10px] uppercase tracking-[0.4em] text-accent">02 / Our Story</p>
-          <h2 className="mt-4 editorial-heading text-6xl sm:text-8xl max-w-4xl">
-            {t.story.title}
-          </h2>
+        </Reveal>
+        <SplitText as="h2" text={t.story.title} className="mt-4 editorial-heading text-6xl sm:text-8xl max-w-4xl block" stagger={70} />
+        <Reveal delay={200}>
           <p className="mt-6 max-w-xl text-foreground/70 text-lg font-serif italic">{t.story.lead}</p>
         </Reveal>
         <div className="mt-20 grid gap-16 lg:grid-cols-2 items-start">
-          <Reveal delay={80}>
+          <Reveal variant="mask" delay={80}>
             <div className="aspect-[4/5] overflow-hidden">
-              <img src={florals} alt="Florals" className="h-full w-full object-cover grayscale hover:grayscale-0 transition-all duration-1000" />
+              <Parallax speed={-0.15} className="h-full w-full">
+                <img src={florals} alt="Florals" className="h-full w-full object-cover grayscale hover:grayscale-0 transition-all duration-1000 scale-110" />
+              </Parallax>
             </div>
           </Reveal>
           <div className="lg:pt-20">
             {t.story.timeline.map((item, i) => (
-              <Reveal key={i} delay={120 + i * 80}>
-                <div className="grid grid-cols-[80px_1fr] gap-6 py-8 border-t border-accent/20 first:border-t-0">
-                  <div className="editorial-heading text-4xl text-accent">{item.year}</div>
+              <Reveal key={i} variant="left" delay={120 + i * 80}>
+                <div className="grid grid-cols-[80px_1fr] gap-6 py-8 border-t border-accent/20 first:border-t-0 group">
+                  <div className="editorial-heading text-4xl text-accent transition-transform duration-500 group-hover:translate-x-2">{item.year}</div>
                   <p className="text-foreground/80 leading-relaxed text-lg font-serif">{item.body}</p>
                 </div>
               </Reveal>
@@ -190,9 +192,9 @@ function Home() {
         <div className="mx-auto max-w-[1600px] px-6 lg:px-12 relative">
           <Reveal>
             <p className="text-[10px] uppercase tracking-[0.4em] text-accent">03 / The Day</p>
-            <h2 className="mt-4 editorial-heading text-6xl sm:text-8xl text-primary-foreground">
-              {t.details.title}
-            </h2>
+          </Reveal>
+          <SplitText as="h2" text={t.details.title} className="mt-4 editorial-heading text-6xl sm:text-8xl text-primary-foreground block" stagger={70} />
+          <Reveal delay={200}>
             <p className="mt-6 max-w-xl text-primary-foreground/80 text-lg font-serif italic">{t.details.lead}</p>
           </Reveal>
 
@@ -213,9 +215,11 @@ function Home() {
               </ul>
             </div>
             <div className="lg:col-span-7 grid gap-10 content-start lg:pl-8">
-              <Reveal>
+              <Reveal variant="mask">
                 <div className="aspect-[16/10] overflow-hidden">
-                  <img src={interior} alt="Barn interior" className="h-full w-full object-cover" />
+                  <Parallax speed={-0.12} className="h-full w-full">
+                    <img src={interior} alt="Barn interior" className="h-full w-full object-cover scale-110" />
+                  </Parallax>
                 </div>
               </Reveal>
               <Reveal>
