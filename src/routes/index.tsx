@@ -314,21 +314,27 @@ function Home() {
 
       {/* ============ PHOTOS ============ */}
       <section id="photos" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-32">
-        <Reveal>
-          <div className="flex flex-wrap items-end justify-between gap-6">
-            <div>
+        <div className="flex flex-wrap items-end justify-between gap-6">
+          <div>
+            <Reveal>
               <p className="text-[10px] uppercase tracking-[0.4em] text-accent">06 / Photos</p>
-              <h2 className="mt-4 editorial-heading text-6xl sm:text-8xl">{t.photos.title}</h2>
+            </Reveal>
+            <SplitText as="h2" text={t.photos.title} className="mt-4 editorial-heading text-6xl sm:text-8xl block" stagger={70} />
+            <Reveal delay={200}>
               <p className="mt-6 max-w-xl text-foreground/70 text-lg font-serif italic">{t.photos.lead}</p>
-            </div>
-            <button
-              onClick={() => setUploadOpen(true)}
-              className="border border-primary text-primary px-6 py-3 text-[10px] uppercase tracking-[0.3em] hover:bg-primary hover:text-primary-foreground transition-colors"
-            >
-              {t.photos.uploadTitle} +
-            </button>
+            </Reveal>
           </div>
-        </Reveal>
+          <Reveal>
+            <Magnetic strength={0.2}>
+              <button
+                onClick={() => setUploadOpen(true)}
+                className="border border-primary text-primary px-6 py-3 text-[10px] uppercase tracking-[0.3em] hover:bg-primary hover:text-primary-foreground transition-colors"
+              >
+                {t.photos.uploadTitle} +
+              </button>
+            </Magnetic>
+          </Reveal>
+        </div>
 
         {photos.length === 0 ? (
           <Reveal>
@@ -339,9 +345,10 @@ function Home() {
         ) : (
           <div className="mt-16 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {photos.map((p, i) => (
-              <Reveal key={p.id} delay={i * 40}>
-                <a href={p.url} target="_blank" rel="noopener" className="block overflow-hidden group">
-                  <img src={p.url} alt={p.caption ?? ""} loading="lazy" className="w-full h-auto object-cover aspect-square transition-transform duration-700 group-hover:scale-105" />
+              <Reveal key={p.id} variant="scale" delay={i * 40}>
+                <a href={p.url} target="_blank" rel="noopener" className="block overflow-hidden group relative">
+                  <img src={p.url} alt={p.caption ?? ""} loading="lazy" className="w-full h-auto object-cover aspect-square transition-transform duration-700 group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/20 transition-colors duration-500" />
                 </a>
               </Reveal>
             ))}
@@ -354,22 +361,25 @@ function Home() {
         <div className="mx-auto max-w-[1600px] px-6 lg:px-12">
           <Reveal>
             <p className="text-[10px] uppercase tracking-[0.4em] text-accent">07 / Registry</p>
-            <h2 className="mt-4 editorial-heading text-6xl sm:text-8xl">{t.registry.title}</h2>
+          </Reveal>
+          <SplitText as="h2" text={t.registry.title} className="mt-4 editorial-heading text-6xl sm:text-8xl block" stagger={70} />
+          <Reveal delay={200}>
             <p className="mt-6 max-w-xl text-foreground/70 text-lg font-serif italic">{t.registry.lead}</p>
           </Reveal>
           <div className="mt-16 grid gap-6 md:grid-cols-3">
             {registryItems.map((it, i) => (
-              <Reveal key={it.name} delay={i * 100}>
+              <Reveal key={it.name} variant="blur" delay={i * 120}>
                 <a
                   href={it.href}
                   target="_blank"
                   rel="noopener"
-                  className="block bg-background border border-accent/30 p-8 hover:border-primary transition-all hover:-translate-y-1 h-full group"
+                  className="relative block bg-background border border-accent/30 p-8 transition-all hover:-translate-y-2 hover:shadow-2xl h-full group overflow-hidden"
                 >
+                  <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-accent to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-700 origin-left" />
                   <div className="text-[10px] uppercase tracking-[0.3em] text-accent">{String(i + 1).padStart(2, "0")}</div>
-                  <div className="mt-4 editorial-heading text-4xl">{it.name}</div>
+                  <div className="mt-4 editorial-heading text-4xl transition-transform duration-500 group-hover:translate-x-1">{it.name}</div>
                   <p className="mt-4 text-sm text-foreground/75 leading-relaxed">{it.note}</p>
-                  <div className="mt-8 text-[10px] uppercase tracking-[0.3em] text-primary border-b border-primary/40 pb-1 inline-block group-hover:border-primary">Visit →</div>
+                  <div className="mt-8 text-[10px] uppercase tracking-[0.3em] text-primary link-underline">Visit →</div>
                 </a>
               </Reveal>
             ))}
@@ -381,16 +391,18 @@ function Home() {
       <section id="faq" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-32">
         <Reveal>
           <p className="text-[10px] uppercase tracking-[0.4em] text-accent">08 / FAQ</p>
-          <h2 className="mt-4 editorial-heading text-6xl sm:text-8xl">{t.faq.title}</h2>
+        </Reveal>
+        <SplitText as="h2" text={t.faq.title} className="mt-4 editorial-heading text-6xl sm:text-8xl block" stagger={70} />
+        <Reveal delay={200}>
           <p className="mt-6 max-w-xl text-foreground/70 text-lg font-serif italic">{t.faq.lead}</p>
         </Reveal>
         <div className="mt-16 grid gap-0 lg:grid-cols-2 lg:gap-x-16">
           {t.faq.items.map((item, i) => (
-            <Reveal key={i} delay={i * 60}>
-              <details className="group border-t border-accent/20 py-6 [&_summary::-webkit-details-marker]:hidden">
+            <Reveal key={i} variant="up" delay={i * 60}>
+              <details className="group border-t border-accent/20 py-6 [&_summary::-webkit-details-marker]:hidden transition-colors hover:border-accent">
                 <summary className="flex items-baseline justify-between gap-6 cursor-pointer list-none">
-                  <span className="font-serif italic text-xl text-primary leading-snug">{item.q}</span>
-                  <span className="text-accent text-2xl transition-transform group-open:rotate-45">+</span>
+                  <span className="font-serif italic text-xl text-primary leading-snug transition-transform duration-500 group-hover:translate-x-1">{item.q}</span>
+                  <span className="text-accent text-2xl transition-transform duration-500 group-open:rotate-45">+</span>
                 </summary>
                 <p className="mt-4 text-foreground/80 leading-relaxed">{item.a}</p>
               </details>
@@ -409,12 +421,14 @@ function Home() {
               Won't be the same<br />without <span className="text-primary-soft italic">you</span>.
             </h2>
             <div className="mt-10">
-              <Link
-                to="/rsvp"
-                className="inline-block border border-primary bg-primary text-primary-foreground px-10 py-4 text-[11px] uppercase tracking-[0.35em] hover:bg-transparent hover:text-primary transition-colors"
-              >
-                {t.home.rsvpCta}
-              </Link>
+              <Magnetic strength={0.3}>
+                <Link
+                  to="/rsvp"
+                  className="inline-block border border-primary bg-primary text-primary-foreground px-10 py-4 text-[11px] uppercase tracking-[0.35em] hover:bg-transparent hover:text-primary transition-colors"
+                >
+                  {t.home.rsvpCta}
+                </Link>
+              </Magnetic>
             </div>
             <p className="mt-6 text-xs uppercase tracking-[0.3em] text-muted-foreground">{t.rsvp.deadlineLine}</p>
           </Reveal>
