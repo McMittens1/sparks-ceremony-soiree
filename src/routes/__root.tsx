@@ -61,9 +61,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Geo & Partner · Sparks' Barn · October 10, 2026" },
+      { title: "Geovanni & Addison · Sparks' Barn · October 10, 2026" },
       { name: "description", content: "Our wedding at Sparks' Barn in Louisville, Nebraska — October 10, 2026. Details, travel, and RSVP." },
-      { property: "og:title", content: "Geo & Partner · Sparks' Barn · October 10, 2026" },
+      { property: "og:title", content: "Geovanni & Addison · Sparks' Barn · October 10, 2026" },
       { property: "og:description", content: "Join us for our wedding at Sparks' Barn in Louisville, Nebraska." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -75,8 +75,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&family=Inter:wght@300;400;500;600&family=Petit+Formal+Script&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,300;1,9..144,400;1,9..144,600;1,9..144,800&family=Inter:wght@300;400;500;600&display=swap",
       },
+
     ],
   }),
   shellComponent: RootShell,

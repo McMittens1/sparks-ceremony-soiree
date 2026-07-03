@@ -1,6 +1,8 @@
 export const SITE = {
-  couple: "Geo & Partner",
-  coupleShort: "Geo & Partner",
+  couple: "Geovanni & Addison",
+  coupleShort: "G & A",
+  partnerA: "Geovanni Moreno",
+  partnerB: "Addison Hillman",
   venue: "Sparks' Barn",
   city: "Louisville, Nebraska",
   address: "Sparks' Barn, Louisville, NE",

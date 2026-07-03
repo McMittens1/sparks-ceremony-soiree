@@ -7,9 +7,9 @@ import { listApprovedPhotos, uploadGuestPhotos, type GalleryPhoto } from "@/lib/
 
 export const Route = createFileRoute("/photos")({
   head: () => ({ meta: [
-    { title: "Photos · Geo & Partner" },
+    { title: "Photos · Geovanni & Addison" },
     { name: "description", content: "Photos from our wedding day — approved by us before anything goes public." },
-    { property: "og:title", content: "Photos · Geo & Partner" },
+    { property: "og:title", content: "Photos · Geovanni & Addison" },
     { property: "og:description", content: "Photos from our wedding day." },
   ]}),
   component: PhotosPage,
