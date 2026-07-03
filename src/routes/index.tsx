@@ -425,15 +425,14 @@ function Home() {
       </section>
 
       {/* ============ FINAL CTA ============ */}
-      <section className="relative py-32 text-center border-t border-accent/20 overflow-hidden">
-        <Marquee items={["RSVP by September 15", "Confirma antes del 15 de Septiembre"]} className="absolute inset-x-0 top-1/2 -translate-y-1/2 opacity-30 border-y-0" />
+      <section className="relative py-40 text-center border-t border-accent/20 overflow-hidden">
         <div className="relative mx-auto max-w-2xl px-6">
           <Reveal>
             <p className="text-[10px] uppercase tracking-[0.4em] text-accent">See you at the barn</p>
-            <h2 className="mt-6 editorial-heading text-5xl sm:text-7xl">
-              Won't be the same<br />without <span className="text-primary-soft italic">you</span>.
-            </h2>
-            <div className="mt-10">
+          </Reveal>
+          <SplitText as="h2" text="Won't be the same without you." className="mt-6 editorial-heading text-5xl sm:text-7xl block" stagger={65} />
+          <Reveal delay={400}>
+            <div className="mt-12 flex flex-col items-center gap-6">
               <Magnetic strength={0.3}>
                 <Link
                   to="/rsvp"
@@ -442,8 +441,9 @@ function Home() {
                   {t.home.rsvpCta}
                 </Link>
               </Magnetic>
+              <div className="draw-line h-px w-24 bg-accent origin-left" />
+              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{t.rsvp.deadlineLine}</p>
             </div>
-            <p className="mt-6 text-xs uppercase tracking-[0.3em] text-muted-foreground">{t.rsvp.deadlineLine}</p>
           </Reveal>
         </div>
       </section>
