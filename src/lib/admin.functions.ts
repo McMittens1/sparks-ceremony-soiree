@@ -121,3 +121,19 @@ export const setPhotoStatus = createServerFn({ method: "POST" })
     }).eq("id", data.id);
     return { ok: true };
   });
+
+export const claimAdminIfFirst = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ granted: boolean; isAdmin: boolean }> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: mine } = await supabaseAdmin
+      .from("user_roles").select("id").eq("user_id", context.userId).eq("role", "admin").maybeSingle();
+    if (mine) return { granted: false, isAdmin: true };
+    const { count } = await supabaseAdmin
+      .from("user_roles").select("id", { count: "exact", head: true }).eq("role", "admin");
+    if ((count ?? 0) > 0) return { granted: false, isAdmin: false };
+    const { error } = await supabaseAdmin
+      .from("user_roles").insert({ user_id: context.userId, role: "admin" });
+    if (error) return { granted: false, isAdmin: false };
+    return { granted: true, isAdmin: true };
+  });
