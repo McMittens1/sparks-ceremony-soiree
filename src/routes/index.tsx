@@ -193,6 +193,25 @@ function Home() {
         </div>
       </section>
 
+
+      {/* ============ ENGAGEMENT STRIP ============ */}
+      <section aria-label="Engagement photos" className="py-16 border-t border-accent/20 overflow-hidden">
+        <div className="mx-auto max-w-[1600px] px-6 lg:px-12">
+          <Reveal>
+            <p className="text-[10px] uppercase tracking-[0.4em] text-accent">Engagement · MMXXV</p>
+          </Reveal>
+        </div>
+        <div className="mt-8 flex gap-4 overflow-x-auto snap-x snap-mandatory px-6 lg:px-12 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {engagementStrip.map((img, i) => (
+            <Reveal key={i} variant="scale" delay={i * 60}>
+              <div className="snap-start shrink-0 w-[70vw] sm:w-[38vw] lg:w-[26vw] aspect-[3/4] overflow-hidden group">
+                <img src={img.url} alt="Geovanni and Addison" loading="lazy" className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
       {/* ============ DETAILS ============ */}
       <section id="details" className="relative py-20 bg-primary text-primary-foreground overflow-hidden grain">
 
