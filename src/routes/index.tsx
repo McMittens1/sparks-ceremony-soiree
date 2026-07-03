@@ -66,66 +66,65 @@ function Home() {
   return (
     <div id="home">
       {/* ============ HERO ============ */}
-      <section className="relative min-h-[100svh] pt-20 pb-16 overflow-hidden">
-        <div className="mx-auto max-w-[1600px] px-6 lg:px-12 grid grid-cols-12 gap-6 lg:gap-12 items-end min-h-[85svh]">
+      <section className="relative pt-24 pb-24 sm:pt-32 sm:pb-32 overflow-hidden">
+        <div className="mx-auto max-w-[1600px] px-6 lg:px-12 grid grid-cols-12 gap-6 lg:gap-8 items-center">
           {/* Left: image + tan accent */}
-          <div className="col-span-12 lg:col-span-7 relative z-10">
-            <div className="relative aspect-[4/5] sm:aspect-[5/6] w-full overflow-hidden shadow-2xl animate-rise">
-              <div ref={heroImgRef} className="absolute inset-0 transition-transform duration-500 ease-out">
+          <div className="col-span-12 lg:col-span-6 relative z-10 order-2 lg:order-1">
+            <div className="relative aspect-[4/5] w-full overflow-hidden shadow-2xl animate-rise">
+              <div ref={heroImgRef} className="absolute inset-0 transition-transform duration-500 ease-out will-change-transform">
                 <img src={hero} alt="Sparks' Barn at golden hour" className="h-full w-full object-cover" />
               </div>
               <div className="absolute inset-0 bg-gradient-to-t from-foreground/25 via-transparent to-transparent" />
             </div>
-            <div className="absolute -bottom-6 left-6 lg:left-12 w-40 h-40 bg-accent -z-10 hidden sm:block" />
+            <div className="absolute -bottom-6 -left-6 w-32 h-32 sm:w-40 sm:h-40 bg-accent -z-10" />
           </div>
 
           {/* Right: typographic stack */}
-          <div className="col-span-12 lg:col-span-5 flex flex-col justify-between h-full pt-8 lg:pt-16 lg:-ml-24 relative z-20">
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.4em] text-accent animate-rise" style={{ animationDelay: "0.1s" }}>
-                {t.home.kicker}
-              </p>
-              <h1 className="mt-6 editorial-heading text-[18vw] sm:text-[13vw] lg:text-[9vw] xl:text-[8rem] animate-rise" style={{ animationDelay: "0.25s" }}>
-                Geovanni<br />
-                <span className="text-primary-soft">&</span> Addison
-              </h1>
-              <div className="mt-10 space-y-8 animate-rise" style={{ animationDelay: "0.45s" }}>
-                <div className="border-l-2 border-accent pl-5">
-                  <p className="text-[10px] uppercase tracking-[0.3em] text-foreground/60 font-semibold">
-                    {t.home.title}
-                  </p>
-                  <p className="mt-2 font-serif italic text-2xl text-primary leading-tight">
-                    {t.home.dateLine}
-                  </p>
-                </div>
-                <p className="max-w-md text-foreground/80 leading-relaxed">
-                  {t.home.intro}
+          <div className="col-span-12 lg:col-span-6 relative z-20 order-1 lg:order-2 lg:-ml-16">
+            <p className="text-[10px] uppercase tracking-[0.4em] text-accent animate-rise" style={{ animationDelay: "0.1s" }}>
+              {t.home.kicker}
+            </p>
+            <h1 className="mt-6 editorial-heading text-[16vw] sm:text-[13vw] lg:text-[8.5vw] xl:text-[9rem] animate-rise" style={{ animationDelay: "0.25s" }}>
+              Geovanni<br />
+              <span className="text-primary-soft">&</span> Addison
+            </h1>
+            <div className="mt-10 space-y-8 animate-rise max-w-xl" style={{ animationDelay: "0.45s" }}>
+              <div className="border-l-2 border-accent pl-5">
+                <p className="text-[10px] uppercase tracking-[0.3em] text-foreground/60 font-semibold">
+                  {t.home.title}
                 </p>
-                <div className="flex flex-wrap items-center gap-6 pt-2">
-                  <Link
-                    to="/rsvp"
-                    className="border border-primary bg-primary text-primary-foreground px-8 py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-transparent hover:text-primary transition-colors"
-                  >
-                    {t.home.rsvpCta}
-                  </Link>
-                  <a
-                    href="#details"
-                    className="text-[10px] uppercase tracking-[0.3em] text-primary border-b border-primary/50 pb-1 hover:border-primary"
-                  >
-                    {t.home.detailsCta} →
-                  </a>
-                </div>
+                <p className="mt-2 font-serif italic text-xl sm:text-2xl text-primary leading-tight">
+                  {t.home.dateLine}
+                </p>
               </div>
-            </div>
-
-            <div className="hidden lg:block absolute -right-6 top-16 h-full pointer-events-none">
-              <p className="[writing-mode:vertical-rl] rotate-180 whitespace-nowrap text-accent text-[10px] tracking-[0.6em] uppercase font-semibold">
-                Louisville · Nebraska · MMXXVI
+              <p className="text-foreground/80 leading-relaxed">
+                {t.home.intro}
               </p>
+              <div className="flex flex-wrap items-center gap-6 pt-2">
+                <Link
+                  to="/rsvp"
+                  className="border border-primary bg-primary text-primary-foreground px-8 py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-transparent hover:text-primary transition-colors"
+                >
+                  {t.home.rsvpCta}
+                </Link>
+                <a
+                  href="#details"
+                  className="text-[10px] uppercase tracking-[0.3em] text-primary border-b border-primary/50 pb-1 hover:border-primary"
+                >
+                  {t.home.detailsCta} →
+                </a>
+              </div>
             </div>
           </div>
         </div>
+
+        <div className="hidden lg:block absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none">
+          <p className="[writing-mode:vertical-rl] rotate-180 whitespace-nowrap text-accent text-[10px] tracking-[0.6em] uppercase font-semibold">
+            Louisville · Nebraska · MMXXVI
+          </p>
+        </div>
       </section>
+
 
       {/* ============ KINETIC MARQUEE ============ */}
       <Marquee items={["Sparks' Barn", "October 10, 2026", "Louisville · Nebraska", "Geovanni & Addison", "Diez de Octubre"]} className="my-16" />
