@@ -18,12 +18,18 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const t = useT();
   const nav = useNavigate();
+  const claim = useServerFn(claimAdminIfFirst);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  async function goAdmin() {
+    try { await claim(); } catch {}
+    nav({ to: "/_authenticated/admin" as string });
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -37,7 +43,7 @@ function AuthPage() {
       setLoading(false);
       if (error) { setErr(error.message); return; }
       if (data.session) {
-        nav({ to: "/_authenticated/admin" as string });
+        await goAdmin();
       } else {
         setInfo("Account created. Check your email to confirm, then sign in.");
         setMode("signin");
@@ -47,7 +53,8 @@ function AuthPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) { setErr(error.message); return; }
-    nav({ to: "/_authenticated/admin" as string });
+    await goAdmin();
+
   }
 
   return (
