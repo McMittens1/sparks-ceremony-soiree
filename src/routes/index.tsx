@@ -176,7 +176,7 @@ function Home() {
           <Reveal variant="mask" delay={80}>
             <div className="aspect-[4/5] overflow-hidden">
               <Parallax speed={-0.15} className="h-full w-full">
-                <img src={florals} alt="Florals" className="h-full w-full object-cover grayscale hover:grayscale-0 transition-all duration-1000 scale-110" />
+                <img src={florals} alt="Geovanni and Addison" className="h-full w-full object-cover transition-all duration-1000 scale-110" />
               </Parallax>
             </div>
           </Reveal>
