@@ -70,7 +70,7 @@ function Home() {
     <div id="home">
       <SectionRail />
       {/* ============ HERO ============ */}
-      <section className="relative pt-24 pb-24 sm:pt-32 sm:pb-32 overflow-hidden">
+      <section className="relative pt-16 pb-16 sm:pt-24 sm:pb-20 overflow-hidden">
         <div className="mx-auto max-w-[1600px] px-6 lg:px-12 grid grid-cols-12 gap-6 lg:gap-8 items-center">
           {/* Left: image + tan accent */}
           <div className="col-span-12 lg:col-span-6 relative z-10 order-2 lg:order-1">
@@ -136,7 +136,7 @@ function Home() {
 
 
       {/* ============ COUNTDOWN ============ */}
-      <section className="mx-auto max-w-[1600px] px-6 lg:px-12 py-16">
+      <section className="mx-auto max-w-[1600px] px-6 lg:px-12 py-10">
         <Reveal>
           <div className="grid grid-cols-12 gap-8 items-baseline">
             <div className="col-span-12 sm:col-span-4">
@@ -153,7 +153,7 @@ function Home() {
       </section>
 
       {/* ============ OUR STORY ============ */}
-      <section id="story" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-32 border-t border-accent/20">
+      <section id="story" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-20 border-t border-accent/20">
         <Reveal>
           <p className="text-[10px] uppercase tracking-[0.4em] text-accent">02 / Our Story</p>
         </Reveal>
@@ -161,7 +161,7 @@ function Home() {
         <Reveal delay={200}>
           <p className="mt-6 max-w-xl text-foreground/70 text-lg font-serif italic">{t.story.lead}</p>
         </Reveal>
-        <div className="mt-20 grid gap-16 lg:grid-cols-2 items-start">
+        <div className="mt-12 grid gap-10 lg:grid-cols-2 items-start">
           <Reveal variant="mask" delay={80}>
             <div className="aspect-[4/5] overflow-hidden">
               <Parallax speed={-0.15} className="h-full w-full">
@@ -172,7 +172,7 @@ function Home() {
           <div className="lg:pt-20">
             {t.story.timeline.map((item, i) => (
               <Reveal key={i} variant="left" delay={120 + i * 80}>
-                <div className="grid grid-cols-[80px_1fr] gap-6 py-8 border-t border-accent/20 first:border-t-0 group">
+                <div className="grid grid-cols-[80px_1fr] gap-6 py-5 border-t border-accent/20 first:border-t-0 group">
                   <div className="editorial-heading text-4xl text-accent transition-transform duration-500 group-hover:translate-x-2">{item.year}</div>
                   <p className="text-foreground/80 leading-relaxed text-lg font-serif">{item.body}</p>
                 </div>
@@ -183,7 +183,7 @@ function Home() {
       </section>
 
       {/* ============ DETAILS ============ */}
-      <section id="details" className="relative py-32 bg-primary text-primary-foreground overflow-hidden grain">
+      <section id="details" className="relative py-20 bg-primary text-primary-foreground overflow-hidden grain">
 
         <div className="mx-auto max-w-[1600px] px-6 lg:px-12 relative">
           <Reveal>
@@ -196,7 +196,7 @@ function Home() {
 
           {/* Integrated date lockup — draws itself in on scroll */}
           <Reveal variant="up" delay={280}>
-            <div className="mt-16 flex items-end gap-6 sm:gap-10 border-t border-primary-foreground/15 pt-10">
+            <div className="mt-10 flex items-end gap-6 sm:gap-10 border-t border-primary-foreground/15 pt-10">
               {[
                 { n: "10", cap: "Sat" },
                 { n: "10", cap: "Oct" },
@@ -214,7 +214,7 @@ function Home() {
             <div className="draw-line mt-4 h-px bg-accent origin-left" />
           </Reveal>
 
-          <div className="mt-20 grid gap-16 lg:grid-cols-12">
+          <div className="mt-12 grid gap-10 lg:grid-cols-12">
             <div className="lg:col-span-5">
               <Reveal>
                 <p className="text-[10px] uppercase tracking-[0.35em] text-accent">{t.details.scheduleTitle}</p>
@@ -256,7 +256,7 @@ function Home() {
       </section>
 
       {/* ============ WEDDING PARTY ============ */}
-      <section id="party" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-32">
+      <section id="party" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-20">
         <Reveal>
           <p className="text-[10px] uppercase tracking-[0.4em] text-accent">04 / Wedding Party</p>
         </Reveal>
@@ -264,7 +264,7 @@ function Home() {
         <Reveal delay={200}>
           <p className="mt-6 max-w-xl text-foreground/70 text-lg font-serif italic">{t.party.lead}</p>
         </Reveal>
-        <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {["Maid of Honor", "Best Man", "Bridesmaids", "Groomsmen"].map((role, i) => (
             <Reveal key={role} variant="scale" delay={i * 100}>
               <div className="relative aspect-[4/5] bg-accent/10 flex items-end p-6 border border-accent/20 group hover:border-primary transition-all overflow-hidden hover:-translate-y-1 duration-500">
@@ -281,8 +281,8 @@ function Home() {
       </section>
 
       {/* ============ TRAVEL ============ */}
-      <section id="travel" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-32 border-t border-accent/20">
-        <div className="grid gap-16 lg:grid-cols-12 items-start">
+      <section id="travel" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-20 border-t border-accent/20">
+        <div className="grid gap-10 lg:grid-cols-12 items-start">
           <div className="lg:col-span-5">
             <Reveal>
               <p className="text-[10px] uppercase tracking-[0.4em] text-accent">05 / Getting There</p>
@@ -291,7 +291,7 @@ function Home() {
             <Reveal delay={180}>
               <p className="mt-6 text-foreground/70 font-serif italic text-lg">{t.travel.lead}</p>
             </Reveal>
-            <div className="mt-12 space-y-10">
+            <div className="mt-12 space-y-6">
               <Reveal variant="left">
 
                 <div>
@@ -327,7 +327,7 @@ function Home() {
       </section>
 
       {/* ============ PHOTOS ============ */}
-      <section id="photos" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-32">
+      <section id="photos" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-20">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
             <Reveal>
@@ -352,12 +352,12 @@ function Home() {
 
         {photos.length === 0 ? (
           <Reveal>
-            <div className="mt-20 aspect-[16/6] border border-dashed border-accent/40 flex items-center justify-center text-center px-6">
+            <div className="mt-12 aspect-[16/6] border border-dashed border-accent/40 flex items-center justify-center text-center px-6">
               <p className="font-serif italic text-2xl text-primary/60 max-w-md">{t.photos.empty}</p>
             </div>
           </Reveal>
         ) : (
-          <div className="mt-16 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div className="mt-10 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {photos.map((p, i) => (
               <Reveal key={p.id} variant="scale" delay={i * 40}>
                 <a href={p.url} target="_blank" rel="noopener" className="block overflow-hidden group relative">
@@ -371,7 +371,7 @@ function Home() {
       </section>
 
       {/* ============ REGISTRY ============ */}
-      <section id="registry" className="relative py-32 bg-accent/10 border-y border-accent/20">
+      <section id="registry" className="relative py-20 bg-accent/10 border-y border-accent/20">
         <div className="mx-auto max-w-[1600px] px-6 lg:px-12">
           <Reveal>
             <p className="text-[10px] uppercase tracking-[0.4em] text-accent">07 / Registry</p>
@@ -380,7 +380,7 @@ function Home() {
           <Reveal delay={200}>
             <p className="mt-6 max-w-xl text-foreground/70 text-lg font-serif italic">{t.registry.lead}</p>
           </Reveal>
-          <div className="mt-16 grid gap-6 md:grid-cols-3">
+          <div className="mt-10 grid gap-6 md:grid-cols-3">
             {registryItems.map((it, i) => (
               <Reveal key={it.name} variant="blur" delay={i * 120}>
                 <a
@@ -402,7 +402,7 @@ function Home() {
       </section>
 
       {/* ============ FAQ ============ */}
-      <section id="faq" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-32">
+      <section id="faq" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-20">
         <Reveal>
           <p className="text-[10px] uppercase tracking-[0.4em] text-accent">08 / FAQ</p>
         </Reveal>
@@ -410,7 +410,7 @@ function Home() {
         <Reveal delay={200}>
           <p className="mt-6 max-w-xl text-foreground/70 text-lg font-serif italic">{t.faq.lead}</p>
         </Reveal>
-        <div className="mt-16 grid gap-0 lg:grid-cols-2 lg:gap-x-16">
+        <div className="mt-10 grid gap-0 lg:grid-cols-2 lg:gap-x-16">
           {t.faq.items.map((item, i) => (
             <Reveal key={i} variant="up" delay={i * 60}>
               <details className="group border-t border-accent/20 py-6 [&_summary::-webkit-details-marker]:hidden transition-colors hover:border-accent">
@@ -426,7 +426,7 @@ function Home() {
       </section>
 
       {/* ============ FINAL CTA ============ */}
-      <section className="relative py-40 text-center border-t border-accent/20 overflow-hidden">
+      <section className="relative py-24 text-center border-t border-accent/20 overflow-hidden">
         <div className="relative mx-auto max-w-2xl px-6">
           <Reveal>
             <p className="text-[10px] uppercase tracking-[0.4em] text-accent">See you at the barn</p>
