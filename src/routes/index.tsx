@@ -11,9 +11,20 @@ import { Parallax } from "@/components/site/Parallax";
 import { SplitText } from "@/components/site/SplitText";
 import { Magnetic } from "@/components/site/Magnetic";
 import { listApprovedPhotos, type GalleryPhoto } from "@/lib/photos.functions";
-import hero from "@/assets/hero-barn.jpg";
-import florals from "@/assets/florals.jpg";
 import interior from "@/assets/barn-interior.jpg";
+import eng74 from "@/assets/engagement/Geo_AddiEngagement-74.jpg.asset.json";
+import eng06 from "@/assets/engagement/Geo_AddiEngagement-06.jpg.asset.json";
+import eng94 from "@/assets/engagement/Geo_AddiEngagement-94.jpg.asset.json";
+import eng82 from "@/assets/engagement/Geo_AddiEngagement-82.jpg.asset.json";
+import eng75 from "@/assets/engagement/Geo_AddiEngagement-75.jpg.asset.json";
+import eng27 from "@/assets/engagement/Geo_AddiEngagement-27.jpg.asset.json";
+import eng19 from "@/assets/engagement/Geo_AddiEngagement-19.jpg.asset.json";
+import eng15 from "@/assets/engagement/Geo_AddiEngagement-15.jpg.asset.json";
+import eng13 from "@/assets/engagement/Geo_AddiEngagement-13.jpg.asset.json";
+import eng10 from "@/assets/engagement/Geo_AddiEngagement-10.jpg.asset.json";
+const hero = eng74.url;
+const florals = eng06.url;
+const engagementStrip = [eng94, eng82, eng75, eng27, eng19, eng15, eng13, eng10];
 
 export const Route = createFileRoute("/")({
   component: Home,
