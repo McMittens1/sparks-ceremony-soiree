@@ -6,6 +6,7 @@ import { SITE } from "@/lib/site";
 import { Reveal } from "@/components/site/Reveal";
 import { Countdown } from "@/components/site/Countdown";
 import { PhotoUploadModal } from "@/components/site/PhotoUploadModal";
+import { SectionRail } from "@/components/site/SectionRail";
 import { Parallax } from "@/components/site/Parallax";
 import { SplitText } from "@/components/site/SplitText";
 import { Magnetic } from "@/components/site/Magnetic";
