@@ -14,16 +14,211 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      app_config: {
+        Row: {
+          id: number
+          rsvp_deadline: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          rsvp_deadline?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          rsvp_deadline?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      guest_photos: {
+        Row: {
+          caption: string | null
+          created_at: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          storage_path: string
+          uploader_email: string | null
+          uploader_name: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          storage_path: string
+          uploader_email?: string | null
+          uploader_name: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          storage_path?: string
+          uploader_email?: string | null
+          uploader_name?: string
+        }
+        Relationships: []
+      }
+      guests: {
+        Row: {
+          added_by_guest: boolean
+          attending: boolean | null
+          created_at: string
+          full_name: string
+          id: string
+          invite_id: string
+          is_child: boolean
+          is_primary: boolean
+          updated_at: string
+        }
+        Insert: {
+          added_by_guest?: boolean
+          attending?: boolean | null
+          created_at?: string
+          full_name: string
+          id?: string
+          invite_id: string
+          is_child?: boolean
+          is_primary?: boolean
+          updated_at?: string
+        }
+        Update: {
+          added_by_guest?: boolean
+          attending?: boolean | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          invite_id?: string
+          is_child?: boolean
+          is_primary?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guests_invite_id_fkey"
+            columns: ["invite_id"]
+            isOneToOne: false
+            referencedRelation: "invites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invites: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          language: string
+          max_guests: number
+          notes: string | null
+          party_name: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          language?: string
+          max_guests?: number
+          notes?: string | null
+          party_name: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          language?: string
+          max_guests?: number
+          notes?: string | null
+          party_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      rsvp_submissions: {
+        Row: {
+          contact_email: string
+          contact_phone: string | null
+          id: string
+          invite_id: string
+          message: string | null
+          submitted_at: string
+          updated_at: string
+        }
+        Insert: {
+          contact_email: string
+          contact_phone?: string | null
+          id?: string
+          invite_id: string
+          message?: string | null
+          submitted_at?: string
+          updated_at?: string
+        }
+        Update: {
+          contact_email?: string
+          contact_phone?: string | null
+          id?: string
+          invite_id?: string
+          message?: string | null
+          submitted_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rsvp_submissions_invite_id_fkey"
+            columns: ["invite_id"]
+            isOneToOne: true
+            referencedRelation: "invites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +345,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin"],
+    },
   },
 } as const

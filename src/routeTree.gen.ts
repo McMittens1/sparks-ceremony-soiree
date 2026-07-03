@@ -9,38 +9,262 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WeddingPartyRouteImport } from './routes/wedding-party'
+import { Route as TravelRouteImport } from './routes/travel'
+import { Route as RsvpRouteImport } from './routes/rsvp'
+import { Route as RegistryRouteImport } from './routes/registry'
+import { Route as PhotosRouteImport } from './routes/photos'
+import { Route as OurStoryRouteImport } from './routes/our-story'
+import { Route as FaqRouteImport } from './routes/faq'
+import { Route as DetailsRouteImport } from './routes/details'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as ApiPublicWeatherRouteImport } from './routes/api/public/weather'
 
+const WeddingPartyRoute = WeddingPartyRouteImport.update({
+  id: '/wedding-party',
+  path: '/wedding-party',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TravelRoute = TravelRouteImport.update({
+  id: '/travel',
+  path: '/travel',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RsvpRoute = RsvpRouteImport.update({
+  id: '/rsvp',
+  path: '/rsvp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegistryRoute = RegistryRouteImport.update({
+  id: '/registry',
+  path: '/registry',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PhotosRoute = PhotosRouteImport.update({
+  id: '/photos',
+  path: '/photos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OurStoryRoute = OurStoryRouteImport.update({
+  id: '/our-story',
+  path: '/our-story',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DetailsRoute = DetailsRouteImport.update({
+  id: '/details',
+  path: '/details',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiPublicWeatherRoute = ApiPublicWeatherRouteImport.update({
+  id: '/api/public/weather',
+  path: '/api/public/weather',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/details': typeof DetailsRoute
+  '/faq': typeof FaqRoute
+  '/our-story': typeof OurStoryRoute
+  '/photos': typeof PhotosRoute
+  '/registry': typeof RegistryRoute
+  '/rsvp': typeof RsvpRoute
+  '/travel': typeof TravelRoute
+  '/wedding-party': typeof WeddingPartyRoute
+  '/admin': typeof AuthenticatedAdminRoute
+  '/api/public/weather': typeof ApiPublicWeatherRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/details': typeof DetailsRoute
+  '/faq': typeof FaqRoute
+  '/our-story': typeof OurStoryRoute
+  '/photos': typeof PhotosRoute
+  '/registry': typeof RegistryRoute
+  '/rsvp': typeof RsvpRoute
+  '/travel': typeof TravelRoute
+  '/wedding-party': typeof WeddingPartyRoute
+  '/admin': typeof AuthenticatedAdminRoute
+  '/api/public/weather': typeof ApiPublicWeatherRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/details': typeof DetailsRoute
+  '/faq': typeof FaqRoute
+  '/our-story': typeof OurStoryRoute
+  '/photos': typeof PhotosRoute
+  '/registry': typeof RegistryRoute
+  '/rsvp': typeof RsvpRoute
+  '/travel': typeof TravelRoute
+  '/wedding-party': typeof WeddingPartyRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/api/public/weather': typeof ApiPublicWeatherRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/details'
+    | '/faq'
+    | '/our-story'
+    | '/photos'
+    | '/registry'
+    | '/rsvp'
+    | '/travel'
+    | '/wedding-party'
+    | '/admin'
+    | '/api/public/weather'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/details'
+    | '/faq'
+    | '/our-story'
+    | '/photos'
+    | '/registry'
+    | '/rsvp'
+    | '/travel'
+    | '/wedding-party'
+    | '/admin'
+    | '/api/public/weather'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/details'
+    | '/faq'
+    | '/our-story'
+    | '/photos'
+    | '/registry'
+    | '/rsvp'
+    | '/travel'
+    | '/wedding-party'
+    | '/_authenticated/admin'
+    | '/api/public/weather'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  DetailsRoute: typeof DetailsRoute
+  FaqRoute: typeof FaqRoute
+  OurStoryRoute: typeof OurStoryRoute
+  PhotosRoute: typeof PhotosRoute
+  RegistryRoute: typeof RegistryRoute
+  RsvpRoute: typeof RsvpRoute
+  TravelRoute: typeof TravelRoute
+  WeddingPartyRoute: typeof WeddingPartyRoute
+  ApiPublicWeatherRoute: typeof ApiPublicWeatherRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/wedding-party': {
+      id: '/wedding-party'
+      path: '/wedding-party'
+      fullPath: '/wedding-party'
+      preLoaderRoute: typeof WeddingPartyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/travel': {
+      id: '/travel'
+      path: '/travel'
+      fullPath: '/travel'
+      preLoaderRoute: typeof TravelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rsvp': {
+      id: '/rsvp'
+      path: '/rsvp'
+      fullPath: '/rsvp'
+      preLoaderRoute: typeof RsvpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/registry': {
+      id: '/registry'
+      path: '/registry'
+      fullPath: '/registry'
+      preLoaderRoute: typeof RegistryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/photos': {
+      id: '/photos'
+      path: '/photos'
+      fullPath: '/photos'
+      preLoaderRoute: typeof PhotosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/our-story': {
+      id: '/our-story'
+      path: '/our-story'
+      fullPath: '/our-story'
+      preLoaderRoute: typeof OurStoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/details': {
+      id: '/details'
+      path: '/details'
+      fullPath: '/details'
+      preLoaderRoute: typeof DetailsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,12 +272,58 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/weather': {
+      id: '/api/public/weather'
+      path: '/api/public/weather'
+      fullPath: '/api/public/weather'
+      preLoaderRoute: typeof ApiPublicWeatherRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  DetailsRoute: DetailsRoute,
+  FaqRoute: FaqRoute,
+  OurStoryRoute: OurStoryRoute,
+  PhotosRoute: PhotosRoute,
+  RegistryRoute: RegistryRoute,
+  RsvpRoute: RsvpRoute,
+  TravelRoute: TravelRoute,
+  WeddingPartyRoute: WeddingPartyRoute,
+  ApiPublicWeatherRoute: ApiPublicWeatherRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
