@@ -124,7 +124,7 @@ function Home() {
           </div>
         </div>
 
-        <div className="hidden lg:block absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none">
+        <div className="hidden lg:block absolute left-6 top-1/2 -translate-y-1/2 pointer-events-none">
           <p className="[writing-mode:vertical-rl] rotate-180 whitespace-nowrap text-accent text-[10px] tracking-[0.6em] uppercase font-semibold">
             Louisville · Nebraska · MMXXVI
           </p>
