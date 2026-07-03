@@ -104,15 +104,17 @@ function Home() {
                 {t.home.intro}
               </p>
               <div className="flex flex-wrap items-center gap-6 pt-2">
-                <Link
-                  to="/rsvp"
-                  className="border border-primary bg-primary text-primary-foreground px-8 py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-transparent hover:text-primary transition-colors"
-                >
-                  {t.home.rsvpCta}
-                </Link>
+                <Magnetic strength={0.25}>
+                  <Link
+                    to="/rsvp"
+                    className="inline-block border border-primary bg-primary text-primary-foreground px-8 py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-transparent hover:text-primary transition-colors"
+                  >
+                    {t.home.rsvpCta}
+                  </Link>
+                </Magnetic>
                 <a
                   href="#details"
-                  className="text-[10px] uppercase tracking-[0.3em] text-primary border-b border-primary/50 pb-1 hover:border-primary"
+                  className="link-underline text-[10px] uppercase tracking-[0.3em] text-primary"
                 >
                   {t.home.detailsCta} →
                 </a>
@@ -129,8 +131,11 @@ function Home() {
       </section>
 
 
-      {/* ============ KINETIC MARQUEE ============ */}
-      <Marquee items={["Sparks' Barn", "October 10, 2026", "Louisville · Nebraska", "Geovanni & Addison", "Diez de Octubre"]} className="my-16" />
+      {/* ============ KINETIC MARQUEES ============ */}
+      <div className="my-16 space-y-1">
+        <Marquee items={["Sparks' Barn", "October 10, 2026", "Louisville · Nebraska", "Geovanni & Addison", "Diez de Octubre"]} />
+        <Marquee items={["Two hearts", "One barn", "Golden hour", "Vows at dusk", "MMXXVI"]} reverse />
+      </div>
 
       {/* ============ COUNTDOWN ============ */}
       <section className="mx-auto max-w-[1600px] px-6 lg:px-12 py-16">
