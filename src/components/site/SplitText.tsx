@@ -42,6 +42,6 @@ export function SplitText({ text, className = "", as: As = "h2", by = "word", de
           </span>
         );
       })}
-    </As>
+    </Tag>
   );
 }
