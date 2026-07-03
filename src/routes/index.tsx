@@ -87,7 +87,7 @@ function Home() {
           <div className="col-span-12 lg:col-span-6 relative z-10 order-2 lg:order-1">
             <div className="relative aspect-[4/5] w-full overflow-hidden shadow-2xl animate-rise">
               <div ref={heroImgRef} className="absolute inset-0 transition-transform duration-500 ease-out will-change-transform">
-                <img src={hero} alt="Sparks' Barn at golden hour" className="h-full w-full object-cover" />
+                <img src={hero} alt="Geovanni and Addison" className="h-full w-full object-cover" />
               </div>
               <div className="absolute inset-0 bg-gradient-to-t from-foreground/25 via-transparent to-transparent" />
             </div>
