@@ -62,8 +62,8 @@ export const lookupInvite = createServerFn({ method: "POST" })
         .from("guests").select("invite_id, invites!inner(id, party_name, max_guests, language)")
         .ilike("full_name", `%${q}%`).limit(1);
       if (guestMatch && guestMatch.length) {
-        // @ts-expect-error nested join shape
-        inviteRow = guestMatch[0].invites;
+        const gm = guestMatch[0] as { invites: { id: string; party_name: string; max_guests: number; language: string } };
+        inviteRow = gm.invites;
       }
     }
     if (!inviteRow) {

@@ -101,7 +101,7 @@ export const getAdminPhotos = createServerFn({ method: "POST" })
         result.push({
           id: row.id, url: signed.signedUrl, caption: row.caption,
           uploader_name: row.uploader_name, uploader_email: row.uploader_email,
-          status: row.status, created_at: row.created_at,
+          status: row.status as "pending" | "approved" | "rejected", created_at: row.created_at,
         });
       }
     }
