@@ -4,9 +4,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { useT } from "@/i18n/context";
 import { SITE } from "@/lib/site";
 import { Reveal } from "@/components/site/Reveal";
-import { Marquee } from "@/components/site/Marquee";
 import { Countdown } from "@/components/site/Countdown";
 import { PhotoUploadModal } from "@/components/site/PhotoUploadModal";
+import { SectionRail } from "@/components/site/SectionRail";
 import { Parallax } from "@/components/site/Parallax";
 import { SplitText } from "@/components/site/SplitText";
 import { Magnetic } from "@/components/site/Magnetic";
@@ -68,6 +68,7 @@ function Home() {
 
   return (
     <div id="home">
+      <SectionRail />
       {/* ============ HERO ============ */}
       <section className="relative pt-24 pb-24 sm:pt-32 sm:pb-32 overflow-hidden">
         <div className="mx-auto max-w-[1600px] px-6 lg:px-12 grid grid-cols-12 gap-6 lg:gap-8 items-center">
@@ -123,7 +124,7 @@ function Home() {
           </div>
         </div>
 
-        <div className="hidden lg:block absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none">
+        <div className="hidden lg:block absolute left-6 top-1/2 -translate-y-1/2 pointer-events-none">
           <p className="[writing-mode:vertical-rl] rotate-180 whitespace-nowrap text-accent text-[10px] tracking-[0.6em] uppercase font-semibold">
             Louisville · Nebraska · MMXXVI
           </p>
@@ -131,11 +132,8 @@ function Home() {
       </section>
 
 
-      {/* ============ KINETIC MARQUEES ============ */}
-      <div className="my-16 space-y-1">
-        <Marquee items={["Sparks' Barn", "October 10, 2026", "Louisville · Nebraska", "Geovanni & Addison", "Diez de Octubre"]} />
-        <Marquee items={["Two hearts", "One barn", "Golden hour", "Vows at dusk", "MMXXVI"]} reverse />
-      </div>
+
+
 
       {/* ============ COUNTDOWN ============ */}
       <section className="mx-auto max-w-[1600px] px-6 lg:px-12 py-16">
@@ -186,11 +184,7 @@ function Home() {
 
       {/* ============ DETAILS ============ */}
       <section id="details" className="relative py-32 bg-primary text-primary-foreground overflow-hidden grain">
-        <div className="absolute inset-0 opacity-[0.05] pointer-events-none flex items-center">
-          <Parallax speed={0.35} className="w-full">
-            <div className="whitespace-nowrap text-[20vw] font-serif italic text-primary-foreground">10 · 10 · 26</div>
-          </Parallax>
-        </div>
+
         <div className="mx-auto max-w-[1600px] px-6 lg:px-12 relative">
           <Reveal>
             <p className="text-[10px] uppercase tracking-[0.4em] text-accent">03 / The Day</p>
@@ -198,6 +192,26 @@ function Home() {
           <SplitText as="h2" text={t.details.title} className="mt-4 editorial-heading text-6xl sm:text-8xl text-primary-foreground block" stagger={70} />
           <Reveal delay={200}>
             <p className="mt-6 max-w-xl text-primary-foreground/80 text-lg font-serif italic">{t.details.lead}</p>
+          </Reveal>
+
+          {/* Integrated date lockup — draws itself in on scroll */}
+          <Reveal variant="up" delay={280}>
+            <div className="mt-16 flex items-end gap-6 sm:gap-10 border-t border-primary-foreground/15 pt-10">
+              {[
+                { n: "10", cap: "Sat" },
+                { n: "10", cap: "Oct" },
+                { n: "26", cap: "MMXXVI" },
+              ].map((d, i) => (
+                <div key={i} className="flex items-end gap-6 sm:gap-10">
+                  <div className="text-center">
+                    <div className="editorial-heading text-primary-foreground text-[18vw] sm:text-[10vw] leading-[0.8]">{d.n}</div>
+                    <div className="mt-2 text-[10px] uppercase tracking-[0.4em] text-accent">{d.cap}</div>
+                  </div>
+                  {i < 2 && <span className="editorial-heading text-primary-foreground/40 text-[10vw] sm:text-[6vw] pb-6">·</span>}
+                </div>
+              ))}
+            </div>
+            <div className="draw-line mt-4 h-px bg-accent origin-left" />
           </Reveal>
 
           <div className="mt-20 grid gap-16 lg:grid-cols-12">
@@ -412,15 +426,14 @@ function Home() {
       </section>
 
       {/* ============ FINAL CTA ============ */}
-      <section className="relative py-32 text-center border-t border-accent/20 overflow-hidden">
-        <Marquee items={["RSVP by September 15", "Confirma antes del 15 de Septiembre"]} className="absolute inset-x-0 top-1/2 -translate-y-1/2 opacity-30 border-y-0" />
+      <section className="relative py-40 text-center border-t border-accent/20 overflow-hidden">
         <div className="relative mx-auto max-w-2xl px-6">
           <Reveal>
             <p className="text-[10px] uppercase tracking-[0.4em] text-accent">See you at the barn</p>
-            <h2 className="mt-6 editorial-heading text-5xl sm:text-7xl">
-              Won't be the same<br />without <span className="text-primary-soft italic">you</span>.
-            </h2>
-            <div className="mt-10">
+          </Reveal>
+          <SplitText as="h2" text="Won't be the same without you." className="mt-6 editorial-heading text-5xl sm:text-7xl block" stagger={65} />
+          <Reveal delay={400}>
+            <div className="mt-12 flex flex-col items-center gap-6">
               <Magnetic strength={0.3}>
                 <Link
                   to="/rsvp"
@@ -429,8 +442,9 @@ function Home() {
                   {t.home.rsvpCta}
                 </Link>
               </Magnetic>
+              <div className="draw-line h-px w-24 bg-accent origin-left" />
+              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{t.rsvp.deadlineLine}</p>
             </div>
-            <p className="mt-6 text-xs uppercase tracking-[0.3em] text-muted-foreground">{t.rsvp.deadlineLine}</p>
           </Reveal>
         </div>
       </section>
