@@ -34,7 +34,8 @@ export function Countdown() {
       {items.map(([n, label]) => (
         <div key={label} className="text-center">
           <div className="font-serif text-4xl sm:text-6xl text-primary tabular-nums">
-            {String(n).padStart(2, "0")}
+            {n === null ? "--" : String(n).padStart(2, "0")}
+
           </div>
           <div className="mt-1 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-muted-foreground">
             {label}
