@@ -68,6 +68,7 @@ function Home() {
 
   return (
     <div id="home">
+      <SectionRail />
       {/* ============ HERO ============ */}
       <section className="relative pt-24 pb-24 sm:pt-32 sm:pb-32 overflow-hidden">
         <div className="mx-auto max-w-[1600px] px-6 lg:px-12 grid grid-cols-12 gap-6 lg:gap-8 items-center">
