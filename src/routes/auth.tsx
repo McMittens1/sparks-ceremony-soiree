@@ -1,8 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/i18n/context";
 import { Reveal } from "@/components/site/Reveal";
+import { claimAdminIfFirst } from "@/lib/admin.functions";
+
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [
