@@ -25,7 +25,6 @@ export function Header() {
         </Link>
         <nav className="hidden lg:flex items-center gap-6 text-xs uppercase tracking-[0.2em] text-foreground/80">
           {links.map((l) => (
-            // @ts-expect-error TanStack typed routes
             <Link key={l.to} to={l.to} className="hover:text-primary transition-colors" activeProps={{ className: "text-primary" }}>
               {t.nav[l.key]}
             </Link>
@@ -54,7 +53,6 @@ export function Header() {
         <div className="lg:hidden border-t border-border/60 bg-background">
           <div className="mx-auto max-w-6xl px-4 py-4 flex flex-col gap-3 text-sm">
             {links.map((l) => (
-              // @ts-expect-error
               <Link key={l.to} to={l.to} onClick={() => setOpen(false)} className="py-1" activeProps={{ className: "text-primary" }}>
                 {t.nav[l.key]}
               </Link>
