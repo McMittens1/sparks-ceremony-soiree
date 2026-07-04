@@ -1,23 +1,23 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { SITE } from "@/lib/site";
+import { dictionaries } from "@/i18n/dictionaries";
 
 export default defineTool({
-  name: "get_wedding_info",
-  title: "Get wedding info",
-  description: "Couple, wedding date, venue name, address, and map link.",
+  name: "get_travel_info",
+  title: "Travel & lodging",
+  description: "Venue address, map link, hotel block, and parking notes.",
   inputSchema: {},
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: () => {
+    const t = dictionaries.en.travel;
     const payload = {
-      couple: SITE.couple,
-      partnerA: SITE.partnerA,
-      partnerB: SITE.partnerB,
-      date: SITE.eventDatePretty.en,
-      isoDate: SITE.eventDate,
-      venue: SITE.venue,
       city: SITE.city,
       address: SITE.address,
       mapLink: SITE.mapLink,
+      lead: t.lead,
+      hotels: t.hotelsBody,
+      parking: t.parkingBody,
+      whatToPack: t.weatherAdvice,
     };
     return {
       content: [{ type: "text", text: JSON.stringify(payload) }],
