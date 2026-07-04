@@ -8,9 +8,9 @@ export function Footer() {
       <div className="mx-auto max-w-[1600px] px-6 lg:px-12 py-12 grid gap-8 sm:grid-cols-3 items-start text-xs">
         <div>
           <div className="font-serif italic text-3xl text-primary">{SITE.coupleShort}</div>
-          <div className="mt-3 tracking-[0.25em] uppercase text-muted-foreground">{SITE.venue}</div>
-          <div className="mt-1 tracking-[0.25em] uppercase text-muted-foreground">{SITE.city}</div>
+          <div className="mt-3 tracking-[0.25em] uppercase text-muted-foreground">October · MMXXVI</div>
         </div>
+
         <div className="tracking-[0.25em] uppercase text-muted-foreground sm:text-center">
           10 · 10 · 26
         </div>
