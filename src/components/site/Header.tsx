@@ -31,10 +31,6 @@ export function Header() {
 
   function goToSection(id: string) {
     setOpen(false);
-    if (id === "story") {
-      nav({ to: "/our-story" });
-      return;
-    }
     if (onHome) {
       const el = document.getElementById(id);
       if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
