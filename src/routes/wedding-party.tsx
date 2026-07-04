@@ -30,11 +30,19 @@ function Party() {
         <h1 className="mt-2 font-serif text-5xl sm:text-6xl">{t.party.title}</h1>
         <p className="mt-4 text-foreground/70 max-w-xl">{t.party.lead}</p>
       </Reveal>
-      <div className="mt-16 grid grid-cols-2 sm:grid-cols-3 gap-8">
+      <Reveal delay={120}>
+        <p className="mt-6 text-xs uppercase tracking-[0.35em] text-muted-foreground">Names to be announced</p>
+      </Reveal>
+      <div className="mt-12 grid grid-cols-2 sm:grid-cols-3 gap-6 sm:gap-8">
         {party.map((p, i) => (
           <Reveal key={p.name} delay={i * 60}>
-            <div className="aspect-[3/4] rounded-sm bg-secondary/60 border border-border/60 flex items-end p-4">
-              <div>
+            <div className="aspect-[3/4] rounded-sm bg-secondary/60 border border-border/60 flex flex-col justify-end p-4 relative overflow-hidden">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-16 h-16 rounded-full bg-border/50 flex items-center justify-center font-serif text-2xl text-foreground/30">
+                  {p.name.split(" ").map((n) => n[0]).join("")}
+                </div>
+              </div>
+              <div className="relative z-10">
                 <div className="font-serif text-xl">{p.name}</div>
                 <div className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mt-1">{p.role}</div>
               </div>
