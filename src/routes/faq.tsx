@@ -5,9 +5,9 @@ import { Reveal } from "@/components/site/Reveal";
 
 export const Route = createFileRoute("/faq")({
   head: () => ({ meta: [
-    { title: "FAQ · Geo & Partner" },
+    { title: "FAQ · Geovanni & Addison" },
     { name: "description", content: "Answers to the most common questions about our wedding day." },
-    { property: "og:title", content: "FAQ · Geo & Partner" },
+    { property: "og:title", content: "FAQ · Geovanni & Addison" },
     { property: "og:description", content: "Answers to the most common questions." },
   ]}),
   component: FAQ,

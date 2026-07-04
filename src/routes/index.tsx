@@ -303,7 +303,7 @@ function Home() {
 
 
       {/* ============ TRAVEL ============ */}
-      <section id="travel" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-20 border-t border-accent/20">
+      <section id="travel" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-20 border-t border-accent/20 overflow-hidden">
         <div className="grid gap-10 lg:grid-cols-12 items-start">
           <div className="lg:col-span-5">
             <Reveal>

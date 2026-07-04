@@ -13,9 +13,9 @@ const party = [
 
 export const Route = createFileRoute("/wedding-party")({
   head: () => ({ meta: [
-    { title: "Wedding Party · Geo & Partner" },
+    { title: "Wedding Party · Geovanni & Addison" },
     { name: "description", content: "The friends and family standing with us on October 10, 2026." },
-    { property: "og:title", content: "Wedding Party · Geo & Partner" },
+    { property: "og:title", content: "Wedding Party · Geovanni & Addison" },
     { property: "og:description", content: "The friends and family standing with us on October 10, 2026." },
   ]}),
   component: Party,

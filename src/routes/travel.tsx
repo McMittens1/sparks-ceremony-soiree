@@ -7,9 +7,9 @@ import { SITE } from "@/lib/site";
 
 export const Route = createFileRoute("/travel")({
   head: () => ({ meta: [
-    { title: "Travel · Geo & Partner" },
+    { title: "Travel · Geovanni & Addison" },
     { name: "description", content: "How to get to Sparks' Barn in Louisville, Nebraska — plus hotels, parking, and what to pack." },
-    { property: "og:title", content: "Travel · Geo & Partner" },
+    { property: "og:title", content: "Travel · Geovanni & Addison" },
     { property: "og:description", content: "Directions, hotels, parking, and weather for October 10, 2026." },
   ]}),
   component: Travel,

@@ -10,9 +10,9 @@ const items = [
 
 export const Route = createFileRoute("/registry")({
   head: () => ({ meta: [
-    { title: "Registry · Geo & Partner" },
+    { title: "Registry · Geovanni & Addison" },
     { name: "description", content: "Where we've registered — including a honeymoon fund and a local charity." },
-    { property: "og:title", content: "Registry · Geo & Partner" },
+    { property: "og:title", content: "Registry · Geovanni & Addison" },
     { property: "og:description", content: "Where we've registered." },
   ]}),
   component: Registry,
