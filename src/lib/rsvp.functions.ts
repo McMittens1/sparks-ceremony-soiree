@@ -413,7 +413,7 @@ export const importGuestsCsv = createServerFn({ method: "POST" })
         const { error } = await sb.from("guests").insert({
           slug,
           primary_name: rec.primary_name,
-          party_members,
+          party_members: party_members as unknown as import("@/integrations/supabase/types").Json,
           phone: rec.phone || null,
           email: rec.email || null,
           address_line1: rec.address_line1 || null,
