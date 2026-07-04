@@ -1,39 +1,42 @@
-## Next improvements
+## Polish the existing wedding site
 
-### 1. Clean up unused RSVP code
-The old invite-code flow is dead now that we point at The Knot.
-- Delete `src/lib/rsvp.functions.ts` and any imports of it.
-- Remove `src/components/site/PhotoUploadModal.tsx`-adjacent RSVP form pieces if any reference the old flow (verify during build).
-- Trim `_authenticated/admin.tsx` sections that manage invites / attendance (keep photo moderation).
-- Drop unused i18n strings for the invite-code screen from `src/i18n/dictionaries.ts`.
-- Leave DB tables alone (no destructive migration) — just stop reading/writing them.
+Goal: make the current site look great and work smoothly on every screen, then fold in the new photos and real content you provide.
 
-### 2. Add RSVP call-out to the home page
-So guests can RSVP in two clicks from the landing.
-- New `RsvpCta` section in `src/routes/index.tsx`, placed after the hero / countdown, before existing sections.
-- Content: short "RSVP by [deadline]" line, the couple's names, and the same orange "RSVP on The Knot" button that opens `SITE.rsvpUrl` in a new tab.
-- Reuse the button styling from `src/routes/rsvp.tsx` so the two surfaces match.
-- Header CTA still deep-links to `/rsvp` for guests who land elsewhere.
+### 1. Responsive / mobile audit and fixes
+- Review every public page (`/`, `/rsvp`, `/details`, `/travel`, `/faq`, `/wedding-party`, `/registry`, `/photos`, `/our-story`) on mobile, tablet, and desktop.
+- Fix any layout breaks, clipped text, oversized hero images, or buttons that are hard to tap.
+- Check that navigation, the header CTA, and footer behave correctly on small screens.
+- Verify no horizontal scroll at any viewport width.
 
-### 3. Polish the `/rsvp` landing page
-- Add a hero image (reuse one of the engagement photos in `src/assets/engagement/`).
-- Show a live countdown to the RSVP deadline using existing `Countdown` component.
-- Add supporting links under the button: "See details", "Travel & lodging", "FAQ".
-- Tighten copy, keep bilingual via `useT()`.
+### 2. Visual polish pass
+- Normalize spacing, typography scale, and section rhythm across pages.
+- Ensure the color palette and design tokens feel consistent (no hardcoded colors, only semantic tokens).
+- Improve hover/focus states, transitions, and micro-interactions so the site feels refined.
+- Tighten the RSVP section and hero so the two-step Knot flow is obvious and inviting.
 
-### 4. Live weather in the MCP `get_weather_forecast` tool
-Right now it returns hard-coded climatology.
-- Rewrite `src/lib/mcp/tools/weather.ts` to call the existing `/api/public/weather` route server-to-server using `getRequest()` origin (or `process.env` base URL) inside the handler.
-- Fall back to the current static payload if the fetch fails, so the tool never errors.
-- Re-run `app_mcp_server--extract_mcp_manifest` to refresh `.lovable/mcp/manifest.json`.
+### 3. Photo gallery improvement
+- Better layout for `/photos` (masonry or clean grid) with lightbox on click.
+- Add lazy loading and a graceful empty state before approved guest photos exist.
+- Prepare the gallery to receive your new engagement/wedding photos.
 
-### 5. Real wedding party & registry data
-Placeholders in `wedding-party.ts` and `registry.ts` (and the matching site pages) get replaced with actual entries.
-- Requires the real names/roles and registry URLs from you — I'll ask once we start this step.
-- Update both the MCP tool file and the corresponding route page (`src/routes/wedding-party.tsx`, `src/routes/registry.tsx`) so the site and the MCP agree.
-- Re-extract the manifest after edits.
+### 4. Integrate new photos
+- After you upload the new images, place them where they fit best: hero, `/our-story`, `/photos`, `/rsvp`, or `/wedding-party` placeholders.
+- Optimize image sizing and `srcset` for performance across devices.
+- Add meaningful alt text for accessibility and SEO.
+
+### 5. Content and placeholders
+- Replace placeholder text on `/wedding-party` and `/registry` with real names and links as you provide them.
+- Keep the MCP tools in sync with the same real data so the site and MCP match.
+- Refresh `/our-story` and `/faq` copy if you want new wording.
+
+### 6. Final check
+- Run a full build and click through every page in the preview to confirm no errors.
+- Verify the MCP manifest still extracts cleanly after any content/tool changes.
+- Check that the header, footer, and all CTAs remain usable on small screens.
 
 ### Out of scope
-- No schema changes.
-- No visual redesign beyond the RSVP surfaces.
-- No new MCP tools; OAuth `lookup_my_rsvp` stays skipped since RSVP is off-site now.
+- No new AI chatbot or external MCP connection work.
+- No schema changes or new backend features.
+- No big redesign unless you specifically ask for one later.
+
+Once you approve, I'll start with the responsive audit and visual polish, then pause for your photos and real content.
