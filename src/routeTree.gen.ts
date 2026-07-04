@@ -15,13 +15,17 @@ import { Route as RsvpRouteImport } from './routes/rsvp'
 import { Route as RegistryRouteImport } from './routes/registry'
 import { Route as PhotosRouteImport } from './routes/photos'
 import { Route as OurStoryRouteImport } from './routes/our-story'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as DetailsRouteImport } from './routes/details'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as ApiPublicWeatherRouteImport } from './routes/api/public/weather'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 
 const WeddingPartyRoute = WeddingPartyRouteImport.update({
   id: '/wedding-party',
@@ -53,6 +57,11 @@ const OurStoryRoute = OurStoryRouteImport.update({
   path: '/our-story',
   getParentRoute: () => rootRouteImport,
 } as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FaqRoute = FaqRouteImport.update({
   id: '/faq',
   path: '/faq',
@@ -82,24 +91,46 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicWeatherRoute = ApiPublicWeatherRouteImport.update({
   id: '/api/public/weather',
   path: '/api/public/weather',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/details': typeof DetailsRoute
   '/faq': typeof FaqRoute
+  '/mcp': typeof McpRoute
   '/our-story': typeof OurStoryRoute
   '/photos': typeof PhotosRoute
   '/registry': typeof RegistryRoute
   '/rsvp': typeof RsvpRoute
   '/travel': typeof TravelRoute
   '/wedding-party': typeof WeddingPartyRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/weather': typeof ApiPublicWeatherRoute
 }
 export interface FileRoutesByTo {
@@ -107,13 +138,17 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/details': typeof DetailsRoute
   '/faq': typeof FaqRoute
+  '/mcp': typeof McpRoute
   '/our-story': typeof OurStoryRoute
   '/photos': typeof PhotosRoute
   '/registry': typeof RegistryRoute
   '/rsvp': typeof RsvpRoute
   '/travel': typeof TravelRoute
   '/wedding-party': typeof WeddingPartyRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/weather': typeof ApiPublicWeatherRoute
 }
 export interface FileRoutesById {
@@ -123,13 +158,17 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/details': typeof DetailsRoute
   '/faq': typeof FaqRoute
+  '/mcp': typeof McpRoute
   '/our-story': typeof OurStoryRoute
   '/photos': typeof PhotosRoute
   '/registry': typeof RegistryRoute
   '/rsvp': typeof RsvpRoute
   '/travel': typeof TravelRoute
   '/wedding-party': typeof WeddingPartyRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/weather': typeof ApiPublicWeatherRoute
 }
 export interface FileRouteTypes {
@@ -139,13 +178,17 @@ export interface FileRouteTypes {
     | '/auth'
     | '/details'
     | '/faq'
+    | '/mcp'
     | '/our-story'
     | '/photos'
     | '/registry'
     | '/rsvp'
     | '/travel'
     | '/wedding-party'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/admin'
+    | '/.mcp/invoke-tool/$tool'
     | '/api/public/weather'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -153,13 +196,17 @@ export interface FileRouteTypes {
     | '/auth'
     | '/details'
     | '/faq'
+    | '/mcp'
     | '/our-story'
     | '/photos'
     | '/registry'
     | '/rsvp'
     | '/travel'
     | '/wedding-party'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/admin'
+    | '/.mcp/invoke-tool/$tool'
     | '/api/public/weather'
   id:
     | '__root__'
@@ -168,13 +215,17 @@ export interface FileRouteTypes {
     | '/auth'
     | '/details'
     | '/faq'
+    | '/mcp'
     | '/our-story'
     | '/photos'
     | '/registry'
     | '/rsvp'
     | '/travel'
     | '/wedding-party'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/_authenticated/admin'
+    | '/.mcp/invoke-tool/$tool'
     | '/api/public/weather'
   fileRoutesById: FileRoutesById
 }
@@ -184,12 +235,16 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   DetailsRoute: typeof DetailsRoute
   FaqRoute: typeof FaqRoute
+  McpRoute: typeof McpRoute
   OurStoryRoute: typeof OurStoryRoute
   PhotosRoute: typeof PhotosRoute
   RegistryRoute: typeof RegistryRoute
   RsvpRoute: typeof RsvpRoute
   TravelRoute: typeof TravelRoute
   WeddingPartyRoute: typeof WeddingPartyRoute
+  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicWeatherRoute: typeof ApiPublicWeatherRoute
 }
 
@@ -237,6 +292,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OurStoryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/faq': {
       id: '/faq'
       path: '/faq'
@@ -279,11 +341,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/weather': {
       id: '/api/public/weather'
       path: '/api/public/weather'
       fullPath: '/api/public/weather'
       preLoaderRoute: typeof ApiPublicWeatherRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -306,14 +389,29 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   DetailsRoute: DetailsRoute,
   FaqRoute: FaqRoute,
+  McpRoute: McpRoute,
   OurStoryRoute: OurStoryRoute,
   PhotosRoute: PhotosRoute,
   RegistryRoute: RegistryRoute,
   RsvpRoute: RsvpRoute,
   TravelRoute: TravelRoute,
   WeddingPartyRoute: WeddingPartyRoute,
+  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicWeatherRoute: ApiPublicWeatherRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
