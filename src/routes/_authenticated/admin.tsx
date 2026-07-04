@@ -349,12 +349,13 @@ function GuestEditor({ row, onClose, onSaved }: { row: AdminGuestRow | null; onC
 
         <div className="mt-6 space-y-4">
           <div>
-            <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Primary name (household label)</label>
-            <input value={primaryName} onChange={(e) => setPrimaryName(e.target.value)} className="mt-1 w-full border border-input bg-background px-3 py-2 text-sm" />
+            <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Invitation name</label>
+            <input value={primaryName} onChange={(e) => setPrimaryName(e.target.value)} placeholder="e.g. The Smith Family or John & Jane Doe" className="mt-1 w-full border border-input bg-background px-3 py-2 text-sm" />
+            <p className="mt-1 text-[11px] text-muted-foreground">How this invite is addressed on the envelope. Used to look them up.</p>
           </div>
 
           <div>
-            <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Party members</label>
+            <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Guests on this invite</label>
             <div className="mt-1 space-y-2">
               {members.map((m, i) => (
                 <div key={i} className="flex gap-2 items-center">
