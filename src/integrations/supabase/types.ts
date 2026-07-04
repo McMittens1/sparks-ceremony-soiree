@@ -50,6 +50,107 @@ export type Database = {
         }
         Relationships: []
       }
+      guests: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          email: string | null
+          id: string
+          invite_notes: string | null
+          party_members: Json
+          phone: string | null
+          postal_code: string | null
+          primary_name: string
+          slug: string
+          state: string | null
+          updated_at: string
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          invite_notes?: string | null
+          party_members?: Json
+          phone?: string | null
+          postal_code?: string | null
+          primary_name: string
+          slug: string
+          state?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          invite_notes?: string | null
+          party_members?: Json
+          phone?: string | null
+          postal_code?: string | null
+          primary_name?: string
+          slug?: string
+          state?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      rsvps: {
+        Row: {
+          address: Json | null
+          address_confirmed: boolean
+          attendees: Json
+          guest_id: string
+          id: string
+          message: string | null
+          song_request: string | null
+          status: string
+          submitted_at: string
+          updated_at: string
+        }
+        Insert: {
+          address?: Json | null
+          address_confirmed?: boolean
+          attendees?: Json
+          guest_id: string
+          id?: string
+          message?: string | null
+          song_request?: string | null
+          status: string
+          submitted_at?: string
+          updated_at?: string
+        }
+        Update: {
+          address?: Json | null
+          address_confirmed?: boolean
+          attendees?: Json
+          guest_id?: string
+          id?: string
+          message?: string | null
+          song_request?: string | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rsvps_guest_id_fkey"
+            columns: ["guest_id"]
+            isOneToOne: true
+            referencedRelation: "guests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -83,6 +184,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       app_role: "admin"
