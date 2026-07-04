@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
 
 const SECTIONS = [
-  { id: "home",     n: "01", label: "Intro" },
-  { id: "story",    n: "02", label: "Story" },
-  { id: "details",  n: "03", label: "The Day" },
-  { id: "party",    n: "04", label: "Party" },
-  { id: "travel",   n: "05", label: "Travel" },
-  { id: "photos",   n: "06", label: "Photos" },
-  { id: "registry", n: "07", label: "Registry" },
-  { id: "faq",      n: "08", label: "FAQ" },
+  { id: "home",      n: "00", label: "Invitation" },
+  { id: "countdown", n: "01", label: "Countdown" },
+  { id: "story",     n: "02", label: "Story" },
+  { id: "details",   n: "03", label: "The Day" },
+  { id: "party",     n: "04", label: "Party" },
+  { id: "travel",    n: "05", label: "Travel" },
+  { id: "photos",    n: "06", label: "Photos" },
+  { id: "registry",  n: "07", label: "Registry" },
+  { id: "faq",       n: "08", label: "FAQ" },
 ];
+
 
 /** Fixed right-side spine: animated section indicator that tracks scroll. Desktop only. */
 export function SectionRail() {

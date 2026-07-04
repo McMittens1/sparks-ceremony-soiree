@@ -7,7 +7,7 @@ import barn from "@/assets/barn-interior.jpg";
 export const Route = createFileRoute("/details")({
   head: () => ({ meta: [
     { title: "The Day · Geo & Partner" },
-    { name: "description", content: "Day-of schedule, dress code, and venue notes for our wedding at Sparks' Barn." },
+    { name: "description", content: "Day-of schedule, dress code, and venue notes." },
     { property: "og:title", content: "The Day · Geo & Partner" },
     { property: "og:description", content: "Day-of schedule, dress code, and venue notes." },
   ]}),
