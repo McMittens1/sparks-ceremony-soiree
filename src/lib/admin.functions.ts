@@ -18,7 +18,7 @@ export interface AdminPhoto {
 
 export const getAdminPhotos = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { status: "pending" | "approved" | "rejected" }) =>
+  .validator((d: { status: "pending" | "approved" | "rejected" }) =>
     z.object({ status: z.enum(["pending", "approved", "rejected"]) }).parse(d))
   .handler(async ({ data, context }): Promise<AdminPhoto[]> => {
     const sb = await ensureAdmin(context.userId);
@@ -43,7 +43,7 @@ export const getAdminPhotos = createServerFn({ method: "POST" })
 
 export const setPhotoStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { id: string; status: "approved" | "rejected" }) =>
+  .validator((d: { id: string; status: "approved" | "rejected" }) =>
     z.object({ id: z.string().uuid(), status: z.enum(["approved", "rejected"]) }).parse(d))
   .handler(async ({ data, context }): Promise<{ ok: boolean }> => {
     const sb = await ensureAdmin(context.userId);
