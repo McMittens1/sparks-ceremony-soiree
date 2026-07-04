@@ -164,7 +164,7 @@ const en: Dict = {
     title: "Admin", signOut: "Sign out", rsvpsTab: "RSVPs", photosTab: "Photo queue",
     totalsAttending: "Attending", totalsDeclined: "Declined", totalsPending: "Pending",
     totalsAdults: "Adults", totalsChildren: "Children", exportCsv: "Export CSV",
-    partyCol: "Party", guestsCol: "Guests", contactCol: "Contact", submittedCol: "Submitted",
+    partyCol: "Invitation", guestsCol: "Guests", contactCol: "Contact", submittedCol: "Submitted",
     noRsvps: "No RSVPs yet.",
     pending: "Pending", approved: "Approved", rejected: "Rejected",
     approve: "Approve", reject: "Reject", noPhotos: "No photos in this tab.",

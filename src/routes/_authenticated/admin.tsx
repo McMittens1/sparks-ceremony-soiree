@@ -191,7 +191,7 @@ function RsvpsPanel() {
           onClick={() => setEditing("new")}
           className="ml-auto text-xs uppercase tracking-[0.2em] border border-primary text-primary px-3 py-2 hover:bg-primary hover:text-primary-foreground"
         >
-          + Add guest
+          + Add invitation
         </button>
         <button
           onClick={() => setImportOpen(true)}
@@ -232,7 +232,7 @@ function RsvpsPanel() {
                     <td className="py-3 pr-4">
                       <div className="font-serif text-primary">{r.primary_name}</div>
                       <div className="text-[11px] text-muted-foreground">
-                        Party of {r.party_members.length || 1}
+                        Invited {r.party_members.length || 1}{r.rsvp ? ` · ${attending.length} attending` : ""}
                         {r.phone ? ` · ${r.phone}` : ""}
                         {r.email ? ` · ${r.email}` : ""}
                       </div>
@@ -336,7 +336,7 @@ function GuestEditor({ row, onClose, onSaved }: { row: AdminGuestRow | null; onC
     <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-start sm:items-center justify-center p-4 overflow-y-auto">
       <div className="w-full max-w-2xl bg-card border border-border p-6 sm:p-8 my-8">
         <div className="flex items-center justify-between">
-          <h3 className="font-serif text-2xl text-primary">{row ? "Edit guest" : "Add guest"}</h3>
+          <h3 className="font-serif text-2xl text-primary">{row ? "Edit invitation" : "Add invitation"}</h3>
           <button onClick={onClose} className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Close</button>
         </div>
 
@@ -349,12 +349,13 @@ function GuestEditor({ row, onClose, onSaved }: { row: AdminGuestRow | null; onC
 
         <div className="mt-6 space-y-4">
           <div>
-            <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Primary name (household label)</label>
-            <input value={primaryName} onChange={(e) => setPrimaryName(e.target.value)} className="mt-1 w-full border border-input bg-background px-3 py-2 text-sm" />
+            <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Invitation name</label>
+            <input value={primaryName} onChange={(e) => setPrimaryName(e.target.value)} placeholder="e.g. The Smith Family or John & Jane Doe" className="mt-1 w-full border border-input bg-background px-3 py-2 text-sm" />
+            <p className="mt-1 text-[11px] text-muted-foreground">How this invite is addressed on the envelope. Used to look them up.</p>
           </div>
 
           <div>
-            <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Party members</label>
+            <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Guests on this invite</label>
             <div className="mt-1 space-y-2">
               {members.map((m, i) => (
                 <div key={i} className="flex gap-2 items-center">
