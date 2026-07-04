@@ -152,7 +152,7 @@ function Home() {
           <div className="grid grid-cols-12 gap-8 items-baseline">
             <div className="col-span-12 sm:col-span-4">
               <p className="text-[10px] uppercase tracking-[0.4em] text-accent">01 / Countdown</p>
-              <h2 className="mt-4 editorial-heading text-5xl sm:text-6xl">
+              <h2 className="mt-4 editorial-heading text-4xl sm:text-5xl md:text-6xl">
                 Until we<br />say <span className="text-primary-soft italic">I do</span>
               </h2>
             </div>
@@ -168,7 +168,7 @@ function Home() {
         <Reveal>
           <p className="text-[10px] uppercase tracking-[0.4em] text-accent">02 / Our Story</p>
         </Reveal>
-        <SplitText as="h2" text={t.story.title} className="mt-4 editorial-heading text-6xl sm:text-8xl max-w-4xl block" stagger={70} />
+        <SplitText as="h2" text={t.story.title} className="mt-4 editorial-heading text-5xl sm:text-6xl md:text-7xl lg:text-8xl max-w-4xl block" stagger={70} />
         <Reveal delay={200}>
           <p className="mt-6 max-w-xl text-foreground/70 text-lg font-serif italic">{t.story.lead}</p>
         </Reveal>
@@ -220,7 +220,7 @@ function Home() {
           <Reveal>
             <p className="text-[10px] uppercase tracking-[0.4em] text-accent">03 / The Day</p>
           </Reveal>
-          <SplitText as="h2" text={t.details.title} className="mt-4 editorial-heading text-6xl sm:text-8xl text-primary-foreground block" stagger={70} />
+          <SplitText as="h2" text={t.details.title} className="mt-4 editorial-heading text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-primary-foreground block" stagger={70} />
           <Reveal delay={200}>
             <p className="mt-6 max-w-xl text-primary-foreground/80 text-lg font-serif italic">{t.details.lead}</p>
           </Reveal>
@@ -295,7 +295,7 @@ function Home() {
             <Reveal>
               <p className="text-[10px] uppercase tracking-[0.4em] text-accent">04 / Wedding Party</p>
             </Reveal>
-            <SplitText as="h2" text={t.party.title} className="mt-4 editorial-heading text-6xl sm:text-7xl block" stagger={70} />
+            <SplitText as="h2" text={t.party.title} className="mt-4 editorial-heading text-5xl sm:text-6xl md:text-7xl block" stagger={70} />
             <Reveal delay={200}>
               <p className="mt-6 max-w-md text-foreground/70 text-lg font-serif italic">{t.party.lead}</p>
             </Reveal>
@@ -326,7 +326,7 @@ function Home() {
             <Reveal>
               <p className="text-[10px] uppercase tracking-[0.4em] text-accent">05 / Getting There</p>
             </Reveal>
-            <SplitText as="h2" text={t.travel.title} className="mt-4 editorial-heading text-6xl sm:text-7xl block" stagger={60} />
+            <SplitText as="h2" text={t.travel.title} className="mt-4 editorial-heading text-5xl sm:text-6xl md:text-7xl block" stagger={60} />
             <Reveal delay={180}>
               <p className="mt-6 text-foreground/70 font-serif italic text-lg">{t.travel.lead}</p>
             </Reveal>
@@ -373,7 +373,7 @@ function Home() {
             <Reveal>
               <p className="text-[10px] uppercase tracking-[0.4em] text-accent">06 / Photos</p>
             </Reveal>
-            <SplitText as="h2" text={t.photos.title} className="mt-4 editorial-heading text-6xl sm:text-8xl block" stagger={70} />
+            <SplitText as="h2" text={t.photos.title} className="mt-4 editorial-heading text-5xl sm:text-6xl md:text-7xl lg:text-8xl block" stagger={70} />
             <Reveal delay={200}>
               <p className="mt-6 max-w-xl text-foreground/70 text-lg font-serif italic">{t.photos.lead}</p>
             </Reveal>
@@ -416,7 +416,7 @@ function Home() {
           <Reveal>
             <p className="text-[10px] uppercase tracking-[0.4em] text-accent">07 / Registry</p>
           </Reveal>
-          <SplitText as="h2" text={t.registry.title} className="mt-4 editorial-heading text-6xl sm:text-8xl block" stagger={70} />
+          <SplitText as="h2" text={t.registry.title} className="mt-4 editorial-heading text-5xl sm:text-6xl md:text-7xl lg:text-8xl block" stagger={70} />
           <Reveal delay={200}>
             <p className="mt-6 max-w-xl text-foreground/70 text-lg font-serif italic">{t.registry.lead}</p>
           </Reveal>
@@ -446,7 +446,7 @@ function Home() {
         <Reveal>
           <p className="text-[10px] uppercase tracking-[0.4em] text-accent">08 / FAQ</p>
         </Reveal>
-        <SplitText as="h2" text={t.faq.title} className="mt-4 editorial-heading text-6xl sm:text-8xl block" stagger={70} />
+        <SplitText as="h2" text={t.faq.title} className="mt-4 editorial-heading text-5xl sm:text-6xl md:text-7xl lg:text-8xl block" stagger={70} />
         <Reveal delay={200}>
           <p className="mt-6 max-w-xl text-foreground/70 text-lg font-serif italic">{t.faq.lead}</p>
         </Reveal>
@@ -475,7 +475,7 @@ function Home() {
           <Reveal>
             <p className="text-[10px] uppercase tracking-[0.4em] text-accent">See you soon</p>
           </Reveal>
-          <SplitText as="h2" text="Won't be the same without you." className="mt-6 editorial-heading text-5xl sm:text-7xl block" stagger={65} />
+          <SplitText as="h2" text="Won't be the same without you." className="mt-6 editorial-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl block" stagger={65} />
           <Reveal delay={400}>
             <div className="mt-12 flex flex-col items-center gap-6">
               <Magnetic strength={0.3}>
