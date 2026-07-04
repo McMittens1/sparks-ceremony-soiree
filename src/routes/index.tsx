@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useT } from "@/i18n/context";
 import { SITE } from "@/lib/site";
 import { Reveal } from "@/components/site/Reveal";
 import { Countdown } from "@/components/site/Countdown";
 import { PhotoUploadModal } from "@/components/site/PhotoUploadModal";
+import { Lightbox } from "@/components/site/Lightbox";
 import { SectionRail } from "@/components/site/SectionRail";
 import { Parallax } from "@/components/site/Parallax";
 import { SplitText } from "@/components/site/SplitText";
