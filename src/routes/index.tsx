@@ -99,7 +99,7 @@ function Home() {
             <p className="text-[10px] uppercase tracking-[0.4em] text-accent animate-rise" style={{ animationDelay: "0.1s" }}>
               {t.home.kicker}
             </p>
-            <h1 className="mt-6 editorial-heading text-[16vw] sm:text-[13vw] lg:text-[8.5vw] xl:text-[9rem] animate-rise" style={{ animationDelay: "0.25s" }}>
+            <h1 className="mt-6 editorial-heading text-[14vw] sm:text-[11vw] md:text-[10vw] lg:text-[8vw] xl:text-[8.5rem] animate-rise" style={{ animationDelay: "0.25s" }}>
               Geovanni<br />
               <span className="text-primary-soft">&</span> Addison
             </h1>
