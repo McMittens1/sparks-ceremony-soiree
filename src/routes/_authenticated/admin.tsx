@@ -232,7 +232,7 @@ function RsvpsPanel() {
                     <td className="py-3 pr-4">
                       <div className="font-serif text-primary">{r.primary_name}</div>
                       <div className="text-[11px] text-muted-foreground">
-                        Party of {r.party_members.length || 1}
+                        Invited {r.party_members.length || 1}{r.rsvp ? ` · ${attending.length} attending` : ""}
                         {r.phone ? ` · ${r.phone}` : ""}
                         {r.email ? ` · ${r.email}` : ""}
                       </div>
