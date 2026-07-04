@@ -330,7 +330,7 @@ export const upsertGuest = createServerFn({ method: "POST" })
 
     const payload = {
       primary_name: data.primary_name,
-      party_members: data.party_members,
+      party_members: data.party_members as unknown as import("@/integrations/supabase/types").Json,
       phone: data.phone || null,
       email: data.email || null,
       address_line1: data.address_line1 || null,
@@ -343,8 +343,7 @@ export const upsertGuest = createServerFn({ method: "POST" })
     };
 
     if (data.id) {
-      const update: Record<string, unknown> = { ...payload };
-      if (data.slug) update.slug = data.slug.toUpperCase();
+      const update = data.slug ? { ...payload, slug: data.slug.toUpperCase() } : payload;
       const { data: updated, error } = await sb
         .from("guests").update(update).eq("id", data.id).select("id, slug").maybeSingle();
       if (error || !updated) throw new Error(error?.message ?? "Update failed");
