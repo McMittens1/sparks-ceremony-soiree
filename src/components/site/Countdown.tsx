@@ -36,9 +36,11 @@ export function Countdown() {
           <div className="font-serif text-3xl sm:text-5xl md:text-6xl text-primary tabular-nums">
             {n === null ? "--" : String(n).padStart(2, "0")}
           </div>
-          <div className="mt-1 text-[9px] sm:text-xs uppercase tracking-[0.15em] sm:tracking-[0.2em] text-muted-foreground truncate">
-            {label}
+          <div className="mt-1 text-[9px] sm:text-xs uppercase tracking-[0.1em] sm:tracking-[0.2em] text-muted-foreground">
+            <span className="sm:hidden">{label.slice(0, 3)}</span>
+            <span className="hidden sm:inline">{label}</span>
           </div>
+
         </div>
       ))}
     </div>
