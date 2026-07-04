@@ -43,10 +43,20 @@ function Home() {
   const location = useLocation();
   const [uploadOpen, setUploadOpen] = useState(false);
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const loadPhotos = useServerFn(listApprovedPhotos);
   const heroImgRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { loadPhotos().then(setPhotos).catch(() => {}); }, [loadPhotos]);
+
+  const openLightbox = useCallback((index: number) => setLightboxIndex(index), []);
+  const closeLightbox = useCallback(() => setLightboxIndex(null), []);
+  const nextPhoto = useCallback(() => {
+    setLightboxIndex((i) => (i === null || photos.length === 0 ? null : (i + 1) % photos.length));
+  }, [photos.length]);
+  const prevPhoto = useCallback(() => {
+    setLightboxIndex((i) => (i === null || photos.length === 0 ? null : (i - 1 + photos.length) % photos.length));
+  }, [photos.length]);
 
   // Cursor-linked parallax on the hero image
   useEffect(() => {
