@@ -1,5 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Reveal } from "@/components/site/Reveal";
+import eng94 from "@/assets/engagement/Geo_AddiEngagement-94.jpg.asset.json";
+import eng82 from "@/assets/engagement/Geo_AddiEngagement-82.jpg.asset.json";
+import eng75 from "@/assets/engagement/Geo_AddiEngagement-75.jpg.asset.json";
+import eng27 from "@/assets/engagement/Geo_AddiEngagement-27.jpg.asset.json";
+import eng19 from "@/assets/engagement/Geo_AddiEngagement-19.jpg.asset.json";
+import eng15 from "@/assets/engagement/Geo_AddiEngagement-15.jpg.asset.json";
+import eng13 from "@/assets/engagement/Geo_AddiEngagement-13.jpg.asset.json";
+import eng10 from "@/assets/engagement/Geo_AddiEngagement-10.jpg.asset.json";
 
 // ---------- content ----------
 type Dated = {
@@ -19,8 +27,9 @@ type Montage = {
 };
 type Entry = Dated | Montage;
 
-const ph = (seed: string, w = 900, h = 1200) =>
-  `https://picsum.photos/seed/${encodeURIComponent(seed)}/${w}/${h}`;
+const PHOTOS = [eng94, eng82, eng75, eng27, eng19, eng15, eng13, eng10].map((a) => a.url);
+const pick = (i: number, count: number) =>
+  Array.from({ length: count }, (_, j) => PHOTOS[(i + j) % PHOTOS.length]);
 
 const ENTRIES: Entry[] = [
   {
@@ -30,7 +39,7 @@ const ENTRIES: Entry[] = [
     title: "The first date",
     body:
       "We met on Hinge and our first date almost didn't happen — Addi had literally moved into a new house that day and probably should have been unpacking. We met at Kinkaider anyway, and right as we sat down at the outdoor patio her glasses snapped clean in half. We laughed about it, grabbed Canes on the way back to her place, and spent the night watching a scary movie surrounded by moving boxes while her dog Odin barked at me the entire time like he hadn't decided if I was allowed to be there.",
-    photos: [ph("story-first-1", 900, 1200), ph("story-first-2", 900, 700), ph("story-first-3", 900, 900)],
+    photos: pick(0, 3),
   },
   {
     kind: "dated",
@@ -39,7 +48,7 @@ const ENTRIES: Entry[] = [
     title: "The dogs approve",
     body:
       "We were only about two weeks into dating when we decided it was time to introduce the dogs, half expecting it to go badly. It didn't. Copper and Odin got along right away — no growling, no standoff, just two dogs that seemed to already know they'd be seeing a lot more of each other. It felt like a good sign for the rest of us too.",
-    photos: [ph("story-dogs-1", 900, 1100), ph("story-dogs-2", 900, 900)],
+    photos: pick(3, 2),
   },
   {
     kind: "dated",
@@ -48,7 +57,7 @@ const ENTRIES: Entry[] = [
     title: "From her dog to ours",
     body:
       "He liked me pretty much from the start, but somewhere along the way, without either of us really noticing it happening, he stopped being just Addi's dog and started being mine too. By that spring he was waiting by the door when I showed up, the same way he did for her.",
-    photos: [ph("story-odin-1", 900, 1200), ph("story-odin-2", 900, 800), ph("story-odin-3", 900, 1000)],
+    photos: pick(5, 3),
   },
   {
     kind: "montage",
@@ -56,17 +65,7 @@ const ENTRIES: Entry[] = [
     title: "A lot of good ones, stacked",
     body:
       "No single story covers this part — just a lot of good ones stacked on top of each other. Trips we took, holidays with both families, random Tuesdays that didn't need a reason to be good. We got better at being a team without really talking about it. Somewhere in the middle of it all, Odin and Copper went from dogs that tolerated each other to actual brothers.",
-    photos: [
-      ph("story-mid-1", 800, 1100),
-      ph("story-mid-2", 900, 700),
-      ph("story-mid-3", 800, 800),
-      ph("story-mid-4", 900, 1200),
-      ph("story-mid-5", 900, 700),
-      ph("story-mid-6", 800, 900),
-      ph("story-mid-7", 900, 1000),
-      ph("story-mid-8", 900, 1200),
-      ph("story-mid-9", 900, 800),
-    ],
+    photos: pick(0, 9),
   },
   {
     kind: "dated",
@@ -75,12 +74,7 @@ const ENTRIES: Entry[] = [
     title: "The proposal",
     body:
       "I told her we were going to see a movie, which was technically true — except I'd rented out the whole theater first. She sat through a video I made and then a string of movie trailers that kept getting stranger, some real, some completely made up. When it ended I walked her outside, and the marquee out front read \u201CAddi, will you marry me?\u201D She said yes — and she'll be the first to tell you she saw it coming.",
-    photos: [
-      ph("story-prop-1", 900, 1200),
-      ph("story-prop-2", 900, 700),
-      ph("story-prop-3", 900, 1000),
-      ph("story-prop-4", 900, 900),
-    ],
+    photos: pick(1, 4),
   },
   {
     kind: "montage",
@@ -88,14 +82,7 @@ const ENTRIES: Entry[] = [
     title: "The months after the yes",
     body:
       "Telling everyone the news, watching family get just as excited as we were, starting to actually picture what our place together would look like. It didn't feel like planning so much as looking forward to something we already knew was coming.",
-    photos: [
-      ph("story-ready-1", 900, 1200),
-      ph("story-ready-2", 900, 900),
-      ph("story-ready-3", 900, 700),
-      ph("story-ready-4", 900, 1000),
-      ph("story-ready-5", 900, 1100),
-      ph("story-ready-6", 900, 800),
-    ],
+    photos: pick(5, 6),
   },
   {
     kind: "dated",
@@ -104,7 +91,7 @@ const ENTRIES: Entry[] = [
     title: "One roof, four of us",
     body:
       "We were surrounded by boxes again — except this time they weren't going anywhere. It took a minute to feel like our place instead of just her place with my stuff in it, but it did. Odin and Copper have been under one roof together ever since, and neither of them seems to remember a time it was any other way.",
-    photos: [ph("story-move-1", 900, 1200), ph("story-move-2", 900, 800), ph("story-move-3", 900, 1000)],
+    photos: pick(2, 3),
   },
   {
     kind: "montage",
@@ -112,14 +99,7 @@ const ENTRIES: Entry[] = [
     title: "Ordinary, in the best way",
     body:
       "Since then it's mostly been us figuring out what a real life together looks like — Odin and Copper included, the two of them fully inseparable now. Ordinary as it sounds, it's been our favorite part so far, and it's all been building toward something a lot bigger.",
-    photos: [
-      ph("story-settle-1", 900, 1100),
-      ph("story-settle-2", 900, 800),
-      ph("story-settle-3", 900, 1200),
-      ph("story-settle-4", 900, 900),
-      ph("story-settle-5", 900, 700),
-      ph("story-settle-6", 900, 1000),
-    ],
+    photos: pick(5, 6),
   },
   {
     kind: "dated",
@@ -127,7 +107,7 @@ const ENTRIES: Entry[] = [
     place: "Sparks' Barn",
     title: "The next chapter starts here",
     body: "With everyone we love in one place to celebrate it with us.",
-    photos: [ph("story-wed-1", 900, 1200), ph("story-wed-2", 900, 900)],
+    photos: pick(7, 2),
   },
 ];
 

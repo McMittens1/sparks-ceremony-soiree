@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useT } from "@/i18n/context";
 import { SITE } from "@/lib/site";
 import { Reveal } from "@/components/site/Reveal";
 import { Countdown } from "@/components/site/Countdown";
 import { PhotoUploadModal } from "@/components/site/PhotoUploadModal";
+import { Lightbox } from "@/components/site/Lightbox";
 import { SectionRail } from "@/components/site/SectionRail";
 import { Parallax } from "@/components/site/Parallax";
 import { SplitText } from "@/components/site/SplitText";
@@ -42,10 +43,20 @@ function Home() {
   const location = useLocation();
   const [uploadOpen, setUploadOpen] = useState(false);
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const loadPhotos = useServerFn(listApprovedPhotos);
   const heroImgRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { loadPhotos().then(setPhotos).catch(() => {}); }, [loadPhotos]);
+
+  const openLightbox = useCallback((index: number) => setLightboxIndex(index), []);
+  const closeLightbox = useCallback(() => setLightboxIndex(null), []);
+  const nextPhoto = useCallback(() => {
+    setLightboxIndex((i) => (i === null || photos.length === 0 ? null : (i + 1) % photos.length));
+  }, [photos.length]);
+  const prevPhoto = useCallback(() => {
+    setLightboxIndex((i) => (i === null || photos.length === 0 ? null : (i - 1 + photos.length) % photos.length));
+  }, [photos.length]);
 
   // Cursor-linked parallax on the hero image
   useEffect(() => {
@@ -303,7 +314,7 @@ function Home() {
 
 
       {/* ============ TRAVEL ============ */}
-      <section id="travel" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-20 border-t border-accent/20">
+      <section id="travel" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-20 border-t border-accent/20 overflow-hidden">
         <div className="grid gap-10 lg:grid-cols-12 items-start">
           <div className="lg:col-span-5">
             <Reveal>
@@ -383,15 +394,28 @@ function Home() {
           <div className="mt-10 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {photos.map((p, i) => (
               <Reveal key={p.id} variant="scale" delay={i * 40}>
-                <a href={p.url} target="_blank" rel="noopener" className="block overflow-hidden group relative">
+                <button
+                  onClick={() => openLightbox(i)}
+                  className="block w-full overflow-hidden group relative text-left focus:outline-none focus:ring-2 focus:ring-primary/50"
+                >
                   <img src={p.url} alt={p.caption ?? ""} loading="lazy" className="w-full h-auto object-cover aspect-square transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/20 transition-colors duration-500" />
-                </a>
+                </button>
               </Reveal>
             ))}
           </div>
         )}
       </section>
+
+      {lightboxIndex !== null && (
+        <Lightbox
+          photos={photos}
+          currentIndex={lightboxIndex}
+          onClose={closeLightbox}
+          onNext={nextPhoto}
+          onPrev={prevPhoto}
+        />
+      )}
 
       {/* ============ REGISTRY ============ */}
       <section id="registry" className="relative py-20 bg-accent/10 border-y border-accent/20">

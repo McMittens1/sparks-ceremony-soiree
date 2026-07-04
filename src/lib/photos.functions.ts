@@ -14,7 +14,7 @@ const uploadSchema = z.object({
 });
 
 export const uploadGuestPhotos = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => uploadSchema.parse(data))
+  .validator((data: unknown) => uploadSchema.parse(data))
   .handler(async ({ data }): Promise<{ ok: boolean }> => {
     if (data.honeypot && data.honeypot.trim().length > 0) return { ok: true };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
