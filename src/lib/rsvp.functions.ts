@@ -200,9 +200,9 @@ export const getGuestBySlug = createServerFn({ method: "POST" })
     const rsvp: PublicRsvp | null = r
       ? {
           status: r.status as PublicRsvp["status"],
-          attendees: Array.isArray(r.attendees) ? (r.attendees as AttendeeChoice[]) : [],
+          attendees: (Array.isArray(r.attendees) ? (r.attendees as unknown as AttendeeChoice[]) : []),
           address_confirmed: !!r.address_confirmed,
-          address: (r.address as GuestAddress | null) ?? null,
+          address: (r.address as unknown as GuestAddress | null) ?? null,
           song_request: r.song_request,
           message: r.message,
           submitted_at: r.submitted_at,
