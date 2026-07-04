@@ -1,0 +1,4 @@
+DROP TABLE IF EXISTS public.rsvp_submissions CASCADE;
+DROP TABLE IF EXISTS public.guests CASCADE;
+DROP TABLE IF EXISTS public.invites CASCADE;
+DROP TABLE IF EXISTS public.app_config CASCADE;
