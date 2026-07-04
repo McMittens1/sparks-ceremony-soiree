@@ -11,4 +11,5 @@ export const SITE = {
   mapEmbed:
     "https://www.google.com/maps?q=Louisville%2C+Nebraska&output=embed",
   mapLink: "https://www.google.com/maps/search/?api=1&query=Louisville%2C+Nebraska",
+  rsvpUrl: "https://www.theknot.com/us/geovanni-moreno-and-addison-hillman-oct-2026/rsvp",
 } as const;
