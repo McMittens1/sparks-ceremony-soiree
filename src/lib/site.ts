@@ -11,5 +11,10 @@ export const SITE = {
   mapEmbed:
     "https://www.google.com/maps?q=Louisville%2C+Nebraska&output=embed",
   mapLink: "https://www.google.com/maps/search/?api=1&query=Louisville%2C+Nebraska",
-  rsvpUrl: "https://www.theknot.com/us/geovanni-moreno-and-addison-hillman-oct-2026/rsvp",
+  // RSVP is handled on-site at /rsvp.
+  rsvpUrl: "/rsvp",
+  // Deadline for the RSVP soft cutoff (still accepts after, but shows a late notice).
+  rsvpDeadline: "2026-09-15T23:59:59-05:00",
+  // Shown when a guest can't find their name in the lookup. Update to your preferred contact.
+  rsvpFallbackContact: "Text Addi or Geo directly — we'll get you sorted.",
 } as const;
