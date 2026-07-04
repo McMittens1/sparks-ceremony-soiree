@@ -81,11 +81,10 @@ function Home() {
     <div id="home">
       <SectionRail />
       {/* ============ HERO ============ */}
-      <section className="relative pt-16 pb-16 sm:pt-24 sm:pb-20 overflow-hidden">
-        <div className="mx-auto max-w-[1600px] px-6 lg:px-12 grid grid-cols-12 gap-6 lg:gap-8 items-center">
-          {/* Left: image + tan accent */}
-          <div className="col-span-12 lg:col-span-6 relative z-10 order-2 lg:order-1">
-            <div className="relative aspect-[4/5] w-full overflow-hidden shadow-2xl animate-rise">
+      <section className="relative pt-10 pb-16 sm:pt-16 sm:pb-24 lg:pt-20 lg:pb-28 overflow-hidden">
+        <div className="mx-auto max-w-[1500px] px-6 lg:px-12 grid grid-cols-12 gap-6 lg:gap-10 items-center">
+          <div className="col-span-12 lg:col-span-7 relative z-10 order-2 lg:order-1">
+            <div className="relative aspect-[4/5] lg:aspect-[5/6] w-full overflow-hidden shadow-2xl animate-rise">
               <div ref={heroImgRef} className="absolute inset-0 transition-transform duration-500 ease-out will-change-transform">
                 <img src={hero} alt="Geovanni and Addison" className="h-full w-full object-cover" />
               </div>
@@ -94,16 +93,15 @@ function Home() {
             <div className="absolute -bottom-6 -left-6 w-32 h-32 sm:w-40 sm:h-40 bg-accent -z-10" />
           </div>
 
-          {/* Right: typographic stack */}
-          <div className="col-span-12 lg:col-span-6 relative z-20 order-1 lg:order-2 xl:-ml-16">
+          <div className="col-span-12 lg:col-span-5 relative z-20 order-1 lg:order-2">
             <p className="text-[10px] uppercase tracking-[0.4em] text-accent animate-rise" style={{ animationDelay: "0.1s" }}>
               {t.home.kicker}
             </p>
-            <h1 className="mt-6 editorial-heading text-[14vw] sm:text-[11vw] md:text-[10vw] lg:text-[8vw] xl:text-[8.5rem] animate-rise" style={{ animationDelay: "0.25s" }}>
+            <h1 className="mt-6 editorial-heading text-[14vw] sm:text-[11vw] lg:text-[7vw] xl:text-[6.5rem] 2xl:text-[8rem] animate-rise" style={{ animationDelay: "0.25s" }}>
               Geovanni<br />
               <span className="text-primary-soft">&</span> Addison
             </h1>
-            <div className="mt-10 space-y-8 animate-rise max-w-xl" style={{ animationDelay: "0.45s" }}>
+            <div className="mt-10 space-y-8 animate-rise max-w-md" style={{ animationDelay: "0.45s" }}>
               <div className="border-l-2 border-accent pl-5">
                 <p className="text-[10px] uppercase tracking-[0.3em] text-foreground/60 font-semibold">
                   {t.home.title}
@@ -125,7 +123,7 @@ function Home() {
                   </Link>
                 </Magnetic>
                 <a
-                  href="#details"
+                  href="#countdown"
                   className="link-underline text-[10px] uppercase tracking-[0.3em] text-primary"
                 >
                   {t.home.detailsCta} →
@@ -134,34 +132,33 @@ function Home() {
             </div>
           </div>
         </div>
+      </section>
 
-        <div className="hidden lg:block absolute left-6 top-1/2 -translate-y-1/2 pointer-events-none">
-          <p className="[writing-mode:vertical-rl] rotate-180 whitespace-nowrap text-accent text-[10px] tracking-[0.6em] uppercase font-semibold">
-            Louisville · Nebraska · MMXXVI
-          </p>
+      {/* ============ COUNTDOWN — hero moment ============ */}
+      <section id="countdown" className="relative border-y border-accent/20 bg-gradient-to-b from-background via-accent/5 to-background overflow-hidden">
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[800px] h-[800px] rounded-full bg-primary/5 blur-3xl animate-float" />
+        </div>
+        <div className="mx-auto max-w-[1500px] px-6 lg:px-12 py-20 sm:py-28 lg:py-32">
+          <Reveal>
+            <div className="flex flex-col items-center text-center">
+              <p className="text-[10px] uppercase tracking-[0.4em] text-accent">01 / Countdown</p>
+              <h2 className="mt-6 editorial-heading text-5xl sm:text-7xl md:text-8xl lg:text-[9rem] leading-[0.9]">
+                Until we say
+                <br />
+                <span className="italic text-primary-soft">I do</span>
+              </h2>
+              <div className="mt-6 h-px w-24 bg-accent draw-line origin-center" />
+            </div>
+          </Reveal>
+          <Reveal delay={200}>
+            <div className="mt-14 sm:mt-20">
+              <Countdown />
+            </div>
+          </Reveal>
         </div>
       </section>
 
-
-
-
-
-      {/* ============ COUNTDOWN ============ */}
-      <section className="mx-auto max-w-[1600px] px-6 lg:px-12 py-10">
-        <Reveal>
-          <div className="grid grid-cols-12 gap-8 items-baseline">
-            <div className="col-span-12 sm:col-span-4">
-              <p className="text-[10px] uppercase tracking-[0.4em] text-accent">01 / Countdown</p>
-              <h2 className="mt-4 editorial-heading text-4xl sm:text-5xl md:text-6xl">
-                Until we<br />say <span className="text-primary-soft italic">I do</span>
-              </h2>
-            </div>
-            <div className="col-span-12 sm:col-span-8">
-              <Countdown />
-            </div>
-          </div>
-        </Reveal>
-      </section>
 
       {/* ============ OUR STORY ============ */}
       <section id="story" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-20 border-t border-accent/20">
