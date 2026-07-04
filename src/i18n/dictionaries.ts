@@ -59,7 +59,7 @@ const en: Dict = {
   home: {
     kicker: "Save the date",
     title: "You are invited to",
-    dateLine: "October 10, 2026 · Louisville, Nebraska",
+    dateLine: "October 10, 2026",
     intro: "One evening under string lights and open sky — a ceremony, a reception, and everyone we love in one room.",
     countdownLabel: "Until we say I do",
     days: "days", hours: "hours", minutes: "minutes", seconds: "seconds",
@@ -178,7 +178,7 @@ const es: Dict = {
   common: { language: "Idioma", loading: "Cargando…", required: "Requerido", submit: "Enviar", save: "Guardar", cancel: "Cancelar", back: "Atrás", close: "Cerrar" },
   home: {
     kicker: "Reserva la fecha", title: "Están invitados a",
-    dateLine: "10 de octubre de 2026 · Louisville, Nebraska",
+    dateLine: "10 de octubre de 2026",
     intro: "Una tarde bajo luces cálidas y el cielo abierto — ceremonia, recepción y todos los que queremos en un solo lugar.",
     countdownLabel: "Para el gran día",
     days: "días", hours: "horas", minutes: "minutos", seconds: "segundos",

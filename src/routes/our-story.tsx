@@ -5,9 +5,9 @@ import { Reveal } from "@/components/site/Reveal";
 export const Route = createFileRoute("/our-story")({
   head: () => ({ meta: [
     { title: "Our Story · Geo & Partner" },
-    { name: "description", content: "From karaoke bar to Sparks' Barn — the short version of our story." },
+    { name: "description", content: "The short version of how we got here." },
     { property: "og:title", content: "Our Story · Geo & Partner" },
-    { property: "og:description", content: "From karaoke bar to Sparks' Barn — the short version of our story." },
+    { property: "og:description", content: "The short version of how we got here." },
   ]}),
   component: Story,
 });
