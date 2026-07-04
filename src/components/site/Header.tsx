@@ -52,7 +52,7 @@ export function Header() {
           <span className="hidden sm:inline text-[9px] uppercase tracking-[0.35em] text-accent group-hover:text-primary transition-colors">10 · 10 · 26</span>
         </button>
 
-        <nav className="hidden lg:flex items-center gap-8 text-[10px] uppercase tracking-[0.3em] text-foreground/70">
+        <nav className="hidden lg:flex items-center gap-4 xl:gap-8 text-[10px] uppercase tracking-[0.3em] text-foreground/70 whitespace-nowrap">
           {sections.map((s) => (
             <button
               key={s.id}
