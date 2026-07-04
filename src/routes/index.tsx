@@ -352,8 +352,8 @@ function Home() {
               </Reveal>
             </div>
           </div>
-          <Reveal variant="right" delay={120}>
-            <div className="lg:col-span-7 lg:col-start-6 aspect-[4/3] overflow-hidden border border-accent/20 group">
+          <Reveal variant="right" delay={120} className="lg:col-span-7 lg:col-start-6">
+            <div className="aspect-[4/3] overflow-hidden border border-accent/20 group">
               <iframe
                 src={SITE.mapEmbed}
                 title={t.travel.mapTitle}
@@ -362,6 +362,7 @@ function Home() {
               />
             </div>
           </Reveal>
+
         </div>
       </section>
 
