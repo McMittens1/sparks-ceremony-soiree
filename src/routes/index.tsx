@@ -226,21 +226,22 @@ function Home() {
 
           {/* Integrated date lockup — draws itself in on scroll */}
           <Reveal variant="up" delay={280}>
-            <div className="mt-10 flex items-end gap-6 sm:gap-10 border-t border-primary-foreground/15 pt-10">
+            <div className="mt-10 flex flex-wrap items-end gap-x-4 gap-y-6 sm:gap-x-8 md:gap-x-10 border-t border-primary-foreground/15 pt-10">
               {[
                 { n: "10", cap: "Sat" },
                 { n: "10", cap: "Oct" },
                 { n: "26", cap: "MMXXVI" },
               ].map((d, i) => (
-                <div key={i} className="flex items-end gap-6 sm:gap-10">
+                <div key={i} className="flex items-end gap-4 sm:gap-8 md:gap-10">
                   <div className="text-center">
-                    <div className="editorial-heading text-primary-foreground text-[18vw] sm:text-[10vw] leading-[0.8]">{d.n}</div>
-                    <div className="mt-2 text-[10px] uppercase tracking-[0.4em] text-accent">{d.cap}</div>
+                    <div className="editorial-heading text-primary-foreground text-[14vw] sm:text-[11vw] md:text-[9vw] lg:text-[8vw] leading-[0.8]">{d.n}</div>
+                    <div className="mt-2 text-[9px] sm:text-[10px] uppercase tracking-[0.35em] sm:tracking-[0.4em] text-accent">{d.cap}</div>
                   </div>
-                  {i < 2 && <span className="editorial-heading text-primary-foreground/40 text-[10vw] sm:text-[6vw] pb-6">·</span>}
+                  {i < 2 && <span className="editorial-heading text-primary-foreground/40 text-[8vw] sm:text-[6vw] md:text-[5vw] pb-4 sm:pb-6">·</span>}
                 </div>
               ))}
             </div>
+
             <div className="draw-line mt-4 h-px bg-accent origin-left" />
           </Reveal>
 
