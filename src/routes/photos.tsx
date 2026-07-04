@@ -4,7 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useT } from "@/i18n/context";
 import { Reveal } from "@/components/site/Reveal";
 import { Lightbox } from "@/components/site/Lightbox";
-import { listApprovedPhotos, uploadGuestPhotos, type GalleryPhoto } from "@/lib/photos.functions";
+import { PhotoUploadModal } from "@/components/site/PhotoUploadModal";
+import { listApprovedPhotos, type GalleryPhoto } from "@/lib/photos.functions";
 
 export const Route = createFileRoute("/photos")({
   head: () => ({ meta: [
@@ -19,45 +20,11 @@ export const Route = createFileRoute("/photos")({
 function PhotosPage() {
   const t = useT();
   const load = useServerFn(listApprovedPhotos);
-  const upload = useServerFn(uploadGuestPhotos);
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [caption, setCaption] = useState("");
-  const [honeypot, setHoneypot] = useState("");
-  const [files, setFiles] = useState<File[]>([]);
-  const [status, setStatus] = useState<"idle" | "uploading" | "done" | "error">("idle");
+  const [uploadOpen, setUploadOpen] = useState(false);
 
   useEffect(() => { load().then(setPhotos).catch(() => {}); }, [load]);
-
-  async function readFile(f: File): Promise<string> {
-    return new Promise((res, rej) => {
-      const r = new FileReader();
-      r.onload = () => res(String(r.result));
-      r.onerror = rej;
-      r.readAsDataURL(f);
-    });
-  }
-
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!name.trim() || files.length === 0) return;
-    setStatus("uploading");
-    try {
-      const payload = await Promise.all(files.slice(0, 5).map(async (f) => ({
-        filename: f.name, contentType: f.type, dataUrl: await readFile(f),
-      })));
-      await upload({ data: {
-        uploaderName: name, uploaderEmail: email || null, caption: caption || null,
-        honeypot: honeypot || null, files: payload,
-      }});
-      setStatus("done");
-      setName(""); setEmail(""); setCaption(""); setFiles([]);
-    } catch {
-      setStatus("error");
-    }
-  }
 
   const openLightbox = useCallback((index: number) => setLightboxIndex(index), []);
   const closeLightbox = useCallback(() => setLightboxIndex(null), []);
