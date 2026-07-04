@@ -30,18 +30,20 @@ export function Countdown() {
   ];
 
   return (
-    <div className="grid grid-cols-4 gap-3 sm:gap-6 max-w-xl mx-auto">
+    <div className="grid grid-cols-4 gap-2 sm:gap-6 max-w-xl mx-auto">
       {items.map(([n, label]) => (
-        <div key={label} className="text-center">
-          <div className="font-serif text-4xl sm:text-6xl text-primary tabular-nums">
+        <div key={label} className="min-w-0 text-center">
+          <div className="font-serif text-3xl sm:text-5xl md:text-6xl text-primary tabular-nums">
             {n === null ? "--" : String(n).padStart(2, "0")}
+          </div>
+          <div className="mt-1 text-[9px] sm:text-xs uppercase tracking-[0.1em] sm:tracking-[0.2em] text-muted-foreground">
+            <span className="sm:hidden">{label.slice(0, 3)}</span>
+            <span className="hidden sm:inline">{label}</span>
+          </div>
 
-          </div>
-          <div className="mt-1 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-muted-foreground">
-            {label}
-          </div>
         </div>
       ))}
     </div>
   );
 }
+

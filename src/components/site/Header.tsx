@@ -52,7 +52,7 @@ export function Header() {
           <span className="hidden sm:inline text-[9px] uppercase tracking-[0.35em] text-accent group-hover:text-primary transition-colors">10 · 10 · 26</span>
         </button>
 
-        <nav className="hidden lg:flex items-center gap-8 text-[10px] uppercase tracking-[0.3em] text-foreground/70">
+        <nav className="hidden xl:flex items-center gap-6 text-[10px] uppercase tracking-[0.3em] text-foreground/70 whitespace-nowrap">
           {sections.map((s) => (
             <button
               key={s.id}
@@ -78,7 +78,7 @@ export function Header() {
         </nav>
 
         <button
-          className="lg:hidden text-[10px] uppercase tracking-[0.3em] text-primary"
+          className="xl:hidden text-[10px] uppercase tracking-[0.3em] text-primary"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
           aria-label="Menu"
@@ -88,7 +88,7 @@ export function Header() {
       </div>
 
       {open && (
-        <div className="lg:hidden border-t border-accent/20 bg-background animate-rise">
+        <div className="xl:hidden border-t border-accent/20 bg-background animate-rise">
           <div className="mx-auto max-w-6xl px-6 py-6 flex flex-col gap-4 text-sm">
             {sections.map((s) => (
               <button
