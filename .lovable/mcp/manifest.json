@@ -8,14 +8,14 @@
   "mcp": {
     "server": {
       "name": "geo-addi-wedding-mcp",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "title": "Geovanni & Addison Wedding"
     },
     "tools": [
       {
         "name": "get_wedding_info",
         "title": "Get wedding info",
-        "description": "Get the couple, wedding date, venue, and location details.",
+        "description": "Couple, wedding date, venue name, address, and map link.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
@@ -41,6 +41,146 @@
           "$schema": "http://json-schema.org/draft-07/schema#",
           "type": "object",
           "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_schedule",
+        "title": "Day-of schedule",
+        "description": "Timeline of the wedding day (ceremony, cocktail hour, dinner, dancing, send-off).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_dress_code",
+        "title": "Dress code",
+        "description": "Attire guidance for guests.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_travel_info",
+        "title": "Travel & lodging",
+        "description": "Venue address, map link, hotel block, and parking notes.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_weather_forecast",
+        "title": "Wedding-day weather",
+        "description": "Typical early-October forecast for the venue area: high, low, chance of rain, sunset.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_faq",
+        "title": "Frequently asked questions",
+        "description": "List FAQ items about the wedding. Optional `search` filters by keyword (case-insensitive).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "search": {
+              "description": "Optional keyword to filter FAQ entries.",
+              "type": "string"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_wedding_party",
+        "title": "Wedding party",
+        "description": "Members of the wedding party and their roles.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_registry_links",
+        "title": "Registry",
+        "description": "Where the couple is registered, including honeymoon fund and charity options.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_approved_photos",
+        "title": "Approved guest photos",
+        "description": "List approved guest photos with signed image URLs and captions. Limit defaults to 12 (max 30).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "description": "How many photos to return (default 12, max 30).",
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
         },
         "outputSchema": null
       }
