@@ -123,14 +123,12 @@ function Home() {
               </p>
               <div className="flex flex-wrap items-center gap-6 pt-2">
                 <Magnetic strength={0.25}>
-                  <a
-                    href={SITE.rsvpUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <Link
+                    to="/rsvp"
                     className="inline-block border border-primary bg-primary text-primary-foreground px-8 py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-transparent hover:text-primary transition-colors"
                   >
-                    {t.home.rsvpCta} ↗
-                  </a>
+                    {t.home.rsvpCta} →
+                  </Link>
                 </Magnetic>
                 <a
                   href="#countdown"
