@@ -1,5 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Reveal } from "@/components/site/Reveal";
+import eng94 from "@/assets/engagement/Geo_AddiEngagement-94.jpg.asset.json";
+import eng82 from "@/assets/engagement/Geo_AddiEngagement-82.jpg.asset.json";
+import eng75 from "@/assets/engagement/Geo_AddiEngagement-75.jpg.asset.json";
+import eng27 from "@/assets/engagement/Geo_AddiEngagement-27.jpg.asset.json";
+import eng19 from "@/assets/engagement/Geo_AddiEngagement-19.jpg.asset.json";
+import eng15 from "@/assets/engagement/Geo_AddiEngagement-15.jpg.asset.json";
+import eng13 from "@/assets/engagement/Geo_AddiEngagement-13.jpg.asset.json";
+import eng10 from "@/assets/engagement/Geo_AddiEngagement-10.jpg.asset.json";
 
 // ---------- content ----------
 type Dated = {
@@ -18,9 +26,6 @@ type Montage = {
   photos: string[];
 };
 type Entry = Dated | Montage;
-
-const ph = (seed: string, w = 900, h = 1200) =>
-  `https://picsum.photos/seed/${encodeURIComponent(seed)}/${w}/${h}`;
 
 const ENTRIES: Entry[] = [
   {
