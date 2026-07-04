@@ -169,25 +169,8 @@ function Home() {
         <Reveal delay={200}>
           <p className="mt-6 max-w-xl text-foreground/70 text-lg font-serif italic">{t.story.lead}</p>
         </Reveal>
-        <div className="mt-12 grid gap-10 lg:grid-cols-2 items-start">
-          <Reveal variant="mask" delay={80}>
-            <div className="aspect-[4/5] overflow-hidden">
-              <Parallax speed={-0.15} className="h-full w-full">
-                <img src={florals} alt="Geovanni and Addison" className="h-full w-full object-cover transition-all duration-1000 scale-110" />
-              </Parallax>
-            </div>
-          </Reveal>
-          <div className="lg:pt-20">
-            {t.story.timeline.map((item, i) => (
-              <Reveal key={i} variant="left" delay={120 + i * 80}>
-                <div className="grid grid-cols-[64px_1fr] sm:grid-cols-[80px_1fr] gap-4 sm:gap-6 py-5 border-t border-accent/20 first:border-t-0 group">
-                  <div className="editorial-heading text-3xl sm:text-4xl text-accent transition-transform duration-500 group-hover:translate-x-2">{item.year}</div>
-                  <p className="text-foreground/80 leading-relaxed text-base sm:text-lg font-serif">{item.body}</p>
-                </div>
-
-              </Reveal>
-            ))}
-          </div>
+        <div className="mt-16">
+          <StoryTimeline />
         </div>
       </section>
 
