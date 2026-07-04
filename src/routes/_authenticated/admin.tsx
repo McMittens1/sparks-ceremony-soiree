@@ -336,7 +336,7 @@ function GuestEditor({ row, onClose, onSaved }: { row: AdminGuestRow | null; onC
     <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-start sm:items-center justify-center p-4 overflow-y-auto">
       <div className="w-full max-w-2xl bg-card border border-border p-6 sm:p-8 my-8">
         <div className="flex items-center justify-between">
-          <h3 className="font-serif text-2xl text-primary">{row ? "Edit guest" : "Add guest"}</h3>
+          <h3 className="font-serif text-2xl text-primary">{row ? "Edit invitation" : "Add invitation"}</h3>
           <button onClick={onClose} className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Close</button>
         </div>
 
