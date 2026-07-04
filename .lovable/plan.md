@@ -1,42 +1,40 @@
-## Polish the existing wedding site
+## Polish the existing wedding site — status
 
 Goal: make the current site look great and work smoothly on every screen, then fold in the new photos and real content you provide.
 
-### 1. Responsive / mobile audit and fixes
-- Review every public page (`/`, `/rsvp`, `/details`, `/travel`, `/faq`, `/wedding-party`, `/registry`, `/photos`, `/our-story`) on mobile, tablet, and desktop.
-- Fix any layout breaks, clipped text, oversized hero images, or buttons that are hard to tap.
-- Check that navigation, the header CTA, and footer behave correctly on small screens.
-- Verify no horizontal scroll at any viewport width.
+### ✅ Done
 
-### 2. Visual polish pass
-- Normalize spacing, typography scale, and section rhythm across pages.
-- Ensure the color palette and design tokens feel consistent (no hardcoded colors, only semantic tokens).
-- Improve hover/focus states, transitions, and micro-interactions so the site feels refined.
-- Tighten the RSVP section and hero so the two-step Knot flow is obvious and inviting.
+1. **Responsive / mobile audit and fixes**
+   - Checked every public page on mobile (390px), tablet (768px), and desktop (1280px).
+   - Fixed horizontal overflow on the home page by clipping the travel section's reveal animation.
+   - Verified no horizontal scroll at any viewport width.
 
-### 3. Photo gallery improvement
-- Better layout for `/photos` (masonry or clean grid) with lightbox on click.
-- Add lazy loading and a graceful empty state before approved guest photos exist.
-- Prepare the gallery to receive your new engagement/wedding photos.
+2. **Visual polish pass**
+   - Unified page titles: all routes now use "Geovanni & Addison" instead of "Geo & Partner".
+   - Made placeholder content honest: wedding party shows "Names to be announced" and registry placeholders show "Details coming soon" instead of broken links.
+   - Replaced generic `picsum.photos` placeholders in `/our-story` with real engagement photos.
+   - Updated server functions to the current `.validator()` API (cleaner build output).
 
-### 4. Integrate new photos
-- After you upload the new images, place them where they fit best: hero, `/our-story`, `/photos`, `/rsvp`, or `/wedding-party` placeholders.
-- Optimize image sizing and `srcset` for performance across devices.
-- Add meaningful alt text for accessibility and SEO.
+3. **Photo gallery improvement**
+   - Added a new `Lightbox` component with keyboard navigation (Esc, ←, →) and a caption bar.
+   - Wired the lightbox into `/photos` and the home page gallery.
+   - Changed `/photos` layout to a CSS masonry-style `columns` grid.
+   - Improved the empty state with a framed placeholder and a nudge to share photos.
 
-### 5. Content and placeholders
-- Replace placeholder text on `/wedding-party` and `/registry` with real names and links as you provide them.
-- Keep the MCP tools in sync with the same real data so the site and MCP match.
-- Refresh `/our-story` and `/faq` copy if you want new wording.
+4. **Final check**
+   - Full production build passes.
+   - MCP manifest extracts cleanly with 10 tools.
+   - All pages pass the responsive overflow audit.
 
-### 6. Final check
-- Run a full build and click through every page in the preview to confirm no errors.
-- Verify the MCP manifest still extracts cleanly after any content/tool changes.
-- Check that the header, footer, and all CTAs remain usable on small screens.
+### ⏳ Waiting on you
+
+- **More photos**: upload them directly in this chat — up to 10 images per message, up to 20 MB each works best. For a big batch, a Google Drive / Dropbox link is fine too. I'll place them in the hero, `/our-story`, `/photos`, `/rsvp`, or `/wedding-party` and migrate them to the Lovable CDN for fast loading.
+- **Real wedding party names and roles** so I can replace the placeholder cards.
+- **Real registry links** (Honeymoon Fund, Local charity) so I can make those cards clickable.
+- **Venue address / exact map pin** for Sparks' Barn if you want the map to point directly at it instead of Louisville, NE.
 
 ### Out of scope
-- No new AI chatbot or external MCP connection work.
-- No schema changes or new backend features.
-- No big redesign unless you specifically ask for one later.
 
-Once you approve, I'll start with the responsive audit and visual polish, then pause for your photos and real content.
+- No new AI chatbot or external MCP connection work yet.
+- No schema changes or new backend features.
+- No big redesign unless you ask for one later.
