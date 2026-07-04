@@ -191,7 +191,7 @@ function RsvpsPanel() {
           onClick={() => setEditing("new")}
           className="ml-auto text-xs uppercase tracking-[0.2em] border border-primary text-primary px-3 py-2 hover:bg-primary hover:text-primary-foreground"
         >
-          + Add guest
+          + Add invitation
         </button>
         <button
           onClick={() => setImportOpen(true)}
