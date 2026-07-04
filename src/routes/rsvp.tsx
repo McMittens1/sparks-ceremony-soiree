@@ -221,7 +221,7 @@ function RsvpPage() {
                     >
                       <div className="font-serif text-primary">{m.primary_name}</div>
                       <div className="text-xs text-muted-foreground">
-                        Party of {m.party_size || 1} · code {m.slug}
+                        Party of {m.party_size || 1}
                       </div>
                     </button>
                   ))}
