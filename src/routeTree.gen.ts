@@ -9,15 +9,8 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as WeddingPartyRouteImport } from './routes/wedding-party'
-import { Route as TravelRouteImport } from './routes/travel'
 import { Route as RsvpRouteImport } from './routes/rsvp'
-import { Route as RegistryRouteImport } from './routes/registry'
-import { Route as PhotosRouteImport } from './routes/photos'
-import { Route as OurStoryRouteImport } from './routes/our-story'
 import { Route as McpRouteImport } from './routes/mcp'
-import { Route as FaqRouteImport } from './routes/faq'
-import { Route as DetailsRouteImport } from './routes/details'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -27,49 +20,14 @@ import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]
 import { Route as ApiPublicWeatherRouteImport } from './routes/api/public/weather'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 
-const WeddingPartyRoute = WeddingPartyRouteImport.update({
-  id: '/wedding-party',
-  path: '/wedding-party',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TravelRoute = TravelRouteImport.update({
-  id: '/travel',
-  path: '/travel',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const RsvpRoute = RsvpRouteImport.update({
   id: '/rsvp',
   path: '/rsvp',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RegistryRoute = RegistryRouteImport.update({
-  id: '/registry',
-  path: '/registry',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PhotosRoute = PhotosRouteImport.update({
-  id: '/photos',
-  path: '/photos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OurStoryRoute = OurStoryRouteImport.update({
-  id: '/our-story',
-  path: '/our-story',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const McpRoute = McpRouteImport.update({
   id: '/mcp',
   path: '/mcp',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FaqRoute = FaqRouteImport.update({
-  id: '/faq',
-  path: '/faq',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DetailsRoute = DetailsRouteImport.update({
-  id: '/details',
-  path: '/details',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -118,15 +76,8 @@ const Char91DotmcpChar93InvokeToolToolRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/details': typeof DetailsRoute
-  '/faq': typeof FaqRoute
   '/mcp': typeof McpRoute
-  '/our-story': typeof OurStoryRoute
-  '/photos': typeof PhotosRoute
-  '/registry': typeof RegistryRoute
   '/rsvp': typeof RsvpRoute
-  '/travel': typeof TravelRoute
-  '/wedding-party': typeof WeddingPartyRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -136,15 +87,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/details': typeof DetailsRoute
-  '/faq': typeof FaqRoute
   '/mcp': typeof McpRoute
-  '/our-story': typeof OurStoryRoute
-  '/photos': typeof PhotosRoute
-  '/registry': typeof RegistryRoute
   '/rsvp': typeof RsvpRoute
-  '/travel': typeof TravelRoute
-  '/wedding-party': typeof WeddingPartyRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -156,15 +100,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
-  '/details': typeof DetailsRoute
-  '/faq': typeof FaqRoute
   '/mcp': typeof McpRoute
-  '/our-story': typeof OurStoryRoute
-  '/photos': typeof PhotosRoute
-  '/registry': typeof RegistryRoute
   '/rsvp': typeof RsvpRoute
-  '/travel': typeof TravelRoute
-  '/wedding-party': typeof WeddingPartyRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
@@ -176,15 +113,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
-    | '/details'
-    | '/faq'
     | '/mcp'
-    | '/our-story'
-    | '/photos'
-    | '/registry'
     | '/rsvp'
-    | '/travel'
-    | '/wedding-party'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/admin'
@@ -194,15 +124,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
-    | '/details'
-    | '/faq'
     | '/mcp'
-    | '/our-story'
-    | '/photos'
-    | '/registry'
     | '/rsvp'
-    | '/travel'
-    | '/wedding-party'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/admin'
@@ -213,15 +136,8 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
-    | '/details'
-    | '/faq'
     | '/mcp'
-    | '/our-story'
-    | '/photos'
-    | '/registry'
     | '/rsvp'
-    | '/travel'
-    | '/wedding-party'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/_authenticated/admin'
@@ -233,15 +149,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
-  DetailsRoute: typeof DetailsRoute
-  FaqRoute: typeof FaqRoute
   McpRoute: typeof McpRoute
-  OurStoryRoute: typeof OurStoryRoute
-  PhotosRoute: typeof PhotosRoute
-  RegistryRoute: typeof RegistryRoute
   RsvpRoute: typeof RsvpRoute
-  TravelRoute: typeof TravelRoute
-  WeddingPartyRoute: typeof WeddingPartyRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -250,20 +159,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/wedding-party': {
-      id: '/wedding-party'
-      path: '/wedding-party'
-      fullPath: '/wedding-party'
-      preLoaderRoute: typeof WeddingPartyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/travel': {
-      id: '/travel'
-      path: '/travel'
-      fullPath: '/travel'
-      preLoaderRoute: typeof TravelRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/rsvp': {
       id: '/rsvp'
       path: '/rsvp'
@@ -271,46 +166,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RsvpRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/registry': {
-      id: '/registry'
-      path: '/registry'
-      fullPath: '/registry'
-      preLoaderRoute: typeof RegistryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/photos': {
-      id: '/photos'
-      path: '/photos'
-      fullPath: '/photos'
-      preLoaderRoute: typeof PhotosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/our-story': {
-      id: '/our-story'
-      path: '/our-story'
-      fullPath: '/our-story'
-      preLoaderRoute: typeof OurStoryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/mcp': {
       id: '/mcp'
       path: '/mcp'
       fullPath: '/mcp'
       preLoaderRoute: typeof McpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/faq': {
-      id: '/faq'
-      path: '/faq'
-      fullPath: '/faq'
-      preLoaderRoute: typeof FaqRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/details': {
-      id: '/details'
-      path: '/details'
-      fullPath: '/details'
-      preLoaderRoute: typeof DetailsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -387,15 +247,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
-  DetailsRoute: DetailsRoute,
-  FaqRoute: FaqRoute,
   McpRoute: McpRoute,
-  OurStoryRoute: OurStoryRoute,
-  PhotosRoute: PhotosRoute,
-  RegistryRoute: RegistryRoute,
   RsvpRoute: RsvpRoute,
-  TravelRoute: TravelRoute,
-  WeddingPartyRoute: WeddingPartyRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
