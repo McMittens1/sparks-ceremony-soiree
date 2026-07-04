@@ -1,12 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useT } from "@/i18n/context";
 import { Reveal } from "@/components/site/Reveal";
-
-const items = [
-  { name: "Zola", href: "https://zola.com", note: "Main registry — dishes, linens, the boring good stuff." },
-  { name: "Honeymoon Fund", href: null, note: "A weekend somewhere warm after the barn cools down." },
-  { name: "Local charity", href: null, note: "In lieu of a gift, a Lincoln food bank we care about." },
-];
+import { REGISTRY as items } from "@/lib/wedding-data";
 
 export const Route = createFileRoute("/registry")({
   head: () => ({ meta: [

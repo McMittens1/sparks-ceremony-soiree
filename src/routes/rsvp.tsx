@@ -41,7 +41,7 @@ function RsvpPage() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 border border-primary bg-primary px-10 py-4 text-[11px] uppercase tracking-[0.35em] text-primary-foreground shadow-sm transition hover:bg-transparent hover:text-primary"
             >
-              RSVP on The Knot
+              {t.home.rsvpCta}
               <span aria-hidden>↗</span>
             </a>
             <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Opens theknot.com in a new tab</p>

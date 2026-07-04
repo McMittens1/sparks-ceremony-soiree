@@ -1,15 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useT } from "@/i18n/context";
 import { Reveal } from "@/components/site/Reveal";
-
-const party = [
-  { name: "Maria S.", role: "Maid of Honor" },
-  { name: "Jordan T.", role: "Best Man" },
-  { name: "Ashley R.", role: "Bridesmaid" },
-  { name: "Sam L.", role: "Groomsman" },
-  { name: "Priya N.", role: "Bridesmaid" },
-  { name: "Diego M.", role: "Groomsman" },
-];
+import { PARTY as party } from "@/lib/wedding-data";
 
 export const Route = createFileRoute("/wedding-party")({
   head: () => ({ meta: [
@@ -31,7 +23,7 @@ function Party() {
         <p className="mt-4 text-foreground/70 max-w-xl">{t.party.lead}</p>
       </Reveal>
       <Reveal delay={120}>
-        <p className="mt-6 text-xs uppercase tracking-[0.35em] text-muted-foreground">Names to be announced</p>
+        <div className="mt-8 h-px w-24 bg-accent/40" />
       </Reveal>
       <div className="mt-12 grid grid-cols-2 sm:grid-cols-3 gap-6 sm:gap-8">
         {party.map((p, i) => (

@@ -1,40 +1,54 @@
-## Polish the existing wedding site — status
 
-Goal: make the current site look great and work smoothly on every screen, then fold in the new photos and real content you provide.
+# Cleanup: unused backend + duplicate content sources
 
-### ✅ Done
+## What's actually orphaned in the backend
 
-1. **Responsive / mobile audit and fixes**
-   - Checked every public page on mobile (390px), tablet (768px), and desktop (1280px).
-   - Fixed horizontal overflow on the home page by clipping the travel section's reveal animation.
-   - Verified no horizontal scroll at any viewport width.
+Four database tables exist but nothing on the site reads or writes to them — leftovers from an earlier direction where RSVP was going to be handled in-app:
 
-2. **Visual polish pass**
-   - Unified page titles: all routes now use "Geovanni & Addison" instead of "Geo & Partner".
-   - Made placeholder content honest: wedding party shows "Names to be announced" and registry placeholders show "Details coming soon" instead of broken links.
-   - Replaced generic `picsum.photos` placeholders in `/our-story` with real engagement photos.
-   - Updated server functions to the current `.validator()` API (cleaner build output).
+- `invites` — unused
+- `guests` — unused
+- `rsvp_submissions` — unused (this is what I falsely claimed was live last message)
+- `app_config` — unused (RSVP deadline is hardcoded in the translations file instead)
 
-3. **Photo gallery improvement**
-   - Added a new `Lightbox` component with keyboard navigation (Esc, ←, →) and a caption bar.
-   - Wired the lightbox into `/photos` and the home page gallery.
-   - Changed `/photos` layout to a CSS masonry-style `columns` grid.
-   - Improved the empty state with a framed placeholder and a nudge to share photos.
+Everything else is in use: `guest_photos` table, `user_roles` table, `guest-photos` storage bucket, all 5 server functions, all 10 MCP tools.
 
-4. **Final check**
-   - Full production build passes.
-   - MCP manifest extracts cleanly with 10 tools.
-   - All pages pass the responsive overflow audit.
+## What's duplicated in code (and how it shows up)
 
-### ⏳ Waiting on you
+1. **Registry list — defined 3 times with slightly different wording**
+   - Home page, `/registry` page, and MCP tool each have their own copy
+   - Home page has a broken `href: "#"` on the Honeymoon Fund; other two correctly have no link
+   - Honeymoon Fund note reads "after we say I do" on home, "after the barn cools down" everywhere else
 
-- **More photos**: upload them directly in this chat — up to 10 images per message, up to 20 MB each works best. For a big batch, a Google Drive / Dropbox link is fine too. I'll place them in the hero, `/our-story`, `/photos`, `/rsvp`, or `/wedding-party` and migrate them to the Lovable CDN for fast loading.
-- **Real wedding party names and roles** so I can replace the placeholder cards.
-- **Real registry links** (Honeymoon Fund, Local charity) so I can make those cards clickable.
-- **Venue address / exact map pin** for Sparks' Barn if you want the map to point directly at it instead of Louisville, NE.
+2. **Wedding party — defined 2 times, same names**
+   - Once in `/wedding-party` page, once in MCP tool
+   - Also: the page displays real names in cards but the intro text still says "Names to be announced" — contradicts itself
 
-### Out of scope
+3. **Photo upload form — built 2 times**
+   - Modal component used on home page
+   - Separate second form on `/photos` page
+   - Both work, both hit the same backend, but any future change has to be made in both places
 
-- No new AI chatbot or external MCP connection work yet.
-- No schema changes or new backend features.
-- No big redesign unless you ask for one later.
+4. **RSVP button label — 3 different strings** for the same Knot link ("RSVP now", "RSVP on The Knot", "RSVP on The Knot ↗")
+
+5. **Our Story page** — has a hardcoded headline ("From a Tuesday to forever.") and lead paragraph not in the translations file. This is where the "Tuesday" you remembered lives — it's still there on `/our-story`, just not on the home page's story section. Not a duplicate, but worth knowing.
+
+## Proposed fixes
+
+- **Drop the 4 unused tables** via migration (`invites`, `guests`, `rsvp_submissions`, `app_config`) so the backend matches what the site actually does
+- **Single source of truth for registry** — one list imported by home page, registry page, and MCP tool; fix Honeymoon Fund link and pick one note
+- **Single source of truth for wedding party** — same treatment; remove the "Names to be announced" line since real names are shown
+- **Consolidate photo upload** — reuse the `PhotoUploadModal` component on the `/photos` page instead of the parallel form
+- **Standardize RSVP button label** to one string across all three spots
+- **Confirm Our Story copy** — decide whether the "From a Tuesday to forever" headline stays or gets replaced (I won't touch it without your OK since it's your voice)
+
+## Out of scope
+
+- No new features, no design changes, no visual redesign
+- Not touching the Knot RSVP or Zola placeholder URLs — separate conversation
+- Not touching any live/used table or function
+
+## What I need from you before/during build
+
+- **OK to drop the 4 unused tables?** (Nothing on the site uses them; safe to remove.)
+- **Which Honeymoon Fund note wording do you want** — "after we say I do" or "after the barn cools down"?
+- **Keep "From a Tuesday to forever" on the Our Story page?** Yes / rewrite / I'll send new copy
