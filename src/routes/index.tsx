@@ -394,15 +394,28 @@ function Home() {
           <div className="mt-10 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {photos.map((p, i) => (
               <Reveal key={p.id} variant="scale" delay={i * 40}>
-                <a href={p.url} target="_blank" rel="noopener" className="block overflow-hidden group relative">
+                <button
+                  onClick={() => openLightbox(i)}
+                  className="block w-full overflow-hidden group relative text-left focus:outline-none focus:ring-2 focus:ring-primary/50"
+                >
                   <img src={p.url} alt={p.caption ?? ""} loading="lazy" className="w-full h-auto object-cover aspect-square transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/20 transition-colors duration-500" />
-                </a>
+                </button>
               </Reveal>
             ))}
           </div>
         )}
       </section>
+
+      {lightboxIndex !== null && (
+        <Lightbox
+          photos={photos}
+          currentIndex={lightboxIndex}
+          onClose={closeLightbox}
+          onNext={nextPhoto}
+          onPrev={prevPhoto}
+        />
+      )}
 
       {/* ============ REGISTRY ============ */}
       <section id="registry" className="relative py-20 bg-accent/10 border-y border-accent/20">
