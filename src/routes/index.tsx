@@ -254,10 +254,11 @@ function Home() {
               <ul className="mt-6">
                 {t.details.schedule.map((s, i) => (
                   <Reveal key={i} delay={80 + i * 40}>
-                    <li className="grid grid-cols-[100px_1fr] gap-6 items-baseline py-4 border-t border-primary-foreground/15">
-                      <span className="font-serif italic text-2xl text-accent tabular-nums">{s.time}</span>
-                      <span className="text-primary-foreground/90 text-lg font-serif">{s.label}</span>
+                    <li className="grid grid-cols-[80px_1fr] sm:grid-cols-[100px_1fr] gap-4 sm:gap-6 items-baseline py-4 border-t border-primary-foreground/15">
+                      <span className="font-serif italic text-xl sm:text-2xl text-accent tabular-nums">{s.time}</span>
+                      <span className="text-primary-foreground/90 text-base sm:text-lg font-serif">{s.label}</span>
                     </li>
+
                   </Reveal>
                 ))}
               </ul>
