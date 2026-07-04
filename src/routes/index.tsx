@@ -116,12 +116,14 @@ function Home() {
               </p>
               <div className="flex flex-wrap items-center gap-6 pt-2">
                 <Magnetic strength={0.25}>
-                  <Link
-                    to="/rsvp"
+                  <a
+                    href={SITE.rsvpUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="inline-block border border-primary bg-primary text-primary-foreground px-8 py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-transparent hover:text-primary transition-colors"
                   >
-                    {t.home.rsvpCta}
-                  </Link>
+                    {t.home.rsvpCta} ↗
+                  </a>
                 </Magnetic>
                 <a
                   href="#countdown"
@@ -460,15 +462,18 @@ function Home() {
           <Reveal delay={400}>
             <div className="mt-12 flex flex-col items-center gap-6">
               <Magnetic strength={0.3}>
-                <Link
-                  to="/rsvp"
+                <a
+                  href={SITE.rsvpUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-block border border-primary bg-primary text-primary-foreground px-10 py-4 text-[11px] uppercase tracking-[0.35em] hover:bg-transparent hover:text-primary transition-colors"
                 >
-                  {t.home.rsvpCta}
-                </Link>
+                  RSVP on The Knot ↗
+                </a>
               </Magnetic>
+              <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Opens theknot.com — {t.rsvp.deadlineLine.toLowerCase()}</p>
               <div className="draw-line h-px w-24 bg-accent origin-left" />
-              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{t.rsvp.deadlineLine}</p>
+              <Link to="/rsvp" className="text-[10px] uppercase tracking-[0.3em] text-primary link-underline">More details →</Link>
             </div>
           </Reveal>
         </div>
