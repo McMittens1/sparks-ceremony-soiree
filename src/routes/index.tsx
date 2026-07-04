@@ -13,6 +13,7 @@ import { SplitText } from "@/components/site/SplitText";
 import { Magnetic } from "@/components/site/Magnetic";
 import { StoryTimeline } from "@/components/site/StoryTimeline";
 import { listApprovedPhotos, type GalleryPhoto } from "@/lib/photos.functions";
+import { REGISTRY as registryItems } from "@/lib/wedding-data";
 
 import eng74 from "@/assets/engagement/Geo_AddiEngagement-74.jpg.asset.json";
 import eng06 from "@/assets/engagement/Geo_AddiEngagement-06.jpg.asset.json";
@@ -32,11 +33,6 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-const registryItems = [
-  { name: "Zola", href: "https://zola.com", note: "Main registry — dishes, linens, the boring good stuff." },
-  { name: "Honeymoon Fund", href: "#", note: "A weekend somewhere warm after we say I do." },
-  { name: "Local charity", href: "#", note: "In lieu of a gift, a Lincoln food bank we care about." },
-];
 
 function Home() {
   const t = useT();
