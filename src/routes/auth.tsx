@@ -28,7 +28,7 @@ function AuthPage() {
 
   async function goAdmin() {
     try { await claim(); } catch {}
-    nav({ to: "/_authenticated/admin" as string });
+    nav({ to: "/admin" });
   }
 
   async function onSubmit(e: React.FormEvent) {
