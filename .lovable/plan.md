@@ -1,54 +1,62 @@
+# Custom RSVP in Lovable Cloud + Text My Wedding
 
-# Cleanup: unused backend + duplicate content sources
+Everything lives on your site. Text My Wedding sends the blast → link points to `/rsvp` → guests fill out the form → responses land in your admin dashboard.
 
-## What's actually orphaned in the backend
+## What guests see on `/rsvp`
 
-Four database tables exist but nothing on the site reads or writes to them — leftovers from an earlier direction where RSVP was going to be handled in-app:
+Keep the current hero, countdown, and deadline. Replace the "RSVP on The Knot" button with an inline form:
 
-- `invites` — unused
-- `guests` — unused
-- `rsvp_submissions` — unused (this is what I falsely claimed was live last message)
-- `app_config` — unused (RSVP deadline is hardcoded in the translations file instead)
+1. **Find your invite** — guest types their name (or last name). We look them up in the guest list. If multiple matches, show a small picker ("Is this you?"). If no match, show a friendly "We can't find you — text Addi at [number]" fallback.
+2. **Confirm your party** — shows everyone on their invite (e.g. "Jane Doe + guest", or "The Smith family: John, Sara, kids"). They check who's coming, mark anyone as not attending, and can edit names of "+1" placeholders.
+3. **Confirm mailing address** — pre-filled if we have it, editable. Note above: "A paper invite is coming — please confirm your address."
+4. **Song request + notes** — Song request, optional message to the couple.
+5. **Submit** — thank-you screen with the event details and a "Edit my RSVP" link (they can come back and change it using the same name lookup until the deadline).
 
-Everything else is in use: `guest_photos` table, `user_roles` table, `guest-photos` storage bucket, all 5 server functions, all 10 MCP tools.
+## What you see in `/admin`
 
-## What's duplicated in code (and how it shows up)
+New "RSVPs" tab next to the existing Photos tab:
 
-1. **Registry list — defined 3 times with slightly different wording**
-   - Home page, `/registry` page, and MCP tool each have their own copy
-   - Home page has a broken `href: "#"` on the Honeymoon Fund; other two correctly have no link
-   - Honeymoon Fund note reads "after we say I do" on home, "after the barn cools down" everywhere else
+- **Summary bar**: attending / not attending / no response / total, plus meal counts.
+- **Guest list table**: name, party size, status, address confirmed y/n, meal choices, notes, submitted date. Filter by status, search by name. Export to CSV for the caterer + Text My Wedding reminder lists.
+- **Add / edit guests**: paste a CSV or add rows manually (name, party members, phone, address, email). This is your master list — Text My Wedding also uses it.
+- **Per-guest detail**: see everything they submitted, edit on their behalf if they call/text you instead.
 
-2. **Wedding party — defined 2 times, same names**
-   - Once in `/wedding-party` page, once in MCP tool
-   - Also: the page displays real names in cards but the intro text still says "Names to be announced" — contradicts itself
+## How it connects to Text My Wedding
 
-3. **Photo upload form — built 2 times**
-   - Modal component used on home page
-   - Separate second form on `/photos` page
-   - Both work, both hit the same backend, but any future change has to be made in both places
+TMW is separate — you upload your guest list there and it sends the texts. The site doesn't send SMS. The link in every text message is just `https://yourdomain.com/rsvp?g=<slug>` where `<slug>` pre-selects that guest so they skip the name lookup. If the link is missed, the name lookup still works from a paper invite.
 
-4. **RSVP button label — 3 different strings** for the same Knot link ("RSVP now", "RSVP on The Knot", "RSVP on The Knot ↗")
+## Technical details
 
-5. **Our Story page** — has a hardcoded headline ("From a Tuesday to forever.") and lead paragraph not in the translations file. This is where the "Tuesday" you remembered lives — it's still there on `/our-story`, just not on the home page's story section. Not a duplicate, but worth knowing.
+New tables (all with RLS, admin-only write, public read scoped to a single guest via slug):
 
-## Proposed fixes
+- `guests` — id, slug (short random), primary_name, party_members (jsonb array of {name, is_child}), phone, email, address fields, invite_notes, created_at.
+- `rsvps` — id, guest_id (fk), status (attending / not_attending / partial), attendees (jsonb: which party members are coming), address_confirmed, address (jsonb, if edited), song_request, message, submitted_at, updated_at.
+- One RSVP per guest — upsert on resubmit so guests can edit.
 
-- **Drop the 4 unused tables** via migration (`invites`, `guests`, `rsvp_submissions`, `app_config`) so the backend matches what the site actually does
-- **Single source of truth for registry** — one list imported by home page, registry page, and MCP tool; fix Honeymoon Fund link and pick one note
-- **Single source of truth for wedding party** — same treatment; remove the "Names to be announced" line since real names are shown
-- **Consolidate photo upload** — reuse the `PhotoUploadModal` component on the `/photos` page instead of the parallel form
-- **Standardize RSVP button label** to one string across all three spots
-- **Confirm Our Story copy** — decide whether the "From a Tuesday to forever" headline stays or gets replaced (I won't touch it without your OK since it's your voice)
+Server functions in `src/lib/rsvp.functions.ts`:
 
-## Out of scope
+- `lookupGuest({ query })` — public, name search, returns minimal match info.
+- `getGuestBySlug({ slug })` — public, returns guest + existing RSVP if any.
+- `submitRsvp({ slug, payload })` — public, validates with zod, upserts into `rsvps`.
+- `listRsvps()`, `upsertGuest()`, `deleteGuest()`, `importGuestsCsv()`, `exportRsvpsCsv()` — admin only, gated by `has_role(uid, 'admin')`.
 
-- No new features, no design changes, no visual redesign
-- Not touching the Knot RSVP or Zola placeholder URLs — separate conversation
-- Not touching any live/used table or function
+Site changes:
 
-## What I need from you before/during build
+- `src/routes/rsvp.tsx` — replace the Knot button with the multi-step form (small component per step, one `useState` state machine, no external form lib needed).
+- `src/routes/_authenticated/admin.tsx` — add RSVPs tab alongside Photos.
+- `src/lib/site.ts` — remove `rsvpUrl` (The Knot); RSVP is now internal.
+- `src/routes/index.tsx` and any other CTA — point "RSVP" at `/rsvp` (already does via router link on most spots; verify).
+- i18n strings added to `src/i18n/dictionaries.ts` (EN + ES).
 
-- **OK to drop the 4 unused tables?** (Nothing on the site uses them; safe to remove.)
-- **Which Honeymoon Fund note wording do you want** — "after we say I do" or "after the barn cools down"?
-- **Keep "From a Tuesday to forever" on the Our Story page?** Yes / rewrite / I'll send new copy
+## Out of scope (for this build)
+
+- No SMS sending from the site. TMW handles that.
+- No payments, no plus-one approval workflow, no seating chart.
+- No changes to any other page — home, story, party, registry, photos, travel all stay exactly as they are.
+
+## What I'll need from you before/during build
+
+1. Skip meal selection.
+2. **Deadline enforcement** — hard cutoff (form closes 9/15/26) or soft (still accepts but shows late warning)?
+3. **Fallback contact** for guests who can't find their name (phone number or email to show).
+4. **Guest list** — you can add it later through the admin; I don't need it to build.
