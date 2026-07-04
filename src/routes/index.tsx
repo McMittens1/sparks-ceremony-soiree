@@ -95,7 +95,7 @@ function Home() {
           </div>
 
           {/* Right: typographic stack */}
-          <div className="col-span-12 lg:col-span-6 relative z-20 order-1 lg:order-2 lg:-ml-16">
+          <div className="col-span-12 lg:col-span-6 relative z-20 order-1 lg:order-2 xl:-ml-16">
             <p className="text-[10px] uppercase tracking-[0.4em] text-accent animate-rise" style={{ animationDelay: "0.1s" }}>
               {t.home.kicker}
             </p>
