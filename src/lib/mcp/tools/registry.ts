@@ -1,10 +1,8 @@
 import { defineTool } from "@lovable.dev/mcp-js";
+import { REGISTRY } from "@/lib/wedding-data";
 
-const REGISTRY = [
-  { name: "Zola", url: "https://zola.com", note: "Main registry — dishes, linens, the boring good stuff." },
-  { name: "Honeymoon Fund", url: null, note: "A weekend somewhere warm after the barn cools down." },
-  { name: "Local charity", url: null, note: "In lieu of a gift, a Lincoln food bank we care about." },
-];
+// Shape adapter: MCP consumers expect `url` (not `href`).
+const items = REGISTRY.map((r) => ({ name: r.name, url: r.href, note: r.note }));
 
 export default defineTool({
   name: "get_registry_links",
@@ -13,7 +11,7 @@ export default defineTool({
   inputSchema: {},
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: () => ({
-    content: [{ type: "text", text: JSON.stringify(REGISTRY) }],
-    structuredContent: { items: REGISTRY },
+    content: [{ type: "text", text: JSON.stringify(items) }],
+    structuredContent: { items },
   }),
 });

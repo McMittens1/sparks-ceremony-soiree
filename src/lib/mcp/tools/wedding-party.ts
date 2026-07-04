@@ -1,13 +1,5 @@
 import { defineTool } from "@lovable.dev/mcp-js";
-
-const PARTY = [
-  { name: "Maria S.", role: "Maid of Honor" },
-  { name: "Jordan T.", role: "Best Man" },
-  { name: "Ashley R.", role: "Bridesmaid" },
-  { name: "Sam L.", role: "Groomsman" },
-  { name: "Priya N.", role: "Bridesmaid" },
-  { name: "Diego M.", role: "Groomsman" },
-];
+import { PARTY } from "@/lib/wedding-data";
 
 export default defineTool({
   name: "get_wedding_party",

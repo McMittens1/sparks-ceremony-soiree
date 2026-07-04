@@ -502,7 +502,7 @@ function Home() {
                   rel="noopener noreferrer"
                   className="inline-block border border-primary bg-primary text-primary-foreground px-10 py-4 text-[11px] uppercase tracking-[0.35em] hover:bg-transparent hover:text-primary transition-colors"
                 >
-                  RSVP on The Knot ↗
+                  {t.home.rsvpCta} ↗
                 </a>
               </Magnetic>
               <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Opens theknot.com — {t.rsvp.deadlineLine.toLowerCase()}</p>
