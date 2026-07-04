@@ -278,9 +278,9 @@ export const listGuestsWithRsvps = createServerFn({ method: "POST" })
     for (const r of rsvps ?? []) {
       rsvpByGuest.set(r.guest_id, {
         status: r.status as PublicRsvp["status"],
-        attendees: Array.isArray(r.attendees) ? (r.attendees as AttendeeChoice[]) : [],
+        attendees: (Array.isArray(r.attendees) ? (r.attendees as unknown as AttendeeChoice[]) : []),
         address_confirmed: !!r.address_confirmed,
-        address: (r.address as GuestAddress | null) ?? null,
+        address: (r.address as unknown as GuestAddress | null) ?? null,
         song_request: r.song_request,
         message: r.message,
         submitted_at: r.submitted_at,
@@ -291,7 +291,7 @@ export const listGuestsWithRsvps = createServerFn({ method: "POST" })
       id: g.id,
       slug: g.slug,
       primary_name: g.primary_name,
-      party_members: Array.isArray(g.party_members) ? (g.party_members as PartyMember[]) : [],
+      party_members: Array.isArray(g.party_members) ? (g.party_members as unknown as PartyMember[]) : [],
       phone: g.phone,
       email: g.email,
       address_line1: g.address_line1,
