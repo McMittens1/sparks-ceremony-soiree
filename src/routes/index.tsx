@@ -424,22 +424,36 @@ function Home() {
             <p className="mt-6 max-w-xl text-foreground/70 text-lg font-serif italic">{t.registry.lead}</p>
           </Reveal>
           <div className="mt-10 grid gap-6 md:grid-cols-3">
-            {registryItems.map((it, i) => (
-              <Reveal key={it.name} variant="blur" delay={i * 120}>
-                <a
-                  href={it.href}
-                  target="_blank"
-                  rel="noopener"
-                  className="relative block bg-background border border-accent/30 p-8 transition-all hover:-translate-y-2 hover:shadow-2xl h-full group overflow-hidden"
-                >
+            {registryItems.map((it, i) => {
+              const cardInner = (
+                <>
                   <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-accent to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-700 origin-left" />
                   <div className="text-[10px] uppercase tracking-[0.3em] text-accent">{String(i + 1).padStart(2, "0")}</div>
                   <div className="mt-4 editorial-heading text-4xl transition-transform duration-500 group-hover:translate-x-1">{it.name}</div>
                   <p className="mt-4 text-sm text-foreground/75 leading-relaxed">{it.note}</p>
-                  <div className="mt-8 text-[10px] uppercase tracking-[0.3em] text-primary link-underline">Visit →</div>
-                </a>
-              </Reveal>
-            ))}
+                  <div className="mt-8 text-[10px] uppercase tracking-[0.3em] text-primary link-underline">
+                    {it.href ? "Visit →" : "Details coming soon"}
+                  </div>
+                </>
+              );
+              const baseClass = "relative block bg-background border border-accent/30 p-8 transition-all h-full group overflow-hidden";
+              return (
+                <Reveal key={it.name} variant="blur" delay={i * 120}>
+                  {it.href ? (
+                    <a
+                      href={it.href}
+                      target="_blank"
+                      rel="noopener"
+                      className={`${baseClass} hover:-translate-y-2 hover:shadow-2xl`}
+                    >
+                      {cardInner}
+                    </a>
+                  ) : (
+                    <div className={baseClass}>{cardInner}</div>
+                  )}
+                </Reveal>
+              );
+            })}
           </div>
         </div>
       </section>
