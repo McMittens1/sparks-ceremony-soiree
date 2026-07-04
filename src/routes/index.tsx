@@ -10,6 +10,7 @@ import { SectionRail } from "@/components/site/SectionRail";
 import { Parallax } from "@/components/site/Parallax";
 import { SplitText } from "@/components/site/SplitText";
 import { Magnetic } from "@/components/site/Magnetic";
+import { StoryTimeline } from "@/components/site/StoryTimeline";
 import { listApprovedPhotos, type GalleryPhoto } from "@/lib/photos.functions";
 
 import eng74 from "@/assets/engagement/Geo_AddiEngagement-74.jpg.asset.json";
