@@ -466,7 +466,7 @@ function Home() {
       </section>
 
       {/* ============ FINAL CTA ============ */}
-      <section className="relative py-32 text-center border-t border-accent/20 overflow-hidden">
+      <section className="relative py-20 sm:py-28 lg:py-32 text-center border-t border-accent/20 overflow-hidden">
         <div aria-hidden className="absolute inset-0 -z-10">
           <img src={eng10.url} alt="" className="h-full w-full object-cover object-center opacity-20" />
           <div className="absolute inset-0 bg-gradient-to-b from-background via-background/70 to-background" />
