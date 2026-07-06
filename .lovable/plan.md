@@ -1,37 +1,38 @@
 
-Home already has every section inline, and the header nav already scrolls to them via hash anchors (`#story`, `#details`, `#party`, `#travel`, `#photos`, `#registry`, `#faq`) — not links to separate pages. The standalone route files are pure duplicates that no in-site link points to.
+## Still open (in priority order)
 
-## Delete these duplicate route files
+**1. Wedding party names** — `src/lib/wedding-data.ts` still has seeded fakes (Maria S., Jordan T., Ashley R., Sam L., Priya N., Diego M.). The `#party` section on home renders these. Need real names + roles, or set to "to be announced" on both surfaces.
 
-- `src/routes/our-story.tsx`
-- `src/routes/details.tsx`
-- `src/routes/wedding-party.tsx`
-- `src/routes/travel.tsx`
-- `src/routes/photos.tsx`
-- `src/routes/registry.tsx`
-- `src/routes/faq.tsx`
+**2. Registry links** — `wedding-data.ts`:
+- Zola link is generic `https://zola.com` — need your real Zola URL
+- Honeymoon Fund: no link, renders "Details coming soon"
+- Local charity: no link, renders "Details coming soon"
+- Send actual URLs, or tell me to drop the two placeholders.
 
-TanStack Router regenerates `routeTree.gen.ts` from the remaining files on next build. Nothing else needs to change.
+**3. Story chapter photos** — `StoryTimeline.tsx` cycles the same 8 engagement shots for every chapter via `pick(i, count)`. Chapters like "Odin comes around" / "Copper meets Odin" need real chapter-specific images. Send photos mapped to chapters when you have them.
 
-## Keep
+**4. Hotel / travel copy** — `dictionaries.ts` still says "We've held a small block at hotels in Plattsmouth and south Omaha…" Need real hotel name(s) + booking link(s), or a rewrite if there's no block.
 
-- `/` — the full scroll (all sections)
-- `/rsvp` — form flow, doesn't belong inline
-- `/auth`, `/_authenticated/admin` — sign-in + admin
-- `__root.tsx`, `/api/*`, `/[.mcp]/*`, `/[.well-known]/*` — shell + machine endpoints
+**5. RSVP address subtitle** — `rsvp.tsx` line ~317 currently says "A paper invite is on its way." Should probably be "Please confirm your address so future updates reach you." (or similar) since paper invites are going out separately.
 
-## What stays the same
+**6. FAQ re-read** — 6 generic Q&As in `dictionaries.ts` `faq.items`. Especially plus-ones and kids policy — worth confirming they match your actual answers.
 
-- Header nav — already hash-anchor scrolling, unchanged.
-- SectionRail (right-side spine) — already anchors to `#home`, `#story`, etc., unchanged.
-- All section content and copy — unchanged.
+**7. Spanish mirror** — every EN edit above needs the matching ES string updated in `dictionaries.ts`.
 
-## What this does NOT touch
+## Then: pre-publish verification
 
-Content edits still pending (wedding party names, registry links, hotel copy, RSVP address subtitle, per-chapter story photos, Spanish mirror) — separate follow-ups after you send inputs.
+- End-to-end RSVP test: create a fake invite in admin → submit as guest → confirm it lands.
+- Photo upload + admin moderation dry-run.
+- Quick pass on `#details` values (date `2026-10-10 17:00`, venue "Sparks' Barn, Louisville, NE", deadline `2026-09-15`, dress code colors).
 
-## Optional (my vote: skip)
+## Nice-to-have (can wait for after publish)
 
-Redirect old paths like `/registry` → `/#registry` for anyone with an old link. Since the site isn't published yet, there's nothing to preserve. Skip.
+- Per-route (well, per-section) `og:image` using the hero
+- RSVP confirmation email (needs custom domain first)
+- 404 copy polish
 
-Approve and I'll delete the 7 files in one pass.
+## My suggestion
+
+Fastest path to publish: **send me items 1, 2, 4, 5 as text and I'll knock them out in one pass**, then mirror ES, then run the RSVP/photo test. Story photos (#3) can slot in whenever you're ready — they don't block launch, they just make the timeline stronger.
+
+Which do you want to start with?
