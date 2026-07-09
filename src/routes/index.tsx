@@ -15,9 +15,9 @@ import { StoryTimeline } from "@/components/site/StoryTimeline";
 import { listApprovedPhotos, type GalleryPhoto } from "@/lib/photos.functions";
 import { REGISTRY as registryItems, PARTY } from "@/lib/wedding-data";
 
+import heroCouple from "@/assets/hero/hero-couple.jpg.asset.json";
 import favorite from "@/assets/engagement/Favorite.jpg.asset.json";
 import eng74 from "@/assets/engagement/Geo_AddiEngagement-74.jpg.asset.json";
-import eng06 from "@/assets/engagement/Geo_AddiEngagement-06.jpg.asset.json";
 import eng94 from "@/assets/engagement/Geo_AddiEngagement-94.jpg.asset.json";
 import eng82 from "@/assets/engagement/Geo_AddiEngagement-82.jpg.asset.json";
 import eng75 from "@/assets/engagement/Geo_AddiEngagement-75.jpg.asset.json";
@@ -26,8 +26,8 @@ import eng19 from "@/assets/engagement/Geo_AddiEngagement-19.jpg.asset.json";
 import eng15 from "@/assets/engagement/Geo_AddiEngagement-15.jpg.asset.json";
 import eng13 from "@/assets/engagement/Geo_AddiEngagement-13.jpg.asset.json";
 import eng10 from "@/assets/engagement/Geo_AddiEngagement-10.jpg.asset.json";
-const hero = favorite.url;
-const florals = eng06.url;
+const hero = heroCouple.url;
+const heroDesktop = favorite.url;
 const engagementStrip = [eng74, eng94, eng82, eng75, eng27, eng19, eng15, eng13, eng10];
 
 export const Route = createFileRoute("/")({
@@ -68,142 +68,132 @@ function Home() {
   return (
     <div id="home">
       <SectionRail />
-      {/* ============ HERO — Cinematic Editorial Masthead ============ */}
-      <section className="relative px-4 py-6 sm:p-6 md:p-12 overflow-hidden bg-background">
-        <div className="mx-auto max-w-[1600px] w-full grid grid-cols-12 gap-0 border border-tan/25">
+      {/* ============ HERO — Cinematic B&W (mobile) ============ */}
+      <section className="relative md:hidden h-[100svh] min-h-[640px] w-full overflow-hidden bg-black text-white">
+        <img
+          src={hero}
+          alt="Geovanni Moreno and Addison Hillman."
+          className="absolute inset-0 h-full w-full object-cover grayscale contrast-[1.05] animate-rise"
+          style={{ animationDuration: "1.6s" }}
+          loading="eager"
+          fetchPriority="high"
+          decoding="async"
+          width={1332}
+          height={999}
+        />
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/10 to-black/90" />
+        <div aria-hidden className="absolute inset-0 grain pointer-events-none" />
 
-          {/* Metadata rail (mono) */}
-          <div className="col-span-12 md:col-span-1 flex md:flex-col justify-between items-center py-4 md:py-8 px-4 md:px-0 border-b md:border-b-0 md:border-r border-tan/30">
+        {/* Top meta */}
+        <div className="relative z-10 flex items-center justify-between px-5 pt-5 font-mono text-[9px] uppercase tracking-[0.35em] text-white/85 animate-rise" style={{ animationDelay: "0.2s" }}>
+          <span>Est. MMXXVI</span>
+          <span className="flex items-center gap-2">
+            <span>10</span><span className="text-white/50">·</span><span>10</span><span className="text-white/50">·</span><span>26</span>
+          </span>
+        </div>
+
+        {/* Bottom lockup */}
+        <div className="absolute inset-x-0 bottom-0 z-10 px-5 pb-8">
+          <p
+            className="font-mono text-[9px] uppercase tracking-[0.4em] text-white/70 animate-rise"
+            style={{ animationDelay: "0.35s" }}
+          >
+            {t.home.kicker}
+          </p>
+          <h1 aria-label="Geovanni and Addison" className="mt-3 font-serif leading-[0.85] text-white">
             <span
-              className="font-mono text-[10px] tracking-[0.35em] text-foreground/60 uppercase md:-rotate-90 md:origin-center whitespace-nowrap animate-rise"
-              style={{ animationDelay: "0.1s" }}
+              className="block text-[3.5rem] tracking-tight animate-rise"
+              style={{ animationDelay: "0.5s" }}
             >
-              Est. MMXXVI
+              Geovanni
             </span>
+            <span
+              className="block italic text-[3rem] text-white/90 ml-6 mt-1 animate-rise"
+              style={{ animationDelay: "0.7s" }}
+            >
+              &amp; Addison
+            </span>
+          </h1>
+
+          <div className="mt-6 flex items-center gap-3 animate-rise" style={{ animationDelay: "0.9s" }}>
+            <div className="h-px w-8 bg-white/60" />
+            <p className="font-mono text-[9px] uppercase tracking-[0.32em] text-white/80">
+              {SITE.venue} · Louisville, NE
+            </p>
+          </div>
+
+          <div className="mt-7 flex items-center gap-5 animate-rise" style={{ animationDelay: "1.05s" }}>
+            <Link
+              to="/rsvp"
+              search={{}}
+              className="inline-block px-7 py-3.5 border border-white text-white text-[10px] uppercase tracking-[0.3em] font-medium hover:bg-white hover:text-black transition-colors duration-500"
+            >
+              {t.home.rsvpCta}
+            </Link>
+            <a
+              href="#countdown"
+              className="text-[10px] uppercase tracking-[0.3em] text-white/80 link-underline"
+            >
+              {t.home.detailsCta} ↓
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ============ HERO — Editorial Masthead (desktop) ============ */}
+      <section className="relative hidden md:block p-6 md:p-12 overflow-hidden bg-background">
+        <div className="mx-auto max-w-[1600px] w-full grid grid-cols-12 gap-0 border border-tan/25">
+          <div className="col-span-12 md:col-span-1 flex md:flex-col justify-between items-center py-4 md:py-8 px-4 md:px-0 border-b md:border-b-0 md:border-r border-tan/30">
+            <span className="font-mono text-[10px] tracking-[0.35em] text-foreground/60 uppercase md:-rotate-90 md:origin-center whitespace-nowrap animate-rise" style={{ animationDelay: "0.1s" }}>Est. MMXXVI</span>
             <div className="font-mono flex md:flex-col items-center gap-3 md:gap-4 text-[11px] text-foreground font-medium animate-rise" style={{ animationDelay: "0.2s" }}>
-              <span>10</span>
-              <span className="text-lavender">—</span>
-              <span className="text-tan">10</span>
-              <span className="text-lavender">—</span>
-              <span>26</span>
+              <span>10</span><span className="text-lavender">—</span><span className="text-tan">10</span><span className="text-lavender">—</span><span>26</span>
             </div>
           </div>
 
-          {/* Main split */}
           <div className="col-span-12 md:col-span-11 grid grid-cols-1 md:grid-cols-11">
-
-            {/* Typographic column */}
             <div className="md:col-span-5 flex flex-col justify-center px-6 md:px-12 lg:px-16 py-14 md:py-16 z-10 order-2 md:order-1">
-              <p
-                className="font-mono text-[10px] uppercase tracking-[0.35em] text-tan animate-rise"
-                style={{ animationDelay: "0.15s" }}
-              >
-                {t.home.kicker}
-              </p>
-              <h1
-                aria-label="Geovanni and Addison"
-                className="mt-5 font-serif leading-[0.82] text-foreground flex flex-col"
-              >
-                <span
-                  className="text-6xl sm:text-7xl md:text-[6.5rem] lg:text-[8.5rem] tracking-tight animate-rise"
-                  style={{ animationDelay: "0.25s" }}
-                >
-                  Geovanni
-                </span>
-                <span
-                  className="italic text-lavender text-5xl sm:text-6xl md:text-[5.5rem] lg:text-[7rem] ml-8 md:ml-14 lg:ml-20 mt-1 animate-rise"
-                  style={{ animationDelay: "0.4s" }}
-                >
-                  &amp; Addison
-                </span>
+              <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-tan animate-rise" style={{ animationDelay: "0.15s" }}>{t.home.kicker}</p>
+              <h1 aria-label="Geovanni and Addison" className="mt-5 font-serif leading-[0.82] text-foreground flex flex-col">
+                <span className="text-6xl sm:text-7xl md:text-[6.5rem] lg:text-[8.5rem] tracking-tight animate-rise" style={{ animationDelay: "0.25s" }}>Geovanni</span>
+                <span className="italic text-lavender text-5xl sm:text-6xl md:text-[5.5rem] lg:text-[7rem] ml-8 md:ml-14 lg:ml-20 mt-1 animate-rise" style={{ animationDelay: "0.4s" }}>&amp; Addison</span>
               </h1>
-
               <div className="mt-10 sm:mt-14 space-y-8 animate-rise" style={{ animationDelay: "0.55s" }}>
                 <div className="flex items-start gap-4">
                   <div className="w-px h-12 bg-tan mt-1 shrink-0" />
                   <p className="text-[11px] uppercase tracking-[0.28em] leading-relaxed text-foreground/80">
-                    Celebrating at <span className="font-semibold text-foreground">{SITE.venue}</span>
-                    <br />
-                    Louisville, Nebraska
+                    Celebrating at <span className="font-semibold text-foreground">{SITE.venue}</span><br />Louisville, Nebraska
                   </p>
                 </div>
-
                 <div className="flex flex-wrap items-center gap-5">
                   <Magnetic strength={0.2}>
-                    <Link
-                      to="/rsvp"
-                      search={{}}
-                      className="inline-block px-9 py-4 border border-foreground text-foreground hover:bg-foreground hover:text-background transition-colors duration-500 text-[10px] uppercase tracking-[0.3em] font-medium"
-                    >
-                      {t.home.rsvpCta}
-                    </Link>
+                    <Link to="/rsvp" search={{}} className="inline-block px-9 py-4 border border-foreground text-foreground hover:bg-foreground hover:text-background transition-colors duration-500 text-[10px] uppercase tracking-[0.3em] font-medium">{t.home.rsvpCta}</Link>
                   </Magnetic>
-                  <a
-                    href="#countdown"
-                    className="text-[10px] uppercase tracking-[0.3em] text-foreground/70 link-underline"
-                  >
-                    {t.home.detailsCta} →
-                  </a>
+                  <a href="#countdown" className="text-[10px] uppercase tracking-[0.3em] text-foreground/70 link-underline">{t.home.detailsCta} →</a>
                 </div>
               </div>
             </div>
 
-            {/* Cinematic image */}
             <div className="md:col-span-6 relative order-1 md:order-2">
               <div className="aspect-[4/5] md:aspect-auto md:h-[86vh] overflow-hidden bg-muted">
-                <img
-                  src={hero}
-                  alt="Geovanni Moreno and Addison Hillman."
-                  className="h-full w-full object-cover animate-rise"
-                  style={{ animationDelay: "0.1s", animationDuration: "1.4s" }}
-                  loading="eager"
-                  fetchPriority="high"
-                  decoding="async"
-                  width={1920}
-                  height={2400}
-                />
+                <img src={heroDesktop} alt="Geovanni Moreno and Addison Hillman." className="h-full w-full object-cover animate-rise" style={{ animationDelay: "0.1s", animationDuration: "1.4s" }} loading="eager" fetchPriority="high" decoding="async" width={1920} height={2400} />
               </div>
-
-              {/* Lavender accent label */}
               <div className="absolute top-0 right-0 bg-lavender px-4 py-2 hidden md:block animate-rise" style={{ animationDelay: "0.7s" }}>
-                <span className="font-mono text-[9px] text-background uppercase tracking-[0.25em] font-bold">
-                  MMXXVI
-                </span>
+                <span className="font-mono text-[9px] text-background uppercase tracking-[0.25em] font-bold">MMXXVI</span>
               </div>
-
-              {/* Coordinates plate */}
               <div className="absolute -bottom-6 -left-6 md:-left-10 bg-background p-6 md:p-8 hidden md:block border border-tan/30 shadow-2xl z-20 animate-rise" style={{ animationDelay: "0.85s" }}>
                 <div className="font-mono text-[10px] space-y-2 text-foreground min-w-[180px]">
-                  <div className="flex justify-between gap-6 border-b border-tan/25 pb-1.5">
-                    <span className="text-foreground/60">LOC</span>
-                    <span className="font-semibold">40.9997° N</span>
-                  </div>
-                  <div className="flex justify-between gap-6">
-                    <span className="text-foreground/60">DAT</span>
-                    <span className="font-semibold">10.10.2026</span>
-                  </div>
+                  <div className="flex justify-between gap-6 border-b border-tan/25 pb-1.5"><span className="text-foreground/60">LOC</span><span className="font-semibold">40.9997° N</span></div>
+                  <div className="flex justify-between gap-6"><span className="text-foreground/60">DAT</span><span className="font-semibold">10.10.2026</span></div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Bottom ornamental rail */}
           <div className="col-span-12 border-t border-tan/30 py-4 px-4 sm:px-6 flex flex-wrap gap-4 justify-between items-center bg-background">
-            <div className="font-mono text-[9px] uppercase tracking-[0.4em] text-tan">
-              Louisville · Nebraska · Two Thousand Twenty Six
-            </div>
-            <div className="hidden md:flex gap-6 font-mono text-[9px]">
-              <span className="text-foreground/40">[ 01 ]</span>
-              <span className="text-foreground/40">[ 02 ]</span>
-              <span className="text-foreground">[ 03 ]</span>
-            </div>
+            <div className="font-mono text-[9px] uppercase tracking-[0.4em] text-tan">Louisville · Nebraska · Two Thousand Twenty Six</div>
+            <div className="hidden md:flex gap-6 font-mono text-[9px]"><span className="text-foreground/40">[ 01 ]</span><span className="text-foreground/40">[ 02 ]</span><span className="text-foreground">[ 03 ]</span></div>
           </div>
         </div>
-
-        {/* Intro paragraph — separate breath below the masthead */}
-        <p className="mx-auto mt-14 sm:mt-20 max-w-2xl text-center text-foreground/75 leading-relaxed animate-rise px-6" style={{ animationDelay: "1s" }}>
-          {t.home.intro}
-        </p>
       </section>
 
 
