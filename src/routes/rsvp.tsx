@@ -314,7 +314,7 @@ function RsvpPage() {
               <section className="border border-accent/20 bg-card/60 backdrop-blur-sm p-6 sm:p-8">
                 <h2 className="font-serif text-2xl text-primary">Confirm your address</h2>
                 <p className="mt-2 text-sm text-foreground/75">
-                  A paper invite is on its way — please confirm your mailing address so we don't send it to the wrong place.
+                  Please confirm your mailing address so we can send thank-yous and any future updates to the right place.
                 </p>
                 <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <input

@@ -16,7 +16,9 @@ export interface Dict {
   party: { title: string; lead: string };
   travel: {
     title: string; lead: string; mapTitle: string;
+    addressLabel: string;
     hotelsTitle: string; hotelsBody: string;
+    hotelGroups: { area: string; drive: string; items: { name: string; city: string }[] }[];
     parkingTitle: string; parkingBody: string;
     weatherTitle: string; weatherLoading: string; weatherAvg: string;
     weatherHigh: string; weatherLow: string; weatherRain: string; weatherSunset: string;
@@ -95,10 +97,41 @@ const en: Dict = {
   party: { title: "Wedding Party", lead: "The friends and family standing with us that night." },
   travel: {
     title: "Getting There",
-    lead: "Louisville, Nebraska is about 25 minutes south of Omaha.",
+    lead: "Sparks' Barn is in Louisville, Nebraska — about 25 minutes south of Omaha and 40 minutes east of Lincoln.",
     mapTitle: "The venue on the map",
+    addressLabel: "Venue address",
     hotelsTitle: "Where to stay",
-    hotelsBody: "We've held a small block at hotels in Plattsmouth and south Omaha. Details will land here as we finalize.",
+    hotelsBody: "We haven't blocked rooms anywhere. Most out-of-town guests stay in Lincoln or Omaha — here are well-known options in each area.",
+    hotelGroups: [
+      {
+        area: "Closest to the venue (Plattsmouth)",
+        drive: "~15 min drive",
+        items: [
+          { name: "Cobblestone Inn & Suites", city: "Plattsmouth, NE" },
+          { name: "American Inn", city: "Plattsmouth, NE" },
+        ],
+      },
+      {
+        area: "Lincoln",
+        drive: "~40 min drive",
+        items: [
+          { name: "Graduate by Hilton Lincoln", city: "Downtown Lincoln" },
+          { name: "Hilton Garden Inn Lincoln Downtown / Haymarket", city: "Haymarket, Lincoln" },
+          { name: "Hyatt Place Lincoln / Haymarket", city: "Haymarket, Lincoln" },
+          { name: "Hampton Inn Lincoln South", city: "South Lincoln (near I-80)" },
+        ],
+      },
+      {
+        area: "Omaha / Airport (OMA)",
+        drive: "~30–40 min drive",
+        items: [
+          { name: "Hilton Omaha Downtown", city: "Downtown Omaha" },
+          { name: "Hyatt Place Omaha / Downtown - Old Market", city: "Old Market, Omaha" },
+          { name: "Hampton Inn & Suites Omaha - Downtown", city: "Downtown Omaha" },
+          { name: "Courtyard by Marriott Omaha East / Council Bluffs", city: "Near OMA airport" },
+        ],
+      },
+    ],
     parkingTitle: "Parking",
     parkingBody: "Free on-site parking. You can leave a car overnight if you're getting a ride home.",
     weatherTitle: "What to pack",
@@ -121,12 +154,13 @@ const en: Dict = {
   faq: {
     title: "FAQ", lead: "The questions we've been getting most.",
     items: [
-      { q: "Can I bring a plus-one?", a: "If your invite says +1 (or your party allows more than one guest on the RSVP page), yes. Otherwise please keep it to the named guests." },
-      { q: "Are kids welcome?", a: "Yes — you can add kids to your party on the RSVP page. Mark them as a child so we can plan headcount." },
-      { q: "What time should I arrive?", a: "Doors open at 4:30 PM. The ceremony starts at 5:00 PM sharp." },
-      { q: "What's the dress code?", a: "Cocktail attire in warm neutrals or lavender. Flats or block heels recommended — the ground is uneven." },
-      { q: "Is it indoors or outdoors?", a: "Ceremony is outdoors on the lawn, weather permitting. Dinner and dancing are inside the barn." },
-      { q: "Where should I stay?", a: "See the Travel page — we're finalizing a small block and will post details there." },
+      { q: "Where is the wedding?", a: "Sparks' Barn, 13817 108th St, Louisville, NE 68037 — about 25 minutes south of Omaha and 40 minutes east of Lincoln." },
+      { q: "Can I bring a plus-one?", a: "Only if your invitation names a plus-one or the RSVP page lets you add more than one guest. If you're not sure, RSVP with the names listed on your invite and reach out if something's missing." },
+      { q: "Are kids welcome?", a: "Yes. Add them to your party on the RSVP page and mark them as a child so we can plan headcount and meals." },
+      { q: "What time should I arrive?", a: "Doors open at 4:30 PM. The ceremony starts at 5:00 PM sharp — please be seated by 4:55." },
+      { q: "What's the dress code?", a: "Cocktail attire in warm neutrals, lavender, or plum. Skip stilettos — the barn floor is uneven and the ceremony is on grass. Flats or block heels work great." },
+      { q: "Is it indoors or outdoors?", a: "The ceremony is outdoors on the lawn (weather permitting). Cocktails, dinner, and dancing are inside the barn." },
+      { q: "Where should I stay?", a: "We haven't blocked rooms. The Travel section lists well-known hotels in Plattsmouth (closest), Lincoln, and Omaha — pick whatever's easiest for you." },
     ],
   },
   rsvp: {
@@ -211,10 +245,42 @@ const es: Dict = {
   },
   party: { title: "Cortejo", lead: "Las personas que estarán con nosotros esa noche." },
   travel: {
-    title: "Cómo llegar", lead: "Louisville, Nebraska está a unos 25 minutos al sur de Omaha.",
+    title: "Cómo llegar",
+    lead: "Sparks' Barn está en Louisville, Nebraska — a unos 25 minutos al sur de Omaha y 40 minutos al este de Lincoln.",
     mapTitle: "El lugar en el mapa",
+    addressLabel: "Dirección del lugar",
     hotelsTitle: "Dónde alojarse",
-    hotelsBody: "Reservamos un bloque pequeño en hoteles de Plattsmouth y el sur de Omaha. Publicaremos los detalles pronto.",
+    hotelsBody: "No tenemos bloque de habitaciones. La mayoría de invitados de fuera se quedan en Lincoln o Omaha — aquí van opciones conocidas en cada zona.",
+    hotelGroups: [
+      {
+        area: "Más cerca del lugar (Plattsmouth)",
+        drive: "~15 min en auto",
+        items: [
+          { name: "Cobblestone Inn & Suites", city: "Plattsmouth, NE" },
+          { name: "American Inn", city: "Plattsmouth, NE" },
+        ],
+      },
+      {
+        area: "Lincoln",
+        drive: "~40 min en auto",
+        items: [
+          { name: "Graduate by Hilton Lincoln", city: "Centro de Lincoln" },
+          { name: "Hilton Garden Inn Lincoln Downtown / Haymarket", city: "Haymarket, Lincoln" },
+          { name: "Hyatt Place Lincoln / Haymarket", city: "Haymarket, Lincoln" },
+          { name: "Hampton Inn Lincoln South", city: "Sur de Lincoln (cerca I-80)" },
+        ],
+      },
+      {
+        area: "Omaha / Aeropuerto (OMA)",
+        drive: "~30–40 min en auto",
+        items: [
+          { name: "Hilton Omaha Downtown", city: "Centro de Omaha" },
+          { name: "Hyatt Place Omaha / Downtown - Old Market", city: "Old Market, Omaha" },
+          { name: "Hampton Inn & Suites Omaha - Downtown", city: "Centro de Omaha" },
+          { name: "Courtyard by Marriott Omaha East / Council Bluffs", city: "Cerca del aeropuerto OMA" },
+        ],
+      },
+    ],
     parkingTitle: "Estacionamiento",
     parkingBody: "Gratis en el lugar. Puedes dejar el auto durante la noche si vuelves con alguien más.",
     weatherTitle: "Qué llevar",
@@ -236,12 +302,13 @@ const es: Dict = {
   faq: {
     title: "Preguntas frecuentes", lead: "Lo que más nos preguntan.",
     items: [
-      { q: "¿Puedo llevar acompañante?", a: "Si tu invitación indica +1 (o tu grupo permite más de un invitado en la página de RSVP), sí. Si no, por favor limítate a las personas nombradas." },
-      { q: "¿Se admiten niños?", a: "Sí — puedes agregar niños a tu grupo en la página de RSVP. Márcalos como niño para el conteo." },
-      { q: "¿A qué hora debo llegar?", a: "Las puertas abren a las 4:30 PM. La ceremonia empieza puntual a las 5:00 PM." },
-      { q: "¿Cuál es el código de vestimenta?", a: "Cóctel en tonos cálidos o lavanda. Se recomienda tacón bajo — el suelo es irregular." },
-      { q: "¿Es al aire libre o dentro?", a: "La ceremonia es al aire libre; la cena y el baile son dentro del granero." },
-      { q: "¿Dónde me hospedo?", a: "Ver la página de Cómo llegar — estamos cerrando un bloque de hotel y publicaremos los detalles." },
+      { q: "¿Dónde es la boda?", a: "Sparks' Barn, 13817 108th St, Louisville, NE 68037 — a unos 25 minutos al sur de Omaha y 40 minutos al este de Lincoln." },
+      { q: "¿Puedo llevar acompañante?", a: "Solo si tu invitación indica +1 o si la página de RSVP te permite agregar más de un invitado. Si no estás seguro, confirma con los nombres de tu invitación y avísanos si falta alguien." },
+      { q: "¿Se admiten niños?", a: "Sí. Agrégalos a tu grupo en la página de RSVP y márcalos como niño para el conteo y la comida." },
+      { q: "¿A qué hora debo llegar?", a: "Las puertas abren a las 4:30 PM. La ceremonia empieza puntual a las 5:00 PM — por favor toma tu lugar antes de las 4:55." },
+      { q: "¿Cuál es el código de vestimenta?", a: "Cóctel en tonos cálidos, lavanda o ciruela. Evita tacones muy finos — el piso del granero es irregular y la ceremonia es sobre césped. Tacón bajo o zapato plano funcionan bien." },
+      { q: "¿Es al aire libre o dentro?", a: "La ceremonia es al aire libre en el jardín (si el clima lo permite). Cóctel, cena y baile son dentro del granero." },
+      { q: "¿Dónde me hospedo?", a: "No tenemos bloque de habitaciones. La sección de Cómo llegar lista hoteles conocidos en Plattsmouth (el más cercano), Lincoln y Omaha — elige el que más te convenga." },
     ],
   },
   rsvp: {

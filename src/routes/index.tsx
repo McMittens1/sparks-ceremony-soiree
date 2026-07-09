@@ -430,19 +430,52 @@ function Home() {
             </Reveal>
             <div className="mt-12 space-y-6">
               <Reveal variant="left">
-
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-accent">{t.travel.addressLabel}</p>
+                  <p className="mt-3 text-foreground/80 leading-relaxed">
+                    <span className="font-serif text-lg text-primary">{SITE.venue}</span>
+                    <br />
+                    <a
+                      href={SITE.mapLink}
+                      target="_blank"
+                      rel="noopener"
+                      className="link-underline"
+                    >
+                      {SITE.address}
+                    </a>
+                  </p>
+                </div>
+              </Reveal>
+              <Reveal variant="left" delay={60}>
                 <div>
                   <p className="text-[10px] uppercase tracking-[0.3em] text-accent">{t.travel.hotelsTitle}</p>
                   <p className="mt-3 text-foreground/80 leading-relaxed">{t.travel.hotelsBody}</p>
+                  <div className="mt-5 space-y-5">
+                    {t.travel.hotelGroups.map((group) => (
+                      <div key={group.area}>
+                        <p className="text-[11px] uppercase tracking-[0.25em] text-primary/80">
+                          {group.area} <span className="text-foreground/50 normal-case tracking-normal">· {group.drive}</span>
+                        </p>
+                        <ul className="mt-2 space-y-1 text-sm text-foreground/80">
+                          {group.items.map((h) => (
+                            <li key={h.name}>
+                              <span className="text-foreground">{h.name}</span>
+                              <span className="text-foreground/55"> — {h.city}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </Reveal>
-              <Reveal variant="left" delay={80}>
+              <Reveal variant="left" delay={120}>
                 <div>
                   <p className="text-[10px] uppercase tracking-[0.3em] text-accent">{t.travel.parkingTitle}</p>
                   <p className="mt-3 text-foreground/80 leading-relaxed">{t.travel.parkingBody}</p>
                 </div>
               </Reveal>
-              <Reveal variant="left" delay={160}>
+              <Reveal variant="left" delay={180}>
                 <div>
                   <p className="text-[10px] uppercase tracking-[0.3em] text-accent">{t.travel.weatherTitle}</p>
                   <p className="mt-3 text-foreground/80 leading-relaxed">{t.travel.weatherAdvice}</p>
@@ -460,6 +493,7 @@ function Home() {
               />
             </div>
           </Reveal>
+
 
         </div>
       </section>
