@@ -151,11 +151,9 @@ function Home() {
         <div className="mx-auto max-w-[1500px] px-6 lg:px-12 py-20 sm:py-28 lg:py-32">
           <Reveal>
             <div className="flex flex-col items-center text-center">
-              <p className="text-[10px] uppercase tracking-[0.4em] text-accent">01 / Countdown</p>
+              <p className="text-[10px] uppercase tracking-[0.4em] text-accent">Countdown</p>
               <h2 className="mt-6 editorial-heading text-5xl sm:text-7xl md:text-8xl lg:text-[9rem] leading-[0.9]">
-                Until we say
-                <br />
-                <span className="italic text-primary-soft">I do</span>
+                {t.home.countdownLabel}
               </h2>
               <div className="mt-6 h-px w-24 bg-accent draw-line origin-center" />
             </div>

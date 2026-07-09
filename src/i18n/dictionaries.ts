@@ -59,10 +59,10 @@ const en: Dict = {
   nav: { home: "Home", story: "Our Story", details: "Details", party: "Wedding Party", travel: "Travel", photos: "Photos", registry: "Registry", faq: "FAQ", rsvp: "RSVP" },
   common: { language: "Language", loading: "Loading…", required: "Required", submit: "Submit", save: "Save", cancel: "Cancel", back: "Back", close: "Close" },
   home: {
-    kicker: "Save the date",
-    title: "You are invited to",
+    kicker: "The Wedding of",
+    title: "The Big Day",
     dateLine: "October 10, 2026",
-    intro: "One evening under string lights and open sky — a ceremony, a reception, and everyone we love in one room.",
+    intro: "Welcome to our wedding website — everything you need for the celebration lives here: the schedule, travel details, our registry, and how to RSVP.",
     countdownLabel: "Until we say I do",
     days: "days", hours: "hours", minutes: "minutes", seconds: "seconds",
     rsvpCta: "RSVP now", detailsCta: "See the details",
@@ -204,16 +204,16 @@ const en: Dict = {
     approve: "Approve", reject: "Reject", noPhotos: "No photos in this tab.",
   },
   auth: { title: "Admin sign-in", email: "Email", password: "Password", submit: "Sign in", err: "Invalid email or password.", notAdmin: "This account isn't set up as an admin." },
-  footer: { made: "Made with love — 10.10.26" },
+  footer: { made: "Made with love by Geo — 10.10.26" },
 };
 
 const es: Dict = {
   nav: { home: "Inicio", story: "Nuestra historia", details: "Detalles", party: "Cortejo", travel: "Cómo llegar", photos: "Fotos", registry: "Regalos", faq: "Preguntas", rsvp: "Confirmar" },
   common: { language: "Idioma", loading: "Cargando…", required: "Requerido", submit: "Enviar", save: "Guardar", cancel: "Cancelar", back: "Atrás", close: "Cerrar" },
   home: {
-    kicker: "Reserva la fecha", title: "Están invitados a",
+    kicker: "La boda de", title: "El gran día",
     dateLine: "10 de octubre de 2026",
-    intro: "Una tarde bajo luces cálidas y el cielo abierto — ceremonia, recepción y todos los que queremos en un solo lugar.",
+    intro: "Bienvenidos a nuestro sitio de boda — aquí encontrarán todo para la celebración: el programa, cómo llegar, mesa de regalos y cómo confirmar asistencia.",
     countdownLabel: "Para el gran día",
     days: "días", hours: "horas", minutes: "minutos", seconds: "segundos",
     rsvpCta: "Confirmar asistencia", detailsCta: "Ver los detalles",
@@ -352,7 +352,7 @@ const es: Dict = {
     approve: "Aprobar", reject: "Rechazar", noPhotos: "No hay fotos en esta pestaña.",
   },
   auth: { title: "Acceso admin", email: "Correo", password: "Contraseña", submit: "Entrar", err: "Correo o contraseña incorrectos.", notAdmin: "Esta cuenta no es administradora." },
-  footer: { made: "Hecho con amor — 10.10.26" },
+  footer: { made: "Hecho con amor por Geo — 10.10.26" },
 };
 
 export const dictionaries: Record<Lang, Dict> = { en, es };
