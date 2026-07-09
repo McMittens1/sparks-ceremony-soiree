@@ -664,6 +664,11 @@ function Home() {
             </Reveal>
           ))}
         </div>
+        <Reveal delay={200}>
+          <p className="mt-12 text-center text-sm text-foreground/60 font-serif italic">
+            Still have a question? {SITE.rsvpFallbackContact}
+          </p>
+        </Reveal>
       </section>
 
       {/* ============ FINAL CTA ============ */}
