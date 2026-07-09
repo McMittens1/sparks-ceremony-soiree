@@ -64,6 +64,7 @@ export function Header() {
           ))}
           <Link
             to="/rsvp"
+            search={{}}
             className="ml-2 border border-primary text-primary px-5 py-2 hover:bg-primary hover:text-primary-foreground transition-colors"
           >
             {t.nav.rsvp}
@@ -101,6 +102,7 @@ export function Header() {
             ))}
             <Link
               to="/rsvp"
+              search={{}}
               onClick={() => setOpen(false)}
               className="mt-2 self-start border border-primary text-primary px-5 py-2 text-[10px] uppercase tracking-[0.3em]"
             >

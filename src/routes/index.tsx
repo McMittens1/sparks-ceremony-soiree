@@ -125,6 +125,7 @@ function Home() {
                 <Magnetic strength={0.25}>
                   <Link
                     to="/rsvp"
+                    search={{}}
                     className="inline-block border border-primary bg-primary text-primary-foreground px-8 py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-transparent hover:text-primary transition-colors"
                   >
                     {t.home.rsvpCta} →
@@ -521,6 +522,7 @@ function Home() {
               <Magnetic strength={0.3}>
                 <Link
                   to="/rsvp"
+                  search={{}}
                   className="inline-block border border-primary bg-primary text-primary-foreground px-10 py-4 text-[11px] uppercase tracking-[0.35em] hover:bg-transparent hover:text-primary transition-colors"
                 >
                   {t.home.rsvpCta} →
@@ -528,7 +530,7 @@ function Home() {
               </Magnetic>
               <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{t.rsvp.deadlineLine}</p>
               <div className="draw-line h-px w-24 bg-accent origin-left" />
-              <Link to="/rsvp" className="text-[10px] uppercase tracking-[0.3em] text-primary link-underline">See RSVP page →</Link>
+              <Link to="/rsvp" search={{}} className="text-[10px] uppercase tracking-[0.3em] text-primary link-underline">See RSVP page →</Link>
             </div>
           </Reveal>
         </div>
