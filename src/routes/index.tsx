@@ -421,24 +421,24 @@ function Home() {
                       : "text-2xl";
                 return (
                   <div className="group">
-                    <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-accent/10 ring-1 ring-accent/20">
+                    <div className="relative aspect-[4/5] overflow-hidden bg-muted border border-tan/25 transition-colors duration-500 group-hover:border-tan/60">
                       {p.photo ? (
                         <img
                           src={p.photo}
                           alt={p.name}
-                          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
                           loading="lazy"
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center">
-                          <span className="editorial-heading text-4xl sm:text-5xl text-accent/60">
+                          <span className="font-serif text-4xl sm:text-5xl text-tan/70">
                             {initials(p.name)}
                           </span>
                         </div>
                       )}
                     </div>
-                    <p className={`mt-4 font-serif italic text-primary ${sizeClass}`}>{p.name}</p>
-                    <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">
+                    <p className={`mt-4 font-serif text-foreground ${sizeClass}`}>{p.name}</p>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-tan mt-1">
                       {p.role}
                     </p>
                   </div>
