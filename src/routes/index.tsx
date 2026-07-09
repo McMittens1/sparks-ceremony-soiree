@@ -15,9 +15,9 @@ import { StoryTimeline } from "@/components/site/StoryTimeline";
 import { listApprovedPhotos, type GalleryPhoto } from "@/lib/photos.functions";
 import { REGISTRY as registryItems, PARTY } from "@/lib/wedding-data";
 
+import heroCouple from "@/assets/hero/hero-couple.jpg.asset.json";
 import favorite from "@/assets/engagement/Favorite.jpg.asset.json";
 import eng74 from "@/assets/engagement/Geo_AddiEngagement-74.jpg.asset.json";
-import eng06 from "@/assets/engagement/Geo_AddiEngagement-06.jpg.asset.json";
 import eng94 from "@/assets/engagement/Geo_AddiEngagement-94.jpg.asset.json";
 import eng82 from "@/assets/engagement/Geo_AddiEngagement-82.jpg.asset.json";
 import eng75 from "@/assets/engagement/Geo_AddiEngagement-75.jpg.asset.json";
@@ -26,8 +26,8 @@ import eng19 from "@/assets/engagement/Geo_AddiEngagement-19.jpg.asset.json";
 import eng15 from "@/assets/engagement/Geo_AddiEngagement-15.jpg.asset.json";
 import eng13 from "@/assets/engagement/Geo_AddiEngagement-13.jpg.asset.json";
 import eng10 from "@/assets/engagement/Geo_AddiEngagement-10.jpg.asset.json";
-const hero = favorite.url;
-const florals = eng06.url;
+const hero = heroCouple.url;
+const heroDesktop = favorite.url;
 const engagementStrip = [eng74, eng94, eng82, eng75, eng27, eng19, eng15, eng13, eng10];
 
 export const Route = createFileRoute("/")({
