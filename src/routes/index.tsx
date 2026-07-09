@@ -289,48 +289,132 @@ function Home() {
               <p className="mt-6 max-w-md text-foreground/70 text-lg font-serif italic">{t.party.lead}</p>
             </Reveal>
           </div>
-          <div className="lg:col-span-8">
-            <div className="grid gap-10 sm:grid-cols-2 lg:gap-16">
-              <Reveal variant="up" delay={100}>
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.35em] text-accent mb-6">Bride's side</p>
-                  <ul className="space-y-5">
-                    {PARTY.filter((p) => ["Maid of Honor", "Bridesmaid", "Flower Girl"].includes(p.role)).map((p) => (
-                      <li key={p.name}>
-                        <p className="font-serif italic text-2xl text-primary">{p.name}</p>
-                        <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">{p.role}</p>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </Reveal>
-              <Reveal variant="up" delay={200}>
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.35em] text-accent mb-6">Groom's side</p>
-                  <ul className="space-y-5">
-                    {PARTY.filter((p) => ["Best Man", "Groomsman", "Ring Bearer"].includes(p.role)).map((p) => (
-                      <li key={p.name}>
-                        <p className="font-serif italic text-2xl text-primary">{p.name}</p>
-                        <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">{p.role}</p>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </Reveal>
-            </div>
-            <Reveal delay={300}>
-              <div className="mt-16 pt-10 border-t border-accent/20">
-                <p className="text-[10px] uppercase tracking-[0.35em] text-accent mb-4">Ushers</p>
-                <p className="text-sm sm:text-base text-foreground/70 leading-relaxed">
-                  {PARTY.filter((p) => p.role === "Usher")
-                    .map((p) => p.name)
-                    .join(" · ")}
-                </p>
-              </div>
-            </Reveal>
+          <div className="lg:col-span-8 space-y-16">
+            {(() => {
+              const featured = PARTY.filter((p) => ["Maid of Honor", "Best Man"].includes(p.role));
+              const bridesmaids = PARTY.filter((p) => p.role === "Bridesmaid");
+              const groomsmen = PARTY.filter((p) => p.role === "Groomsman");
+              const kids = PARTY.filter((p) => ["Flower Girl", "Ring Bearer"].includes(p.role));
+              const ushers = PARTY.filter((p) => p.role === "Usher");
+
+              const initials = (n: string) =>
+                n.split(" ").map((s) => s[0]).slice(0, 2).join("").toUpperCase();
+
+              const Portrait = ({
+                p,
+                size = "md",
+              }: {
+                p: (typeof PARTY)[number];
+                size?: "sm" | "md" | "lg";
+              }) => {
+                const sizeClass =
+                  size === "lg"
+                    ? "text-3xl sm:text-4xl"
+                    : size === "sm"
+                      ? "text-lg"
+                      : "text-2xl";
+                return (
+                  <div className="group">
+                    <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-accent/10 ring-1 ring-accent/20">
+                      {p.photo ? (
+                        <img
+                          src={p.photo}
+                          alt={p.name}
+                          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center">
+                          <span className="editorial-heading text-4xl sm:text-5xl text-accent/60">
+                            {initials(p.name)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <p className={`mt-4 font-serif italic text-primary ${sizeClass}`}>{p.name}</p>
+                    <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">
+                      {p.role}
+                    </p>
+                  </div>
+                );
+              };
+
+              return (
+                <>
+                  {/* Featured: Maid of Honor & Best Man */}
+                  {featured.length > 0 && (
+                    <Reveal variant="up">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-[0.35em] text-accent mb-6">Standing closest</p>
+                        <div className="grid gap-8 sm:grid-cols-2">
+                          {featured.map((p) => (
+                            <Portrait key={p.name} p={p} size="lg" />
+                          ))}
+                        </div>
+                      </div>
+                    </Reveal>
+                  )}
+
+                  {/* Bridesmaids */}
+                  {bridesmaids.length > 0 && (
+                    <Reveal variant="up" delay={100}>
+                      <div>
+                        <p className="text-[10px] uppercase tracking-[0.35em] text-accent mb-6">Bridesmaids</p>
+                        <div className="grid gap-6 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+                          {bridesmaids.map((p) => (
+                            <Portrait key={p.name} p={p} size="sm" />
+                          ))}
+                        </div>
+                      </div>
+                    </Reveal>
+                  )}
+
+                  {/* Groomsmen */}
+                  {groomsmen.length > 0 && (
+                    <Reveal variant="up" delay={150}>
+                      <div>
+                        <p className="text-[10px] uppercase tracking-[0.35em] text-accent mb-6">Groomsmen</p>
+                        <div className="grid gap-6 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+                          {groomsmen.map((p) => (
+                            <Portrait key={p.name} p={p} size="sm" />
+                          ))}
+                        </div>
+                      </div>
+                    </Reveal>
+                  )}
+
+                  {/* Flower Girl & Ring Bearer */}
+                  {kids.length > 0 && (
+                    <Reveal variant="up" delay={200}>
+                      <div>
+                        <p className="text-[10px] uppercase tracking-[0.35em] text-accent mb-6">Down the aisle first</p>
+                        <div className="grid gap-6 grid-cols-2 sm:max-w-md">
+                          {kids.map((p) => (
+                            <Portrait key={p.name} p={p} size="sm" />
+                          ))}
+                        </div>
+                      </div>
+                    </Reveal>
+                  )}
+
+                  {/* Ushers */}
+                  {ushers.length > 0 && (
+                    <Reveal delay={250}>
+                      <div className="pt-10 border-t border-accent/20">
+                        <p className="text-[10px] uppercase tracking-[0.35em] text-accent mb-4">Ushers</p>
+                        <p className="text-sm sm:text-base text-foreground/70 leading-relaxed">
+                          {ushers.map((p) => p.name).join(" · ")}
+                        </p>
+                      </div>
+                    </Reveal>
+                  )}
+                </>
+              );
+            })()}
           </div>
         </div>
       </section>
+
 
 
       {/* ============ TRAVEL ============ */}
