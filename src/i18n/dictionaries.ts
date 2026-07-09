@@ -97,10 +97,41 @@ const en: Dict = {
   party: { title: "Wedding Party", lead: "The friends and family standing with us that night." },
   travel: {
     title: "Getting There",
-    lead: "Louisville, Nebraska is about 25 minutes south of Omaha.",
+    lead: "Sparks' Barn is in Louisville, Nebraska — about 25 minutes south of Omaha and 40 minutes east of Lincoln.",
     mapTitle: "The venue on the map",
+    addressLabel: "Venue address",
     hotelsTitle: "Where to stay",
-    hotelsBody: "We've held a small block at hotels in Plattsmouth and south Omaha. Details will land here as we finalize.",
+    hotelsBody: "We haven't blocked rooms anywhere. Most out-of-town guests stay in Lincoln or Omaha — here are well-known options in each area.",
+    hotelGroups: [
+      {
+        area: "Closest to the venue (Plattsmouth)",
+        drive: "~15 min drive",
+        items: [
+          { name: "Cobblestone Inn & Suites", city: "Plattsmouth, NE" },
+          { name: "American Inn", city: "Plattsmouth, NE" },
+        ],
+      },
+      {
+        area: "Lincoln",
+        drive: "~40 min drive",
+        items: [
+          { name: "Graduate by Hilton Lincoln", city: "Downtown Lincoln" },
+          { name: "Hilton Garden Inn Lincoln Downtown / Haymarket", city: "Haymarket, Lincoln" },
+          { name: "Hyatt Place Lincoln / Haymarket", city: "Haymarket, Lincoln" },
+          { name: "Hampton Inn Lincoln South", city: "South Lincoln (near I-80)" },
+        ],
+      },
+      {
+        area: "Omaha / Airport (OMA)",
+        drive: "~30–40 min drive",
+        items: [
+          { name: "Hilton Omaha Downtown", city: "Downtown Omaha" },
+          { name: "Hyatt Place Omaha / Downtown - Old Market", city: "Old Market, Omaha" },
+          { name: "Hampton Inn & Suites Omaha - Downtown", city: "Downtown Omaha" },
+          { name: "Courtyard by Marriott Omaha East / Council Bluffs", city: "Near OMA airport" },
+        ],
+      },
+    ],
     parkingTitle: "Parking",
     parkingBody: "Free on-site parking. You can leave a car overnight if you're getting a ride home.",
     weatherTitle: "What to pack",
