@@ -294,38 +294,12 @@ function Home() {
                 <div>
                   <p className="text-[10px] uppercase tracking-[0.35em] text-accent mb-6">Bride's side</p>
                   <ul className="space-y-5">
-                    <li>
-                      <p className="font-serif italic text-2xl text-primary">Olyvia Hillman</p>
-                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Maid of Honor</p>
-                    </li>
-                    <li>
-                      <p className="font-serif italic text-2xl text-primary">Melinda Reinke</p>
-                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Bridesmaid</p>
-                    </li>
-                    <li>
-                      <p className="font-serif italic text-2xl text-primary">Lesly Moreno</p>
-                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Bridesmaid</p>
-                    </li>
-                    <li>
-                      <p className="font-serif italic text-2xl text-primary">Bryce Marker</p>
-                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Bridesmaid</p>
-                    </li>
-                    <li>
-                      <p className="font-serif italic text-2xl text-primary">Dru Brown</p>
-                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Bridesmaid</p>
-                    </li>
-                    <li>
-                      <p className="font-serif italic text-2xl text-primary">Ryane Needles</p>
-                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Bridesmaid</p>
-                    </li>
-                    <li>
-                      <p className="font-serif italic text-2xl text-primary">Jetta Tegeler</p>
-                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Bridesmaid</p>
-                    </li>
-                    <li>
-                      <p className="font-serif italic text-2xl text-primary">Ivy Smith</p>
-                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Flower Girl</p>
-                    </li>
+                    {PARTY.filter((p) => ["Maid of Honor", "Bridesmaid", "Flower Girl"].includes(p.role)).map((p) => (
+                      <li key={p.name}>
+                        <p className="font-serif italic text-2xl text-primary">{p.name}</p>
+                        <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">{p.role}</p>
+                      </li>
+                    ))}
                   </ul>
                 </div>
               </Reveal>
@@ -333,46 +307,12 @@ function Home() {
                 <div>
                   <p className="text-[10px] uppercase tracking-[0.35em] text-accent mb-6">Groom's side</p>
                   <ul className="space-y-5">
-                    <li>
-                      <p className="font-serif italic text-2xl text-primary">Andres Moreno</p>
-                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Best Man</p>
-                    </li>
-                    <li>
-                      <p className="font-serif italic text-2xl text-primary">Nathan Asselin</p>
-                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Groomsman</p>
-                    </li>
-                    <li>
-                      <p className="font-serif italic text-2xl text-primary">Nathan Merritt</p>
-                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Groomsman</p>
-                    </li>
-                    <li>
-                      <p className="font-serif italic text-2xl text-primary">Joey Buresh</p>
-                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Groomsman</p>
-                    </li>
-                    <li>
-                      <p className="font-serif italic text-2xl text-primary">Alex Krause</p>
-                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Groomsman</p>
-                    </li>
-                    <li>
-                      <p className="font-serif italic text-2xl text-primary">Jonathan Houser</p>
-                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Groomsman</p>
-                    </li>
-                    <li>
-                      <p className="font-serif italic text-2xl text-primary">Jacob Laurell</p>
-                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Groomsman</p>
-                    </li>
-                    <li>
-                      <p className="font-serif italic text-2xl text-primary">Nick Gude</p>
-                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Groomsman</p>
-                    </li>
-                    <li>
-                      <p className="font-serif italic text-2xl text-primary">David Ramirez</p>
-                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Groomsman</p>
-                    </li>
-                    <li>
-                      <p className="font-serif italic text-2xl text-primary">Alan Meza</p>
-                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Ring Bearer</p>
-                    </li>
+                    {PARTY.filter((p) => ["Best Man", "Groomsman", "Ring Bearer"].includes(p.role)).map((p) => (
+                      <li key={p.name}>
+                        <p className="font-serif italic text-2xl text-primary">{p.name}</p>
+                        <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">{p.role}</p>
+                      </li>
+                    ))}
                   </ul>
                 </div>
               </Reveal>
@@ -381,7 +321,9 @@ function Home() {
               <div className="mt-16 pt-10 border-t border-accent/20">
                 <p className="text-[10px] uppercase tracking-[0.35em] text-accent mb-4">Ushers</p>
                 <p className="text-sm sm:text-base text-foreground/70 leading-relaxed">
-                  Matt Vu · Kollin Barnes · Kenny Nguyen · Zach Funk · Aaron Ramirez · Jose Barrios · Freddy Gonzalez · Jose Martinez · Mateo Meza
+                  {PARTY.filter((p) => p.role === "Usher")
+                    .map((p) => p.name)
+                    .join(" · ")}
                 </p>
               </div>
             </Reveal>
