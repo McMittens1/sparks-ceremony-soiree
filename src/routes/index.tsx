@@ -31,6 +31,18 @@ const florals = eng06.url;
 const engagementStrip = [eng74, eng94, eng82, eng75, eng27, eng19, eng15, eng13, eng10];
 
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { property: "og:image", content: `https://sparks-ceremony-soiree.lovable.app${favorite.url}` },
+      { property: "og:image:alt", content: "Geovanni Moreno and Addison Hillman." },
+      { property: "og:url", content: "https://sparks-ceremony-soiree.lovable.app/" },
+      { name: "twitter:image", content: `https://sparks-ceremony-soiree.lovable.app${favorite.url}` },
+    ],
+    links: [
+      { rel: "canonical", href: "https://sparks-ceremony-soiree.lovable.app/" },
+      { rel: "preload", as: "image", href: favorite.url, fetchpriority: "high" },
+    ],
+  }),
   component: Home,
 });
 
@@ -55,10 +67,12 @@ function Home() {
     setLightboxIndex((i) => (i === null || photos.length === 0 ? null : (i - 1 + photos.length) % photos.length));
   }, [photos.length]);
 
-  // Cursor-linked parallax on the hero image
+  // Cursor-linked parallax on the hero image — gated so it doesn't fight the entrance animation
   useEffect(() => {
     const el = heroImgRef.current;
     if (!el) return;
+    const parent = el.parentElement;
+    if (!parent) return;
     const onMove = (e: MouseEvent) => {
       const rect = el.getBoundingClientRect();
       const cx = (e.clientX - rect.left) / rect.width - 0.5;
@@ -66,12 +80,14 @@ function Home() {
       el.style.transform = `translate3d(${cx * -14}px, ${cy * -14}px, 0) scale(1.04)`;
     };
     const onLeave = () => { el.style.transform = ""; };
-    const parent = el.parentElement;
-    parent?.addEventListener("mousemove", onMove);
-    parent?.addEventListener("mouseleave", onLeave);
+    const timer = setTimeout(() => {
+      parent.addEventListener("mousemove", onMove);
+      parent.addEventListener("mouseleave", onLeave);
+    }, 900);
     return () => {
-      parent?.removeEventListener("mousemove", onMove);
-      parent?.removeEventListener("mouseleave", onLeave);
+      clearTimeout(timer);
+      parent.removeEventListener("mousemove", onMove);
+      parent.removeEventListener("mouseleave", onLeave);
     };
   }, []);
 
