@@ -1,143 +1,60 @@
-## Pre-publish review
+## Pre-launch polish pass
 
-The site is content-complete and structurally solid. Highest-impact items before publishing:
+A focused, high-impact review before publishing. Scope stays on presentation and copy — no business/data changes. Grouped by impact, with a "why" for each.
 
-1. **Tone** — remove invitation/save-the-date framing sitewide (biggest issue you flagged).
-2. **Hero** — redesign around your favorite engagement photo, not just swap it in.
-3. **Metadata** — homepage `<title>` and description should describe the site, not invite anyone.
-4. **A few small polish items** worth catching in the same pass.
+### 1. Fix content inconsistencies (highest impact)
 
-Deferring per your earlier direction: wedding-party portraits, per-chapter story photos, per-section `og:image`, RSVP confirmation email.
+- **Section numbering.** Sections currently jump from unnumbered Countdown to `02 / Our Story` and end at `08 / FAQ`. Renumber sequentially: Countdown → `01`, Our Story → `02`, Details → `03`, Party → `04`, Travel → `05`, Photos → `06`, Registry → `07`, FAQ → `08`.
+- **Countdown label.** Dictionary still reads "Until we say I do" / "Para el gran día" and renders in a giant editorial style below "Countdown". Replace with a single, warmer line: EN "Until we say I do" is fine tonally but reads awkward at 9rem; use "Counting down" / "En cuenta regresiva" instead so the big type is short and elegant.
+- **Placeholder timeline.** `story.timeline` is generic templated copy (2019 karaoke, 2021 snowstorm, 2024 kitchen proposal). Replace the copy with a soft, real-agnostic version ("2019 · We met.", "2021 · Made it official.", "2024 · The yes.", "2026 · Forever.") so it doesn't ship as obvious placeholder while G+A supply real dates later.
+- **Photos section framing.** Pre-wedding the section says "add your own — we'll post them after the wedding" and shows a "Share a photo +" button, but the empty state right below says "Photos will appear here after the wedding." The upload CTA can confuse guests now. Hide the upload button + change lead to "A shared gallery, coming after the wedding. We'll open uploads closer to the day." (EN + ES). Keep the upload modal wiring intact so we can flip it back on later.
 
----
+### 2. Hero refinements
 
-## 1. Copy rewrite — remove invitation language
+The framed portrait layout stays. Refinements only:
 
-Search-and-replace across `src/i18n/dictionaries.ts` (EN + ES) and `src/lib/site.ts`. Every string below currently frames the site as the invitation itself.
+- **Add `og:image`** on the home route's `head()` pointing to the absolute CDN URL of `Favorite.jpg` so link previews show the couple, not nothing. (Root `og:image` intentionally omitted per instructions.)
+- **Preload the hero** by adding a `{ rel: "preload", as: "image", href: favorite.url }` link on the `/` route head — improves LCP.
+- **Mobile hero (<640): reduce `text-[16vw]` to `text-[14vw]`** on the two name lines so `Geovanni` / `Addison` don't crowd the 440px viewport edges. `&` stays at `14vw` → drop to `12vw`.
+- **Museum caption bar.** Center column reads `Sparks' Barn · Louisville, NE` — link it to the map (`SITE.mapLink`) with `link-underline` so it's a real tap target.
+- **Cursor parallax** currently mutates `transform` directly on mousemove, competing with the `animate-rise` entrance animation. Gate the parallax listener behind a `setTimeout(..., 900)` so the entrance completes first.
 
-**Home (`home.*`)**
+### 3. Accessibility + semantic polish
 
-- `kicker`: "Save the date" → "The Wedding of" (ES: "La boda de")
-- `title`: "You are invited to" → remove entirely; replace the small caps label above the date with "The Big Day" / "El gran día"
-- `intro`: rewrite from "One evening under string lights…" to a welcoming site-intro line: *"Welcome to our wedding website. This is where you'll find everything you need for the celebration — schedule, travel, and how to RSVP."* (ES equivalent)
-- `rsvpCta`: keep "RSVP now" (that's the site's action, not the invite)
+- Add `lang` sync on `<html>` from the LanguageProvider so screen readers switch pronunciation when the user toggles ES.
+- Ensure the icon-only mobile "Menu / Close" button and any icon-only lightbox controls have `aria-label`s (spot-audit).
+- `min-h-screen` → `min-h-dvh` where used, so mobile browsers don't over-scroll under the URL bar.
+- Add `alt=""` on the decorative Final CTA background image (currently already empty — verify) and confirm every engagement-strip image has a meaningful alt (currently all say "Geovanni and Addison" — good).
 
-**Details (`details.lead`)** — currently fine, no change.
+### 4. UI consistency
 
-**RSVP (`rsvp.deadlineLine`)** — keep "Please respond by…" (site action).
+- **Buttons.** RSVP primary CTA appears in three places (header, hero, final CTA) with three different sizes and paddings. Standardize on the hero size (`px-7 py-3.5 text-[10px] tracking-[0.3em]`) everywhere except the Final CTA hero button (which stays larger by design).
+- **Section headings.** All h2s except Countdown use `SplitText`. Wrap the Countdown h2 in `SplitText` too so scroll-in motion is consistent.
+- **FAQ.** Two-column grid at `lg:` splits items row-major; that's correct. Add a soft closing line after the last FAQ ("Still have a question? Text us." + a `mailto:` or the `SITE.rsvpFallbackContact` line) so guests have an out.
+- **Registry cards.** All four items have hrefs, so the "Details coming soon" branch is dead. Remove the branch and simplify to `<a>` only — reduces render logic and prevents future accidental blanks.
 
-**FAQ** — no invitation phrasing; leave.
+### 5. Performance / craft
 
-**Footer (`footer.made`)** — "Made with love — 10.10.26" is fine; no invite wording.
+- Add `loading="lazy"` + `decoding="async"` on the party portraits and any engagement-strip image after the first two.
+- Iframe map: keep `loading="lazy"`; also add `referrerPolicy="no-referrer-when-downgrade"` to satisfy Google Maps in some browsers.
+- Preload the Fraunces italic 400 subset via `<link rel="preload" as="font" ...>` — this is what the entire site's editorial-heading uses, and it's the biggest FOUT contributor.
 
-`**SITE` (`src/lib/site.ts`)** — no user-facing invite copy; leave.
+### 6. What we deliberately are NOT touching
 
-I'll do one final grep for "invited", "save the date", "invitation" (EN + ES equivalents) to catch anything missed.
+- RSVP flow (already reviewed in the earlier pass — leave for post-launch iteration if issues surface).
+- Admin route.
+- Backend / schema / migrations.
+- Adding new sections (livestream, gift-giving legal copy, dress-code visuals, etc.) — post-launch.
 
----
+### Files touched
 
-## 2. Homepage metadata (`src/routes/__root.tsx` / `src/routes/index.tsx`)
+- `src/i18n/dictionaries.ts` — countdownLabel, story.timeline, photos.lead + hide upload copy, EN + ES.
+- `src/routes/index.tsx` — section number kickers, hero mobile type scale, hero caption bar link, hide upload button, remove registry dead branch, Countdown SplitText, small button consistency, FAQ closing line, parallax timing.
+- `src/routes/__root.tsx` — Fraunces preload link, dynamic `<html lang>` via provider.
+- `src/routes/rsvp.tsx` — only if the RSVP CTA styles diverge from the shared token.
+- `src/components/site/Header.tsx` — button size token alignment; `aria-label` audit.
+- `src/i18n/context.tsx` — sync `document.documentElement.lang` on language change.
 
-- Title: `Geovanni & Addison — October 10, 2026` (currently likely "You are invited…" style)
-- Description: `The wedding website for Geovanni Moreno and Addison Hillman. Schedule, travel, registry, and RSVP for October 10, 2026 at Sparks' Barn, Louisville, NE.`
-- `og:title` / `og:description` match.
-- No `og:image` change (deferred until you approve a share image).
+### Verification
 
----
-
-## 3. Hero redesign
-
-### Evaluation of the photo
-
-The favorite is a warm, close-cropped horizontal portrait — you two facing each other, soft neutral limestone columns behind, natural light from screen-left. Strengths: intimate eye-line, warm skin tones against cool stone, negative space above your heads on the left side of the frame. Weaknesses for the *current* hero: it's horizontal, and the current hero is a tall 4:5/5:6 vertical crop on the left with type on the right — that layout would force a hard crop that loses either Geo's face or Addi's hair. The photo deserves a layout built for it.
-
-### Concepts considered
-
-1. **Full-bleed cinematic** — image fills viewport, overlaid serif type. Rejected: heavy-handed, hides the photo's intimacy behind text, hurts LCP.
-2. **Editorial split with vertical crop** — what we have today. Rejected: crops the photo badly.
-3. **Wide framed portrait with typographic overlay (chosen)** — image sits as a wide, generously matted "gallery print" centered under a large editorial headline. Names overlap the top edge of the image (the "&" tucks into the negative space between your faces). Meta info (date, venue, RSVP) sits in a refined 3-column caption bar *below* the image, like a museum plate. Feels premium, magazine-grade, and is built around this exact composition.
-
-### Chosen design — details
-
-Layout (desktop ≥1024):
-
-```
-        ┌─────────────────────────────────────────────┐
-        │        GEOVANNI                             │   ← editorial serif, huge
-        │                &                            │
-        │                     ADDISON                 │
-        │  ┌───────────────────────────────────────┐  │
-        │  │                                       │  │
-        │  │        [engagement photo 16:10]       │  │
-        │  │                                       │  │
-        │  └───────────────────────────────────────┘  │
-        │  ── 10 · 10 · 26 ─ SPARKS' BARN ─ RSVP →    │
-        └─────────────────────────────────────────────┘
-```
-
-- Container: `max-w-[1400px]`, generous top padding, subtle textured background (existing `bg-background`).
-- Names: split across three lines, `Geovanni` left-aligned, `&` centered italic in `text-primary-soft`, `Addison` right-aligned. Type overlaps the photo's top edge by ~40px so the frame breaks the baseline — a classic editorial move.
-- Photo: 16:10 aspect on desktop, 4:3 on tablet, 5:4 on mobile (all crops center-safe for this photo — verified against the composition). Wrapped in a thin `border border-accent/30` with a soft `shadow-2xl` and a `~24px` inset white/paper mat that reads as a printed plate.
-- Caption bar: three columns beneath the photo — `10 · 10 · 26` (left, tracking), venue + city (center, italic serif), RSVP link + countdown link (right). Divided by hairline dots. Small caps, `text-[10px] tracking-[0.35em]`.
-- Kicker "The Wedding of" sits above the name block, small caps, `text-accent`.
-
-Mobile (< 640):
-
-- Kicker → names stacked centered (`Geovanni / & / Addison`, still editorial).
-- Photo becomes 5:4, full width edge-to-edge with 24px page gutters.
-- Caption bar collapses to a vertical stack, still 3 items.
-- No overlap on names/photo (breaks readability at small widths).
-
-Tablet (640–1024): 4:3 photo, names stacked but larger, caption bar horizontal.
-
-Motion & polish:
-
-- Names animate in on load with staggered `rise` (already in the codebase) — Geovanni → & → Addison, 120ms stagger.
-- Photo reveals with a subtle `clip-path: inset(0 0 100% 0)` → `inset(0)` wipe over 900ms, easing `[0.22, 1, 0.36, 1]`.
-- Existing cursor-parallax on the photo container stays (subtle, 8px max on this larger frame instead of 14px so it feels premium not bouncy).
-- Respect `prefers-reduced-motion`: skip clip-path wipe and parallax, just fade in.
-
-Accessibility:
-
-- `<h1>` remains "Geovanni & Addison" (single accessible name; visual line-break with `<br>` + `aria-label` on the h1 so screen readers read it as one phrase).
-- `alt` on photo: "Geovanni Moreno and Addison Hillman."
-- Names use `text-primary` / `text-primary-soft` — contrast already verified against `bg-background`.
-- No text sits on top of the photo, so contrast concerns are eliminated.
-
-Performance:
-
-- Photo served from CDN via existing `.asset.json` pipeline.
-- Add `loading="eager"` + `fetchpriority="high"` + explicit `width`/`height` attrs to avoid CLS.
-- Preload the hero image in `head().links` of `/` route (`rel: "preload", as: "image"`).
-
-Files changed:
-
-- `src/lib/wedding-data.ts` — no change (hero is route-local).
-- Upload `Favorite.jpg` via `lovable-assets` to `src/assets/engagement/Favorite.jpg.asset.json`.
-- `src/routes/index.tsx` — replace the entire hero `<section>` block (lines ~91–144) with the new layout, keeping the cursor-parallax hook (retuned) and imports.
-- `src/styles.css` — add one `@keyframes` for the clip-path reveal + `.animate-reveal` utility.
-- `src/routes/index.tsx` `head()` — add hero image preload.
-
-If you look at this and don't love it, we can adjust before I build — but I do think this photo is strong enough to justify a purpose-built hero over the current column layout.
-
----
-
-## 4. Small polish (same pass)
-
-- **Section 01/Countdown** kicker still says "01 / Countdown" — the numbering pattern isn't used elsewhere; drop the "01 /" prefix to match the rest of the site.
-- **Footer**: Change to "Made with love by Geo — 10.10.26" ; but confirm the couple mark `G & A` is the intended footer identity (it is, per `SITE.coupleShort`).
-- **Countdown** uses hardcoded English "Until we say / I do" in `index.tsx` instead of `t.home.countdownLabel` — wire it through the dictionary so Spanish works.
-- **Router title fallback** currently shows "Lovable App" briefly on cold load — set root `title` fallback to "Geovanni & Addison — 10.10.26".
-
----
-
-## Order of operations
-
-1. Upload `Favorite.jpg` → asset pointer.
-2. Copy rewrite in EN + ES dictionaries + grep verification.
-3. Root + index `head()` metadata.
-4. Rebuild hero section.
-5. Small polish (countdown i18n, section number, root title).
-6. Typecheck, view preview at desktop/tablet/mobile, confirm reduced-motion.
-
-I will not publish — you'll click **Publish → Update** yourself when you're happy.
+After edits: build check, then a Playwright pass at 440×800 and 1440×900 taking screenshots of hero, countdown, story, details, party, travel, photos (empty), registry, faq, final CTA — attach for review before pressing publish.

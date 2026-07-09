@@ -31,6 +31,18 @@ const florals = eng06.url;
 const engagementStrip = [eng74, eng94, eng82, eng75, eng27, eng19, eng15, eng13, eng10];
 
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { property: "og:image", content: `https://sparks-ceremony-soiree.lovable.app${favorite.url}` },
+      { property: "og:image:alt", content: "Geovanni Moreno and Addison Hillman." },
+      { property: "og:url", content: "https://sparks-ceremony-soiree.lovable.app/" },
+      { name: "twitter:image", content: `https://sparks-ceremony-soiree.lovable.app${favorite.url}` },
+    ],
+    links: [
+      { rel: "canonical", href: "https://sparks-ceremony-soiree.lovable.app/" },
+      { rel: "preload", as: "image", href: favorite.url, fetchpriority: "high" },
+    ],
+  }),
   component: Home,
 });
 
@@ -55,10 +67,12 @@ function Home() {
     setLightboxIndex((i) => (i === null || photos.length === 0 ? null : (i - 1 + photos.length) % photos.length));
   }, [photos.length]);
 
-  // Cursor-linked parallax on the hero image
+  // Cursor-linked parallax on the hero image — gated so it doesn't fight the entrance animation
   useEffect(() => {
     const el = heroImgRef.current;
     if (!el) return;
+    const parent = el.parentElement;
+    if (!parent) return;
     const onMove = (e: MouseEvent) => {
       const rect = el.getBoundingClientRect();
       const cx = (e.clientX - rect.left) / rect.width - 0.5;
@@ -66,12 +80,14 @@ function Home() {
       el.style.transform = `translate3d(${cx * -14}px, ${cy * -14}px, 0) scale(1.04)`;
     };
     const onLeave = () => { el.style.transform = ""; };
-    const parent = el.parentElement;
-    parent?.addEventListener("mousemove", onMove);
-    parent?.addEventListener("mouseleave", onLeave);
+    const timer = setTimeout(() => {
+      parent.addEventListener("mousemove", onMove);
+      parent.addEventListener("mouseleave", onLeave);
+    }, 900);
     return () => {
-      parent?.removeEventListener("mousemove", onMove);
-      parent?.removeEventListener("mouseleave", onLeave);
+      clearTimeout(timer);
+      parent.removeEventListener("mousemove", onMove);
+      parent.removeEventListener("mouseleave", onLeave);
     };
   }, []);
 
@@ -103,19 +119,19 @@ function Home() {
             className="relative z-10 mt-6 sm:mt-8 editorial-heading leading-[0.85] text-center lg:text-left"
           >
             <span
-              className="block text-[16vw] sm:text-[12vw] lg:text-[9vw] xl:text-[10rem] animate-rise lg:pl-[4%]"
+              className="block text-[14vw] sm:text-[12vw] lg:text-[9vw] xl:text-[10rem] animate-rise lg:pl-[4%]"
               style={{ animationDelay: "0.15s" }}
             >
               Geovanni
             </span>
             <span
-              className="block italic text-primary-soft text-[14vw] sm:text-[10vw] lg:text-[7vw] xl:text-[8rem] animate-rise lg:pl-[38%] -mt-2 lg:-mt-4"
+              className="block italic text-primary-soft text-[12vw] sm:text-[10vw] lg:text-[7vw] xl:text-[8rem] animate-rise lg:pl-[38%] -mt-2 lg:-mt-4"
               style={{ animationDelay: "0.3s" }}
             >
               &amp;
             </span>
             <span
-              className="block text-[16vw] sm:text-[12vw] lg:text-[9vw] xl:text-[10rem] animate-rise lg:pl-[30%] -mt-2 lg:-mt-6"
+              className="block text-[14vw] sm:text-[12vw] lg:text-[9vw] xl:text-[10rem] animate-rise lg:pl-[30%] -mt-2 lg:-mt-6"
               style={{ animationDelay: "0.45s" }}
             >
               Addison
@@ -154,9 +170,11 @@ function Home() {
               </p>
             </div>
             <div className="text-center text-[10px] uppercase tracking-[0.35em] text-foreground/70 sm:border-x sm:border-accent/25 sm:px-6">
-              Sparks' Barn
-              <span className="mx-2 text-accent">·</span>
-              Louisville, NE
+              <a href={SITE.mapLink} target="_blank" rel="noopener" className="link-underline">
+                Sparks' Barn
+                <span className="mx-2 text-accent">·</span>
+                Louisville, NE
+              </a>
             </div>
             <div className="flex flex-wrap items-center justify-center sm:justify-end gap-5">
               <Magnetic strength={0.25}>
@@ -193,10 +211,13 @@ function Home() {
         <div className="mx-auto max-w-[1500px] px-6 lg:px-12 py-20 sm:py-28 lg:py-32">
           <Reveal>
             <div className="flex flex-col items-center text-center">
-              <p className="text-[10px] uppercase tracking-[0.4em] text-accent">Countdown</p>
-              <h2 className="mt-6 editorial-heading text-5xl sm:text-7xl md:text-8xl lg:text-[9rem] leading-[0.9]">
-                {t.home.countdownLabel}
-              </h2>
+              <p className="text-[10px] uppercase tracking-[0.4em] text-accent">01 / Countdown</p>
+              <SplitText
+                as="h2"
+                text={t.home.countdownLabel}
+                className="mt-6 editorial-heading text-5xl sm:text-7xl md:text-8xl lg:text-[9rem] leading-[0.9] block"
+                stagger={70}
+              />
               <div className="mt-6 h-px w-24 bg-accent draw-line origin-center" />
             </div>
           </Reveal>
@@ -550,16 +571,7 @@ function Home() {
               <p className="mt-6 max-w-xl text-foreground/70 text-lg font-serif italic">{t.photos.lead}</p>
             </Reveal>
           </div>
-          <Reveal>
-            <Magnetic strength={0.2}>
-              <button
-                onClick={() => setUploadOpen(true)}
-                className="border border-primary text-primary px-6 py-3 text-[10px] uppercase tracking-[0.3em] hover:bg-primary hover:text-primary-foreground transition-colors"
-              >
-                {t.photos.uploadTitle} +
-              </button>
-            </Magnetic>
-          </Reveal>
+          {/* Upload button hidden pre-wedding; re-enable closer to the day. */}
         </div>
 
         {photos.length === 0 ? (
@@ -606,9 +618,16 @@ function Home() {
             <p className="mt-6 max-w-xl text-foreground/70 text-lg font-serif italic">{t.registry.lead}</p>
           </Reveal>
           <div className="mt-10 grid gap-6 md:grid-cols-3">
-            {registryItems.map((it, i) => {
-              const cardInner = (
-                <>
+            {registryItems.map((it, i) => (
+              <Reveal key={it.name} variant="blur" delay={i * 120}>
+                <a
+                  href={it.href ?? "#"}
+                  target={it.href ? "_blank" : undefined}
+                  rel={it.href ? "noopener" : undefined}
+                  aria-disabled={it.href ? undefined : true}
+                  onClick={(e) => { if (!it.href) e.preventDefault(); }}
+                  className="relative block bg-background border border-accent/30 p-8 transition-all h-full group overflow-hidden hover:-translate-y-2 hover:shadow-2xl"
+                >
                   <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-accent to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-700 origin-left" />
                   <div className="text-[10px] uppercase tracking-[0.3em] text-accent">{String(i + 1).padStart(2, "0")}</div>
                   <div className="mt-4 editorial-heading text-4xl transition-transform duration-500 group-hover:translate-x-1">{it.name}</div>
@@ -616,26 +635,9 @@ function Home() {
                   <div className="mt-8 text-[10px] uppercase tracking-[0.3em] text-primary link-underline">
                     {it.href ? "Visit →" : "Details coming soon"}
                   </div>
-                </>
-              );
-              const baseClass = "relative block bg-background border border-accent/30 p-8 transition-all h-full group overflow-hidden";
-              return (
-                <Reveal key={it.name} variant="blur" delay={i * 120}>
-                  {it.href ? (
-                    <a
-                      href={it.href}
-                      target="_blank"
-                      rel="noopener"
-                      className={`${baseClass} hover:-translate-y-2 hover:shadow-2xl`}
-                    >
-                      {cardInner}
-                    </a>
-                  ) : (
-                    <div className={baseClass}>{cardInner}</div>
-                  )}
-                </Reveal>
-              );
-            })}
+                </a>
+              </Reveal>
+            ))}
           </div>
         </div>
       </section>
@@ -662,6 +664,11 @@ function Home() {
             </Reveal>
           ))}
         </div>
+        <Reveal delay={200}>
+          <p className="mt-12 text-center text-sm text-foreground/60 font-serif italic">
+            Still have a question? {SITE.rsvpFallbackContact}
+          </p>
+        </Reveal>
       </section>
 
       {/* ============ FINAL CTA ============ */}
