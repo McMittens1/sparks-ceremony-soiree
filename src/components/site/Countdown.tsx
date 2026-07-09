@@ -13,14 +13,13 @@ function diff(target: number) {
   };
 }
 
-/** A single flip-style digit that pulses when its value changes. */
+/** A single digit block that pulses when its value changes. */
 function Digit({ value }: { value: string }) {
   const prev = useRef(value);
   const ref = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     if (prev.current !== value && ref.current) {
       ref.current.classList.remove("count-pulse");
-      // reflow so animation restarts
       void ref.current.offsetWidth;
       ref.current.classList.add("count-pulse");
     }
@@ -33,6 +32,11 @@ function Digit({ value }: { value: string }) {
   );
 }
 
+/**
+ * Editorial panoramic countdown — a horizontal 4-cell strip.
+ * Numerals are Instrument Serif (via .font-serif), unit labels are mono.
+ * The rightmost cell (seconds) subtly emphasises the live pulse via lavender label.
+ */
 export function Countdown() {
   const t = useT();
   const target = new Date(SITE.eventDate).getTime();
@@ -42,34 +46,34 @@ export function Countdown() {
     const id = setInterval(() => setTick(diff(target)), 1000);
     return () => clearInterval(id);
   }, [target]);
-  const items: [number | null, string][] = [
-    [tick?.d ?? null, t.home.days],
-    [tick?.h ?? null, t.home.hours],
-    [tick?.m ?? null, t.home.minutes],
-    [tick?.s ?? null, t.home.seconds],
+
+  const items: { n: number | null; label: string; short: string; live?: boolean }[] = [
+    { n: tick?.d ?? null, label: t.home.days, short: "Days" },
+    { n: tick?.h ?? null, label: t.home.hours, short: "Hrs" },
+    { n: tick?.m ?? null, label: t.home.minutes, short: "Min" },
+    { n: tick?.s ?? null, label: t.home.seconds, short: "Sec", live: true },
   ];
 
   return (
-    <div className="mx-auto max-w-5xl grid grid-cols-4 gap-2 sm:gap-6 lg:gap-10 items-end">
-      {items.map(([n, label], i) => {
-        const str = n === null ? "--" : String(n).padStart(2, "0");
+    <div className="grid grid-cols-2 md:grid-cols-4 w-full">
+      {items.map((it, i) => {
+        const str = it.n === null ? "--" : it.n >= 100 ? String(it.n) : String(it.n).padStart(2, "0");
         return (
-          <div key={label} className="min-w-0 text-center relative">
-            {i > 0 && (
-              <span
-                aria-hidden
-                className="absolute -left-1 sm:-left-3 lg:-left-5 top-1/2 -translate-y-[65%] font-serif italic text-primary-soft/40 text-3xl sm:text-5xl lg:text-6xl select-none"
-              >
-                ·
-              </span>
-            )}
-            <div className="editorial-heading text-primary text-[16vw] sm:text-[13vw] md:text-[11vw] lg:text-[9rem] xl:text-[11rem] leading-[0.85]">
+          <div
+            key={it.short}
+            className={`px-6 sm:px-8 py-6 sm:py-4 ${i === 0 ? "" : "md:border-l border-tan/40"} ${i < 2 ? "border-b md:border-b-0 border-tan/30" : ""}`}
+          >
+            <span
+              className={`block font-mono text-[10px] uppercase tracking-[0.3em] mb-4 sm:mb-6 ${
+                it.live ? "text-lavender" : "text-tan"
+              }`}
+            >
+              <span className="hidden sm:inline">{it.short}</span>
+              <span className="sm:hidden">{it.label.slice(0, 3)}</span>
+            </span>
+            <span className="font-serif text-6xl sm:text-7xl md:text-8xl text-foreground leading-none">
               <Digit value={str} />
-            </div>
-            <div className="mt-3 sm:mt-5 text-[9px] sm:text-[11px] uppercase tracking-[0.3em] sm:tracking-[0.4em] text-muted-foreground">
-              <span className="sm:hidden">{label.slice(0, 3)}</span>
-              <span className="hidden sm:inline">{label}</span>
-            </div>
+            </span>
           </div>
         );
       })}
