@@ -13,7 +13,7 @@ import { SplitText } from "@/components/site/SplitText";
 import { Magnetic } from "@/components/site/Magnetic";
 import { StoryTimeline } from "@/components/site/StoryTimeline";
 import { listApprovedPhotos, type GalleryPhoto } from "@/lib/photos.functions";
-import { REGISTRY as registryItems } from "@/lib/wedding-data";
+import { REGISTRY as registryItems, PARTY } from "@/lib/wedding-data";
 
 import eng74 from "@/assets/engagement/Geo_AddiEngagement-74.jpg.asset.json";
 import eng06 from "@/assets/engagement/Geo_AddiEngagement-06.jpg.asset.json";
@@ -125,6 +125,7 @@ function Home() {
                 <Magnetic strength={0.25}>
                   <Link
                     to="/rsvp"
+                    search={{}}
                     className="inline-block border border-primary bg-primary text-primary-foreground px-8 py-4 text-[10px] uppercase tracking-[0.3em] hover:bg-transparent hover:text-primary transition-colors"
                   >
                     {t.home.rsvpCta} →
@@ -278,8 +279,8 @@ function Home() {
 
       {/* ============ WEDDING PARTY ============ */}
       <section id="party" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-20 border-t border-accent/20">
-        <div className="grid gap-12 lg:grid-cols-12 items-center">
-          <div className="lg:col-span-5">
+        <div className="grid gap-12 lg:grid-cols-12">
+          <div className="lg:col-span-4">
             <Reveal>
               <p className="text-[10px] uppercase tracking-[0.4em] text-accent">04 / Wedding Party</p>
             </Reveal>
@@ -287,19 +288,44 @@ function Home() {
             <Reveal delay={200}>
               <p className="mt-6 max-w-md text-foreground/70 text-lg font-serif italic">{t.party.lead}</p>
             </Reveal>
-            <Reveal delay={280}>
-              <p className="mt-8 text-xs uppercase tracking-[0.35em] text-muted-foreground">Names to be announced</p>
-            </Reveal>
           </div>
-          <div className="lg:col-span-7 grid grid-cols-2 gap-4">
-            <Reveal variant="mask" delay={100}>
-              <div className="aspect-[3/4] overflow-hidden">
-                <img src={eng15.url} alt="Geovanni and Addison" loading="lazy" className="h-full w-full object-cover transition-transform duration-1000 hover:scale-105" />
-              </div>
-            </Reveal>
-            <Reveal variant="mask" delay={220}>
-              <div className="aspect-[3/4] overflow-hidden mt-10">
-                <img src={eng27.url} alt="Geovanni and Addison" loading="lazy" className="h-full w-full object-cover transition-transform duration-1000 hover:scale-105" />
+          <div className="lg:col-span-8">
+            <div className="grid gap-10 sm:grid-cols-2 lg:gap-16">
+              <Reveal variant="up" delay={100}>
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.35em] text-accent mb-6">Bride's side</p>
+                  <ul className="space-y-5">
+                    {PARTY.filter((p) => ["Maid of Honor", "Bridesmaid", "Flower Girl"].includes(p.role)).map((p) => (
+                      <li key={p.name}>
+                        <p className="font-serif italic text-2xl text-primary">{p.name}</p>
+                        <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">{p.role}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </Reveal>
+              <Reveal variant="up" delay={200}>
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.35em] text-accent mb-6">Groom's side</p>
+                  <ul className="space-y-5">
+                    {PARTY.filter((p) => ["Best Man", "Groomsman", "Ring Bearer"].includes(p.role)).map((p) => (
+                      <li key={p.name}>
+                        <p className="font-serif italic text-2xl text-primary">{p.name}</p>
+                        <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">{p.role}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </Reveal>
+            </div>
+            <Reveal delay={300}>
+              <div className="mt-16 pt-10 border-t border-accent/20">
+                <p className="text-[10px] uppercase tracking-[0.35em] text-accent mb-4">Ushers</p>
+                <p className="text-sm sm:text-base text-foreground/70 leading-relaxed">
+                  {PARTY.filter((p) => p.role === "Usher")
+                    .map((p) => p.name)
+                    .join(" · ")}
+                </p>
               </div>
             </Reveal>
           </div>
@@ -496,6 +522,7 @@ function Home() {
               <Magnetic strength={0.3}>
                 <Link
                   to="/rsvp"
+                  search={{}}
                   className="inline-block border border-primary bg-primary text-primary-foreground px-10 py-4 text-[11px] uppercase tracking-[0.35em] hover:bg-transparent hover:text-primary transition-colors"
                 >
                   {t.home.rsvpCta} →
@@ -503,7 +530,7 @@ function Home() {
               </Magnetic>
               <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{t.rsvp.deadlineLine}</p>
               <div className="draw-line h-px w-24 bg-accent origin-left" />
-              <Link to="/rsvp" className="text-[10px] uppercase tracking-[0.3em] text-primary link-underline">See RSVP page →</Link>
+              <Link to="/rsvp" search={{}} className="text-[10px] uppercase tracking-[0.3em] text-primary link-underline">See RSVP page →</Link>
             </div>
           </Reveal>
         </div>
