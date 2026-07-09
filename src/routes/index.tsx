@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useT } from "@/i18n/context";
 import { SITE } from "@/lib/site";
