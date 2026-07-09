@@ -12,18 +12,23 @@ export type RegistryItem = {
 export const REGISTRY: RegistryItem[] = [
   {
     name: "Zola",
-    href: "https://zola.com",
-    note: "Main registry — dishes, linens, the boring good stuff.",
+    href: "https://www.zola.com/registry/addisonandgeovanni",
+    note: "Our main registry — most up to date, and where the honeymoon fund lives too.",
   },
   {
-    name: "Honeymoon Fund",
-    href: null,
-    note: "A weekend somewhere warm after the barn cools down.",
+    name: "The Knot",
+    href: "https://www.theknot.com/addisonandgeovanni/registry",
+    note: "Used for the wedding shower. Still active, but Zola is more current.",
   },
   {
-    name: "Local charity",
-    href: null,
-    note: "In lieu of a gift, a Lincoln food bank we care about.",
+    name: "Venmo — Geo",
+    href: "https://venmo.com/u/Geo-Moreno-1",
+    note: "Prefer to send something directly, fee-free? @Geo-Moreno-1 on Venmo.",
+  },
+  {
+    name: "Venmo — Addi",
+    href: "https://venmo.com/u/addihillman",
+    note: "Or send to @addihillman — same idea, direct and no fees.",
   },
 ];
 
