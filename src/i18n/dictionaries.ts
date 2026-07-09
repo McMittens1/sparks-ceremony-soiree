@@ -62,14 +62,14 @@ const en: Dict = {
     kicker: "The Wedding of",
     title: "The Big Day",
     dateLine: "October 10, 2026",
-    intro: "[Intro paragraph — add your welcome copy here.]",
+    intro: "Welcome to our wedding website — everything you need for the celebration lives here: the schedule, travel details, our registry, and how to RSVP.",
     countdownLabel: "Until we say I do",
     days: "days", hours: "hours", minutes: "minutes", seconds: "seconds",
     rsvpCta: "RSVP now", detailsCta: "See the details",
   },
   story: {
     title: "Our Story",
-    lead: "[Add a short line about your story.]",
+    lead: "How we got from a first hello to forever.",
     timeline: [
       { year: "2019", body: "A mutual friend, a bad karaoke bar, one shared cab home." },
       { year: "2021", body: "Moved in together during a snowstorm. Nothing has felt off-schedule since." },
@@ -79,7 +79,7 @@ const en: Dict = {
   },
   details: {
     title: "The Day",
-    lead: "[Add a short line about the day.]",
+    lead: "Everything happens at Sparks' Barn — ceremony, dinner, dancing.",
     scheduleTitle: "Day-of schedule",
     schedule: [
       { time: "4:30 PM", label: "Guests arrive" },
@@ -94,7 +94,7 @@ const en: Dict = {
     venueTitle: "The venue",
     venueBody: "Sparks' Barn is an open-air barn on farmland outside Louisville, NE. Ceremony is outdoors on the lawn; reception is inside the barn.",
   },
-  party: { title: "Wedding Party", lead: "[Add a short line about your wedding party.]" },
+  party: { title: "Wedding Party", lead: "The friends and family standing with us that night." },
   travel: {
     title: "Getting There",
     lead: "Sparks' Barn is in Louisville, Nebraska — about 25 minutes south of Omaha and 40 minutes east of Lincoln.",
@@ -142,7 +142,7 @@ const en: Dict = {
   },
   photos: {
     title: "Photos",
-    lead: "[Add a short line about the photo gallery.]",
+    lead: "A gallery from the day. Guests: add your own — we'll post them after the wedding.",
     empty: "Photos will appear here after the wedding.",
     uploadTitle: "Share a photo",
     uploadHint: "Up to 5 images, JPG or PNG, 10 MB each. Nothing goes public until we approve it.",
@@ -150,7 +150,7 @@ const en: Dict = {
     files: "Choose photos", uploadCta: "Upload", uploading: "Uploading…",
     uploadDone: "Thank you — your photos are pending approval.",
   },
-  registry: { title: "Registry", lead: "[Add a short line about the registry.]" },
+  registry: { title: "Registry", lead: "Your presence is the gift. If you'd like to do more, these are the places we've registered." },
   faq: {
     title: "FAQ", lead: "The questions we've been getting most.",
     items: [
@@ -213,13 +213,13 @@ const es: Dict = {
   home: {
     kicker: "La boda de", title: "El gran día",
     dateLine: "10 de octubre de 2026",
-    intro: "[Intro — agrega tu texto de bienvenida aquí.]",
+    intro: "Bienvenidos a nuestro sitio de boda — aquí encontrarán todo para la celebración: el programa, cómo llegar, mesa de regalos y cómo confirmar asistencia.",
     countdownLabel: "Para el gran día",
     days: "días", hours: "horas", minutes: "minutos", seconds: "segundos",
     rsvpCta: "Confirmar asistencia", detailsCta: "Ver los detalles",
   },
   story: {
-    title: "Nuestra historia", lead: "[Agrega una línea breve sobre su historia.]",
+    title: "Nuestra historia", lead: "Del primer hola al para siempre.",
     timeline: [
       { year: "2019", body: "Un amigo en común, un karaoke malísimo, un taxi compartido a casa." },
       { year: "2021", body: "Nos mudamos juntos en plena tormenta de nieve. Todo cayó en su sitio." },
@@ -228,7 +228,7 @@ const es: Dict = {
     ],
   },
   details: {
-    title: "El día", lead: "[Agrega una línea breve sobre el día.]",
+    title: "El día", lead: "Todo pasa en Sparks' Barn — ceremonia, cena y baile.",
     scheduleTitle: "Programa del día",
     schedule: [
       { time: "4:30 PM", label: "Llegada de invitados" },
@@ -243,7 +243,7 @@ const es: Dict = {
     venueTitle: "El lugar",
     venueBody: "Sparks' Barn es un granero abierto en el campo cerca de Louisville, NE. Ceremonia al aire libre; recepción dentro del granero.",
   },
-  party: { title: "Cortejo", lead: "[Agrega una línea breve sobre el cortejo.]" },
+  party: { title: "Cortejo", lead: "Las personas que estarán con nosotros esa noche." },
   travel: {
     title: "Cómo llegar",
     lead: "Sparks' Barn está en Louisville, Nebraska — a unos 25 minutos al sur de Omaha y 40 minutos al este de Lincoln.",
@@ -290,7 +290,7 @@ const es: Dict = {
     weatherAdvice: "La ceremonia es al aire libre y el granero enfría rápido tras la puesta del sol. Trae una chaqueta ligera y zapatos cómodos para pisar el césped.",
   },
   photos: {
-    title: "Fotos", lead: "[Agrega una línea breve sobre las fotos.]",
+    title: "Fotos", lead: "Galería del día. Invitados: suban las suyas — las publicaremos después de la boda.",
     empty: "Las fotos aparecerán aquí después de la boda.",
     uploadTitle: "Compartir una foto",
     uploadHint: "Hasta 5 imágenes, JPG o PNG, 10 MB cada una. Nada se hace público hasta que lo aprobemos.",
@@ -298,7 +298,7 @@ const es: Dict = {
     files: "Elegir fotos", uploadCta: "Subir", uploading: "Subiendo…",
     uploadDone: "Gracias — tus fotos están en revisión.",
   },
-  registry: { title: "Mesa de regalos", lead: "[Agrega una línea breve sobre los regalos.]" },
+  registry: { title: "Mesa de regalos", lead: "Tu presencia es el regalo. Si quieres hacer más, aquí están nuestros registros." },
   faq: {
     title: "Preguntas frecuentes", lead: "Lo que más nos preguntan.",
     items: [
