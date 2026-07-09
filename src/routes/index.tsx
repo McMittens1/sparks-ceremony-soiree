@@ -207,151 +207,195 @@ function Home() {
       </section>
 
 
-      {/* ============ COUNTDOWN — hero moment ============ */}
-      <section id="countdown" className="relative border-y border-accent/20 bg-gradient-to-b from-background via-accent/5 to-background overflow-hidden">
-        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-          <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[800px] h-[800px] rounded-full bg-primary/5 blur-3xl animate-float" />
-        </div>
-        <div className="mx-auto max-w-[1500px] px-6 lg:px-12 py-20 sm:py-28 lg:py-32">
-          <Reveal>
-            <div className="flex flex-col items-center text-center">
-              <p className="text-[10px] uppercase tracking-[0.4em] text-accent">Countdown</p>
-              <h2 className="mt-6 editorial-heading text-5xl sm:text-7xl md:text-8xl lg:text-[9rem] leading-[0.9]">
-                {t.home.countdownLabel}
-              </h2>
-              <div className="mt-6 h-px w-24 bg-accent draw-line origin-center" />
+      {/* ============ COUNTDOWN — editorial panoramic ============ */}
+      <section id="countdown" className="relative overflow-hidden bg-background">
+        <div className="mx-auto max-w-[1600px] px-6 md:px-12 py-20 sm:py-24 lg:py-28">
+          <div className="relative border-t border-b border-tan/60 py-10 md:py-14">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-0 items-end">
+              {/* Headline block */}
+              <Reveal className="lg:col-span-5 lg:border-r border-tan/40 lg:pr-10">
+                <div>
+                  <h2 className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] text-foreground leading-[0.88] tracking-tight">
+                    {t.home.countdownLabel.split(" ").slice(0, -2).join(" ") || "Until we say"}
+                    <br />
+                    <span className="italic text-lavender">
+                      {t.home.countdownLabel.split(" ").slice(-2).join(" ") || "I do"}
+                    </span>
+                  </h2>
+                  <div className="mt-8 flex items-center gap-4">
+                    <div className="h-px w-12 bg-tan draw-line origin-left" />
+                    <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-foreground/80">
+                      October 10, 2026
+                    </p>
+                  </div>
+                </div>
+              </Reveal>
+
+              {/* Countdown grid */}
+              <Reveal delay={200} className="lg:col-span-7 w-full">
+                <Countdown />
+              </Reveal>
             </div>
-          </Reveal>
-          <Reveal delay={200}>
-            <div className="mt-14 sm:mt-20">
-              <Countdown />
+
+            {/* Live indicator overhang */}
+            <div className="absolute bottom-0 right-4 sm:right-8 translate-y-1/2 flex items-center gap-3 bg-background px-3">
+              <span className="w-1.5 h-1.5 rounded-full bg-lavender animate-pulse" aria-hidden />
+              <span className="font-mono text-[9px] uppercase tracking-[0.4em] text-tan">
+                Counting Down
+              </span>
             </div>
-          </Reveal>
+          </div>
         </div>
       </section>
 
 
       {/* ============ OUR STORY ============ */}
-      <section id="story" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-20 border-t border-accent/20">
-        <Reveal>
-          <p className="text-[10px] uppercase tracking-[0.4em] text-accent">02 / Our Story</p>
-        </Reveal>
-        <SplitText as="h2" text={t.story.title} className="mt-4 editorial-heading text-5xl sm:text-6xl md:text-7xl lg:text-8xl max-w-4xl block" stagger={70} />
-        <Reveal delay={200}>
-          <p className="mt-6 max-w-xl text-foreground/70 text-lg font-serif italic">{t.story.lead}</p>
-        </Reveal>
-        <div className="mt-16">
-          <StoryTimeline />
+      <section id="story" className="mx-auto max-w-[1600px] px-6 md:px-12 py-24 sm:py-28 lg:py-32 border-t border-tan/25">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-end mb-16 sm:mb-20">
+          <div className="lg:col-span-8">
+            <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-tan">01 / Chapters</p>
+            <SplitText as="h2" text={t.story.title} className="mt-4 font-serif text-6xl sm:text-7xl md:text-8xl lg:text-[7rem] leading-[0.9] text-foreground block" stagger={70} />
+          </div>
+          <div className="lg:col-span-4">
+            <Reveal delay={200}>
+              <div className="flex items-start gap-4">
+                <div className="h-px w-10 bg-tan mt-3 shrink-0" />
+                <p className="text-foreground/75 leading-relaxed font-serif italic text-xl max-w-md">
+                  {t.story.lead}
+                </p>
+              </div>
+            </Reveal>
+          </div>
         </div>
+        <StoryTimeline />
       </section>
 
 
       {/* ============ ENGAGEMENT STRIP ============ */}
-      <section aria-label="Engagement photos" className="py-16 border-t border-accent/20 overflow-hidden">
+      <section aria-label="Engagement photos" className="py-16 border-t border-tan/25 overflow-hidden">
         <div className="mx-auto max-w-[1600px] px-6 lg:px-12">
           <Reveal>
-            <p className="text-[10px] uppercase tracking-[0.4em] text-accent">Engagement · MMXXV</p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-tan">Engagement · MMXXV</p>
           </Reveal>
         </div>
         <div className="mt-8 flex gap-4 overflow-x-auto snap-x snap-mandatory px-6 lg:px-12 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {engagementStrip.map((img, i) => (
             <Reveal key={i} variant="scale" delay={i * 60}>
-              <div className="snap-start shrink-0 w-[70vw] sm:w-[38vw] lg:w-[26vw] aspect-[3/4] overflow-hidden group">
-                <img src={img.url} alt="Geovanni and Addison" loading="lazy" className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+              <div className="snap-start shrink-0 w-[70vw] sm:w-[38vw] lg:w-[26vw] aspect-[3/4] overflow-hidden group border border-tan/20">
+                <img src={img.url} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110" width={800} height={1067} />
               </div>
             </Reveal>
           ))}
         </div>
       </section>
 
-      {/* ============ DETAILS ============ */}
-      <section id="details" className="relative py-20 bg-primary text-primary-foreground overflow-hidden grain">
-
-        <div className="mx-auto max-w-[1600px] px-6 lg:px-12 relative">
-          <Reveal>
-            <p className="text-[10px] uppercase tracking-[0.4em] text-accent">03 / The Day</p>
-          </Reveal>
-          <SplitText as="h2" text={t.details.title} className="mt-4 editorial-heading text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-primary-foreground block" stagger={70} />
-          <Reveal delay={200}>
-            <p className="mt-6 max-w-xl text-primary-foreground/80 text-lg font-serif italic">{t.details.lead}</p>
-          </Reveal>
-
-          {/* Integrated date lockup — draws itself in on scroll */}
-          <Reveal variant="up" delay={280}>
-            <div className="mt-10 flex flex-wrap items-end gap-x-4 gap-y-6 sm:gap-x-8 md:gap-x-10 border-t border-primary-foreground/15 pt-10">
-              {[
-                { n: "10", cap: "Sat" },
-                { n: "10", cap: "Oct" },
-                { n: "26", cap: "MMXXVI" },
-              ].map((d, i) => (
-                <div key={i} className="flex items-end gap-4 sm:gap-8 md:gap-10">
-                  <div className="text-center">
-                    <div className="editorial-heading text-primary-foreground text-[14vw] sm:text-[11vw] md:text-[9vw] lg:text-[8vw] leading-[0.8]">{d.n}</div>
-                    <div className="mt-2 text-[9px] sm:text-[10px] uppercase tracking-[0.35em] sm:tracking-[0.4em] text-accent">{d.cap}</div>
-                  </div>
-                  {i < 2 && <span className="editorial-heading text-primary-foreground/40 text-[8vw] sm:text-[6vw] md:text-[5vw] pb-4 sm:pb-6">·</span>}
-                </div>
-              ))}
+      {/* ============ DETAILS — cinematic dark editorial ============ */}
+      <section id="details" className="relative py-24 sm:py-28 lg:py-32 bg-ink text-background overflow-hidden">
+        <div className="mx-auto max-w-[1600px] px-6 md:px-12 relative">
+          {/* Header row */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-16 items-end">
+            <div className="lg:col-span-8">
+              <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-tan">02 / The Day</p>
+              <SplitText as="h2" text={t.details.title} className="mt-4 font-serif text-6xl sm:text-7xl md:text-8xl lg:text-[8rem] leading-[0.9] text-background block" stagger={70} />
             </div>
+            <div className="lg:col-span-4">
+              <Reveal delay={200}>
+                <div className="flex items-start gap-4">
+                  <div className="h-px w-10 bg-tan mt-3 shrink-0" />
+                  <p className="text-background/75 font-serif italic text-xl leading-relaxed">{t.details.lead}</p>
+                </div>
+              </Reveal>
+            </div>
+          </div>
 
-            <div className="draw-line mt-4 h-px bg-accent origin-left" />
+          {/* Cinematic date lockup */}
+          <Reveal variant="up" delay={280}>
+            <div className="mt-20 sm:mt-24 border-t border-tan/40 pt-10">
+              <div className="flex items-end justify-between flex-wrap gap-y-6">
+                <div className="font-mono text-[10px] uppercase tracking-[0.4em] text-tan">
+                  Saturday · The tenth · MMXXVI
+                </div>
+                <div className="font-mono text-[10px] uppercase tracking-[0.4em] text-tan hidden md:block">
+                  Louisville, Nebraska
+                </div>
+              </div>
+              <div className="mt-6 font-serif text-[24vw] sm:text-[18vw] md:text-[14vw] lg:text-[13rem] xl:text-[16rem] leading-[0.85] text-background flex items-baseline justify-between">
+                <span>10</span>
+                <span className="text-tan italic mx-2 sm:mx-4">.</span>
+                <span>10</span>
+                <span className="text-tan italic mx-2 sm:mx-4">.</span>
+                <span>26</span>
+              </div>
+              <div className="mt-4 draw-line h-px bg-tan/60 origin-left" />
+            </div>
           </Reveal>
 
-          <div className="mt-12 grid gap-10 lg:grid-cols-12">
+          {/* Content grid */}
+          <div className="mt-16 sm:mt-20 grid gap-12 lg:gap-16 lg:grid-cols-12">
+            {/* Schedule column */}
             <div className="lg:col-span-5">
               <Reveal>
-                <p className="text-[10px] uppercase tracking-[0.35em] text-accent">{t.details.scheduleTitle}</p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-tan">{t.details.scheduleTitle}</p>
               </Reveal>
-              <ul className="mt-6">
+              <ul className="mt-8">
                 {t.details.schedule.map((s, i) => (
                   <Reveal key={i} delay={80 + i * 40}>
-                    <li className="grid grid-cols-[80px_1fr] sm:grid-cols-[100px_1fr] gap-4 sm:gap-6 items-baseline py-4 border-t border-primary-foreground/15">
-                      <span className="font-serif italic text-xl sm:text-2xl text-accent tabular-nums">{s.time}</span>
-                      <span className="text-primary-foreground/90 text-base sm:text-lg font-serif">{s.label}</span>
+                    <li className="grid grid-cols-[90px_1fr] sm:grid-cols-[110px_1fr] gap-6 items-baseline py-5 border-t border-tan/25">
+                      <span className="font-mono text-sm sm:text-base text-tan tabular-nums tracking-tight">{s.time}</span>
+                      <span className="text-background/95 text-lg sm:text-xl font-serif">{s.label}</span>
                     </li>
-
                   </Reveal>
                 ))}
               </ul>
             </div>
-            <div className="lg:col-span-7 grid gap-10 content-start lg:pl-8">
+
+            {/* Image + venue/dress */}
+            <div className="lg:col-span-7 grid gap-12 content-start lg:pl-8">
               <Reveal variant="mask">
-                <div className="aspect-[16/10] overflow-hidden">
+                <div className="aspect-[4/3] overflow-hidden border border-tan/25">
                   <Parallax speed={-0.12} className="h-full w-full">
-                    <img src={eng82.url} alt="Geovanni and Addison" className="h-full w-full object-cover scale-110" />
+                    <img src={eng82.url} alt="" className="h-full w-full object-cover scale-110" width={1600} height={1200} />
                   </Parallax>
                 </div>
               </Reveal>
-              <Reveal>
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.35em] text-accent">{t.details.dressTitle}</p>
-                  <p className="mt-3 text-primary-foreground/85 leading-relaxed">{t.details.dressBody}</p>
-                </div>
-              </Reveal>
-              <Reveal>
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.35em] text-accent">{t.details.venueTitle}</p>
-                  <p className="mt-3 text-primary-foreground/85 leading-relaxed">{t.details.venueBody}</p>
-                </div>
-              </Reveal>
+              <div className="grid sm:grid-cols-2 gap-10">
+                <Reveal>
+                  <div>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-tan">{t.details.dressTitle}</p>
+                    <p className="mt-4 text-background/85 leading-relaxed">{t.details.dressBody}</p>
+                  </div>
+                </Reveal>
+                <Reveal delay={80}>
+                  <div>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-tan">{t.details.venueTitle}</p>
+                    <p className="mt-4 text-background/85 leading-relaxed">{t.details.venueBody}</p>
+                  </div>
+                </Reveal>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* ============ WEDDING PARTY ============ */}
-      <section id="party" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-20 border-t border-accent/20">
-        <div className="grid gap-12 lg:grid-cols-12">
+      <section id="party" className="mx-auto max-w-[1600px] px-6 md:px-12 py-24 sm:py-28 lg:py-32 border-t border-tan/25">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-end mb-16 sm:mb-20">
+          <div className="lg:col-span-8">
+            <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-tan">03 / The Cast</p>
+            <SplitText as="h2" text={t.party.title} className="mt-4 font-serif text-6xl sm:text-7xl md:text-8xl lg:text-[7rem] leading-[0.9] text-foreground block" stagger={70} />
+          </div>
           <div className="lg:col-span-4">
-            <Reveal>
-              <p className="text-[10px] uppercase tracking-[0.4em] text-accent">04 / Wedding Party</p>
-            </Reveal>
-            <SplitText as="h2" text={t.party.title} className="mt-4 editorial-heading text-5xl sm:text-6xl md:text-7xl block" stagger={70} />
             <Reveal delay={200}>
-              <p className="mt-6 max-w-md text-foreground/70 text-lg font-serif italic">{t.party.lead}</p>
+              <div className="flex items-start gap-4">
+                <div className="h-px w-10 bg-tan mt-3 shrink-0" />
+                <p className="text-foreground/75 leading-relaxed font-serif italic text-xl max-w-md">
+                  {t.party.lead}
+                </p>
+              </div>
             </Reveal>
           </div>
-          <div className="lg:col-span-8 space-y-16">
+        </div>
+        <div className="grid grid-cols-1">
             {(() => {
               const featured = PARTY.filter((p) => ["Maid of Honor", "Best Man"].includes(p.role));
               const bridesmaids = PARTY.filter((p) => p.role === "Bridesmaid");

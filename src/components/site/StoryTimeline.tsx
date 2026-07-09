@@ -147,21 +147,38 @@ export function StoryTimeline() {
     };
   }, []);
 
+  // Assign a running index only to dated entries (montages don't count as chapters).
+  let chapter = 0;
+  const enriched = ENTRIES.map((entry) => {
+    if (entry.kind === "dated") {
+      chapter += 1;
+      return { entry, chapterNum: chapter };
+    }
+    return { entry, chapterNum: null as number | null };
+  });
+
   return (
-    <div ref={trackRef} className="relative mx-auto max-w-6xl px-4 sm:px-6">
+    <div ref={trackRef} className="relative mx-auto max-w-[1400px] px-4 sm:px-6">
+      {/* base rail — tan hairline */}
       <div
         aria-hidden
-        className="pointer-events-none absolute top-0 bottom-0 left-6 md:left-1/2 md:-translate-x-1/2 w-px bg-foreground/10"
+        className="pointer-events-none absolute top-0 bottom-0 left-6 md:left-1/2 md:-translate-x-1/2 w-px bg-tan/30"
       />
+      {/* progress fill — lavender */}
       <div
         aria-hidden
-        className="pointer-events-none absolute top-0 left-6 md:left-1/2 md:-translate-x-1/2 w-px bg-primary origin-top"
+        className="pointer-events-none absolute top-0 left-6 md:left-1/2 md:-translate-x-1/2 w-px bg-lavender origin-top"
         style={{ height: "100%", transform: `scaleY(${progress})`, transition: "transform 120ms linear" }}
       />
       <div className="space-y-24 sm:space-y-32">
-        {ENTRIES.map((entry, i) =>
+        {enriched.map(({ entry, chapterNum }, i) =>
           entry.kind === "dated" ? (
-            <DatedEntry key={i} entry={entry} index={i} side={i % 2 === 0 ? "right" : "left"} />
+            <DatedEntry
+              key={i}
+              entry={entry}
+              chapterNum={chapterNum ?? 1}
+              side={((chapterNum ?? 1) % 2 === 1) ? "right" : "left"}
+            />
           ) : (
             <MontageEntry key={i} entry={entry} />
           ),
@@ -174,11 +191,11 @@ export function StoryTimeline() {
 function DatedEntry({
   entry,
   side,
-  index,
+  chapterNum,
 }: {
   entry: Dated;
   side: "left" | "right";
-  index: number;
+  chapterNum: number;
 }) {
   const desktopSide =
     side === "right"
@@ -187,27 +204,31 @@ function DatedEntry({
   return (
     <Reveal variant={side === "right" ? "right" : "left"}>
       <article className={`relative pl-16 md:pl-0 ${desktopSide}`}>
+        {/* Chapter marker — mono index in a tan hairline square */}
         <span
           aria-hidden
-          className="absolute top-2 left-6 md:left-1/2 -translate-x-1/2 z-10 flex h-4 w-4 items-center justify-center"
+          className="absolute top-1 left-6 md:left-1/2 -translate-x-1/2 z-10 flex h-7 w-7 items-center justify-center bg-background border border-tan"
         >
-          <span className="absolute inline-flex h-4 w-4 rounded-full bg-primary/20 animate-ping" />
-          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-background" />
+          <span className="font-mono text-[9px] text-foreground/80 font-medium">
+            {String(chapterNum).padStart(2, "0")}
+          </span>
         </span>
 
-        <div className={`mb-3 flex items-center gap-3 ${side === "left" ? "md:justify-end" : ""}`}>
-          <span className="text-[10px] uppercase tracking-[0.35em] text-primary">
-            {String(index + 1).padStart(2, "0")}
-          </span>
-          <span className="h-px w-8 bg-primary/40" />
-          <time className="font-serif italic text-primary text-sm sm:text-base">{entry.date}</time>
+        {/* Meta row */}
+        <div className={`mb-2 flex items-center gap-3 ${side === "left" ? "md:justify-end" : ""}`}>
+          <span className="h-px w-8 bg-tan/60" />
+          <time className="font-mono text-[10px] uppercase tracking-[0.3em] text-tan">
+            {entry.date}
+          </time>
         </div>
 
-        <p className="text-[11px] uppercase tracking-[0.3em] text-foreground/50">{entry.place}</p>
-        <h3 className="mt-2 font-serif text-3xl sm:text-4xl md:text-5xl leading-tight">{entry.title}</h3>
-        <p className="mt-4 max-w-xl text-foreground/80 leading-relaxed md:inline-block">{entry.body}</p>
+        <p className="text-[10px] uppercase tracking-[0.35em] text-foreground/50 font-mono">{entry.place}</p>
+        <h3 className="mt-3 font-serif text-3xl sm:text-4xl md:text-5xl leading-[1.05] text-foreground">
+          {entry.title}
+        </h3>
+        <p className="mt-5 max-w-xl text-foreground/75 leading-relaxed md:inline-block">{entry.body}</p>
 
-        <div className="mt-8">
+        <div className="mt-10">
           <PhotoStrip photos={entry.photos} align={side} />
         </div>
       </article>
@@ -218,18 +239,26 @@ function DatedEntry({
 function MontageEntry({ entry }: { entry: Montage }) {
   return (
     <Reveal variant="blur">
-      <section className="relative -mx-4 sm:-mx-6 md:mx-0">
-        <div className="relative rounded-3xl bg-gradient-to-b from-primary/5 via-transparent to-accent/5 px-4 sm:px-8 md:px-12 py-16">
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="text-[10px] uppercase tracking-[0.4em] text-accent-foreground/70">— {entry.label} —</p>
-            <h3 className="mt-3 font-serif italic text-4xl sm:text-5xl md:text-6xl text-foreground">
-              {entry.title}
-            </h3>
-            <p className="mx-auto mt-5 max-w-xl text-foreground/75 leading-relaxed">{entry.body}</p>
-          </div>
-          <div className="mt-12">
-            <MontageGrid photos={entry.photos} />
-          </div>
+      <section className="relative">
+        {/* Interlude marker */}
+        <span
+          aria-hidden
+          className="absolute top-4 left-6 md:left-1/2 -translate-x-1/2 z-10 flex h-4 w-4 items-center justify-center"
+        >
+          <span className="h-1 w-1 rounded-full bg-lavender" />
+        </span>
+
+        <div className="mx-auto max-w-3xl text-center pt-4">
+          <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-lavender">
+            — {entry.label} —
+          </p>
+          <h3 className="mt-4 font-serif italic text-4xl sm:text-5xl md:text-6xl text-foreground leading-[1]">
+            {entry.title}
+          </h3>
+          <p className="mx-auto mt-5 max-w-xl text-foreground/75 leading-relaxed">{entry.body}</p>
+        </div>
+        <div className="mt-14">
+          <MontageGrid photos={entry.photos} />
         </div>
       </section>
     </Reveal>
@@ -247,17 +276,17 @@ function PhotoStrip({ photos, align }: { photos: string[]; align: "left" | "righ
   }
   if (photos.length === 2) {
     return (
-      <div className={`grid grid-cols-2 gap-3 max-w-lg ${align === "left" ? "md:ml-auto" : ""}`}>
-        <PhotoTile src={photos[0]} className="aspect-[3/4] translate-y-2" />
-        <PhotoTile src={photos[1]} className="aspect-[3/4] -translate-y-2" />
+      <div className={`grid grid-cols-2 gap-4 max-w-lg ${align === "left" ? "md:ml-auto" : ""}`}>
+        <PhotoTile src={photos[0]} className="aspect-[3/4]" />
+        <PhotoTile src={photos[1]} className="aspect-[3/4] translate-y-6" />
       </div>
     );
   }
   const [hero, ...rest] = photos;
   return (
-    <div className={`grid grid-cols-5 gap-3 max-w-2xl ${align === "left" ? "md:ml-auto" : ""}`}>
+    <div className={`grid grid-cols-5 gap-4 max-w-2xl ${align === "left" ? "md:ml-auto" : ""}`}>
       <PhotoTile src={hero} className="col-span-3 aspect-[4/5]" />
-      <div className="col-span-2 flex flex-col gap-3">
+      <div className="col-span-2 flex flex-col gap-4">
         {rest.slice(0, 3).map((src, i) => (
           <PhotoTile key={i} src={src} className="aspect-[4/3] flex-1" />
         ))}
@@ -267,15 +296,15 @@ function PhotoStrip({ photos, align }: { photos: string[]; align: "left" | "righ
 }
 
 function MontageGrid({ photos }: { photos: string[] }) {
-  const rots = ["-rotate-1", "rotate-1", "-rotate-2", "rotate-2", "rotate-0"];
-  const spans = ["row-span-2", "", "row-span-2", "", "", "row-span-2", "", "", ""];
+  // clean editorial grid — no rotations, no rings, no gradient boxes
+  const spans = ["row-span-2", "", "", "row-span-2", "", "", "row-span-2", "", ""];
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 auto-rows-[120px] sm:auto-rows-[160px] gap-3 sm:gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 auto-rows-[140px] sm:auto-rows-[180px] gap-3 sm:gap-4">
       {photos.map((src, i) => (
         <PhotoTile
           key={i}
           src={src}
-          className={`${spans[i % spans.length]} ${rots[i % rots.length]} hover:rotate-0 h-full w-full`}
+          className={`${spans[i % spans.length]} h-full w-full`}
         />
       ))}
     </div>
@@ -285,16 +314,15 @@ function MontageGrid({ photos }: { photos: string[] }) {
 function PhotoTile({ src, className = "" }: { src: string; className?: string }) {
   return (
     <figure
-      className={`group relative overflow-hidden rounded-xl bg-muted shadow-sm ring-1 ring-foreground/5 transition-all duration-500 will-change-transform hover:shadow-xl hover:ring-primary/30 ${className}`}
+      className={`group relative overflow-hidden bg-muted border border-tan/20 transition-all duration-500 will-change-transform hover:border-tan/60 ${className}`}
     >
       <img
         src={src}
         alt=""
         loading="lazy"
         decoding="async"
-        className="h-full w-full object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]"
+        className="h-full w-full object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.05]"
       />
-      <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-foreground/20 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
     </figure>
   );
 }
