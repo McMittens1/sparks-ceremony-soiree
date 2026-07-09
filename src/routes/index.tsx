@@ -395,7 +395,7 @@ function Home() {
             </Reveal>
           </div>
         </div>
-        <div className="grid grid-cols-1">
+        <div className="space-y-16">
             {(() => {
               const featured = PARTY.filter((p) => ["Maid of Honor", "Best Man"].includes(p.role));
               const bridesmaids = PARTY.filter((p) => p.role === "Bridesmaid");
@@ -518,7 +518,6 @@ function Home() {
               );
             })()}
           </div>
-        </div>
       </section>
 
 
