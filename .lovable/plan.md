@@ -1,38 +1,55 @@
+## Scope
 
-## Still open (in priority order)
+Content-only pass to get the site publish-ready. Wedding party photos and story chapter photos are deferred to post-publish (you can iterate in preview, then click "Update" to push live — no separate staging needed).
 
-**1. Wedding party names** — `src/lib/wedding-data.ts` still has seeded fakes (Maria S., Jordan T., Ashley R., Sam L., Priya N., Diego M.). The `#party` section on home renders these. Need real names + roles, or set to "to be announced" on both surfaces.
+## Changes
 
-**2. Registry links** — `wedding-data.ts`:
-- Zola link is generic `https://zola.com` — need your real Zola URL
-- Honeymoon Fund: no link, renders "Details coming soon"
-- Local charity: no link, renders "Details coming soon"
-- Send actual URLs, or tell me to drop the two placeholders.
+### 1. Registry (`src/lib/wedding-data.ts`)
+Replace the current `REGISTRY` array with:
+- **Zola** → `https://www.zola.com/registry/addisonandgeovanni` — "Main registry — most up to date"
+- **The Knot** → `https://www.theknot.com/addisonandgeovanni/registry` — "Used for the wedding shower"
+- **Honeymoon fund (Zola)** → same Zola URL (or Zola's cash-fund section if you have it) — "Help send us on the honeymoon"
+- **Venmo — Geo** → `https://venmo.com/u/Geo-Moreno-1` — "Fee-free alternative"
+- **Venmo — Addi** → `https://venmo.com/u/addihillman` — "Fee-free alternative"
+- Remove local charity entry.
 
-**3. Story chapter photos** — `StoryTimeline.tsx` cycles the same 8 engagement shots for every chapter via `pick(i, count)`. Chapters like "Odin comes around" / "Copper meets Odin" need real chapter-specific images. Send photos mapped to chapters when you have them.
+### 2. Travel section (`src/lib/site.ts`, `src/i18n/dictionaries.ts`, travel section on home)
+- **Address**: update `SITE.address` to `13817 108th St, Louisville, NE 68037`; update `SITE.mapEmbed` and `SITE.mapLink` to point at that exact address (pin on Sparks' Barn, not the town).
+- **Show the address** in the travel section under the map title.
+- **Hotels copy** rewrite (EN + ES): remove the "we've held a block" line. Replace with a short intro + curated list of nearby options grouped by area:
+  - *Closest (Plattsmouth / Louisville)* — 1–2 options within ~15 min
+  - *Lincoln* (~40 min west) — 2–3 well-known chains near I-80, good for guests staying in Lincoln
+  - *Omaha / Airport (OMA)* — 2–3 options near the airport for fly-in guests
+  - Each entry: hotel name + city + approximate drive time. I'll pick well-known chains (Hilton, Marriott, Hampton, Holiday Inn Express) near each area; you can swap any before publish.
 
-**4. Hotel / travel copy** — `dictionaries.ts` still says "We've held a small block at hotels in Plattsmouth and south Omaha…" Need real hotel name(s) + booking link(s), or a rewrite if there's no block.
+### 3. RSVP subtitle (`src/routes/rsvp.tsx` ~line 317)
+Change "A paper invite is on its way." to something like "Confirm your address below so we can keep you posted." (EN + ES).
 
-**5. RSVP address subtitle** — `rsvp.tsx` line ~317 currently says "A paper invite is on its way." Should probably be "Please confirm your address so future updates reach you." (or similar) since paper invites are going out separately.
+### 4. FAQ tighten (`src/i18n/dictionaries.ts`, both `en.faq.items` and `es.faq.items`)
+Keep the 6 questions; tighten answers so they match reality:
+- Venue name (Sparks' Barn, Louisville NE)
+- No hotel block — point at Travel page for recommendations
+- Plus-ones: only if listed on your invite / RSVP page allows
+- Kids: welcome, mark them as child on RSVP
+- Dress code + indoor/outdoor: already accurate, minor polish
+- Arrival time: 4:30 PM doors, 5:00 PM ceremony
 
-**6. FAQ re-read** — 6 generic Q&As in `dictionaries.ts` `faq.items`. Especially plus-ones and kids policy — worth confirming they match your actual answers.
+### 5. Deferred (post-publish, no code today)
+- Wedding party portraits — add `photo` field to entries in `PARTY` when you have them; layout already supports it and falls back to initials.
+- Story chapter photos — map specific engagement shots to chapters in `StoryTimeline.tsx`.
+- Per-section `og:image`, RSVP confirmation email (needs custom domain).
 
-**7. Spanish mirror** — every EN edit above needs the matching ES string updated in `dictionaries.ts`.
+## Publish workflow (for reference)
+- Frontend edits stay in preview until you click **Publish → Update**. That is your staging.
+- After publish, keep editing freely; nothing goes live until you click Update again.
+- No separate staging site needed.
 
-## Then: pre-publish verification
+## Order of operations
+1. Registry array
+2. Site address + map
+3. Travel dictionary (hotels EN + ES)
+4. RSVP subtitle (EN + ES)
+5. FAQ answers (EN + ES)
+6. Typecheck, confirm preview renders
 
-- End-to-end RSVP test: create a fake invite in admin → submit as guest → confirm it lands.
-- Photo upload + admin moderation dry-run.
-- Quick pass on `#details` values (date `2026-10-10 17:00`, venue "Sparks' Barn, Louisville, NE", deadline `2026-09-15`, dress code colors).
-
-## Nice-to-have (can wait for after publish)
-
-- Per-route (well, per-section) `og:image` using the hero
-- RSVP confirmation email (needs custom domain first)
-- 404 copy polish
-
-## My suggestion
-
-Fastest path to publish: **send me items 1, 2, 4, 5 as text and I'll knock them out in one pass**, then mirror ES, then run the RSVP/photo test. Story photos (#3) can slot in whenever you're ready — they don't block launch, they just make the timeline stronger.
-
-Which do you want to start with?
+After this pass, remaining pre-publish work is: end-to-end RSVP test + photo upload/moderation dry-run.
