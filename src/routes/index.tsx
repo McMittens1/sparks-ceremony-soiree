@@ -68,99 +68,142 @@ function Home() {
   return (
     <div id="home">
       <SectionRail />
-      {/* ============ HERO — editorial framed portrait ============ */}
-      <section className="relative pt-12 pb-16 sm:pt-16 sm:pb-24 lg:pt-20 lg:pb-28 overflow-hidden">
-        <div className="mx-auto max-w-[1400px] px-6 lg:px-12">
-          {/* Kicker */}
-          <p className="text-center text-[10px] uppercase tracking-[0.5em] text-accent animate-rise" style={{ animationDelay: "0.05s" }}>
-            {t.home.kicker}
-          </p>
+      {/* ============ HERO — Cinematic Editorial Masthead ============ */}
+      <section className="relative px-4 py-6 sm:p-6 md:p-12 overflow-hidden bg-background">
+        <div className="mx-auto max-w-[1600px] w-full grid grid-cols-12 gap-0 border border-tan/25">
 
-          {/* Editorial name block — overlaps the photo on desktop */}
-          <h1
-            aria-label="Geovanni and Addison"
-            className="relative z-10 mt-6 sm:mt-8 editorial-heading leading-[0.85] text-center lg:text-left"
-          >
+          {/* Metadata rail (mono) */}
+          <div className="col-span-12 md:col-span-1 flex md:flex-col justify-between items-center py-4 md:py-8 px-4 md:px-0 border-b md:border-b-0 md:border-r border-tan/30">
             <span
-              className="block text-[16vw] sm:text-[12vw] lg:text-[9vw] xl:text-[10rem] animate-rise lg:pl-[4%]"
-              style={{ animationDelay: "0.15s" }}
+              className="font-mono text-[10px] tracking-[0.35em] text-foreground/60 uppercase md:-rotate-90 md:origin-center whitespace-nowrap animate-rise"
+              style={{ animationDelay: "0.1s" }}
             >
-              Geovanni
+              Est. MMXXVI
             </span>
-            <span
-              className="block italic text-primary-soft text-[14vw] sm:text-[10vw] lg:text-[7vw] xl:text-[8rem] animate-rise lg:pl-[38%] -mt-2 lg:-mt-4"
-              style={{ animationDelay: "0.3s" }}
-            >
-              &amp;
-            </span>
-            <span
-              className="block text-[16vw] sm:text-[12vw] lg:text-[9vw] xl:text-[10rem] animate-rise lg:pl-[30%] -mt-2 lg:-mt-6"
-              style={{ animationDelay: "0.45s" }}
-            >
-              Addison
-            </span>
-          </h1>
+            <div className="font-mono flex md:flex-col items-center gap-3 md:gap-4 text-[11px] text-foreground font-medium animate-rise" style={{ animationDelay: "0.2s" }}>
+              <span>10</span>
+              <span className="text-lavender">—</span>
+              <span className="text-tan">10</span>
+              <span className="text-lavender">—</span>
+              <span>26</span>
+            </div>
+          </div>
 
-          {/* Framed portrait — pulls up under the names on desktop */}
-          <div className="relative mt-6 sm:mt-10 lg:-mt-10 animate-rise" style={{ animationDelay: "0.55s" }}>
-            {/* accent block behind */}
-            <div aria-hidden className="absolute -bottom-5 -left-5 sm:-bottom-8 sm:-left-8 w-24 h-24 sm:w-40 sm:h-40 bg-accent -z-10" />
-            <div className="relative bg-background p-2 sm:p-3 shadow-2xl border border-accent/25 overflow-hidden">
-              <div className="relative aspect-[5/4] sm:aspect-[4/3] lg:aspect-[16/10] w-full overflow-hidden bg-muted">
-                <div ref={heroImgRef} className="absolute inset-0 transition-transform duration-500 ease-out will-change-transform">
-                  <img
-                    src={hero}
-                    alt="Geovanni Moreno and Addison Hillman."
-                    className="h-full w-full object-cover"
-                    loading="eager"
-                    fetchPriority="high"
-                    width={1920}
-                    height={1200}
-                  />
+          {/* Main split */}
+          <div className="col-span-12 md:col-span-11 grid grid-cols-1 md:grid-cols-11">
+
+            {/* Typographic column */}
+            <div className="md:col-span-5 flex flex-col justify-center px-6 md:px-12 lg:px-16 py-14 md:py-16 z-10 order-2 md:order-1">
+              <p
+                className="font-mono text-[10px] uppercase tracking-[0.35em] text-tan animate-rise"
+                style={{ animationDelay: "0.15s" }}
+              >
+                {t.home.kicker}
+              </p>
+              <h1
+                aria-label="Geovanni and Addison"
+                className="mt-5 font-serif leading-[0.82] text-foreground flex flex-col"
+              >
+                <span
+                  className="text-6xl sm:text-7xl md:text-[6.5rem] lg:text-[8.5rem] tracking-tight animate-rise"
+                  style={{ animationDelay: "0.25s" }}
+                >
+                  Geovanni
+                </span>
+                <span
+                  className="italic text-lavender text-5xl sm:text-6xl md:text-[5.5rem] lg:text-[7rem] ml-8 md:ml-14 lg:ml-20 mt-1 animate-rise"
+                  style={{ animationDelay: "0.4s" }}
+                >
+                  &amp; Addison
+                </span>
+              </h1>
+
+              <div className="mt-10 sm:mt-14 space-y-8 animate-rise" style={{ animationDelay: "0.55s" }}>
+                <div className="flex items-start gap-4">
+                  <div className="w-px h-12 bg-tan mt-1 shrink-0" />
+                  <p className="text-[11px] uppercase tracking-[0.28em] leading-relaxed text-foreground/80">
+                    Celebrating at <span className="font-semibold text-foreground">{SITE.venue}</span>
+                    <br />
+                    Louisville, Nebraska
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-5">
+                  <Magnetic strength={0.2}>
+                    <Link
+                      to="/rsvp"
+                      search={{}}
+                      className="inline-block px-9 py-4 border border-foreground text-foreground hover:bg-foreground hover:text-background transition-colors duration-500 text-[10px] uppercase tracking-[0.3em] font-medium"
+                    >
+                      {t.home.rsvpCta}
+                    </Link>
+                  </Magnetic>
+                  <a
+                    href="#countdown"
+                    className="text-[10px] uppercase tracking-[0.3em] text-foreground/70 link-underline"
+                  >
+                    {t.home.detailsCta} →
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* Cinematic image */}
+            <div className="md:col-span-6 relative order-1 md:order-2">
+              <div className="aspect-[4/5] md:aspect-auto md:h-[86vh] overflow-hidden bg-muted">
+                <img
+                  src={hero}
+                  alt="Geovanni Moreno and Addison Hillman."
+                  className="h-full w-full object-cover animate-rise"
+                  style={{ animationDelay: "0.1s", animationDuration: "1.4s" }}
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="async"
+                  width={1920}
+                  height={2400}
+                />
+              </div>
+
+              {/* Lavender accent label */}
+              <div className="absolute top-0 right-0 bg-lavender px-4 py-2 hidden md:block animate-rise" style={{ animationDelay: "0.7s" }}>
+                <span className="font-mono text-[9px] text-background uppercase tracking-[0.25em] font-bold">
+                  MMXXVI
+                </span>
+              </div>
+
+              {/* Coordinates plate */}
+              <div className="absolute -bottom-6 -left-6 md:-left-10 bg-background p-6 md:p-8 hidden md:block border border-tan/30 shadow-2xl z-20 animate-rise" style={{ animationDelay: "0.85s" }}>
+                <div className="font-mono text-[10px] space-y-2 text-foreground min-w-[180px]">
+                  <div className="flex justify-between gap-6 border-b border-tan/25 pb-1.5">
+                    <span className="text-foreground/60">LOC</span>
+                    <span className="font-semibold">40.9997° N</span>
+                  </div>
+                  <div className="flex justify-between gap-6">
+                    <span className="text-foreground/60">DAT</span>
+                    <span className="font-semibold">10.10.2026</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Museum-plate caption bar */}
-          <div className="mt-8 sm:mt-10 grid gap-6 sm:grid-cols-3 sm:items-center animate-rise" style={{ animationDelay: "0.7s" }}>
-            <div className="text-center sm:text-left">
-              <p className="text-[10px] uppercase tracking-[0.3em] text-foreground/60 font-semibold">
-                {t.home.title}
-              </p>
-              <p className="mt-2 font-serif italic text-xl sm:text-2xl text-primary leading-tight">
-                {t.home.dateLine}
-              </p>
+          {/* Bottom ornamental rail */}
+          <div className="col-span-12 border-t border-tan/30 py-4 px-4 sm:px-6 flex flex-wrap gap-4 justify-between items-center bg-background">
+            <div className="font-mono text-[9px] uppercase tracking-[0.4em] text-tan">
+              Louisville · Nebraska · Two Thousand Twenty Six
             </div>
-            <div className="text-center text-[10px] uppercase tracking-[0.35em] text-foreground/70 sm:border-x sm:border-accent/25 sm:px-6">
-              Sparks' Barn
-              <span className="mx-2 text-accent">·</span>
-              Louisville, NE
-            </div>
-            <div className="flex flex-wrap items-center justify-center sm:justify-end gap-5">
-              <Magnetic strength={0.25}>
-                <Link
-                  to="/rsvp"
-                  search={{}}
-                  className="inline-block border border-primary bg-primary text-primary-foreground px-7 py-3.5 text-[10px] uppercase tracking-[0.3em] hover:bg-transparent hover:text-primary transition-colors"
-                >
-                  {t.home.rsvpCta} →
-                </Link>
-              </Magnetic>
-              <a
-                href="#countdown"
-                className="link-underline text-[10px] uppercase tracking-[0.3em] text-primary"
-              >
-                {t.home.detailsCta} →
-              </a>
+            <div className="hidden md:flex gap-6 font-mono text-[9px]">
+              <span className="text-foreground/40">[ 01 ]</span>
+              <span className="text-foreground/40">[ 02 ]</span>
+              <span className="text-foreground">[ 03 ]</span>
             </div>
           </div>
-
-          {/* Intro paragraph */}
-          <p className="mx-auto mt-10 sm:mt-14 max-w-2xl text-center text-foreground/75 leading-relaxed animate-rise" style={{ animationDelay: "0.85s" }}>
-            {t.home.intro}
-          </p>
         </div>
+
+        {/* Intro paragraph — separate breath below the masthead */}
+        <p className="mx-auto mt-14 sm:mt-20 max-w-2xl text-center text-foreground/75 leading-relaxed animate-rise px-6" style={{ animationDelay: "1s" }}>
+          {t.home.intro}
+        </p>
       </section>
 
 
