@@ -244,10 +244,42 @@ const es: Dict = {
   },
   party: { title: "Cortejo", lead: "Las personas que estarán con nosotros esa noche." },
   travel: {
-    title: "Cómo llegar", lead: "Louisville, Nebraska está a unos 25 minutos al sur de Omaha.",
+    title: "Cómo llegar",
+    lead: "Sparks' Barn está en Louisville, Nebraska — a unos 25 minutos al sur de Omaha y 40 minutos al este de Lincoln.",
     mapTitle: "El lugar en el mapa",
+    addressLabel: "Dirección del lugar",
     hotelsTitle: "Dónde alojarse",
-    hotelsBody: "Reservamos un bloque pequeño en hoteles de Plattsmouth y el sur de Omaha. Publicaremos los detalles pronto.",
+    hotelsBody: "No tenemos bloque de habitaciones. La mayoría de invitados de fuera se quedan en Lincoln o Omaha — aquí van opciones conocidas en cada zona.",
+    hotelGroups: [
+      {
+        area: "Más cerca del lugar (Plattsmouth)",
+        drive: "~15 min en auto",
+        items: [
+          { name: "Cobblestone Inn & Suites", city: "Plattsmouth, NE" },
+          { name: "American Inn", city: "Plattsmouth, NE" },
+        ],
+      },
+      {
+        area: "Lincoln",
+        drive: "~40 min en auto",
+        items: [
+          { name: "Graduate by Hilton Lincoln", city: "Centro de Lincoln" },
+          { name: "Hilton Garden Inn Lincoln Downtown / Haymarket", city: "Haymarket, Lincoln" },
+          { name: "Hyatt Place Lincoln / Haymarket", city: "Haymarket, Lincoln" },
+          { name: "Hampton Inn Lincoln South", city: "Sur de Lincoln (cerca I-80)" },
+        ],
+      },
+      {
+        area: "Omaha / Aeropuerto (OMA)",
+        drive: "~30–40 min en auto",
+        items: [
+          { name: "Hilton Omaha Downtown", city: "Centro de Omaha" },
+          { name: "Hyatt Place Omaha / Downtown - Old Market", city: "Old Market, Omaha" },
+          { name: "Hampton Inn & Suites Omaha - Downtown", city: "Centro de Omaha" },
+          { name: "Courtyard by Marriott Omaha East / Council Bluffs", city: "Cerca del aeropuerto OMA" },
+        ],
+      },
+    ],
     parkingTitle: "Estacionamiento",
     parkingBody: "Gratis en el lugar. Puedes dejar el auto durante la noche si vuelves con alguien más.",
     weatherTitle: "Qué llevar",
