@@ -16,7 +16,9 @@ export interface Dict {
   party: { title: string; lead: string };
   travel: {
     title: string; lead: string; mapTitle: string;
+    addressLabel: string;
     hotelsTitle: string; hotelsBody: string;
+    hotelGroups: { area: string; drive: string; items: { name: string; city: string }[] }[];
     parkingTitle: string; parkingBody: string;
     weatherTitle: string; weatherLoading: string; weatherAvg: string;
     weatherHigh: string; weatherLow: string; weatherRain: string; weatherSunset: string;
