@@ -154,12 +154,13 @@ const en: Dict = {
   faq: {
     title: "FAQ", lead: "The questions we've been getting most.",
     items: [
-      { q: "Can I bring a plus-one?", a: "If your invite says +1 (or your party allows more than one guest on the RSVP page), yes. Otherwise please keep it to the named guests." },
-      { q: "Are kids welcome?", a: "Yes — you can add kids to your party on the RSVP page. Mark them as a child so we can plan headcount." },
-      { q: "What time should I arrive?", a: "Doors open at 4:30 PM. The ceremony starts at 5:00 PM sharp." },
-      { q: "What's the dress code?", a: "Cocktail attire in warm neutrals or lavender. Flats or block heels recommended — the ground is uneven." },
-      { q: "Is it indoors or outdoors?", a: "Ceremony is outdoors on the lawn, weather permitting. Dinner and dancing are inside the barn." },
-      { q: "Where should I stay?", a: "See the Travel page — we're finalizing a small block and will post details there." },
+      { q: "Where is the wedding?", a: "Sparks' Barn, 13817 108th St, Louisville, NE 68037 — about 25 minutes south of Omaha and 40 minutes east of Lincoln." },
+      { q: "Can I bring a plus-one?", a: "Only if your invitation names a plus-one or the RSVP page lets you add more than one guest. If you're not sure, RSVP with the names listed on your invite and reach out if something's missing." },
+      { q: "Are kids welcome?", a: "Yes. Add them to your party on the RSVP page and mark them as a child so we can plan headcount and meals." },
+      { q: "What time should I arrive?", a: "Doors open at 4:30 PM. The ceremony starts at 5:00 PM sharp — please be seated by 4:55." },
+      { q: "What's the dress code?", a: "Cocktail attire in warm neutrals, lavender, or plum. Skip stilettos — the barn floor is uneven and the ceremony is on grass. Flats or block heels work great." },
+      { q: "Is it indoors or outdoors?", a: "The ceremony is outdoors on the lawn (weather permitting). Cocktails, dinner, and dancing are inside the barn." },
+      { q: "Where should I stay?", a: "We haven't blocked rooms. The Travel section lists well-known hotels in Plattsmouth (closest), Lincoln, and Omaha — pick whatever's easiest for you." },
     ],
   },
   rsvp: {
