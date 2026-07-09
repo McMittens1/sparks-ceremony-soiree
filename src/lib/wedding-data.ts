@@ -30,6 +30,8 @@ export const REGISTRY: RegistryItem[] = [
 export type PartyMember = {
   name: string;
   role: string;
+  /** Optional portrait. Drop a file in src/assets/party/ and import it, or use a URL. */
+  photo?: string;
 };
 
 export const PARTY: PartyMember[] = [
