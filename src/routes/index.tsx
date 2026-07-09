@@ -571,16 +571,7 @@ function Home() {
               <p className="mt-6 max-w-xl text-foreground/70 text-lg font-serif italic">{t.photos.lead}</p>
             </Reveal>
           </div>
-          <Reveal>
-            <Magnetic strength={0.2}>
-              <button
-                onClick={() => setUploadOpen(true)}
-                className="border border-primary text-primary px-6 py-3 text-[10px] uppercase tracking-[0.3em] hover:bg-primary hover:text-primary-foreground transition-colors"
-              >
-                {t.photos.uploadTitle} +
-              </button>
-            </Magnetic>
-          </Reveal>
+          {/* Upload button hidden pre-wedding; re-enable closer to the day. */}
         </div>
 
         {photos.length === 0 ? (
