@@ -13,7 +13,7 @@ import { SplitText } from "@/components/site/SplitText";
 import { Magnetic } from "@/components/site/Magnetic";
 import { StoryTimeline } from "@/components/site/StoryTimeline";
 import { listApprovedPhotos, type GalleryPhoto } from "@/lib/photos.functions";
-import { REGISTRY as registryItems } from "@/lib/wedding-data";
+import { REGISTRY as registryItems, PARTY } from "@/lib/wedding-data";
 
 import eng74 from "@/assets/engagement/Geo_AddiEngagement-74.jpg.asset.json";
 import eng06 from "@/assets/engagement/Geo_AddiEngagement-06.jpg.asset.json";
