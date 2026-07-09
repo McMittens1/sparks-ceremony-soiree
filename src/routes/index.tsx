@@ -119,19 +119,19 @@ function Home() {
             className="relative z-10 mt-6 sm:mt-8 editorial-heading leading-[0.85] text-center lg:text-left"
           >
             <span
-              className="block text-[16vw] sm:text-[12vw] lg:text-[9vw] xl:text-[10rem] animate-rise lg:pl-[4%]"
+              className="block text-[14vw] sm:text-[12vw] lg:text-[9vw] xl:text-[10rem] animate-rise lg:pl-[4%]"
               style={{ animationDelay: "0.15s" }}
             >
               Geovanni
             </span>
             <span
-              className="block italic text-primary-soft text-[14vw] sm:text-[10vw] lg:text-[7vw] xl:text-[8rem] animate-rise lg:pl-[38%] -mt-2 lg:-mt-4"
+              className="block italic text-primary-soft text-[12vw] sm:text-[10vw] lg:text-[7vw] xl:text-[8rem] animate-rise lg:pl-[38%] -mt-2 lg:-mt-4"
               style={{ animationDelay: "0.3s" }}
             >
               &amp;
             </span>
             <span
-              className="block text-[16vw] sm:text-[12vw] lg:text-[9vw] xl:text-[10rem] animate-rise lg:pl-[30%] -mt-2 lg:-mt-6"
+              className="block text-[14vw] sm:text-[12vw] lg:text-[9vw] xl:text-[10rem] animate-rise lg:pl-[30%] -mt-2 lg:-mt-6"
               style={{ animationDelay: "0.45s" }}
             >
               Addison
@@ -170,9 +170,11 @@ function Home() {
               </p>
             </div>
             <div className="text-center text-[10px] uppercase tracking-[0.35em] text-foreground/70 sm:border-x sm:border-accent/25 sm:px-6">
-              Sparks' Barn
-              <span className="mx-2 text-accent">·</span>
-              Louisville, NE
+              <a href={SITE.mapLink} target="_blank" rel="noopener" className="link-underline">
+                Sparks' Barn
+                <span className="mx-2 text-accent">·</span>
+                Louisville, NE
+              </a>
             </div>
             <div className="flex flex-wrap items-center justify-center sm:justify-end gap-5">
               <Magnetic strength={0.25}>
