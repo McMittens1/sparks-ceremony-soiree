@@ -302,12 +302,13 @@ const es: Dict = {
   faq: {
     title: "Preguntas frecuentes", lead: "Lo que más nos preguntan.",
     items: [
-      { q: "¿Puedo llevar acompañante?", a: "Si tu invitación indica +1 (o tu grupo permite más de un invitado en la página de RSVP), sí. Si no, por favor limítate a las personas nombradas." },
-      { q: "¿Se admiten niños?", a: "Sí — puedes agregar niños a tu grupo en la página de RSVP. Márcalos como niño para el conteo." },
-      { q: "¿A qué hora debo llegar?", a: "Las puertas abren a las 4:30 PM. La ceremonia empieza puntual a las 5:00 PM." },
-      { q: "¿Cuál es el código de vestimenta?", a: "Cóctel en tonos cálidos o lavanda. Se recomienda tacón bajo — el suelo es irregular." },
-      { q: "¿Es al aire libre o dentro?", a: "La ceremonia es al aire libre; la cena y el baile son dentro del granero." },
-      { q: "¿Dónde me hospedo?", a: "Ver la página de Cómo llegar — estamos cerrando un bloque de hotel y publicaremos los detalles." },
+      { q: "¿Dónde es la boda?", a: "Sparks' Barn, 13817 108th St, Louisville, NE 68037 — a unos 25 minutos al sur de Omaha y 40 minutos al este de Lincoln." },
+      { q: "¿Puedo llevar acompañante?", a: "Solo si tu invitación indica +1 o si la página de RSVP te permite agregar más de un invitado. Si no estás seguro, confirma con los nombres de tu invitación y avísanos si falta alguien." },
+      { q: "¿Se admiten niños?", a: "Sí. Agrégalos a tu grupo en la página de RSVP y márcalos como niño para el conteo y la comida." },
+      { q: "¿A qué hora debo llegar?", a: "Las puertas abren a las 4:30 PM. La ceremonia empieza puntual a las 5:00 PM — por favor toma tu lugar antes de las 4:55." },
+      { q: "¿Cuál es el código de vestimenta?", a: "Cóctel en tonos cálidos, lavanda o ciruela. Evita tacones muy finos — el piso del granero es irregular y la ceremonia es sobre césped. Tacón bajo o zapato plano funcionan bien." },
+      { q: "¿Es al aire libre o dentro?", a: "La ceremonia es al aire libre en el jardín (si el clima lo permite). Cóctel, cena y baile son dentro del granero." },
+      { q: "¿Dónde me hospedo?", a: "No tenemos bloque de habitaciones. La sección de Cómo llegar lista hoteles conocidos en Plattsmouth (el más cercano), Lincoln y Omaha — elige el que más te convenga." },
     ],
   },
   rsvp: {
