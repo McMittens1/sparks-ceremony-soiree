@@ -278,8 +278,8 @@ function Home() {
 
       {/* ============ WEDDING PARTY ============ */}
       <section id="party" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-20 border-t border-accent/20">
-        <div className="grid gap-12 lg:grid-cols-12 items-center">
-          <div className="lg:col-span-5">
+        <div className="grid gap-12 lg:grid-cols-12">
+          <div className="lg:col-span-4">
             <Reveal>
               <p className="text-[10px] uppercase tracking-[0.4em] text-accent">04 / Wedding Party</p>
             </Reveal>
@@ -287,19 +287,102 @@ function Home() {
             <Reveal delay={200}>
               <p className="mt-6 max-w-md text-foreground/70 text-lg font-serif italic">{t.party.lead}</p>
             </Reveal>
-            <Reveal delay={280}>
-              <p className="mt-8 text-xs uppercase tracking-[0.35em] text-muted-foreground">Names to be announced</p>
-            </Reveal>
           </div>
-          <div className="lg:col-span-7 grid grid-cols-2 gap-4">
-            <Reveal variant="mask" delay={100}>
-              <div className="aspect-[3/4] overflow-hidden">
-                <img src={eng15.url} alt="Geovanni and Addison" loading="lazy" className="h-full w-full object-cover transition-transform duration-1000 hover:scale-105" />
-              </div>
-            </Reveal>
-            <Reveal variant="mask" delay={220}>
-              <div className="aspect-[3/4] overflow-hidden mt-10">
-                <img src={eng27.url} alt="Geovanni and Addison" loading="lazy" className="h-full w-full object-cover transition-transform duration-1000 hover:scale-105" />
+          <div className="lg:col-span-8">
+            <div className="grid gap-10 sm:grid-cols-2 lg:gap-16">
+              <Reveal variant="up" delay={100}>
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.35em] text-accent mb-6">Bride's side</p>
+                  <ul className="space-y-5">
+                    <li>
+                      <p className="font-serif italic text-2xl text-primary">Olyvia Hillman</p>
+                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Maid of Honor</p>
+                    </li>
+                    <li>
+                      <p className="font-serif italic text-2xl text-primary">Melinda Reinke</p>
+                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Bridesmaid</p>
+                    </li>
+                    <li>
+                      <p className="font-serif italic text-2xl text-primary">Lesly Moreno</p>
+                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Bridesmaid</p>
+                    </li>
+                    <li>
+                      <p className="font-serif italic text-2xl text-primary">Bryce Marker</p>
+                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Bridesmaid</p>
+                    </li>
+                    <li>
+                      <p className="font-serif italic text-2xl text-primary">Dru Brown</p>
+                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Bridesmaid</p>
+                    </li>
+                    <li>
+                      <p className="font-serif italic text-2xl text-primary">Ryane Needles</p>
+                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Bridesmaid</p>
+                    </li>
+                    <li>
+                      <p className="font-serif italic text-2xl text-primary">Jetta Tegeler</p>
+                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Bridesmaid</p>
+                    </li>
+                    <li>
+                      <p className="font-serif italic text-2xl text-primary">Ivy Smith</p>
+                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Flower Girl</p>
+                    </li>
+                  </ul>
+                </div>
+              </Reveal>
+              <Reveal variant="up" delay={200}>
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.35em] text-accent mb-6">Groom's side</p>
+                  <ul className="space-y-5">
+                    <li>
+                      <p className="font-serif italic text-2xl text-primary">Andres Moreno</p>
+                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Best Man</p>
+                    </li>
+                    <li>
+                      <p className="font-serif italic text-2xl text-primary">Nathan Asselin</p>
+                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Groomsman</p>
+                    </li>
+                    <li>
+                      <p className="font-serif italic text-2xl text-primary">Nathan Merritt</p>
+                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Groomsman</p>
+                    </li>
+                    <li>
+                      <p className="font-serif italic text-2xl text-primary">Joey Buresh</p>
+                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Groomsman</p>
+                    </li>
+                    <li>
+                      <p className="font-serif italic text-2xl text-primary">Alex Krause</p>
+                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Groomsman</p>
+                    </li>
+                    <li>
+                      <p className="font-serif italic text-2xl text-primary">Jonathan Houser</p>
+                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Groomsman</p>
+                    </li>
+                    <li>
+                      <p className="font-serif italic text-2xl text-primary">Jacob Laurell</p>
+                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Groomsman</p>
+                    </li>
+                    <li>
+                      <p className="font-serif italic text-2xl text-primary">Nick Gude</p>
+                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Groomsman</p>
+                    </li>
+                    <li>
+                      <p className="font-serif italic text-2xl text-primary">David Ramirez</p>
+                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Groomsman</p>
+                    </li>
+                    <li>
+                      <p className="font-serif italic text-2xl text-primary">Alan Meza</p>
+                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">Ring Bearer</p>
+                    </li>
+                  </ul>
+                </div>
+              </Reveal>
+            </div>
+            <Reveal delay={300}>
+              <div className="mt-16 pt-10 border-t border-accent/20">
+                <p className="text-[10px] uppercase tracking-[0.35em] text-accent mb-4">Ushers</p>
+                <p className="text-sm sm:text-base text-foreground/70 leading-relaxed">
+                  Matt Vu · Kollin Barnes · Kenny Nguyen · Zach Funk · Aaron Ramirez · Jose Barrios · Freddy Gonzalez · Jose Martinez · Mateo Meza
+                </p>
               </div>
             </Reveal>
           </div>
