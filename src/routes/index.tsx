@@ -42,7 +42,6 @@ function Home() {
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const loadPhotos = useServerFn(listApprovedPhotos);
-  const heroImgRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { loadPhotos().then(setPhotos).catch(() => {}); }, [loadPhotos]);
 
@@ -54,26 +53,6 @@ function Home() {
   const prevPhoto = useCallback(() => {
     setLightboxIndex((i) => (i === null || photos.length === 0 ? null : (i - 1 + photos.length) % photos.length));
   }, [photos.length]);
-
-  // Cursor-linked parallax on the hero image
-  useEffect(() => {
-    const el = heroImgRef.current;
-    if (!el) return;
-    const onMove = (e: MouseEvent) => {
-      const rect = el.getBoundingClientRect();
-      const cx = (e.clientX - rect.left) / rect.width - 0.5;
-      const cy = (e.clientY - rect.top) / rect.height - 0.5;
-      el.style.transform = `translate3d(${cx * -14}px, ${cy * -14}px, 0) scale(1.04)`;
-    };
-    const onLeave = () => { el.style.transform = ""; };
-    const parent = el.parentElement;
-    parent?.addEventListener("mousemove", onMove);
-    parent?.addEventListener("mouseleave", onLeave);
-    return () => {
-      parent?.removeEventListener("mousemove", onMove);
-      parent?.removeEventListener("mouseleave", onLeave);
-    };
-  }, []);
 
   // Scroll to hash on load / hash change
   useEffect(() => {
