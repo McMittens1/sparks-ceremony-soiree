@@ -1,11 +1,10 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
 import { useLang, useT } from "@/i18n/context";
-import { SITE } from "@/lib/site";
+import { useActiveSection } from "@/hooks/use-active-section";
 
-const sections = [
+const NAV = [
   { id: "story", key: "story" as const },
-  { id: "details", key: "details" as const },
+  { id: "day", key: "details" as const },
   { id: "party", key: "party" as const },
   { id: "travel", key: "travel" as const },
   { id: "photos", key: "photos" as const },
@@ -16,21 +15,12 @@ const sections = [
 export function Header() {
   const t = useT();
   const { lang, setLang } = useLang();
-  const [open, setOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const nav = useNavigate();
+  const active = useActiveSection();
   const onHome = location.pathname === "/";
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   function goToSection(id: string) {
-    setOpen(false);
     if (onHome) {
       const el = document.getElementById(id);
       if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -41,82 +31,58 @@ export function Header() {
   }
 
   return (
-    <header className={`sticky top-0 z-40 transition-all duration-500 ${scrolled ? "bg-background/90 backdrop-blur-md border-b border-accent/20" : "bg-transparent border-b border-transparent"}`}>
-      <div className="mx-auto flex max-w-[1600px] items-center justify-between px-6 lg:px-12 py-5">
+    <header
+      className="sticky top-0 z-40 border-b"
+      style={{
+        background: "rgba(248,244,236,0.94)",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
+        borderColor: "#E1D6C3",
+      }}
+    >
+      <div className="max-w-[1600px] mx-auto flex items-center justify-between px-8 py-5">
         <button
-          onClick={() => goToSection("home")}
-          className="flex items-baseline gap-2 group"
+          onClick={() => goToSection("hero")}
+          className="flex items-center gap-2"
           aria-label="Home"
         >
-          <span className="font-serif italic text-2xl text-primary tracking-tight">{SITE.coupleShort}</span>
-          <span className="hidden sm:inline text-[9px] uppercase tracking-[0.35em] text-accent group-hover:text-primary transition-colors">10 · 10 · 26</span>
+          <span className="font-serif italic text-[22px]" style={{ color: "#2A2520" }}>G</span>
+          <span className="diamond" />
+          <span className="font-serif italic text-[22px]" style={{ color: "#2A2520" }}>A</span>
         </button>
 
-        <nav className="hidden xl:flex items-center gap-6 text-[10px] uppercase tracking-[0.3em] text-foreground/70 whitespace-nowrap">
-          {sections.map((s) => (
-            <button
-              key={s.id}
-              onClick={() => goToSection(s.id)}
-              className="hover:text-primary transition-colors relative py-2"
-            >
-              {t.nav[s.key]}
-            </button>
-          ))}
+        <nav className="flex items-center gap-[22px] uppercase whitespace-nowrap" style={{ fontSize: 10, letterSpacing: "0.18em" }}>
+          {NAV.map((n) => {
+            const isActive = onHome && active === n.id;
+            return (
+              <button
+                key={n.id}
+                onClick={() => goToSection(n.id)}
+                className="transition-colors py-2"
+                style={{ color: isActive ? "#8779A3" : "#4A4238" }}
+              >
+                {t.nav[n.key]}
+              </button>
+            );
+          })}
           <Link
             to="/rsvp"
             search={{}}
-            className="ml-2 border border-primary text-primary px-5 py-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+            className="px-[18px] py-[9px] border transition-colors hover:bg-ink hover:text-ivory"
+            style={{ borderColor: "#2A2520", color: "#2A2520" }}
           >
             {t.nav.rsvp}
           </Link>
           <button
             onClick={() => setLang(lang === "en" ? "es" : "en")}
-            className="ml-1 text-[9px] tracking-[0.3em] text-muted-foreground hover:text-primary"
+            className="ml-1 px-1 transition-colors hover:text-ink"
+            style={{ fontSize: 9, color: "#A39680" }}
             aria-label={t.common.language}
           >
             {lang === "en" ? "EN / ES" : "ES / EN"}
           </button>
         </nav>
-
-        <button
-          className="xl:hidden text-[10px] uppercase tracking-[0.3em] text-primary"
-          onClick={() => setOpen((o) => !o)}
-          aria-expanded={open}
-          aria-label="Menu"
-        >
-          {open ? "Close" : "Menu"}
-        </button>
       </div>
-
-      {open && (
-        <div className="xl:hidden border-t border-accent/20 bg-background animate-rise">
-          <div className="mx-auto max-w-6xl px-6 py-6 flex flex-col gap-4 text-sm">
-            {sections.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => goToSection(s.id)}
-                className="text-left py-2 uppercase tracking-[0.25em] text-xs text-foreground/80 hover:text-primary"
-              >
-                {t.nav[s.key]}
-              </button>
-            ))}
-            <Link
-              to="/rsvp"
-              search={{}}
-              onClick={() => setOpen(false)}
-              className="mt-2 self-start border border-primary text-primary px-5 py-2 text-[10px] uppercase tracking-[0.3em]"
-            >
-              {t.nav.rsvp}
-            </Link>
-            <button
-              onClick={() => setLang(lang === "en" ? "es" : "en")}
-              className="self-start text-[10px] tracking-[0.3em] text-muted-foreground mt-2 uppercase"
-            >
-              {lang === "en" ? "Español" : "English"}
-            </button>
-          </div>
-        </div>
-      )}
     </header>
   );
 }
