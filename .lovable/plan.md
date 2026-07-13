@@ -1,80 +1,87 @@
-# Refactor plan — tokens + component extraction
+# Pre-publish plan
 
-Goal: same look and behavior, cleaner structure. Every step is mechanical and independently verifiable.
+Not everything has to ship on day one. This is ordered by "if we skip it, publishing gets embarrassing" → "nice to have, can follow post-launch."
 
-## Why now
+## 1. Content + copy audit (must do before publish)
 
-The homepage renders from a single 1042-line `src/routes/index.tsx`. The same palette (`#2A2520`, `#4C4066`, `#E1D6C3`, `#8779A3`, `#A39680`, `#F8F4EC`, etc.) is retyped as raw hex strings in `index.tsx`, `StoryTimeline.tsx`, `Header.tsx`, `Footer.tsx`, `rsvp.tsx` — even though `src/styles.css` already declares them as CSS variables and Tailwind v4 color tokens. Two sources of truth = drift risk. Story content also lives inside its rendering component instead of `wedding-data.ts` where the rest of the site content lives.
+Real guests will read this — placeholder or wrong info is the #1 embarrassment risk.
 
-## Scope (in order)
+- Read every section end to end at 390 / 768 / 1440: hero, countdown, Our Story, Day-of schedule, Wedding Party, Travel, Photos, Registry, FAQ, Footer.
+- Verify facts against `src/lib/wedding-data.ts` and `src/lib/site.ts`: date (Oct 10 2026), venue address, RSVP deadline (Sept 15 2026), fallback contact, hotel names, registry links (Zola, The Knot, both Venmos), Sparks' Barn address on Travel.
+- FAQ: confirm answers match reality (dress code, kids, plus-ones, arrival time, indoor vs outdoor).
+- Story entries: last read — typos, tense, punctuation. `DATE_CARDS` currently shows "MMXXVI" but year is 2026 — confirm intended.
+- Spanish translations: click EN/ES on every section and make sure nothing is missing or awkward. If ES isn't ready, hide the toggle for launch and re-enable post-publish.
 
-### 1. One source of truth for the palette
+## 2. RSVP end-to-end test (must do)
 
-- Confirm `@theme inline` in `src/styles.css` exposes: `ink`, `ivory`, `hairline`, `lavender`, `lavender-deep`, `tan`, `tan-deep`, `gold`, `body`, `soft`. Add any missing (e.g. `ivory/75` variants are just Tailwind opacity modifiers, no new token needed).
-- Delete the local `const HAIRLINE/INK/IVORY/LAV/LAV_DEEP/TAN/TAN_DEEP/GOLD/BODY/SOFT` block in `src/routes/index.tsx`.
-- Sweep the codebase and replace every hardcoded hex from that palette with a Tailwind class (`text-ink`, `border-hairline`, `bg-ivory`, `text-lavender-deep`, etc.) or `var(--color-…)` inside a remaining inline `style` where a class doesn't apply (e.g. dynamic `boxShadow`).
-- Files touched: `index.tsx`, `StoryTimeline.tsx`, `Header.tsx`, `Footer.tsx`, `rsvp.tsx`, plus any other `src/components/site/*` that grep flags.
-- Ad-hoc one-offs (`#EFE9DD`, `#C9BB9F`, `#B7A6D4`, `rgba(248,244,236,…)`) stay as-is unless they're used more than twice — then promote to a token.
+RSVP is the one thing that can silently lose data — worth 20 minutes of real testing.
 
-### 2. Typography primitives
+- Load `/rsvp` with no `?g=` param → lookup by name works.
+- Load with `?g=<real-slug>` → hydrates guest, existing RSVP if any.
+- Submit as attending, then re-open and edit → previous answer is preloaded.
+- Submit as not attending, add/remove attendees, mark a child.
+- Confirm submissions land in the DB (check via backend tools) and the fallback contact shows on error.
+- Confirm the deadline banner appears when the clock is past `SITE.rsvpDeadline`.
+- Verify `attachSupabaseAuth` middleware in `src/start.ts` — RSVP server functions must not require auth (they're guest-facing), or the form silently 401s.
 
-Create small, dumb components in `src/components/site/typography.tsx`:
+## 3. SEO + social share polish (must do)
 
-- `<Eyebrow color?>` — the `uppercase font-sans text-[11px] tracking-[0.3em]` label pattern (used 15+ times).
-- `<DisplayHeading size="md|lg|xl">` — `font-serif` heading with clamp() sizes (used 6+ times).
-- `<BodyProse>` — `font-sans text-[17px] leading-[1.8] text-body max-w-[560px]` (used in every story row and most sections).
+- Root `__root.tsx` has generic title/description. Give each shareable route its own `head()` with unique `title`, `description`, `og:title`, `og:description`, `twitter:card`. `/rsvp` already has partial metadata; audit /` and confirm og:image is a real image on the deployed domain.
+- Replace the hardcoded `https://sparks-ceremony-soiree.lovable.app` in `src/routes/index.tsx` with the final published URL if we're changing slugs.
+- Add `robots` meta as `index, follow` on public routes and `noindex` on `/rsvp` (guest data, not for search).
+- Add a real `favicon.ico` + apple-touch-icon if the current one is the Lovable default.
+- Structured data: JSON-LD `Event` on `/` with name, startDate, location — makes Google/iMessage previews richer.
 
-Replace inline-style copies of those patterns across `index.tsx` and `StoryTimeline.tsx`. Do not invent new visual variants — mirror what exists exactly.
+## 4. Accessibility pass (must do — this is a wedding site, older relatives will use it)
 
-### 3. Extract homepage sections
+- Every image has real alt text (engagement photos, party portraits, hero). `alt=""` is only OK for decorative photos.
+- Color contrast: `text-body` / `text-soft` on `bg-ivory` — verify AA at 14px+ body sizes.
+- Keyboard-only pass: tab through Header → RSVP button → mobile menu → every section anchor. Skip-link works.
+- Focus rings visible on all interactive elements (buttons currently rely on browser defaults).
+- Reduced-motion: countdown, Reveal, StoryTimeline animations should respect `prefers-reduced-motion`.
+- Screen reader smoke test (VoiceOver): hero couple names, countdown, section headings all announce sensibly.
 
-Split `src/routes/index.tsx` into `src/components/site/sections/`:
+## 5. Performance + bundle sanity (nice, do before publish if quick)
 
-```text
-sections/
-  HeroSection.tsx
-  CountdownSection.tsx
-  StorySection.tsx        // just the wrapper; StoryTimeline stays where it is
-  DaySection.tsx
-  PartySection.tsx
-  TravelSection.tsx
-  PhotosSection.tsx
-  RegistrySection.tsx
-  FaqSection.tsx
-```
+- Hero image (`favorite.jpg`) is already preloaded — verify it's not oversized. Serve at ≤1600px wide, WebP if we're not already.
+- Engagement + party portraits: confirm they're routed through `lovable-assets` (CDN) not raw imports of huge originals.
+- Check for unused imports and dead components (the refactor already killed most; do a final `rg` sweep).
+- Lighthouse-in-browser on `/` at mobile — target Perf ≥ 85, A11y ≥ 95, Best Practices ≥ 95, SEO 100.
 
-`index.tsx` becomes a thin composition file — imports, `head()`, and `<HeroSection/> <CountdownSection/> …`. Move the shared `SectionHeader` helper into `src/components/site/SectionHeader.tsx`. No prop shuffling — each section reads from `SITE`/`wedding-data` directly, same as today.
+## 6. Error/empty states + guardrails
 
-### 4. Move story content into `wedding-data.ts`
+- 404 page (`NotFoundComponent`): already exists, but wording is fine. Confirm it renders when someone hits `/oops`.
+- Error boundary: try to trigger by throwing in a section, confirm "Try again" invalidates + resets cleanly.
+- RSVP: what happens if the DB is offline? Confirm the fallback contact text shows.
 
-- Move `ENTRIES_RAW` and the `StoryEntry`/`Dated`/`Montage` types from `StoryTimeline.tsx` into `src/lib/wedding-data.ts` (which is already the shared source for registry, party, hotels, FAQ, and MCP tools).
-- `StoryTimeline.tsx` keeps only layout/animation and imports `STORY_ENTRIES`.
-- Also move the small inline arrays in `index.tsx`: the three date cards (`index.tsx:313-317`) and the day-of schedule (`index.tsx:366-373`) — same pattern.
+## 7. Security scan (must do — gate for publish)
 
-### 5. Dead-code sweep
+- Run the built-in security scan on the project.
+- Verify RLS + GRANT on the RSVP + guest tables — public form must only insert/update its own row via `slug`, never list all guests.
+- Confirm `SUPABASE_SERVICE_ROLE_KEY` never appears in client code.
 
-Grep each of these for imports; delete if unused: `PhotoUploadModal.tsx` (Photos section hand-rolls its own inline form), `SectionDivider.tsx` vs `DiamondDivider.tsx` (only one is likely live), `SplitText.tsx`, `ScrollProgress.tsx`, `Parallax.tsx`, `Marquee.tsx`, `Magnetic.tsx`, `Lightbox.tsx`, `Cursor.tsx`, `SectionRail.tsx`. Also remove the "Legacy no-ops still supported" block in `src/styles.css:311-315` if the grep confirms it's dead.
+## 8. Publish
 
-### 6. Explicitly out of scope
+- Publish to Lovable URL (choose a final slug — current `sparks-ceremony-soiree` is fine, or pick something shorter like `moreno-hillman`).
+- Then, from the publish dialog: connect the custom domain if the couple owns one.
+- After publish, re-test the `og:image` and canonical URLs against `https://<final-domain>/` in an actual iMessage/WhatsApp preview.
 
-- Rewriting the `.rs-*` responsive utility layer in `src/styles.css` or removing `!important` overrides. Those exist because JSX uses inline `style={}` for grid layout; unwinding them is a bigger, riskier pass and belongs to a follow-up ("Heavy — align with Tailwind v4 idioms").
-- Any visual change. If a diff produces a visible difference, it's a bug in the refactor, not an intended change.
-- Route-level changes, data-loading changes, RSVP form logic, MCP tools.
+## Post-publish (fine to defer)
 
-## Verification
+- Story timeline photo pass — real captions and photo tuning.
+- Analytics (if wanted): plausible/umami tag on published domain only.
+- Add-to-calendar button on Day-of section (Google + ICS).
+- Guestbook / photo upload (Photos section currently hand-rolls a form — decide if we want it live or gated).
+- Registry: gentle nudge to add gift categories or a honeymoon fund highlight.
+- Cleanup pass on `src/styles.css` `.rs-*` utilities + inline `style={}` in `rsvp.tsx` (called out as deferred in the refactor plan).
+- Copy the two hex constants left in `__root.tsx` NotFoundComponent/ErrorComponent onto tokens.
 
-After each numbered step, run Playwright at 390 / 820 / 1440 against the homepage and RSVP page and diff against pre-refactor screenshots. Any pixel drift = revert and investigate. Typecheck must stay green after each step.
+## Order of operations
 
-## Deliverables
+1 → 2 → 4 → 3 → 7 → 5 → 6 → **publish** → 8 (custom domain, share, celebrate).
 
-- ~10 new files under `src/components/site/sections/` + 1 `SectionHeader.tsx` + 1 `typography.tsx`.
-- `index.tsx` shrinks from 1042 lines to roughly 60–80 lines.
-- `StoryTimeline.tsx` loses ~60 lines of inline style / hex constants and its content array.
-- `wedding-data.ts` gains `STORY_ENTRIES`, `DATE_CARDS`, `DAY_SCHEDULE`.
-- Zero hardcoded palette hex strings in `src/routes/*` and `src/components/site/*` outside `styles.css`.
+Sections 1, 2, 3, 4, 7 are hard gates. 5 and 6 are "spend 30 min, ship whatever you got." Everything under Post-publish waits.
 
-## Not doing (called out from the survey, deferred by choice)
+## What I'd tackle first this turn
 
-- Removing `.rs-*` classes / `!important` from `styles.css`.
-- Reworking `Header.tsx` hamburger into a subcomponent (only 3 lines, not worth it).
-- Any change to `src/integrations/supabase/*`, `src/lib/mcp/*`, `src/lib/*.functions.ts`.
+Say the word and I'll start with **Section 1 (content audit)** — I'll walk every route at three viewports, list every factual/copy issue I find, and we can fix them in one pass before moving to RSVP testing.
