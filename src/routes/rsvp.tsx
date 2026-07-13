@@ -441,8 +441,11 @@ function RsvpPage() {
               </section>
 
               {/* Address */}
-              <section>
-                <p style={{ ...eyebrow, color: LAV_DEEP, letterSpacing: "0.3em", fontSize: 11 }}>
+              <section aria-labelledby="rsvp-address-heading">
+                <p
+                  id="rsvp-address-heading"
+                  style={{ ...eyebrow, color: LAV_DEEP, letterSpacing: "0.3em", fontSize: 11 }}
+                >
                   Mailing address
                 </p>
                 <p
@@ -457,6 +460,8 @@ function RsvpPage() {
                       value={address.line1 ?? ""}
                       onChange={(e) => setAddress({ ...address, line1: e.target.value })}
                       placeholder="Street address"
+                      aria-label="Street address"
+                      autoComplete="address-line1"
                       maxLength={200}
                       style={inputStyle}
                     />
@@ -466,6 +471,8 @@ function RsvpPage() {
                       value={address.line2 ?? ""}
                       onChange={(e) => setAddress({ ...address, line2: e.target.value })}
                       placeholder="Apt / suite (optional)"
+                      aria-label="Apartment or suite (optional)"
+                      autoComplete="address-line2"
                       maxLength={200}
                       style={inputStyle}
                     />
@@ -474,6 +481,8 @@ function RsvpPage() {
                     value={address.city ?? ""}
                     onChange={(e) => setAddress({ ...address, city: e.target.value })}
                     placeholder="City"
+                    aria-label="City"
+                    autoComplete="address-level2"
                     maxLength={120}
                     style={inputStyle}
                   />
@@ -481,6 +490,8 @@ function RsvpPage() {
                     value={address.state ?? ""}
                     onChange={(e) => setAddress({ ...address, state: e.target.value })}
                     placeholder="State"
+                    aria-label="State"
+                    autoComplete="address-level1"
                     maxLength={60}
                     style={inputStyle}
                   />
@@ -488,6 +499,8 @@ function RsvpPage() {
                     value={address.postal_code ?? ""}
                     onChange={(e) => setAddress({ ...address, postal_code: e.target.value })}
                     placeholder="ZIP / postal"
+                    aria-label="ZIP or postal code"
+                    autoComplete="postal-code"
                     maxLength={20}
                     style={inputStyle}
                   />
@@ -495,18 +508,21 @@ function RsvpPage() {
                     value={address.country ?? ""}
                     onChange={(e) => setAddress({ ...address, country: e.target.value })}
                     placeholder="Country (if not US)"
+                    aria-label="Country"
+                    autoComplete="country-name"
                     maxLength={60}
                     style={inputStyle}
                   />
                 </div>
                 <label
-                  className="mt-6 flex items-center gap-2 font-sans"
+                  className="mt-6 flex items-center gap-2 font-sans cursor-pointer"
                   style={{ fontSize: 14, color: BODY }}
                 >
                   <input
                     type="checkbox"
                     checked={addressConfirmed}
                     onChange={(e) => setAddressConfirmed(e.target.checked)}
+                    style={{ accentColor: "#4C4066", width: 16, height: 16 }}
                   />
                   This address is correct.
                 </label>
