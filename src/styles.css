@@ -144,6 +144,48 @@
   ::selection { background: #8779A3; color: #F8F4EC; }
   details > summary { list-style: none; }
   details > summary::-webkit-details-marker { display: none; }
+
+  /* A11y: keyboard focus ring. Mouse clicks stay ring-free via :focus-visible. */
+  :focus { outline: none; }
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  summary:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid #4C4066;
+    outline-offset: 3px;
+    border-radius: 1px;
+  }
+  /* Underlined-only elements get a solid ring against ivory */
+  input:focus-visible,
+  textarea:focus-visible {
+    outline-offset: 2px;
+    background: rgba(135, 121, 163, 0.06);
+  }
+}
+
+/* Skip link — hidden until focused, then pinned top-left */
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 100;
+  background: #2A2520;
+  color: #F8F4EC;
+  padding: 10px 16px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  transform: translateY(-200%);
+  transition: transform 150ms ease;
+}
+.skip-link:focus-visible {
+  transform: translateY(0);
+  outline: 2px solid #8779A3;
+  outline-offset: 2px;
 }
 
 @utility font-script { font-family: var(--font-serif); }
