@@ -656,7 +656,7 @@ function Home() {
         />
         <DiamondDivider className="mt-9" />
 
-        <div className="grid" style={{ marginTop: 64, gridTemplateColumns: "5fr 7fr", gap: 64 }}>
+        <div className="grid rs-stack" style={{ marginTop: 64, gridTemplateColumns: "5fr 7fr", gap: 64 }}>
           <div className="flex flex-col justify-center">
             <span
               className="flex-shrink-0"
