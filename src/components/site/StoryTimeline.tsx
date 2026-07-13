@@ -88,7 +88,7 @@ function DatedRow({
     <div className="relative" style={{ marginTop: 110 }}>
       <span
         aria-hidden
-        className="absolute font-serif select-none pointer-events-none"
+        className="absolute font-serif select-none pointer-events-none rs-story-big-num"
         style={{
           top: -56,
           left: -16,
@@ -102,18 +102,18 @@ function DatedRow({
         {numLabel}
       </span>
       <div
-        className="relative grid items-stretch"
+        className="relative grid items-stretch rs-story-row"
         style={{ gridTemplateColumns: "1fr 88px 1fr", zIndex: 1 }}
       >
         {/* Photo stage — fixed 640px height, hero 62% + filmstrip fills rest */}
         <div
-          className="flex gap-3.5"
+          className="flex gap-3.5 rs-story-photos"
           style={{
             order: flip ? 3 : 1,
             height: 640,
           }}
         >
-          <div className="relative photo-zoom" style={{ flex: "0 0 62%" }}>
+          <div className="relative photo-zoom rs-story-photo-main" style={{ flex: "0 0 62%" }}>
             <img
               src={main}
               alt=""
@@ -123,7 +123,7 @@ function DatedRow({
             />
           </div>
           {rest.length > 0 && (
-            <div className="flex-1 min-w-0 flex flex-col gap-3">
+            <div className="flex-1 min-w-0 flex flex-col gap-3 rs-story-photo-rest">
               {rest.map((src, j) => (
                 <div key={j} className="flex-1 min-h-0 photo-zoom">
                   <img
@@ -140,13 +140,13 @@ function DatedRow({
         </div>
 
         {/* Gutter with hairline + diamond */}
-        <div className="flex items-center justify-center" style={{ order: 2 }}>
+        <div className="flex items-center justify-center rs-story-gutter" style={{ order: 2 }}>
           <StoryGutter />
         </div>
 
         {/* Text column */}
         <div
-          className="flex flex-col justify-center px-2"
+          className="flex flex-col justify-center px-2 rs-story-text"
           style={{ order: flip ? 1 : 3 }}
         >
           <div className="flex items-center gap-3.5 mb-2.5">
