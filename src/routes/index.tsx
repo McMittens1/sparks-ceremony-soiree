@@ -97,6 +97,7 @@ function Home() {
       {/* ============ HERO ============ */}
       <section
         id="hero"
+        className="rs-hero-section"
         style={{
           height: "calc(100vh - 73px)",
           minHeight: 560,
@@ -106,7 +107,7 @@ function Home() {
         }}
       >
         <div
-          className="flex-1 min-h-0 flex items-stretch justify-center"
+          className="flex-1 min-h-0 flex items-stretch justify-center rs-hero-inner"
           style={{
             gap: "clamp(28px, 5cqw, 72px)",
             padding: "0 clamp(20px, 5cqw, 64px)",
@@ -117,7 +118,7 @@ function Home() {
           }}
         >
           <div
-            className="flex flex-col justify-center min-w-0"
+            className="flex flex-col justify-center min-w-0 rs-hero-text"
             style={{ flex: "0 1 440px" }}
           >
             <p
@@ -133,7 +134,7 @@ function Home() {
             </p>
             <h1 style={{ margin: 0, fontWeight: "normal" }}>
               <div
-                className="font-serif"
+                className="font-serif rs-hero-title"
                 style={{
                   fontWeight: 500,
                   fontSize: "clamp(30px, 9.5cqh, 92px)",
@@ -144,7 +145,7 @@ function Home() {
                 Geovanni
               </div>
               <div
-                className="font-serif"
+                className="font-serif rs-hero-title"
                 style={{
                   fontWeight: 500,
                   fontSize: "clamp(30px, 9.5cqh, 92px)",
@@ -215,7 +216,7 @@ function Home() {
             </div>
           </div>
           <div
-            className="min-w-0"
+            className="min-w-0 rs-hero-image"
             style={{ flex: "1 1 560px", padding: "clamp(20px, 4cqh, 40px) 0", boxSizing: "border-box" }}
           >
             <img
@@ -233,6 +234,7 @@ function Home() {
           </div>
         </div>
       </section>
+
 
       {/* ============ COUNTDOWN ============ */}
       <section
