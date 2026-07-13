@@ -175,7 +175,9 @@ export function HeroSection() {
               See details
             </a>
           </div>
+          <HeroCountdown />
         </div>
+
       </div>
     </section>
   );
