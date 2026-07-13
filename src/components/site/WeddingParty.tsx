@@ -31,19 +31,22 @@ export function WeddingParty() {
       <PartyRow label="Groomsmen" people={groomsmen} expanded={expanded} onToggle={toggle} />
       <PartyRow label="Down the aisle first" people={kids} expanded={expanded} onToggle={toggle} maxWidth={280} />
 
-      <div className="mt-14 pt-11 border-t border-hairline">
-        <p className="uppercase font-sans mb-4 text-tan-deep" style={{ fontSize: 11, letterSpacing: "0.3em" }}>
-          Ushers
-        </p>
-        <p className="font-sans text-ink-body" style={{ fontSize: 16, lineHeight: 1.9, maxWidth: 1100 }}>
-          {ushers.map((u, i) => (
-            <span key={u.name}>
-              {u.name}
-              {i < ushers.length - 1 && <span className="text-tan"> · </span>}
-            </span>
-          ))}
-        </p>
-      </div>
+      {/* Ushers intentionally hidden for now — data preserved in wedding-data.ts. */}
+      {false && ushers.length > 0 && (
+        <div className="mt-14 pt-11 border-t border-hairline">
+          <p className="uppercase font-sans mb-4 text-tan-deep" style={{ fontSize: 11, letterSpacing: "0.3em" }}>
+            Ushers
+          </p>
+          <p className="font-sans text-ink-body" style={{ fontSize: 16, lineHeight: 1.9, maxWidth: 1100 }}>
+            {ushers.map((u, i) => (
+              <span key={u.name}>
+                {u.name}
+                {i < ushers.length - 1 && <span className="text-tan"> · </span>}
+              </span>
+            ))}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
