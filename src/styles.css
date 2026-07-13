@@ -418,7 +418,8 @@ details[data-anim][open] > .faq-body {
   /* Tighter typographic rhythm in each story entry on narrow screens */
   .rs-story-text > .flex.items-center { margin-bottom: 6px !important; }
   .rs-story-text h3 { margin: 0 0 14px !important; font-size: clamp(28px, 7vw, 40px) !important; }
-  .rs-story-text p { font-size: 15.5px !important; line-height: 1.7 !important; }
+  .rs-story-text p:not(.uppercase) { font-size: 15.5px !important; line-height: 1.7 !important; }
+
 
   /* Montage grid: fewer cols, shorter rows so text stays visible */
   .rs-montage-grid {
