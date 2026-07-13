@@ -29,37 +29,51 @@ function HeroCountdown() {
   ];
   return (
     <div
-      className="md:hidden flex items-baseline justify-start flex-wrap"
-      style={{ marginTop: "clamp(20px, 3.5cqh, 32px)", gap: "clamp(14px, 4vw, 22px)" }}
+      className="md:hidden"
+      style={{ marginTop: "clamp(24px, 4cqh, 36px)" }}
       aria-label="Countdown to the wedding"
     >
-      {items.map(([val, label], i) => (
-        <div key={label} className="flex items-baseline" style={{ gap: "clamp(14px, 4vw, 22px)" }}>
-          {i > 0 && (
-            <span
-              className="font-serif italic self-center text-lavender"
-              style={{ fontSize: 24 }}
-              aria-hidden
-            >
-              ·
-            </span>
-          )}
-          <div className="text-center">
+      <p
+        className="uppercase font-sans text-tan"
+        style={{
+          fontSize: 9,
+          letterSpacing: "0.42em",
+          margin: "0 0 14px",
+        }}
+      >
+        Counting Down
+      </p>
+      <div
+        className="grid grid-cols-4"
+        style={{
+          borderTop: "1px solid rgba(42,37,32,0.18)",
+          borderBottom: "1px solid rgba(42,37,32,0.18)",
+        }}
+      >
+        {items.map(([val, label], i) => (
+          <div
+            key={label}
+            className="text-center"
+            style={{
+              padding: "14px 4px 12px",
+              borderLeft: i === 0 ? undefined : "1px solid rgba(42,37,32,0.14)",
+            }}
+          >
             <div
               className="font-serif tabular-nums text-ink"
-              style={{ fontWeight: 500, fontSize: "clamp(28px, 4.5cqh, 40px)", lineHeight: 0.9 }}
+              style={{ fontWeight: 500, fontSize: "clamp(30px, 8vw, 40px)", lineHeight: 1 }}
             >
               {val}
             </div>
             <p
               className="uppercase text-tan-deep"
-              style={{ fontSize: 9, letterSpacing: "0.28em", marginTop: 6 }}
+              style={{ fontSize: 9, letterSpacing: "0.24em", marginTop: 8 }}
             >
               {label}
             </p>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
