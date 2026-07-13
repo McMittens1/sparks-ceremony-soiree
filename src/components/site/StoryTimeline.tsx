@@ -279,7 +279,7 @@ function MontageRow({ entry }: { entry: Montage }) {
           {entry.body}
         </p>
         <div
-          className="grid gap-3.5 text-left"
+          className="grid gap-3.5 text-left rs-montage-grid"
           style={{
             gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
             gridAutoRows: 200,
