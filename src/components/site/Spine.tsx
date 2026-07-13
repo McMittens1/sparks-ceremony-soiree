@@ -1,36 +1,11 @@
-import { useLayoutEffect, useRef, useState } from "react";
 import { useActiveSection, SPINE_SECTIONS } from "@/hooks/use-active-section";
 
 /**
  * Persistent 52px-wide decorative rail along the left edge of the home page.
- * Includes an animated lavender bar that slides between numerals as the
- * active section changes.
+ * The active section's numeral lights up lavender.
  */
 export function Spine() {
   const active = useActiveSection();
-  const listRef = useRef<HTMLDivElement>(null);
-  const itemRefs = useRef<Record<string, HTMLSpanElement | null>>({});
-  const [indicator, setIndicator] = useState<{ top: number; height: number; opacity: number }>({
-    top: 0,
-    height: 0,
-    opacity: 0,
-  });
-
-  useLayoutEffect(() => {
-    const list = listRef.current;
-    const el = itemRefs.current[active];
-    if (!list || !el) {
-      setIndicator((p) => ({ ...p, opacity: 0 }));
-      return;
-    }
-    const listRect = list.getBoundingClientRect();
-    const elRect = el.getBoundingClientRect();
-    setIndicator({
-      top: elRect.top - listRect.top + elRect.height / 2 - 10,
-      height: 20,
-      opacity: 1,
-    });
-  }, [active]);
 
   return (
     <aside
@@ -51,22 +26,18 @@ export function Spine() {
       >
         Geovanni &amp; Addison · 10.10.26
       </div>
-      <div ref={listRef} className="relative flex flex-col items-center gap-[9px]">
-        <span
-          className="spine-indicator"
-          style={{ top: indicator.top, height: indicator.height, opacity: indicator.opacity }}
-        />
+      <div className="flex flex-col items-center gap-[9px]">
         {SPINE_SECTIONS.map((s) => {
           const isActive = active === s.id;
           return (
             <span
               key={s.id}
-              ref={(el) => { itemRefs.current[s.id] = el; }}
-              className="font-serif italic transition-all duration-300"
+              className="font-serif italic"
               style={{
-                fontSize: isActive ? 13 : 11,
+                fontSize: 12,
                 color: isActive ? "#B7A6D4" : "#5A5148",
                 fontWeight: isActive ? 600 : 400,
+                transition: "color 400ms ease, font-weight 400ms ease",
               }}
             >
               {s.numeral}
