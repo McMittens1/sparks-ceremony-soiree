@@ -2,10 +2,7 @@ import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useT } from "@/i18n/context";
-import { Reveal } from "@/components/site/Reveal";
-import { Countdown } from "@/components/site/Countdown";
 import { SITE } from "@/lib/site";
-import eng75 from "@/assets/engagement/Geo_AddiEngagement-75.jpg.asset.json";
 import {
   lookupGuest,
   getGuestBySlug,
@@ -33,6 +30,39 @@ export const Route = createFileRoute("/rsvp")({
 
 type Stage = "lookup" | "form" | "done";
 
+const INK = "#2A2520";
+const IVORY = "#F8F4EC";
+const HAIRLINE = "#E1D6C3";
+const LAV = "#8779A3";
+const LAV_DEEP = "#4C4066";
+const TAN = "#A39680";
+const BODY = "#4A4238";
+const SOFT = "#6E6255";
+
+// Styled input (Cormorant italic on a hairline underline) matching the prototype.
+const inputStyle: React.CSSProperties = {
+  fontFamily: "Cormorant, serif",
+  fontStyle: "italic",
+  fontSize: 19,
+  color: INK,
+  border: "none",
+  borderBottom: `1px solid ${TAN}`,
+  background: "transparent",
+  outline: "none",
+  width: "100%",
+  padding: "0 0 10px",
+  boxSizing: "border-box",
+};
+
+const eyebrow: React.CSSProperties = {
+  fontFamily: "Work Sans, sans-serif",
+  fontSize: 10,
+  letterSpacing: "0.2em",
+  textTransform: "uppercase",
+  color: TAN,
+  margin: "0 0 8px",
+};
+
 function RsvpPage() {
   const t = useT();
   const search = useSearch({ from: "/rsvp" });
@@ -56,7 +86,6 @@ function RsvpPage() {
   const [songRequest, setSongRequest] = useState("");
   const [message, setMessage] = useState("");
 
-  // Auto-load if ?g=SLUG present.
   useEffect(() => {
     if (search.g && stage === "lookup") loadSlug(search.g);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -161,66 +190,135 @@ function RsvpPage() {
   }
 
   return (
-    <div className="relative">
-      {/* Hero */}
-      <div className="relative h-[38vh] min-h-[280px] w-full overflow-hidden">
-        <img src={eng75.url} alt="Geovanni and Addison" className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/30 via-background/40 to-background" />
+    <div style={{ background: IVORY, minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      {/* Minimal chrome */}
+      <div
+        className="flex items-center justify-between"
+        style={{ padding: "26px 56px", borderBottom: `1px solid ${HAIRLINE}` }}
+      >
+        <Link to="/" className="flex items-center gap-2">
+          <span className="font-serif italic" style={{ fontSize: 22, color: INK }}>G</span>
+          <span style={{ width: 5, height: 5, background: LAV, transform: "rotate(45deg)" }} />
+          <span className="font-serif italic" style={{ fontSize: 22, color: INK }}>A</span>
+        </Link>
+        <Link
+          to="/"
+          className="uppercase font-sans"
+          style={{
+            fontSize: 10,
+            letterSpacing: "0.2em",
+            color: LAV_DEEP,
+            borderBottom: `1px solid ${LAV_DEEP}`,
+            padding: "2px 0",
+          }}
+        >
+          ← Back to the site
+        </Link>
       </div>
 
-      <div className="mx-auto max-w-2xl px-4 sm:px-6 -mt-16 pb-24 relative">
-        <Reveal>
-          <div className="text-center">
-            <p className="text-[11px] uppercase tracking-[0.35em] text-accent">
-              {SITE.couple} · {SITE.eventDatePretty.en}
+      <div className="flex-1 flex items-center justify-center" style={{ padding: "60px 20px" }}>
+        <div
+          style={{
+            width: 640,
+            maxWidth: "100%",
+            background: IVORY,
+            border: `1px solid ${HAIRLINE}`,
+            boxShadow: "0 50px 90px -50px rgba(42,37,32,0.28)",
+            padding: "56px 64px",
+          }}
+        >
+          <p
+            className="uppercase font-sans text-center"
+            style={{ fontSize: 11, letterSpacing: "0.35em", color: TAN, margin: "0 0 16px" }}
+          >
+            {SITE.couple} · {SITE.eventDatePretty.en}
+          </p>
+          <h1
+            className="font-serif italic text-center"
+            style={{ fontWeight: 500, fontSize: 48, color: INK, margin: 0 }}
+          >
+            {stage === "done" ? t.rsvp.recapTitle : t.rsvp.title}
+          </h1>
+          <p
+            className="uppercase font-sans text-center"
+            style={{ fontSize: 10, letterSpacing: "0.3em", color: SOFT, margin: "14px 0 0" }}
+          >
+            {t.rsvp.deadlineLine}
+          </p>
+          {isLate && (
+            <p
+              className="text-center font-serif italic"
+              style={{ fontSize: 14, color: LAV, marginTop: 10 }}
+            >
+              Past the deadline — we&rsquo;ll do our best to accommodate you.
             </p>
-            <h1 className="mt-3 editorial-heading text-5xl sm:text-6xl text-primary">{t.rsvp.title}</h1>
-            <p className="mt-4 text-xs uppercase tracking-[0.3em] text-muted-foreground">
-              {t.rsvp.deadlineLine}
-            </p>
-            {isLate && (
-              <p className="mt-2 text-xs italic text-accent">
-                Past the deadline — we'll do our best to accommodate you.
-              </p>
-            )}
-          </div>
-        </Reveal>
+          )}
 
-        {/* Lookup stage */}
-        {stage === "lookup" && (
-          <Reveal delay={120}>
-            <div className="mt-12 border border-accent/20 bg-card/60 backdrop-blur-sm p-6 sm:p-10">
-              <h2 className="font-serif text-2xl text-primary">{t.rsvp.lookupTitle}</h2>
-              <p className="mt-2 text-sm text-foreground/75">{t.rsvp.lookupHint}</p>
-              <form onSubmit={onLookupSubmit} className="mt-6 flex flex-col sm:flex-row gap-3">
-                <input
-                  autoFocus
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder={t.rsvp.lookupPlaceholder}
-                  maxLength={120}
-                  className="flex-1 border border-input bg-background px-4 py-3 text-sm outline-none focus:border-primary"
-                />
-                <button
-                  type="submit"
-                  disabled={loading || !query.trim()}
-                  className="border border-primary bg-primary text-primary-foreground px-6 py-3 text-[11px] uppercase tracking-[0.3em] disabled:opacity-50"
-                >
-                  {loading ? t.common.loading : t.rsvp.lookupCta}
-                </button>
-              </form>
+          <div className="my-9 flex items-center gap-3.5">
+            <div className="flex-1 h-px" style={{ background: HAIRLINE }} />
+            <span
+              style={{ width: 6, height: 6, background: LAV, transform: "rotate(45deg)" }}
+              aria-hidden
+            />
+            <div className="flex-1 h-px" style={{ background: HAIRLINE }} />
+          </div>
+
+          {/* Lookup */}
+          {stage === "lookup" && (
+            <form onSubmit={onLookupSubmit}>
+              <p
+                className="font-serif italic text-center"
+                style={{ fontSize: 22, color: INK, margin: "0 0 8px" }}
+              >
+                {t.rsvp.lookupTitle}
+              </p>
+              <p
+                className="text-center font-sans"
+                style={{ fontSize: 14, color: SOFT, margin: "0 0 30px" }}
+              >
+                {t.rsvp.lookupHint}
+              </p>
+              <input
+                autoFocus
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={t.rsvp.lookupPlaceholder}
+                maxLength={120}
+                style={inputStyle}
+              />
+              <button
+                type="submit"
+                disabled={loading || !query.trim()}
+                className="mt-8 block w-full uppercase font-sans"
+                style={{
+                  background: INK,
+                  color: IVORY,
+                  padding: "16px 0",
+                  fontSize: 11,
+                  letterSpacing: "0.26em",
+                  border: `1px solid ${INK}`,
+                  opacity: loading || !query.trim() ? 0.5 : 1,
+                  cursor: loading || !query.trim() ? "not-allowed" : "pointer",
+                }}
+              >
+                {loading ? t.common.loading : t.rsvp.lookupCta}
+              </button>
 
               {matches && matches.length > 1 && (
-                <div className="mt-6 space-y-2">
-                  <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Is this you?</p>
+                <div className="mt-8 space-y-2">
+                  <p style={eyebrow}>Is this you?</p>
                   {matches.map((m) => (
                     <button
                       key={m.slug}
+                      type="button"
                       onClick={() => loadSlug(m.slug)}
-                      className="w-full text-left border border-border/60 hover:border-primary px-4 py-3 transition"
+                      className="w-full text-left border transition-colors"
+                      style={{ padding: "14px 16px", borderColor: HAIRLINE }}
                     >
-                      <div className="font-serif text-primary">{m.primary_name}</div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="font-serif italic" style={{ color: INK, fontSize: 18 }}>
+                        {m.primary_name}
+                      </div>
+                      <div className="font-sans" style={{ fontSize: 12, color: SOFT, marginTop: 4 }}>
                         Party of {m.party_size || 1}
                       </div>
                     </button>
@@ -229,138 +327,174 @@ function RsvpPage() {
               )}
 
               {err && (
-                <div className="mt-6 text-sm text-destructive">
+                <div className="mt-6 font-sans" style={{ fontSize: 14, color: "#8b3a2f" }}>
                   <p>{err}</p>
-                  <p className="mt-2 text-xs text-muted-foreground italic">{SITE.rsvpFallbackContact}</p>
+                  <p className="mt-2 italic font-serif" style={{ color: SOFT, fontSize: 13 }}>
+                    {SITE.rsvpFallbackContact}
+                  </p>
                 </div>
               )}
-            </div>
-          </Reveal>
-        )}
+            </form>
+          )}
 
-        {/* Form stage */}
-        {stage === "form" && guest && (
-          <Reveal delay={120}>
-            <form onSubmit={onSubmit} className="mt-12 space-y-10">
+          {/* Form */}
+          {stage === "form" && guest && (
+            <form onSubmit={onSubmit} className="space-y-10">
               {existingRsvp && (
-                <p className="text-xs uppercase tracking-[0.2em] text-accent">
+                <p
+                  className="uppercase font-sans"
+                  style={{ fontSize: 10, letterSpacing: "0.2em", color: LAV }}
+                >
                   Editing your response — last saved{" "}
                   {new Date(existingRsvp.updated_at).toLocaleDateString()}.
                 </p>
               )}
 
               {/* Party */}
-              <section className="border border-accent/20 bg-card/60 backdrop-blur-sm p-6 sm:p-8">
-                <h2 className="font-serif text-2xl text-primary">{t.rsvp.partyTitle}</h2>
-                <p className="mt-2 text-sm text-foreground/75">{t.rsvp.partySubtitle}</p>
-                <div className="mt-6 space-y-4">
+              <section>
+                <p style={{ ...eyebrow, color: LAV_DEEP, letterSpacing: "0.3em", fontSize: 11 }}>
+                  Your party
+                </p>
+                <p
+                  className="font-sans"
+                  style={{ fontSize: 14, color: SOFT, margin: "0 0 20px", lineHeight: 1.6 }}
+                >
+                  {t.rsvp.partySubtitle}
+                </p>
+                <div className="space-y-5">
                   {attendees.map((a, i) => (
-                    <div key={i} className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto_auto] gap-3 items-center border border-border/40 p-3">
+                    <div
+                      key={i}
+                      className="border"
+                      style={{ padding: 18, borderColor: HAIRLINE }}
+                    >
                       <input
                         value={a.name}
                         onChange={(e) => updateAttendee(i, { name: e.target.value })}
                         placeholder={t.rsvp.fullName}
                         maxLength={120}
-                        className="border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                        style={inputStyle}
                       />
-                      <label className="text-xs uppercase tracking-[0.15em] text-muted-foreground flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={a.is_child}
-                          onChange={(e) => updateAttendee(i, { is_child: e.target.checked })}
-                        />
-                        {t.rsvp.child}
-                      </label>
-                      <div className="flex gap-1">
+                      <div className="flex items-center justify-between flex-wrap gap-3 mt-4">
+                        <div className="flex gap-2">
+                          <PillToggle
+                            active={!a.is_child}
+                            onClick={() => updateAttendee(i, { is_child: false })}
+                            label={t.rsvp.adult}
+                          />
+                          <PillToggle
+                            active={a.is_child}
+                            onClick={() => updateAttendee(i, { is_child: true })}
+                            label={t.rsvp.child}
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <PillToggle
+                            active={a.attending === true}
+                            onClick={() => updateAttendee(i, { attending: true })}
+                            label={t.rsvp.attending}
+                          />
+                          <PillToggle
+                            active={a.attending === false}
+                            onClick={() => updateAttendee(i, { attending: false })}
+                            label={t.rsvp.notAttending}
+                          />
+                        </div>
                         <button
                           type="button"
-                          onClick={() => updateAttendee(i, { attending: true })}
-                          className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] border ${
-                            a.attending ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground"
-                          }`}
+                          onClick={() => removeAttendee(i)}
+                          className="uppercase font-sans"
+                          style={{
+                            fontSize: 10,
+                            letterSpacing: "0.2em",
+                            color: TAN,
+                          }}
                         >
-                          {t.rsvp.attending}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => updateAttendee(i, { attending: false })}
-                          className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] border ${
-                            !a.attending ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground"
-                          }`}
-                        >
-                          {t.rsvp.notAttending}
+                          {t.rsvp.remove}
                         </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => removeAttendee(i)}
-                        className="text-xs uppercase tracking-[0.15em] text-muted-foreground hover:text-destructive"
-                      >
-                        {t.rsvp.remove}
-                      </button>
                     </div>
                   ))}
                 </div>
                 <button
                   type="button"
                   onClick={addAttendee}
-                  className="mt-4 text-xs uppercase tracking-[0.2em] text-primary link-underline"
+                  className="mt-4 uppercase font-sans"
+                  style={{
+                    fontSize: 10,
+                    letterSpacing: "0.2em",
+                    color: LAV_DEEP,
+                    borderBottom: `1px solid ${LAV_DEEP}`,
+                    paddingBottom: 3,
+                  }}
                 >
                   {t.rsvp.addGuest}
                 </button>
               </section>
 
               {/* Address */}
-              <section className="border border-accent/20 bg-card/60 backdrop-blur-sm p-6 sm:p-8">
-                <h2 className="font-serif text-2xl text-primary">Confirm your address</h2>
-                <p className="mt-2 text-sm text-foreground/75">
-                  Please confirm your mailing address so we can send thank-yous and any future updates to the right place.
+              <section>
+                <p style={{ ...eyebrow, color: LAV_DEEP, letterSpacing: "0.3em", fontSize: 11 }}>
+                  Mailing address
                 </p>
-                <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <input
-                    value={address.line1 ?? ""}
-                    onChange={(e) => setAddress({ ...address, line1: e.target.value })}
-                    placeholder="Street address"
-                    maxLength={200}
-                    className="sm:col-span-2 border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-                  />
-                  <input
-                    value={address.line2 ?? ""}
-                    onChange={(e) => setAddress({ ...address, line2: e.target.value })}
-                    placeholder="Apt / suite (optional)"
-                    maxLength={200}
-                    className="sm:col-span-2 border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-                  />
+                <p
+                  className="font-sans"
+                  style={{ fontSize: 14, color: SOFT, margin: "0 0 20px", lineHeight: 1.6 }}
+                >
+                  Confirm your address so thank-yous land in the right mailbox.
+                </p>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-6">
+                  <div className="col-span-2">
+                    <input
+                      value={address.line1 ?? ""}
+                      onChange={(e) => setAddress({ ...address, line1: e.target.value })}
+                      placeholder="Street address"
+                      maxLength={200}
+                      style={inputStyle}
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <input
+                      value={address.line2 ?? ""}
+                      onChange={(e) => setAddress({ ...address, line2: e.target.value })}
+                      placeholder="Apt / suite (optional)"
+                      maxLength={200}
+                      style={inputStyle}
+                    />
+                  </div>
                   <input
                     value={address.city ?? ""}
                     onChange={(e) => setAddress({ ...address, city: e.target.value })}
                     placeholder="City"
                     maxLength={120}
-                    className="border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                    style={inputStyle}
                   />
                   <input
                     value={address.state ?? ""}
                     onChange={(e) => setAddress({ ...address, state: e.target.value })}
                     placeholder="State"
                     maxLength={60}
-                    className="border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                    style={inputStyle}
                   />
                   <input
                     value={address.postal_code ?? ""}
                     onChange={(e) => setAddress({ ...address, postal_code: e.target.value })}
-                    placeholder="ZIP / postal code"
+                    placeholder="ZIP / postal"
                     maxLength={20}
-                    className="border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                    style={inputStyle}
                   />
                   <input
                     value={address.country ?? ""}
                     onChange={(e) => setAddress({ ...address, country: e.target.value })}
                     placeholder="Country (if not US)"
                     maxLength={60}
-                    className="border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                    style={inputStyle}
                   />
                 </div>
-                <label className="mt-4 flex items-center gap-2 text-sm text-foreground/80">
+                <label
+                  className="mt-6 flex items-center gap-2 font-sans"
+                  style={{ fontSize: 14, color: BODY }}
+                >
                   <input
                     type="checkbox"
                     checked={addressConfirmed}
@@ -371,95 +505,146 @@ function RsvpPage() {
               </section>
 
               {/* Extras */}
-              <section className="border border-accent/20 bg-card/60 backdrop-blur-sm p-6 sm:p-8 space-y-4">
+              <section className="space-y-6">
                 <div>
-                  <label className="block text-xs uppercase tracking-[0.2em] text-muted-foreground mb-2">
+                  <p style={{ ...eyebrow, color: LAV_DEEP, letterSpacing: "0.3em", fontSize: 11 }}>
                     Song request (optional)
-                  </label>
+                  </p>
                   <input
                     value={songRequest}
                     onChange={(e) => setSongRequest(e.target.value)}
-                    placeholder="One song that'll get you on the floor"
+                    placeholder="One song that&rsquo;ll get you on the floor"
                     maxLength={200}
-                    className="w-full border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                    style={inputStyle}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs uppercase tracking-[0.2em] text-muted-foreground mb-2">
+                  <p style={{ ...eyebrow, color: LAV_DEEP, letterSpacing: "0.3em", fontSize: 11 }}>
                     {t.rsvp.message}
-                  </label>
+                  </p>
                   <textarea
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     rows={4}
                     maxLength={1000}
-                    className="w-full border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+                    style={{
+                      ...inputStyle,
+                      paddingBottom: 8,
+                      borderBottom: `1px solid ${TAN}`,
+                      resize: "vertical",
+                    }}
                   />
                 </div>
               </section>
 
-              {err && <p className="text-sm text-destructive">{err}</p>}
+              {err && (
+                <p className="font-sans" style={{ fontSize: 14, color: "#8b3a2f" }}>
+                  {err}
+                </p>
+              )}
 
               <div className="flex items-center justify-between gap-4">
                 <button
                   type="button"
-                  onClick={() => { setStage("lookup"); setGuest(null); setMatches(null); setErr(null); }}
-                  className="text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-primary"
+                  onClick={() => {
+                    setStage("lookup");
+                    setGuest(null);
+                    setMatches(null);
+                    setErr(null);
+                  }}
+                  className="uppercase font-sans"
+                  style={{ fontSize: 10, letterSpacing: "0.2em", color: TAN }}
                 >
                   ← {t.common.back}
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="border border-primary bg-primary text-primary-foreground px-8 py-3 text-[11px] uppercase tracking-[0.3em] disabled:opacity-50"
+                  className="uppercase font-sans"
+                  style={{
+                    background: INK,
+                    color: IVORY,
+                    padding: "16px 40px",
+                    fontSize: 11,
+                    letterSpacing: "0.3em",
+                    border: `1px solid ${INK}`,
+                    opacity: loading ? 0.5 : 1,
+                  }}
                 >
                   {loading ? t.rsvp.submitting : t.rsvp.submitCta}
                 </button>
               </div>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground text-center">
+              <p
+                className="text-center uppercase font-sans"
+                style={{ fontSize: 10, letterSpacing: "0.2em", color: SOFT }}
+              >
                 {t.rsvp.resubmitNote}
               </p>
             </form>
-          </Reveal>
-        )}
+          )}
 
-        {/* Done stage */}
-        {stage === "done" && (
-          <Reveal delay={120}>
-            <div className="mt-12 border border-accent/20 bg-card/60 backdrop-blur-sm p-8 sm:p-12 text-center">
-              <h2 className="font-serif text-3xl text-primary">{t.rsvp.recapTitle}</h2>
-              <p className="mt-3 text-foreground/75">{t.rsvp.recapBody}</p>
-              <div className="mt-8 flex flex-col items-center gap-4">
+          {/* Done */}
+          {stage === "done" && (
+            <div className="text-center">
+              <p className="font-sans" style={{ fontSize: 15, color: BODY, lineHeight: 1.7 }}>
+                {t.rsvp.recapBody}
+              </p>
+              <div className="mt-10 flex flex-col items-center gap-5">
                 <button
                   onClick={() => setStage("form")}
-                  className="text-xs uppercase tracking-[0.2em] text-primary link-underline"
+                  className="uppercase font-sans"
+                  style={{
+                    fontSize: 10,
+                    letterSpacing: "0.2em",
+                    color: LAV_DEEP,
+                    borderBottom: `1px solid ${LAV_DEEP}`,
+                    paddingBottom: 3,
+                  }}
                 >
                   {t.rsvp.recapUpdate}
                 </button>
-                <Link to="/" className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground link-underline">
+                <Link
+                  to="/"
+                  className="uppercase font-sans"
+                  style={{ fontSize: 10, letterSpacing: "0.25em", color: TAN }}
+                >
                   Back to the site →
                 </Link>
               </div>
             </div>
-          </Reveal>
-        )}
-
-        {/* Countdown */}
-        <Reveal delay={280}>
-          <div className="mt-20 border-t border-accent/20 pt-10">
-            <p className="text-[10px] uppercase tracking-[0.35em] text-accent text-center">Countdown</p>
-            <div className="mt-6"><Countdown /></div>
-          </div>
-        </Reveal>
-
-        <Reveal delay={340}>
-          <div className="mt-16 flex flex-wrap justify-center gap-6 text-[10px] uppercase tracking-[0.3em]">
-            <Link to="/" hash="details" className="text-primary link-underline">Details →</Link>
-            <Link to="/" hash="travel" className="text-primary link-underline">Travel & lodging →</Link>
-            <Link to="/" hash="faq" className="text-primary link-underline">FAQ →</Link>
-          </div>
-        </Reveal>
+          )}
+        </div>
       </div>
     </div>
+  );
+}
+
+function PillToggle({
+  active,
+  onClick,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className="uppercase font-sans transition-colors"
+      style={{
+        padding: "8px 14px",
+        fontSize: 10,
+        letterSpacing: "0.2em",
+        border: `1px solid ${active ? INK : HAIRLINE}`,
+        background: active ? INK : "transparent",
+        color: active ? IVORY : BODY,
+        cursor: "pointer",
+      }}
+    >
+      {label}
+    </button>
   );
 }
