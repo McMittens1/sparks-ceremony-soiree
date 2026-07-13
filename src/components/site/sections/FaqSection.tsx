@@ -1,0 +1,93 @@
+import { Link } from "@tanstack/react-router";
+import { DiamondDivider } from "@/components/site/DiamondDivider";
+import { SectionHeader } from "@/components/site/SectionHeader";
+import { BodyProse, Eyebrow } from "@/components/site/typography";
+import { FAQ_LOGISTICS, FAQ_GUESTS } from "@/lib/wedding-data";
+
+export function FaqSection() {
+  return (
+    <section id="faq" className="border-t border-hairline">
+      <div className="rs-section" style={{ padding: "100px 64px", maxWidth: 1500, margin: "0 auto" }}>
+        <SectionHeader
+          eyebrow="VIII · FAQ"
+          title="FAQ"
+          subhead="The questions we've been getting most."
+        />
+        <DiamondDivider className="mt-9" />
+
+        <div className="grid rs-stack-2" style={{ marginTop: 60, gridTemplateColumns: "1fr 1fr", gap: 64 }}>
+          {(
+            [
+              { title: "Logistics", items: FAQ_LOGISTICS },
+              { title: "Attire & guests", items: FAQ_GUESTS },
+            ] as const
+          ).map((col) => (
+            <div key={col.title}>
+              <Eyebrow color="lavender-deep" style={{ marginBottom: 8 }}>
+                {col.title}
+              </Eyebrow>
+              {col.items.map((item, i) => (
+                <details
+                  key={i}
+                  data-anim
+                  className="border-t border-hairline"
+                  style={{ padding: "20px 0" }}
+                  open={item.open}
+                >
+                  <summary className="flex justify-between gap-5 cursor-pointer font-serif italic text-ink" style={{ fontSize: 21 }}>
+                    {item.q}
+                    <span
+                      aria-hidden
+                      className="chev flex-shrink-0 bg-lavender"
+                      style={{ width: 6, height: 6, transform: "rotate(45deg)", marginTop: 9 }}
+                    />
+                  </summary>
+                  <div className="faq-body">
+                    <BodyProse style={{ fontSize: 15, lineHeight: 1.75, margin: "14px 0 0" }}>
+                      {item.a}
+                    </BodyProse>
+                  </div>
+                </details>
+              ))}
+            </div>
+          ))}
+        </div>
+        <p className="text-center font-serif italic text-ink-soft" style={{ marginTop: 56, fontSize: 16 }}>
+          Still have a question? Text Addi or Geo directly, we&rsquo;ll get you sorted.
+        </p>
+      </div>
+
+      {/* Closing CTA */}
+      <div className="text-center rs-section bg-lavender-wash" style={{ padding: "130px 64px" }}>
+        <Eyebrow color="lavender-deep" size="lg" style={{ marginBottom: 26 }}>
+          See you soon
+        </Eyebrow>
+        <h2
+          className="font-serif italic mx-auto text-ink"
+          style={{
+            fontWeight: 500,
+            fontSize: "clamp(32px, 6vw, 60px)",
+            margin: 0,
+            maxWidth: 720,
+            lineHeight: 1.15,
+          }}
+        >
+          Won&rsquo;t be the same without you.
+        </h2>
+        <div style={{ marginTop: 44 }}>
+          <Link
+            to="/rsvp"
+            search={{}}
+            className="inline-block uppercase font-sans bg-ink text-ivory border border-ink"
+            style={{ padding: "19px 44px", fontSize: 12, letterSpacing: "0.3em" }}
+          >
+            RSVP now
+          </Link>
+        </div>
+        <Eyebrow color="ink-soft" style={{ marginTop: 26 }}>
+          Please respond by September 15, 2026
+        </Eyebrow>
+      </div>
+    </section>
+  );
+}
