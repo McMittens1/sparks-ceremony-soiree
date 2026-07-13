@@ -354,13 +354,24 @@ details[data-anim][open] > .faq-body {
   .rs-hero-section {
     height: auto !important;
     min-height: 0 !important;
+    container-type: normal !important;
+    display: block !important;
   }
   .rs-hero-inner {
     flex-direction: column !important;
-    gap: 32px !important;
-    padding: 24px !important;
+    gap: 24px !important;
+    padding: 32px 24px 48px !important;
+    height: auto !important;
   }
-  .rs-hero-text { flex: 1 1 auto !important; }
+  .rs-hero-text {
+    flex: 1 1 auto !important;
+    font-size: 16px;
+  }
+  .rs-hero-text > p,
+  .rs-hero-text > h1 > div,
+  .rs-hero-text a {
+    font-size: revert !important;
+  }
   .rs-hero-image {
     flex: 1 1 auto !important;
     padding: 0 !important;
@@ -368,6 +379,7 @@ details[data-anim][open] > .faq-body {
     max-height: 480px;
   }
   .rs-hero-title { font-size: clamp(48px, 12vw, 84px) !important; }
+
 
   /* Countdown label sizing */
   #countdown { padding: 56px 20px !important; }
