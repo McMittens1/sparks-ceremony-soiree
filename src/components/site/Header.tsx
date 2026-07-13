@@ -69,7 +69,7 @@ export function Header() {
         {/* Desktop nav */}
         <nav
           aria-label="Primary"
-          className="hidden lg:flex items-center gap-[22px] uppercase whitespace-nowrap"
+          className="hidden md:flex items-center gap-[18px] uppercase whitespace-nowrap"
           style={{ fontSize: 10, letterSpacing: "0.18em" }}
         >
           {NAV.map((n) => {
@@ -110,7 +110,7 @@ export function Header() {
         </nav>
 
         {/* Mobile hamburger */}
-        <div className="flex lg:hidden items-center gap-3">
+        <div className="flex md:hidden items-center gap-3">
           <Link
             to="/rsvp"
             search={{}}
@@ -137,13 +137,13 @@ export function Header() {
       {/* Mobile menu drawer */}
       <div
         aria-hidden={!menuOpen}
-        className={`mobile-menu-backdrop lg:hidden ${menuOpen ? "is-open" : ""}`}
+        className={`mobile-menu-backdrop md:hidden ${menuOpen ? "is-open" : ""}`}
         onClick={() => setMenuOpen(false)}
       />
       <aside
         id="mobile-menu"
         aria-label="Site navigation"
-        className={`mobile-menu-panel lg:hidden ${menuOpen ? "is-open" : ""}`}
+        className={`mobile-menu-panel md:hidden ${menuOpen ? "is-open" : ""}`}
       >
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-2">
