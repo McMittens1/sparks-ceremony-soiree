@@ -30,8 +30,8 @@ function HeroCountdown() {
   ];
   return (
     <div
-      className="lg:hidden"
-      style={{ marginTop: "clamp(24px, 4cqh, 36px)" }}
+      className="lg:hidden w-full"
+      style={{ marginTop: "clamp(20px, 4svh, 40px)" }}
       aria-label="Countdown to the wedding"
     >
       <p
@@ -62,7 +62,7 @@ function HeroCountdown() {
           >
             <div
               className="font-serif tabular-nums text-ink"
-              style={{ fontWeight: 500, fontSize: "clamp(30px, 8vw, 40px)", lineHeight: 1 }}
+              style={{ fontWeight: 500, fontSize: "clamp(28px, 7vw, 40px)", lineHeight: 1 }}
             >
               {val}
             </div>
