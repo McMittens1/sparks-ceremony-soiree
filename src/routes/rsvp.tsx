@@ -181,6 +181,7 @@ function RsvpPage() {
           attendees: cleaned,
           address_confirmed: addressConfirmed,
           address,
+          email,
           song_request: songRequest,
           message,
         },
