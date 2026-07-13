@@ -7,7 +7,7 @@ import { Reveal } from "@/components/site/Reveal";
 import { claimAdminIfFirst } from "@/lib/admin.functions";
 
 
-export const Route = createFileRoute("/auth")({
+export const Route = createFileRoute("/portal-ga-2026")({
   head: () => ({ meta: [
     { title: "Admin sign-in" },
     { name: "robots", content: "noindex,nofollow" },
@@ -38,7 +38,7 @@ function AuthPage() {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: window.location.origin + "/auth" },
+        options: { emailRedirectTo: window.location.origin + "/portal-ga-2026" },
       });
       setLoading(false);
       if (error) { setErr(error.message); return; }
