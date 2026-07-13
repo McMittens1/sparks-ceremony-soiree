@@ -145,10 +145,8 @@ function DatedRow({
         </div>
 
         {/* Text column */}
-        <Reveal
-          variant={flip ? "left" : "right"}
+        <div
           className="flex flex-col justify-center px-2"
-          // @ts-expect-error style pass-through not typed on Reveal
           style={{ order: flip ? 1 : 3 }}
         >
           <div className="flex items-center gap-3.5 mb-2.5">
@@ -197,6 +195,52 @@ function DatedRow({
           </p>
         </div>
       </div>
+    </div>
+  );
+}
+
+function StoryGutter() {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === "undefined") {
+      el.classList.add("is-in");
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            el.classList.add("is-in");
+            io.disconnect();
+          }
+        }
+      },
+      { threshold: 0.25 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return (
+    <div className="relative" style={{ width: 1, height: "70%" }}>
+      <div
+        ref={ref}
+        className="story-line absolute inset-0"
+        style={{ background: "#E1D6C3" }}
+      />
+      <span
+        className="absolute diamond-in is-in"
+        aria-hidden
+        style={{
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%) rotate(45deg)",
+          width: 7,
+          height: 7,
+          background: "#8779A3",
+        }}
+      />
     </div>
   );
 }
