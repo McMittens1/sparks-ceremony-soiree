@@ -917,6 +917,7 @@ function Home() {
       {/* ============ FAQ ============ */}
       <section id="faq" className="border-t" style={{ borderColor: HAIRLINE }}>
         <div
+          className="rs-section"
           style={{
             padding: "100px 64px",
             maxWidth: 1500,
