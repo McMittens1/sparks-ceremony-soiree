@@ -824,7 +824,7 @@ function Home() {
       {/* ============ REGISTRY ============ */}
       <section
         id="registry"
-        className="border-t"
+        className="border-t rs-section"
         style={{
           padding: "100px 64px",
           maxWidth: 1500,
