@@ -66,6 +66,10 @@ const eyebrow: React.CSSProperties = {
   margin: "0 0 8px",
 };
 
+// Feature flag: when false, the RSVP form is shown in a read-only preview
+// state with a banner and all inputs disabled. Flip to true when RSVPs open.
+const RSVP_OPEN = false;
+
 function RsvpPage() {
   const t = useT();
   const search = useSearch({ from: "/rsvp" });
@@ -91,6 +95,7 @@ function RsvpPage() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
+    if (!RSVP_OPEN) return;
     if (search.g && stage === "lookup") loadSlug(search.g);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search.g]);
@@ -269,8 +274,52 @@ function RsvpPage() {
             <div className="flex-1 h-px" style={{ background: HAIRLINE }} />
           </div>
 
+          {!RSVP_OPEN && (
+            <div
+              role="status"
+              className="text-center"
+              style={{
+                border: `1px solid ${LAV}`,
+                background: "rgba(135,121,163,0.06)",
+                padding: "22px 24px",
+                margin: "0 0 32px",
+              }}
+            >
+              <p
+                className="uppercase font-sans"
+                style={{ fontSize: 10, letterSpacing: "0.32em", color: LAV_DEEP, margin: "0 0 8px" }}
+              >
+                RSVPs open soon
+              </p>
+              <p
+                className="font-serif italic"
+                style={{ fontSize: 18, color: INK, lineHeight: 1.5, margin: 0 }}
+              >
+                We&rsquo;re not accepting responses just yet.
+              </p>
+              <p
+                className="font-sans"
+                style={{ fontSize: 13, color: SOFT, lineHeight: 1.6, margin: "8px 0 0" }}
+              >
+                This form is a preview. It will open closer to the date — you&rsquo;ll receive the link with your invitation.
+              </p>
+            </div>
+          )}
+
           {/* Lookup */}
           {stage === "lookup" && (
+            <fieldset
+              disabled={!RSVP_OPEN}
+              aria-disabled={!RSVP_OPEN}
+              style={{
+                border: "none",
+                padding: 0,
+                margin: 0,
+                minInlineSize: "auto",
+                opacity: RSVP_OPEN ? 1 : 0.55,
+                pointerEvents: RSVP_OPEN ? "auto" : "none",
+              }}
+            >
             <form onSubmit={onLookupSubmit} noValidate>
               <p
                 className="font-serif italic text-center"
@@ -347,6 +396,7 @@ function RsvpPage() {
                 )}
               </div>
             </form>
+            </fieldset>
           )}
 
           {/* Form */}
