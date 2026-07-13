@@ -193,6 +193,24 @@ export function HeroSection() {
           <HeroCountdown />
         </div>
 
+        <div
+          className="rs-hero-image min-w-0"
+          style={{ flex: "1 1 520px", display: "flex", alignItems: "stretch" }}
+        >
+          <img
+            src={favorite.url}
+            alt="Geovanni and Addison, engaged"
+            loading="eager"
+            fetchPriority="high"
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: "center 30%",
+              display: "block",
+            }}
+          />
+        </div>
       </div>
     </section>
   );
