@@ -48,12 +48,11 @@ export function Header() {
 
   return (
     <header
-      className="sticky top-0 z-40 border-b"
+      className="sticky top-0 z-40 border-b border-hairline"
       style={{
         background: "rgba(248,244,236,0.94)",
         backdropFilter: "blur(8px)",
         WebkitBackdropFilter: "blur(8px)",
-        borderColor: "#E1D6C3",
       }}
     >
       <div className="max-w-[1600px] mx-auto flex items-center justify-between px-6 lg:px-8 py-4 lg:py-5">
@@ -62,9 +61,9 @@ export function Header() {
           className="flex items-center gap-2 shrink-0"
           aria-label="Back to top"
         >
-          <span className="font-serif italic text-[22px]" style={{ color: "#2A2520" }} aria-hidden="true">G</span>
+          <span className="font-serif italic text-[22px] text-ink" aria-hidden="true">G</span>
           <span className="diamond" aria-hidden="true" />
-          <span className="font-serif italic text-[22px]" style={{ color: "#2A2520" }} aria-hidden="true">A</span>
+          <span className="font-serif italic text-[22px] text-ink" aria-hidden="true">A</span>
         </button>
 
         {/* Desktop nav */}
@@ -80,15 +79,14 @@ export function Header() {
                 key={n.id}
                 onClick={() => goToSection(n.id)}
                 aria-current={isActive ? "location" : undefined}
-                className="nav-link relative transition-colors py-2"
-                style={{ color: isActive ? "#4C4066" : "#2A2520" }}
+                className={`nav-link relative transition-colors py-2 ${isActive ? "text-lavender-deep" : "text-ink"}`}
               >
                 {t.nav[n.key]}
                 {isActive && (
                   <span
                     aria-hidden="true"
-                    className="absolute left-0 right-0"
-                    style={{ bottom: 0, height: 1, background: "#4C4066" }}
+                    className="absolute left-0 right-0 bg-lavender-deep"
+                    style={{ bottom: 0, height: 1 }}
                   />
                 )}
               </button>
@@ -97,15 +95,14 @@ export function Header() {
           <Link
             to="/rsvp"
             search={{}}
-            className="px-[18px] py-[9px] border transition-colors hover:bg-ink hover:text-ivory"
-            style={{ borderColor: "#2A2520", color: "#2A2520" }}
+            className="px-[18px] py-[9px] border border-ink text-ink transition-colors hover:bg-ink hover:text-ivory"
           >
             {t.nav.rsvp}
           </Link>
           <button
             onClick={() => setLang(lang === "en" ? "es" : "en")}
-            className="ml-1 px-1 transition-colors"
-            style={{ fontSize: 10, color: "#4C4066" }}
+            className="ml-1 px-1 transition-colors text-lavender-deep"
+            style={{ fontSize: 10 }}
             aria-label={`${t.common.language}: ${lang === "en" ? "switch to Spanish" : "switch to English"}`}
           >
             <span aria-hidden="true">{lang === "en" ? "EN / ES" : "ES / EN"}</span>
@@ -117,8 +114,8 @@ export function Header() {
           <Link
             to="/rsvp"
             search={{}}
-            className="uppercase font-sans px-3 py-2 border"
-            style={{ borderColor: "#2A2520", color: "#2A2520", fontSize: 10, letterSpacing: "0.24em" }}
+            className="uppercase font-sans px-3 py-2 border border-ink text-ink"
+            style={{ fontSize: 10, letterSpacing: "0.24em" }}
           >
             {t.nav.rsvp}
           </Link>
@@ -130,9 +127,9 @@ export function Header() {
             aria-controls="mobile-menu"
             className="w-10 h-10 flex flex-col items-center justify-center gap-[5px]"
           >
-            <span aria-hidden style={{ width: 22, height: 1, background: "#2A2520", transition: "transform 220ms ease, opacity 220ms ease", transform: menuOpen ? "translateY(6px) rotate(45deg)" : "none" }} />
-            <span aria-hidden style={{ width: 22, height: 1, background: "#2A2520", transition: "opacity 220ms ease", opacity: menuOpen ? 0 : 1 }} />
-            <span aria-hidden style={{ width: 22, height: 1, background: "#2A2520", transition: "transform 220ms ease", transform: menuOpen ? "translateY(-6px) rotate(-45deg)" : "none" }} />
+            <span aria-hidden className="bg-ink" style={{ width: 22, height: 1, transition: "transform 220ms ease, opacity 220ms ease", transform: menuOpen ? "translateY(6px) rotate(45deg)" : "none" }} />
+            <span aria-hidden className="bg-ink" style={{ width: 22, height: 1, transition: "opacity 220ms ease", opacity: menuOpen ? 0 : 1 }} />
+            <span aria-hidden className="bg-ink" style={{ width: 22, height: 1, transition: "transform 220ms ease", transform: menuOpen ? "translateY(-6px) rotate(-45deg)" : "none" }} />
           </button>
         </div>
       </div>
@@ -150,16 +147,15 @@ export function Header() {
       >
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-2">
-            <span className="font-serif italic text-[22px]" style={{ color: "#2A2520" }} aria-hidden="true">G</span>
+            <span className="font-serif italic text-[22px] text-ink" aria-hidden="true">G</span>
             <span className="diamond" aria-hidden="true" />
-            <span className="font-serif italic text-[22px]" style={{ color: "#2A2520" }} aria-hidden="true">A</span>
+            <span className="font-serif italic text-[22px] text-ink" aria-hidden="true">A</span>
           </div>
           <button
             type="button"
             onClick={() => setMenuOpen(false)}
             aria-label="Close menu"
-            className="w-10 h-10 flex items-center justify-center"
-            style={{ color: "#2A2520" }}
+            className="w-10 h-10 flex items-center justify-center text-ink"
           >
             <span aria-hidden style={{ fontSize: 24, lineHeight: 1 }}>×</span>
           </button>
@@ -169,8 +165,8 @@ export function Header() {
             <button
               key={n.id}
               onClick={() => goToSection(n.id)}
-              className="text-left font-serif italic"
-              style={{ fontSize: 26, color: "#2A2520" }}
+              className="text-left font-serif italic text-ink"
+              style={{ fontSize: 26 }}
             >
               {t.nav[n.key]}
             </button>
@@ -179,15 +175,15 @@ export function Header() {
             to="/rsvp"
             search={{}}
             onClick={() => setMenuOpen(false)}
-            className="text-center uppercase font-sans mt-4 py-4"
-            style={{ background: "#2A2520", color: "#F8F4EC", fontSize: 11, letterSpacing: "0.28em" }}
+            className="text-center uppercase font-sans mt-4 py-4 bg-ink text-ivory"
+            style={{ fontSize: 11, letterSpacing: "0.28em" }}
           >
             {t.nav.rsvp}
           </Link>
           <button
             onClick={() => setLang(lang === "en" ? "es" : "en")}
-            className="mt-6 self-start uppercase"
-            style={{ fontSize: 11, letterSpacing: "0.24em", color: "#4C4066" }}
+            className="mt-6 self-start uppercase text-lavender-deep"
+            style={{ fontSize: 11, letterSpacing: "0.24em" }}
             aria-label={`${t.common.language}: ${lang === "en" ? "switch to Spanish" : "switch to English"}`}
           >
             {lang === "en" ? "EN / ES" : "ES / EN"}

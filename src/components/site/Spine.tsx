@@ -10,18 +10,16 @@ export function Spine() {
   return (
     <aside
       aria-hidden="true"
-      className="fixed left-0 top-0 bottom-0 w-[52px] z-50 flex flex-col items-center justify-between py-6"
-      style={{ background: "#2A2520" }}
+      className="fixed left-0 top-0 bottom-0 w-[52px] z-50 flex flex-col items-center justify-between py-6 bg-ink"
     >
       <span className="diamond flex-shrink-0" style={{ width: 6, height: 6 }} />
       <div
-        className="font-sans uppercase whitespace-nowrap"
+        className="font-sans uppercase whitespace-nowrap text-tan"
         style={{
           writingMode: "vertical-rl",
           transform: "rotate(180deg)",
           fontSize: 9,
           letterSpacing: "0.3em",
-          color: "#A39680",
         }}
       >
         Geovanni &amp; Addison · 10.10.26
