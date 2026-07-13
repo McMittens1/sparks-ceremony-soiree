@@ -53,7 +53,7 @@ function SectionHeader({
   subheadColor?: string;
 }) {
   return (
-    <>
+    <Reveal variant="blur">
       <p
         className="uppercase font-sans"
         style={{ fontSize: 12, letterSpacing: "0.4em", color: eyebrowColor, margin: "0 0 18px" }}
@@ -77,7 +77,7 @@ function SectionHeader({
       >
         {subhead}
       </p>
-    </>
+    </Reveal>
   );
 }
 
