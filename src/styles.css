@@ -97,6 +97,13 @@
   --input: oklch(0.86 0.02 80);
   /* lavender ring */
   --ring: oklch(0.575 0.06 300);
+
+  /* Header height — subtracted from hero min-height so hero fills the viewport
+     below the sticky header at every breakpoint. Keep in sync with Header.tsx. */
+  --header-h: 64px;
+}
+@media (min-width: 768px) {
+  :root { --header-h: 73px; }
 }
 
 .dark {
