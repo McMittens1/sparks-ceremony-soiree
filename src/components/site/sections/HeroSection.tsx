@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { SITE } from "@/lib/site";
+import favorite from "@/assets/engagement/Favorite.jpg.asset.json";
 
 function diff(target: number) {
   const ms = Math.max(0, target - Date.now());
