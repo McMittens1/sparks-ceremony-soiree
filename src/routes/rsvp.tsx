@@ -520,6 +520,25 @@ function RsvpPage() {
                     style={inputStyle}
                   />
                 </div>
+                <div className="mt-6">
+                  <label
+                    htmlFor="rsvp-email"
+                    className="block"
+                    style={{ ...eyebrow, color: LAV_DEEP, letterSpacing: "0.3em", fontSize: 11, margin: "0 0 6px" }}
+                  >
+                    Email — for your RSVP confirmation
+                  </label>
+                  <input
+                    id="rsvp-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    autoComplete="email"
+                    maxLength={200}
+                    style={inputStyle}
+                  />
+                </div>
                 <label
                   className="mt-6 flex items-center gap-2 font-sans cursor-pointer"
                   style={{ fontSize: 14, color: BODY }}
