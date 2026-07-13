@@ -115,6 +115,7 @@ function RsvpPage() {
   function hydrateFromGuest(g: PublicGuest, r: PublicRsvp | null) {
     setGuest(g);
     setExistingRsvp(r);
+    setEmail(g.email ?? "");
     if (r) {
       setAttendees(r.attendees.length ? r.attendees : g.party_members.map((m) => ({ ...m, attending: false })));
       setAddress(r.address ?? g.address);
