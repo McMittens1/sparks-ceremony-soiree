@@ -30,7 +30,7 @@ function HeroCountdown() {
   ];
   return (
     <div
-      className="md:hidden"
+      className="lg:hidden"
       style={{ marginTop: "clamp(24px, 4cqh, 36px)" }}
       aria-label="Countdown to the wedding"
     >
@@ -104,7 +104,7 @@ export function HeroSection() {
         }}
       >
         <div
-          className="flex flex-col justify-center min-w-0 rs-hero-text text-center md:text-left"
+          className="flex flex-col justify-center min-w-0 rs-hero-text text-center lg:text-left"
           style={{ flex: "0 1 440px" }}
         >
           <p
@@ -160,7 +160,7 @@ export function HeroSection() {
             Sparks&rsquo; Barn <span className="text-tan">·</span> Louisville, NE
           </p>
           <div
-            className="flex items-center flex-wrap justify-center md:justify-start"
+            className="flex items-center flex-wrap justify-center lg:justify-start"
             style={{
               marginTop: "clamp(16px, 3cqh, 32px)",
               gap: "clamp(16px, 2.5cqw, 26px)",
@@ -194,8 +194,12 @@ export function HeroSection() {
         </div>
 
         <div
-          className="rs-hero-image min-w-0"
-          style={{ flex: "1 1 520px", display: "flex", alignItems: "stretch" }}
+          className="rs-hero-image min-w-0 hidden lg:flex"
+          style={{
+            flex: "1 1 520px",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
         >
           <img
             src={favorite.url}
@@ -204,9 +208,10 @@ export function HeroSection() {
             fetchPriority="high"
             style={{
               width: "100%",
-              height: "100%",
+              maxHeight: "100%",
+              aspectRatio: "3 / 2",
               objectFit: "cover",
-              objectPosition: "center 30%",
+              objectPosition: "center 35%",
               display: "block",
             }}
           />

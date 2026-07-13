@@ -47,6 +47,7 @@ export function Header() {
   }
 
   return (
+    <>
     <header
       className="sticky top-0 z-40 border-b border-hairline"
       style={{
@@ -133,8 +134,10 @@ export function Header() {
           </button>
         </div>
       </div>
+    </header>
 
-      {/* Mobile menu drawer */}
+    {/* Mobile menu drawer (rendered as sibling of <header> so backdrop-filter
+        on the header doesn't create a containing block that clips it) */}
       <div
         aria-hidden={!menuOpen}
         className={`mobile-menu-backdrop md:hidden ${menuOpen ? "is-open" : ""}`}
@@ -190,6 +193,6 @@ export function Header() {
           </button>
         </nav>
       </aside>
-    </header>
+    </>
   );
 }

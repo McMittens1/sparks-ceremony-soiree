@@ -345,27 +345,6 @@ details[data-anim][open] > .faq-body {
     gap: 24px !important;
   }
 
-  /* Hero: stack text + image vertically, natural height */
-  .rs-hero-section {
-    height: auto !important;
-    min-height: 0 !important;
-    container-type: normal !important;
-    display: block !important;
-  }
-  .rs-hero-inner {
-    flex-direction: column !important;
-    gap: 24px !important;
-    padding: 32px 24px 48px !important;
-    height: auto !important;
-  }
-  .rs-hero-text { flex: 1 1 auto !important; }
-
-  .rs-hero-image {
-    flex: 1 1 auto !important;
-    padding: 0 !important;
-    height: 55vh;
-    max-height: 480px;
-  }
   .rs-hero-title { font-size: clamp(48px, 12vw, 84px) !important; }
 
 
@@ -436,6 +415,28 @@ details[data-anim][open] > .faq-body {
 @media (max-width: 640px) {
   .rs-stack-2 { grid-template-columns: 1fr !important; }
   .rs-montage-grid { grid-template-columns: repeat(2, 1fr) !important; grid-auto-rows: 150px !important; }
+}
+
+/* Hero: below lg the image is hidden — collapse section to natural height */
+@media (max-width: 1023px) {
+  .rs-hero-section {
+    height: auto !important;
+    min-height: 0 !important;
+    container-type: normal !important;
+    display: block !important;
+  }
+  .rs-hero-inner {
+    flex-direction: column !important;
+    gap: 24px !important;
+    padding: 40px 24px 56px !important;
+    height: auto !important;
+    align-items: center !important;
+  }
+  .rs-hero-text {
+    flex: 1 1 auto !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
 }
 
 /* Tablet: registry/hotels 2 cols instead of 3-4 */
