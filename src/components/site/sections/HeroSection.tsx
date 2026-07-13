@@ -103,7 +103,7 @@ export function HeroSection() {
         }}
       >
         <div
-          className="flex flex-col justify-center min-w-0 rs-hero-text"
+          className="flex flex-col justify-center min-w-0 rs-hero-text text-center md:text-left"
           style={{ flex: "0 1 440px" }}
         >
           <p
