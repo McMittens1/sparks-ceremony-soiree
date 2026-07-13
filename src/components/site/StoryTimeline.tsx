@@ -85,7 +85,7 @@ function DatedRow({
 }) {
   const [main, ...rest] = entry.photos;
   return (
-    <div className="relative" style={{ marginTop: 110 }}>
+    <div className="relative rs-story-entry" style={{ marginTop: 110 }}>
       <span
         aria-hidden
         className="absolute font-serif select-none pointer-events-none rs-story-big-num"
