@@ -77,13 +77,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Geovanni & Addison · October 10, 2026" },
       { name: "description", content: "The wedding website for Geovanni Moreno & Addison Hillman. Schedule, travel, registry, and RSVP for October 10, 2026 at Sparks' Barn, Louisville, NE." },
       { property: "og:title", content: "Geovanni & Addison · October 10, 2026" },
-      { property: "og:description", content: "The wedding website for Geovanni Moreno & Addison Hillman — October 10, 2026 at Sparks' Barn, Louisville, NE." },
+      { property: "og:description", content: "The wedding website for Geovanni Moreno & Addison Hillman. Schedule, travel, registry, and RSVP for October 10, 2026 at Sparks' Barn, Louisville, NE." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Geovanni & Addison · October 10, 2026" },
+      { name: "twitter:description", content: "The wedding website for Geovanni Moreno & Addison Hillman. Schedule, travel, registry, and RSVP for October 10, 2026 at Sparks' Barn, Louisville, NE." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/QgOLQ93F1TPGT6HHK39DmJ7E6bY2/social-images/social-1783945112817-IMG_1610.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/QgOLQ93F1TPGT6HHK39DmJ7E6bY2/social-images/social-1783945112817-IMG_1610.webp" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
