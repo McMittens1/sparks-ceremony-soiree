@@ -992,7 +992,7 @@ function Home() {
         </div>
 
         {/* Closing CTA */}
-        <div className="text-center" style={{ padding: "130px 64px", background: "#EAE3F1" }}>
+        <div className="text-center rs-section" style={{ padding: "130px 64px", background: "#EAE3F1" }}>
           <p
             className="uppercase font-sans"
             style={{ fontSize: 12, letterSpacing: "0.4em", color: LAV_DEEP, margin: "0 0 26px" }}
