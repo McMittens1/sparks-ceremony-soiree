@@ -597,7 +597,7 @@ function Home() {
         </div>
 
         <div
-          className="grid border-t"
+          className="grid border-t rs-stack-2"
           style={{
             marginTop: 72,
             gridTemplateColumns: "1fr 1fr",
