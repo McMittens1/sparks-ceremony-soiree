@@ -393,22 +393,29 @@ details[data-anim][open] > .faq-body {
     flex-direction: column !important;
     gap: 12px !important;
   }
-  .rs-story-photos > .rs-story-photo-main { flex: 0 0 auto !important; aspect-ratio: 4/5; }
+  .rs-story-photos > .rs-story-photo-main {
+    flex: 0 0 auto !important;
+    aspect-ratio: 4/5;
+    max-height: 70vh;
+  }
+  .rs-story-photos > .rs-story-photo-main > img { object-position: center top; }
   .rs-story-photos > .rs-story-photo-rest {
     flex-direction: row !important;
     flex: 0 0 auto !important;
+    gap: 10px !important;
   }
   .rs-story-photos > .rs-story-photo-rest > * {
     aspect-ratio: 3/4;
     min-height: 0 !important;
+    max-height: 40vh;
   }
   .rs-story-text { order: 1 !important; padding: 0 !important; }
-  .rs-story-big-num { font-size: 30vw !important; top: -20px !important; left: -8px !important; }
+  .rs-story-big-num { font-size: 22vw !important; top: -12px !important; left: -6px !important; }
 
-  /* Montage grid: fewer cols */
+  /* Montage grid: fewer cols, shorter rows so text stays visible */
   .rs-montage-grid {
     grid-template-columns: repeat(2, 1fr) !important;
-    grid-auto-rows: 200px !important;
+    grid-auto-rows: 40vw !important;
     gap: 10px !important;
   }
 
