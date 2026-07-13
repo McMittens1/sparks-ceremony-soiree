@@ -218,6 +218,7 @@ const submitSchema = z.object({
   attendees: z.array(attendeeSchema).min(1).max(20),
   address_confirmed: z.boolean(),
   address: addressSchema.optional(),
+  email: z.string().trim().email().max(200).optional().or(z.literal("")),
   song_request: z.string().trim().max(200).optional().or(z.literal("")),
   message: z.string().trim().max(1000).optional().or(z.literal("")),
 });
@@ -241,6 +242,21 @@ export const submitRsvp = createServerFn({ method: "POST" })
     const anyYes = data.attendees.some((a) => a.attending);
     const anyNo = data.attendees.some((a) => !a.attending);
     const status: PublicRsvp["status"] = anyYes && anyNo ? "partial" : anyYes ? "attending" : "not_attending";
+
+    // Persist email + address updates back to the guest record so we can reach them later.
+    const guestPatch: Record<string, string | null> = {};
+    if (typeof data.email === "string") guestPatch.email = data.email.trim() || null;
+    if (data.address) {
+      guestPatch.address_line1 = data.address.line1?.trim() || null;
+      guestPatch.address_line2 = data.address.line2?.trim() || null;
+      guestPatch.city = data.address.city?.trim() || null;
+      guestPatch.state = data.address.state?.trim() || null;
+      guestPatch.postal_code = data.address.postal_code?.trim() || null;
+      guestPatch.country = data.address.country?.trim() || null;
+    }
+    if (Object.keys(guestPatch).length > 0) {
+      await supabaseAdmin.from("guests").update(guestPatch).eq("id", g.id);
+    }
 
     const now = new Date().toISOString();
     const { error } = await supabaseAdmin.from("rsvps").upsert(
