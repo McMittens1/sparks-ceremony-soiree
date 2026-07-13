@@ -322,7 +322,7 @@ details[data-anim][open] > .faq-body {
  * Tailwind responsive classes. We override them here for <lg screens by hooking
  * on explicit class names added in the JSX.
  */
-@media (max-width: 1023px) {
+@media (max-width: 767px) {
   /* Global section padding */
   .rs-section {
     padding-left: 24px !important;
