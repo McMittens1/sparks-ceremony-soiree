@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react";
+import { Reveal } from "@/components/site/Reveal";
 import fav from "@/assets/engagement/Favorite.jpg.asset.json";
 import eng74 from "@/assets/engagement/Geo_AddiEngagement-74.jpg.asset.json";
 import eng06 from "@/assets/engagement/Geo_AddiEngagement-06.jpg.asset.json";
