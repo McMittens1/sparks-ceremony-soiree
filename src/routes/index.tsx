@@ -471,7 +471,7 @@ function Home() {
       {/* ============ GETTING THERE ============ */}
       <section
         id="travel"
-        className="border-t"
+        className="border-t rs-section"
         style={{
           padding: "100px 64px",
           maxWidth: 1500,
