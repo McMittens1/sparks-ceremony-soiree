@@ -468,6 +468,9 @@ details[data-anim][open] > .faq-body {
   padding: 24px;
 }
 .mobile-menu-panel.is-open { transform: translateX(0); }
+@media (min-width: 768px) {
+  .mobile-menu-backdrop, .mobile-menu-panel { display: none !important; }
+}
 
 
 /* Diamond bullet (5x5, rotated 45°) via ::before so we don't need a wrapping span */
