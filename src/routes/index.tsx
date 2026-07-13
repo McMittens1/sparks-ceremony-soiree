@@ -641,7 +641,7 @@ function Home() {
       {/* ============ PHOTOS ============ */}
       <section
         id="photos"
-        className="border-t"
+        className="border-t rs-section"
         style={{
           padding: "100px 64px",
           maxWidth: 1500,
