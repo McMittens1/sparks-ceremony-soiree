@@ -839,7 +839,7 @@ function Home() {
         />
         <DiamondDivider className="mt-9" />
 
-        <div className="grid" style={{ marginTop: 64, gridTemplateColumns: "repeat(4, 1fr)", gap: 24 }}>
+        <div className="grid rs-stack-4" style={{ marginTop: 64, gridTemplateColumns: "repeat(4, 1fr)", gap: 24 }}>
           {REGISTRY.map((r) => {
             const lead = r.lead === true;
             const bg = lead ? "#EAE3F1" : IVORY;
