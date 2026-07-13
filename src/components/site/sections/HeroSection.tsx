@@ -160,7 +160,7 @@ export function HeroSection() {
             Sparks&rsquo; Barn <span className="text-tan">·</span> Louisville, NE
           </p>
           <div
-            className="flex items-center flex-wrap justify-center md:justify-start"
+            className="flex items-center flex-wrap justify-center lg:justify-start"
             style={{
               marginTop: "clamp(16px, 3cqh, 32px)",
               gap: "clamp(16px, 2.5cqw, 26px)",
