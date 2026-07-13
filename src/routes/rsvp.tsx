@@ -531,10 +531,15 @@ function RsvpPage() {
               {/* Extras */}
               <section className="space-y-6">
                 <div>
-                  <p style={{ ...eyebrow, color: LAV_DEEP, letterSpacing: "0.3em", fontSize: 11 }}>
+                  <label
+                    htmlFor="rsvp-song"
+                    className="block"
+                    style={{ ...eyebrow, color: LAV_DEEP, letterSpacing: "0.3em", fontSize: 11 }}
+                  >
                     Song request (optional)
-                  </p>
+                  </label>
                   <input
+                    id="rsvp-song"
                     value={songRequest}
                     onChange={(e) => setSongRequest(e.target.value)}
                     placeholder="One song that&rsquo;ll get you on the floor"
@@ -543,10 +548,15 @@ function RsvpPage() {
                   />
                 </div>
                 <div>
-                  <p style={{ ...eyebrow, color: LAV_DEEP, letterSpacing: "0.3em", fontSize: 11 }}>
+                  <label
+                    htmlFor="rsvp-message"
+                    className="block"
+                    style={{ ...eyebrow, color: LAV_DEEP, letterSpacing: "0.3em", fontSize: 11 }}
+                  >
                     {t.rsvp.message}
-                  </p>
+                  </label>
                   <textarea
+                    id="rsvp-message"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     rows={4}
@@ -561,11 +571,14 @@ function RsvpPage() {
                 </div>
               </section>
 
-              {err && (
-                <p className="font-sans" style={{ fontSize: 14, color: "#8b3a2f" }}>
-                  {err}
-                </p>
-              )}
+              <div role="alert" aria-live="polite">
+                {err && (
+                  <p className="font-sans" style={{ fontSize: 14, color: "#7a2f26" }}>
+                    {err}
+                  </p>
+                )}
+              </div>
+
 
               <div className="flex items-center justify-between gap-4">
                 <button
