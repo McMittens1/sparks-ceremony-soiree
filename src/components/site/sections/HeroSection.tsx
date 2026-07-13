@@ -85,18 +85,16 @@ export function HeroSection() {
       id="hero"
       className="rs-hero-section"
       style={{
-        height: "calc(100vh - 73px)",
-        minHeight: 560,
+        minHeight: "calc(100svh - var(--header-h, 64px))",
         display: "flex",
         flexDirection: "column",
-        containerType: "size",
       }}
     >
       <div
-        className="flex-1 min-h-0 flex items-stretch justify-center rs-hero-inner"
+        className="flex-1 min-h-0 flex flex-col lg:flex-row items-center lg:items-stretch justify-center rs-hero-inner"
         style={{
-          gap: "clamp(28px, 5cqw, 72px)",
-          padding: "0 clamp(20px, 5cqw, 64px)",
+          gap: "clamp(24px, 4vw, 72px)",
+          padding: "clamp(32px, 6svh, 64px) clamp(20px, 5vw, 64px)",
           maxWidth: 1800,
           margin: "0 auto",
           width: "100%",
@@ -104,15 +102,15 @@ export function HeroSection() {
         }}
       >
         <div
-          className="flex flex-col justify-center min-w-0 rs-hero-text text-center lg:text-left"
+          className="flex flex-col justify-center min-w-0 rs-hero-text text-center lg:text-left w-full"
           style={{ flex: "0 1 440px" }}
         >
           <p
             className="uppercase font-sans text-tan"
             style={{
-              fontSize: "clamp(9px, 1.3cqh, 12px)",
+              fontSize: "clamp(9px, 1.2vw, 12px)",
               letterSpacing: "0.42em",
-              margin: "0 0 clamp(10px, 2cqh, 22px)",
+              margin: "0 0 clamp(12px, 2svh, 22px)",
             }}
           >
             The Wedding Of
@@ -122,7 +120,7 @@ export function HeroSection() {
               className="font-serif rs-hero-title text-ink"
               style={{
                 fontWeight: 500,
-                fontSize: "clamp(30px, 9.5cqh, 92px)",
+                fontSize: "clamp(44px, 10vw, 92px)",
                 lineHeight: 1,
               }}
             >
@@ -132,9 +130,9 @@ export function HeroSection() {
               className="font-serif rs-hero-title text-ink"
               style={{
                 fontWeight: 500,
-                fontSize: "clamp(30px, 9.5cqh, 92px)",
+                fontSize: "clamp(44px, 10vw, 92px)",
                 lineHeight: 1.05,
-                marginTop: "clamp(2px, 0.6cqh, 8px)",
+                marginTop: "clamp(2px, 0.6svh, 8px)",
               }}
             >
               <span className="italic text-lavender">&amp;</span> Addison
@@ -143,8 +141,8 @@ export function HeroSection() {
           <p
             className="font-serif italic text-lavender-deep"
             style={{
-              margin: "clamp(14px, 3cqh, 32px) 0 0",
-              fontSize: "clamp(15px, 2.6cqh, 24px)",
+              margin: "clamp(14px, 3svh, 32px) 0 0",
+              fontSize: "clamp(17px, 2.4vw, 24px)",
             }}
           >
             October 10, 2026
@@ -152,8 +150,8 @@ export function HeroSection() {
           <p
             className="uppercase font-sans text-ink-body"
             style={{
-              margin: "clamp(4px, 1cqh, 10px) 0 0",
-              fontSize: "clamp(10px, 1.3cqh, 13px)",
+              margin: "clamp(6px, 1svh, 10px) 0 0",
+              fontSize: "clamp(10px, 1.2vw, 13px)",
               letterSpacing: "0.22em",
             }}
           >
@@ -162,8 +160,8 @@ export function HeroSection() {
           <div
             className="flex items-center flex-wrap justify-center lg:justify-start"
             style={{
-              marginTop: "clamp(16px, 3cqh, 32px)",
-              gap: "clamp(16px, 2.5cqw, 26px)",
+              marginTop: "clamp(20px, 3svh, 32px)",
+              gap: "clamp(16px, 2.5vw, 26px)",
             }}
           >
             <Link
@@ -171,8 +169,8 @@ export function HeroSection() {
               search={{}}
               className="inline-block uppercase font-sans bg-ink text-ivory border border-ink"
               style={{
-                padding: "clamp(10px, 1.8cqh, 16px) clamp(20px, 3cqw, 32px)",
-                fontSize: "clamp(9px, 1.3cqh, 11px)",
+                padding: "clamp(12px, 1.6svh, 16px) clamp(22px, 3vw, 32px)",
+                fontSize: "clamp(10px, 1.1vw, 11px)",
                 letterSpacing: "0.26em",
               }}
             >
@@ -182,7 +180,7 @@ export function HeroSection() {
               href="#day"
               className="uppercase font-sans text-lavender-deep border-b border-lavender-deep"
               style={{
-                fontSize: "clamp(9px, 1.2cqh, 11px)",
+                fontSize: "clamp(10px, 1.1vw, 11px)",
                 letterSpacing: "0.2em",
                 paddingBottom: 2,
               }}
