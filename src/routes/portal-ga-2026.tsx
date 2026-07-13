@@ -38,7 +38,7 @@ function AuthPage() {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: window.location.origin + "/auth" },
+        options: { emailRedirectTo: window.location.origin + "/portal-ga-2026" },
       });
       setLoading(false);
       if (error) { setErr(error.message); return; }

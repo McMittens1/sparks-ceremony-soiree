@@ -33,7 +33,7 @@ function Admin() {
 
   async function signOut() {
     await supabase.auth.signOut();
-    nav({ to: "/auth" });
+    nav({ to: "/portal-ga-2026" });
   }
 
   return (
