@@ -194,8 +194,12 @@ export function HeroSection() {
         </div>
 
         <div
-          className="rs-hero-image min-w-0"
-          style={{ flex: "1 1 520px", display: "flex", alignItems: "stretch" }}
+          className="rs-hero-image min-w-0 hidden lg:flex"
+          style={{
+            flex: "1 1 520px",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
         >
           <img
             src={favorite.url}
@@ -204,9 +208,10 @@ export function HeroSection() {
             fetchPriority="high"
             style={{
               width: "100%",
-              height: "100%",
+              maxHeight: "100%",
+              aspectRatio: "3 / 2",
               objectFit: "cover",
-              objectPosition: "center 30%",
+              objectPosition: "center 35%",
               display: "block",
             }}
           />
