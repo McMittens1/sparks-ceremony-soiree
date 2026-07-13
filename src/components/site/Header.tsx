@@ -193,6 +193,6 @@ export function Header() {
           </button>
         </nav>
       </aside>
-    </header>
+    </>
   );
 }
