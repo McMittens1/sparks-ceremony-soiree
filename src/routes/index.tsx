@@ -97,6 +97,7 @@ function Home() {
       {/* ============ HERO ============ */}
       <section
         id="hero"
+        className="rs-hero-section"
         style={{
           height: "calc(100vh - 73px)",
           minHeight: 560,
@@ -106,7 +107,7 @@ function Home() {
         }}
       >
         <div
-          className="flex-1 min-h-0 flex items-stretch justify-center"
+          className="flex-1 min-h-0 flex items-stretch justify-center rs-hero-inner"
           style={{
             gap: "clamp(28px, 5cqw, 72px)",
             padding: "0 clamp(20px, 5cqw, 64px)",
@@ -117,7 +118,7 @@ function Home() {
           }}
         >
           <div
-            className="flex flex-col justify-center min-w-0"
+            className="flex flex-col justify-center min-w-0 rs-hero-text"
             style={{ flex: "0 1 440px" }}
           >
             <p
@@ -133,7 +134,7 @@ function Home() {
             </p>
             <h1 style={{ margin: 0, fontWeight: "normal" }}>
               <div
-                className="font-serif"
+                className="font-serif rs-hero-title"
                 style={{
                   fontWeight: 500,
                   fontSize: "clamp(30px, 9.5cqh, 92px)",
@@ -144,7 +145,7 @@ function Home() {
                 Geovanni
               </div>
               <div
-                className="font-serif"
+                className="font-serif rs-hero-title"
                 style={{
                   fontWeight: 500,
                   fontSize: "clamp(30px, 9.5cqh, 92px)",
@@ -215,7 +216,7 @@ function Home() {
             </div>
           </div>
           <div
-            className="min-w-0"
+            className="min-w-0 rs-hero-image"
             style={{ flex: "1 1 560px", padding: "clamp(20px, 4cqh, 40px) 0", boxSizing: "border-box" }}
           >
             <img
@@ -233,6 +234,7 @@ function Home() {
           </div>
         </div>
       </section>
+
 
       {/* ============ COUNTDOWN ============ */}
       <section
@@ -255,7 +257,7 @@ function Home() {
       {/* ============ OUR STORY ============ */}
       <section
         id="story"
-        className="border-t"
+        className="border-t rs-section"
         style={{
           padding: "100px 64px",
           maxWidth: 1500,
@@ -272,10 +274,11 @@ function Home() {
         <StoryTimeline />
       </section>
 
+
       {/* ============ THE DAY ============ */}
       <section
         id="day"
-        className="border-t"
+        className="border-t rs-section"
         style={{ padding: "100px 64px", background: LAV_DEEP, borderColor: HAIRLINE }}
       >
         <div className="mx-auto" style={{ maxWidth: 1400 }}>
@@ -350,7 +353,7 @@ function Home() {
           </div>
 
           <div
-            className="grid"
+            className="grid rs-stack"
             style={{ marginTop: 70, gridTemplateColumns: "5fr 7fr", gap: 64 }}
           >
             <div>
@@ -446,7 +449,7 @@ function Home() {
       {/* ============ WEDDING PARTY ============ */}
       <section
         id="party"
-        className="border-t"
+        className="border-t rs-section"
         style={{
           padding: "100px 64px",
           maxWidth: 1500,
@@ -468,7 +471,7 @@ function Home() {
       {/* ============ GETTING THERE ============ */}
       <section
         id="travel"
-        className="border-t"
+        className="border-t rs-section"
         style={{
           padding: "100px 64px",
           maxWidth: 1500,
@@ -484,7 +487,7 @@ function Home() {
         <DiamondDivider className="mt-9" />
 
         <div
-          className="grid items-start"
+          className="grid items-start rs-stack"
           style={{ marginTop: 64, gridTemplateColumns: "5fr 7fr", gap: 64 }}
         >
           <div>
@@ -556,7 +559,7 @@ function Home() {
             We haven&rsquo;t blocked rooms anywhere. Most out-of-town guests stay in Lincoln or
             Omaha, here are well-known options in each area.
           </p>
-          <div className="grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: 48 }}>
+          <div className="grid rs-stack-3" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: 48 }}>
             {HOTELS.map((group) => (
               <div key={group.area}>
                 <p
@@ -594,7 +597,7 @@ function Home() {
         </div>
 
         <div
-          className="grid border-t"
+          className="grid border-t rs-stack-2"
           style={{
             marginTop: 72,
             gridTemplateColumns: "1fr 1fr",
@@ -638,7 +641,7 @@ function Home() {
       {/* ============ PHOTOS ============ */}
       <section
         id="photos"
-        className="border-t"
+        className="border-t rs-section"
         style={{
           padding: "100px 64px",
           maxWidth: 1500,
@@ -653,7 +656,7 @@ function Home() {
         />
         <DiamondDivider className="mt-9" />
 
-        <div className="grid" style={{ marginTop: 64, gridTemplateColumns: "5fr 7fr", gap: 64 }}>
+        <div className="grid rs-stack" style={{ marginTop: 64, gridTemplateColumns: "5fr 7fr", gap: 64 }}>
           <div className="flex flex-col justify-center">
             <span
               className="flex-shrink-0"
@@ -698,7 +701,7 @@ function Home() {
             >
               Up to 5 images, JPG or PNG, 10 MB each. Nothing goes public until we approve it.
             </p>
-            <div className="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
+            <div className="grid rs-stack-2" style={{ gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
               <div>
                 <label
                   htmlFor="photo-name"
@@ -821,7 +824,7 @@ function Home() {
       {/* ============ REGISTRY ============ */}
       <section
         id="registry"
-        className="border-t"
+        className="border-t rs-section"
         style={{
           padding: "100px 64px",
           maxWidth: 1500,
@@ -836,7 +839,7 @@ function Home() {
         />
         <DiamondDivider className="mt-9" />
 
-        <div className="grid" style={{ marginTop: 64, gridTemplateColumns: "repeat(4, 1fr)", gap: 24 }}>
+        <div className="grid rs-stack-4" style={{ marginTop: 64, gridTemplateColumns: "repeat(4, 1fr)", gap: 24 }}>
           {REGISTRY.map((r) => {
             const lead = r.lead === true;
             const bg = lead ? "#EAE3F1" : IVORY;
@@ -914,6 +917,7 @@ function Home() {
       {/* ============ FAQ ============ */}
       <section id="faq" className="border-t" style={{ borderColor: HAIRLINE }}>
         <div
+          className="rs-section"
           style={{
             padding: "100px 64px",
             maxWidth: 1500,
@@ -927,7 +931,7 @@ function Home() {
           />
           <DiamondDivider className="mt-9" />
 
-          <div className="grid" style={{ marginTop: 60, gridTemplateColumns: "1fr 1fr", gap: 64 }}>
+          <div className="grid rs-stack-2" style={{ marginTop: 60, gridTemplateColumns: "1fr 1fr", gap: 64 }}>
             {(
               [
                 { title: "Logistics", items: FAQ_LOGISTICS },
@@ -988,7 +992,7 @@ function Home() {
         </div>
 
         {/* Closing CTA */}
-        <div className="text-center" style={{ padding: "130px 64px", background: "#EAE3F1" }}>
+        <div className="text-center rs-section" style={{ padding: "130px 64px", background: "#EAE3F1" }}>
           <p
             className="uppercase font-sans"
             style={{ fontSize: 12, letterSpacing: "0.4em", color: LAV_DEEP, margin: "0 0 26px" }}

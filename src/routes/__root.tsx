@@ -116,10 +116,13 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
-        {isHome && <Spine />}
+        {isHome && (
+          <div className="hidden lg:block">
+            <Spine />
+          </div>
+        )}
         <div
-          className="min-h-screen flex flex-col"
-          style={{ marginLeft: isHome ? 52 : 0 }}
+          className={`min-h-screen flex flex-col ${isHome ? "lg:ml-[52px]" : ""}`}
         >
           <a href="#main-content" className="skip-link">Skip to main content</a>
           {!isRsvp && <Header />}
@@ -130,3 +133,4 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
+
