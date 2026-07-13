@@ -6,7 +6,7 @@ export function CountdownSection() {
   return (
     <section
       id="countdown"
-      className="text-center border-t border-hairline"
+      className="hidden md:block text-center border-t border-hairline"
       style={{ padding: "72px 32px" }}
     >
       <Eyebrow color="tan" size="lg" style={{ marginBottom: 40 }}>
