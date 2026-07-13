@@ -352,7 +352,8 @@ details[data-anim][open] > .faq-body {
     gap: 24px !important;
   }
 
-  .rs-hero-title { font-size: clamp(48px, 12vw, 84px) !important; }
+
+
 
 
   /* Countdown label sizing */
