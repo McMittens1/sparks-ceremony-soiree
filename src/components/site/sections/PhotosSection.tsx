@@ -26,14 +26,14 @@ export function PhotosSection() {
             className="font-serif italic text-ink"
             style={{ fontSize: 30, margin: "24px 0 0", lineHeight: 1.3 }}
           >
-            Photos will appear here after the wedding.
+            A shared gallery, from your eyes.
           </p>
           <p
             className="font-sans text-ink-soft"
             style={{ fontSize: 15, lineHeight: 1.75, margin: "20px 0 0", maxWidth: 420 }}
           >
-            In the meantime, this is exactly where the upload form lives, so guests can start
-            sending photos the moment they take them.
+            Closer to the day, uploads open here so guests can send in the moments we
+            missed. Everything is reviewed before it goes live.
           </p>
         </div>
         <form

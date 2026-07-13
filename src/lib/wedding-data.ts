@@ -171,7 +171,7 @@ export const STORY_ENTRIES: StoryEntry[] = [
 export const DATE_CARDS: { n: string; cap: string }[] = [
   { n: "10", cap: "Sat" },
   { n: "10", cap: "Oct" },
-  { n: "26", cap: "MMXXVI" },
+  { n: "26", cap: "2026" },
 ];
 
 export const DAY_SCHEDULE: { time: string; label: string }[] = [
