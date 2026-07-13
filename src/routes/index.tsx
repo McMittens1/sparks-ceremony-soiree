@@ -944,6 +944,7 @@ function Home() {
                 {col.items.map((item, i) => (
                   <details
                     key={i}
+                    data-anim
                     className="border-t"
                     style={{ padding: "20px 0", borderColor: HAIRLINE }}
                     open={item.open}
@@ -954,7 +955,8 @@ function Home() {
                     >
                       {item.q}
                       <span
-                        className="flex-shrink-0"
+                        aria-hidden
+                        className="chev flex-shrink-0"
                         style={{
                           width: 6,
                           height: 6,
@@ -964,12 +966,14 @@ function Home() {
                         }}
                       />
                     </summary>
-                    <p
-                      className="font-sans"
-                      style={{ fontSize: 15, lineHeight: 1.75, color: BODY, margin: "14px 0 0" }}
-                    >
-                      {item.a}
-                    </p>
+                    <div className="faq-body">
+                      <p
+                        className="font-sans"
+                        style={{ fontSize: 15, lineHeight: 1.75, color: BODY, margin: "14px 0 0" }}
+                      >
+                        {item.a}
+                      </p>
+                    </div>
                   </details>
                 ))}
               </div>
