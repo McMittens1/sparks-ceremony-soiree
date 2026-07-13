@@ -265,24 +265,28 @@ function RsvpPage() {
 
           {/* Lookup */}
           {stage === "lookup" && (
-            <form onSubmit={onLookupSubmit}>
+            <form onSubmit={onLookupSubmit} noValidate>
               <p
                 className="font-serif italic text-center"
                 style={{ fontSize: 22, color: INK, margin: "0 0 8px" }}
               >
                 {t.rsvp.lookupTitle}
               </p>
-              <p
-                className="text-center font-sans"
+              <label
+                htmlFor="rsvp-lookup"
+                className="block text-center font-sans"
                 style={{ fontSize: 14, color: SOFT, margin: "0 0 30px" }}
               >
                 {t.rsvp.lookupHint}
-              </p>
+              </label>
               <input
+                id="rsvp-lookup"
                 autoFocus
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t.rsvp.lookupPlaceholder}
+                aria-label={t.rsvp.lookupPlaceholder}
+                autoComplete="name"
                 maxLength={120}
                 style={inputStyle}
               />
@@ -305,7 +309,7 @@ function RsvpPage() {
               </button>
 
               {matches && matches.length > 1 && (
-                <div className="mt-8 space-y-2">
+                <div className="mt-8 space-y-2" role="group" aria-label="Matching guests">
                   <p style={eyebrow}>Is this you?</p>
                   {matches.map((m) => (
                     <button
@@ -326,14 +330,16 @@ function RsvpPage() {
                 </div>
               )}
 
-              {err && (
-                <div className="mt-6 font-sans" style={{ fontSize: 14, color: "#8b3a2f" }}>
-                  <p>{err}</p>
-                  <p className="mt-2 italic font-serif" style={{ color: SOFT, fontSize: 13 }}>
-                    {SITE.rsvpFallbackContact}
-                  </p>
-                </div>
-              )}
+              <div role="alert" aria-live="polite">
+                {err && (
+                  <div className="mt-6 font-sans" style={{ fontSize: 14, color: "#7a2f26" }}>
+                    <p>{err}</p>
+                    <p className="mt-2 italic font-serif" style={{ color: SOFT, fontSize: 13 }}>
+                      {SITE.rsvpFallbackContact}
+                    </p>
+                  </div>
+                )}
+              </div>
             </form>
           )}
 
