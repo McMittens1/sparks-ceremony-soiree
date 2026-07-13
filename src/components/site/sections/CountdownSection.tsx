@@ -7,7 +7,10 @@ export function CountdownSection() {
     <section
       id="countdown"
       className="hidden lg:block text-center border-t border-hairline"
-      style={{ padding: "72px 32px" }}
+      style={{
+        paddingBlock: "clamp(56px, 8svh, 88px)",
+        paddingInline: "clamp(20px, 4vw, 32px)",
+      }}
     >
       <Eyebrow color="tan" size="lg" style={{ marginBottom: 40 }}>
         I · Counting Down
