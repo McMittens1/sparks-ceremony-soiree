@@ -86,6 +86,7 @@ function RsvpPage() {
   const [attendees, setAttendees] = useState<AttendeeChoice[]>([]);
   const [address, setAddress] = useState<GuestAddress>({});
   const [addressConfirmed, setAddressConfirmed] = useState(false);
+  const [email, setEmail] = useState("");
   const [songRequest, setSongRequest] = useState("");
   const [message, setMessage] = useState("");
 
