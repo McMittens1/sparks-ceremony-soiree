@@ -559,7 +559,7 @@ function Home() {
             We haven&rsquo;t blocked rooms anywhere. Most out-of-town guests stay in Lincoln or
             Omaha, here are well-known options in each area.
           </p>
-          <div className="grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: 48 }}>
+          <div className="grid rs-stack-3" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: 48 }}>
             {HOTELS.map((group) => (
               <div key={group.area}>
                 <p
