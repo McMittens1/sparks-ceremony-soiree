@@ -378,6 +378,8 @@ function RsvpPage() {
                         value={a.name}
                         onChange={(e) => updateAttendee(i, { name: e.target.value })}
                         placeholder={t.rsvp.fullName}
+                        aria-label={`${t.rsvp.fullName} — guest ${i + 1}`}
+                        autoComplete="name"
                         maxLength={120}
                         style={inputStyle}
                       />
