@@ -247,54 +247,57 @@ function StoryGutter() {
 
 function MontageRow({ entry }: { entry: Montage }) {
   return (
-    <div className="text-center" style={{ marginTop: 110 }}>
-      <p
-        className="uppercase font-sans"
-        style={{ fontSize: 11, letterSpacing: "0.4em", color: "#A39680", marginBottom: 16 }}
-      >
-        — {entry.label} —
-      </p>
-      <h3
-        className="font-serif italic"
-        style={{
-          fontWeight: 500,
-          fontSize: "clamp(32px, 5vw, 52px)",
-          color: "#2A2520",
-          margin: "0 0 20px",
-        }}
-      >
-        {entry.title}
-      </h3>
-      <p
-        className="font-sans mx-auto"
-        style={{
-          fontSize: 17,
-          lineHeight: 1.8,
-          color: "#4A4238",
-          maxWidth: 640,
-          margin: "0 auto 44px",
-        }}
-      >
-        {entry.body}
-      </p>
-      <div
-        className="grid gap-3.5 text-left"
-        style={{
-          gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
-          gridAutoRows: 200,
-        }}
-      >
-        {entry.photos.map((src, i) => (
-          <img
-            key={i}
-            src={src}
-            alt=""
-            loading="lazy"
-            className="w-full h-full object-cover border"
-            style={{ borderColor: "#E1D6C3" }}
-          />
-        ))}
+    <Reveal variant="up" className="text-center block" >
+      <div style={{ marginTop: 110 }}>
+        <p
+          className="uppercase font-sans"
+          style={{ fontSize: 11, letterSpacing: "0.4em", color: "#A39680", marginBottom: 16 }}
+        >
+          — {entry.label} —
+        </p>
+        <h3
+          className="font-serif italic"
+          style={{
+            fontWeight: 500,
+            fontSize: "clamp(32px, 5vw, 52px)",
+            color: "#2A2520",
+            margin: "0 0 20px",
+          }}
+        >
+          {entry.title}
+        </h3>
+        <p
+          className="font-sans mx-auto"
+          style={{
+            fontSize: 17,
+            lineHeight: 1.8,
+            color: "#4A4238",
+            maxWidth: 640,
+            margin: "0 auto 44px",
+          }}
+        >
+          {entry.body}
+        </p>
+        <div
+          className="grid gap-3.5 text-left"
+          style={{
+            gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+            gridAutoRows: 200,
+          }}
+        >
+          {entry.photos.map((src, i) => (
+            <div key={i} className="photo-zoom w-full h-full">
+              <img
+                src={src}
+                alt=""
+                loading="lazy"
+                className="w-full h-full object-cover border"
+                style={{ borderColor: "#E1D6C3" }}
+              />
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
+    </Reveal>
   );
 }
