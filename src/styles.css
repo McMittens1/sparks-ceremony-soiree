@@ -377,23 +377,23 @@ details[data-anim][open] > .faq-body {
   .rs-day-dates .rs-day-sep { display: none !important; }
 
   /* Story timeline rows: single column, images below text, compact */
-  .rs-story-entry { margin-top: 56px !important; }
+  .rs-story-entry { margin-top: 72px !important; }
   .rs-story-row {
     grid-template-columns: 1fr !important;
-    gap: 20px !important;
+    gap: 24px !important;
   }
   .rs-story-gutter { display: none !important; }
   .rs-story-photos {
     order: 2 !important;
     height: auto !important;
     flex-direction: column !important;
-    gap: 10px !important;
+    gap: 8px !important;
   }
   .rs-story-photos > .rs-story-photo-main {
     flex: 0 0 auto !important;
     width: 100%;
     aspect-ratio: 4/5;
-    max-height: 56vh;
+    max-height: 52vh;
   }
   .rs-story-photos > .rs-story-photo-main > img { object-position: center top; }
   .rs-story-photos > .rs-story-photo-rest {
@@ -404,10 +404,21 @@ details[data-anim][open] > .faq-body {
   .rs-story-photos > .rs-story-photo-rest > * {
     aspect-ratio: 1/1;
     min-height: 0 !important;
-    max-height: 28vh;
+    max-height: 22vh;
   }
   .rs-story-text { order: 1 !important; padding: 0 !important; }
-  .rs-story-big-num { font-size: 22vw !important; top: -12px !important; left: -6px !important; }
+  /* Big background number: push above the text block so it doesn't overlap
+     the eyebrow / date row or the title. Also softer opacity on small screens. */
+  .rs-story-big-num {
+    font-size: 34vw !important;
+    top: -46px !important;
+    left: -8px !important;
+    color: rgba(135, 121, 163, 0.06) !important;
+  }
+  /* Tighter typographic rhythm in each story entry on narrow screens */
+  .rs-story-text > .flex.items-center { margin-bottom: 6px !important; }
+  .rs-story-text h3 { margin: 0 0 14px !important; font-size: clamp(28px, 7vw, 40px) !important; }
+  .rs-story-text p:not(.uppercase) { font-size: 15.5px !important; line-height: 1.7 !important; }
 
 
   /* Montage grid: fewer cols, shorter rows so text stays visible */
@@ -419,6 +430,7 @@ details[data-anim][open] > .faq-body {
 
   /* Section headers scale down */
   .rs-section h2 { font-size: clamp(36px, 8vw, 52px) !important; }
+
 }
 
 @media (max-width: 640px) {
