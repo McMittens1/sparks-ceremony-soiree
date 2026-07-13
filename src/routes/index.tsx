@@ -1,9 +1,10 @@
 import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Countdown } from "@/components/site/Countdown";
 import { StoryTimeline } from "@/components/site/StoryTimeline";
 import { WeddingParty } from "@/components/site/WeddingParty";
 import { DiamondDivider } from "@/components/site/DiamondDivider";
+import { Reveal } from "@/components/site/Reveal";
 import { SITE } from "@/lib/site";
 import { REGISTRY, HOTELS, FAQ_LOGISTICS, FAQ_GUESTS } from "@/lib/wedding-data";
 import favorite from "@/assets/engagement/Favorite.jpg.asset.json";
