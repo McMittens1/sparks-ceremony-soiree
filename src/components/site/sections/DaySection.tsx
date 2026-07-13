@@ -1,5 +1,6 @@
 import { DATE_CARDS, DAY_SCHEDULE } from "@/lib/wedding-data";
 import { DisplayHeading, Eyebrow } from "@/components/site/typography";
+import barnAerial from "@/assets/venue/sparks-barn-aerial.jpg.asset.json";
 
 export function DaySection() {
   return (
@@ -88,18 +89,27 @@ export function DaySection() {
             ))}
           </div>
           <div className="grid content-start" style={{ gap: 36 }}>
-            <div
-              className="flex items-center justify-center"
-              style={{
-                aspectRatio: "16 / 10",
-                background: "rgba(248,244,236,0.06)",
-                border: "1px dashed rgba(217,201,160,0.5)",
-              }}
-            >
-              <Eyebrow color="gold" size="md" className="text-center" style={{ padding: "0 20px", letterSpacing: "0.2em" }}>
-                Photo needed · the barn
-              </Eyebrow>
-            </div>
+            <figure style={{ margin: 0 }}>
+              <div style={{ aspectRatio: "16 / 10", overflow: "hidden" }}>
+                <img
+                  src={barnAerial.url}
+                  alt="Sparks' Barn at sunset — aerial view of the red barn, patio, and Nebraska farmland."
+                  loading="lazy"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <figcaption
+                className="uppercase font-sans"
+                style={{
+                  marginTop: 12,
+                  fontSize: 10,
+                  letterSpacing: "0.24em",
+                  color: "rgba(248,244,236,0.6)",
+                }}
+              >
+                Sparks&rsquo; Barn · Photo: Olsen Photography
+              </figcaption>
+            </figure>
             <div>
               <Eyebrow color="gold" size="md" style={{ marginBottom: 10 }}>
                 Dress code

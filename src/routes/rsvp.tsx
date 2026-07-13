@@ -86,6 +86,7 @@ function RsvpPage() {
   const [attendees, setAttendees] = useState<AttendeeChoice[]>([]);
   const [address, setAddress] = useState<GuestAddress>({});
   const [addressConfirmed, setAddressConfirmed] = useState(false);
+  const [email, setEmail] = useState("");
   const [songRequest, setSongRequest] = useState("");
   const [message, setMessage] = useState("");
 
@@ -114,6 +115,7 @@ function RsvpPage() {
   function hydrateFromGuest(g: PublicGuest, r: PublicRsvp | null) {
     setGuest(g);
     setExistingRsvp(r);
+    setEmail(g.email ?? "");
     if (r) {
       setAttendees(r.attendees.length ? r.attendees : g.party_members.map((m) => ({ ...m, attending: false })));
       setAddress(r.address ?? g.address);
@@ -179,6 +181,7 @@ function RsvpPage() {
           attendees: cleaned,
           address_confirmed: addressConfirmed,
           address,
+          email,
           song_request: songRequest,
           message,
         },
@@ -514,6 +517,25 @@ function RsvpPage() {
                     aria-label="Country"
                     autoComplete="country-name"
                     maxLength={60}
+                    style={inputStyle}
+                  />
+                </div>
+                <div className="mt-6">
+                  <label
+                    htmlFor="rsvp-email"
+                    className="block"
+                    style={{ ...eyebrow, color: LAV_DEEP, letterSpacing: "0.3em", fontSize: 11, margin: "0 0 6px" }}
+                  >
+                    Email — for your RSVP confirmation
+                  </label>
+                  <input
+                    id="rsvp-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    autoComplete="email"
+                    maxLength={200}
                     style={inputStyle}
                   />
                 </div>
