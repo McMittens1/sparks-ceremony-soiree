@@ -244,7 +244,15 @@ export const submitRsvp = createServerFn({ method: "POST" })
     const status: PublicRsvp["status"] = anyYes && anyNo ? "partial" : anyYes ? "attending" : "not_attending";
 
     // Persist email + address updates back to the guest record so we can reach them later.
-    const guestPatch: Record<string, string | null> = {};
+    const guestPatch: {
+      email?: string | null;
+      address_line1?: string | null;
+      address_line2?: string | null;
+      city?: string | null;
+      state?: string | null;
+      postal_code?: string | null;
+      country?: string | null;
+    } = {};
     if (typeof data.email === "string") guestPatch.email = data.email.trim() || null;
     if (data.address) {
       guestPatch.address_line1 = data.address.line1?.trim() || null;
