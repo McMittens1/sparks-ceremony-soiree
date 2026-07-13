@@ -112,25 +112,6 @@ export function HeroSection() {
             </a>
           </div>
         </div>
-        <div
-          className="min-w-0 rs-hero-image"
-          style={{ flex: "1 1 560px", padding: "clamp(20px, 4cqh, 40px) 0", boxSizing: "border-box" }}
-        >
-          <picture>
-            <source media="(max-width: 900px)" srcSet={barnSunset.url} />
-            <img
-              src={favorite.url}
-              alt="Geovanni and Addison"
-              className="h-full w-full object-cover border border-hairline hero-image-reveal"
-              loading="eager"
-              fetchPriority="high"
-              ref={(el) => {
-                if (!el) return;
-                requestAnimationFrame(() => el.classList.add("is-in"));
-              }}
-            />
-          </picture>
-        </div>
       </div>
     </section>
   );
