@@ -1,6 +1,6 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { dictionaries } from "@/i18n/dictionaries";
+import { FAQ_LOGISTICS, FAQ_GUESTS } from "@/lib/wedding-data";
 
 export default defineTool({
   name: "get_faq",
@@ -11,7 +11,10 @@ export default defineTool({
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: ({ search }) => {
-    const all = dictionaries.en.faq.items.map((it) => ({ question: it.q, answer: it.a }));
+    const all = [...FAQ_LOGISTICS, ...FAQ_GUESTS].map((it) => ({
+      question: it.q,
+      answer: it.a,
+    }));
     const filtered = search
       ? all.filter((it) => {
           const q = search.toLowerCase();
