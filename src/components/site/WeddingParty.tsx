@@ -14,13 +14,10 @@ export function WeddingParty() {
   return (
     <div>
       <div className="flex items-center justify-between flex-wrap gap-2" style={{ margin: "0 0 24px" }}>
-        <p className="uppercase font-sans" style={{ fontSize: 11, letterSpacing: "0.3em", color: "#6B5F49" }}>
+        <p className="uppercase font-sans text-tan-deep" style={{ fontSize: 11, letterSpacing: "0.3em" }}>
           Standing closest
         </p>
-        <p
-          className="uppercase font-sans italic"
-          style={{ fontSize: 10, letterSpacing: "0.2em", color: "#A39680" }}
-        >
+        <p className="uppercase font-sans italic text-tan" style={{ fontSize: 10, letterSpacing: "0.2em" }}>
           Tap anyone for their story →
         </p>
       </div>
@@ -34,18 +31,15 @@ export function WeddingParty() {
       <PartyRow label="Groomsmen" people={groomsmen} expanded={expanded} onToggle={toggle} />
       <PartyRow label="Down the aisle first" people={kids} expanded={expanded} onToggle={toggle} maxWidth={280} />
 
-      <div className="mt-14 pt-11 border-t" style={{ borderColor: "#E1D6C3" }}>
-        <p className="uppercase font-sans mb-4" style={{ fontSize: 11, letterSpacing: "0.3em", color: "#6B5F49" }}>
+      <div className="mt-14 pt-11 border-t border-hairline">
+        <p className="uppercase font-sans mb-4 text-tan-deep" style={{ fontSize: 11, letterSpacing: "0.3em" }}>
           Ushers
         </p>
-        <p
-          className="font-sans"
-          style={{ fontSize: 16, lineHeight: 1.9, color: "#4A4238", maxWidth: 1100 }}
-        >
+        <p className="font-sans text-ink-body" style={{ fontSize: 16, lineHeight: 1.9, maxWidth: 1100 }}>
           {ushers.map((u, i) => (
             <span key={u.name}>
               {u.name}
-              {i < ushers.length - 1 && <span style={{ color: "#A39680" }}> · </span>}
+              {i < ushers.length - 1 && <span className="text-tan"> · </span>}
             </span>
           ))}
         </p>
@@ -70,10 +64,7 @@ function PartyRow({
   if (people.length === 0) return null;
   return (
     <>
-      <p
-        className="uppercase font-sans"
-        style={{ fontSize: 11, letterSpacing: "0.3em", color: "#6B5F49", margin: "56px 0 24px" }}
-      >
+      <p className="uppercase font-sans text-tan-deep" style={{ fontSize: 11, letterSpacing: "0.3em", margin: "56px 0 24px" }}>
         {label}
       </p>
       <div
@@ -107,8 +98,6 @@ function Avatar({
   const isFeatured = p.featured === true;
   const initial = p.name.charAt(0);
   const fontSize = size >= 128 ? 44 : 22;
-  const borderColor = isFeatured ? "#4C4066" : "#A39680";
-  const initialColor = isFeatured ? "#4C4066" : "#6B5F49";
   const label = (isOpen ? "Hide note about " : "Show note about ") + p.name;
   return (
     <div className="text-center">
@@ -120,45 +109,38 @@ function Avatar({
         className="cursor-pointer inline-block"
       >
         <div
-          className="rounded-full flex items-center justify-center mx-auto"
+          className={`rounded-full flex items-center justify-center mx-auto border ${isFeatured ? "border-lavender-deep" : "border-tan"}`}
           style={{
             width: size,
             height: size,
             borderWidth: isFeatured ? 1.5 : 1,
-            borderStyle: "solid",
-            borderColor,
           }}
         >
-          <span className="font-serif italic" style={{ fontSize, color: initialColor }}>
+          <span className={`font-serif italic ${isFeatured ? "text-lavender-deep" : "text-tan-deep"}`} style={{ fontSize }}>
             {initial}
           </span>
         </div>
         <p
-          className="font-serif italic"
+          className="font-serif italic text-ink"
           style={{
             fontSize: isFeatured ? 22 : 14,
-            color: "#2A2520",
             margin: isFeatured ? "18px 0 0" : "12px 0 0",
           }}
         >
           {p.name}
         </p>
         {isFeatured && (
-          <p
-            className="uppercase font-sans"
-            style={{ fontSize: 10, letterSpacing: "0.26em", color: "#6B5F49", margin: "4px 0 0" }}
-          >
+          <p className="uppercase font-sans text-tan-deep" style={{ fontSize: 10, letterSpacing: "0.26em", margin: "4px 0 0" }}>
             {p.role}
           </p>
         )}
       </button>
       {isOpen && (
         <p
-          className="font-sans italic mx-auto"
+          className="font-sans italic mx-auto text-tan"
           style={{
             fontSize: isFeatured ? 13 : 11,
             lineHeight: 1.6,
-            color: "#A39680",
             marginTop: isFeatured ? 14 : 8,
             maxWidth: isFeatured ? 200 : undefined,
           }}

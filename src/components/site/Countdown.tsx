@@ -40,8 +40,8 @@ export function Countdown() {
         <div key={label} className="flex items-baseline" style={{ gap: "clamp(20px, 6vw, 64px)" }}>
           {i > 0 && (
             <span
-              className="font-serif italic self-center"
-              style={{ fontSize: 44, color: "#8779A3" }}
+              className="font-serif italic self-center text-lavender"
+              style={{ fontSize: 44 }}
               aria-hidden
             >
               ·
@@ -50,19 +50,18 @@ export function Countdown() {
           <div className="text-center">
             <div
               key={val}
-              className="font-serif tabular-nums count-digit"
+              className="font-serif tabular-nums count-digit text-ink"
               style={{
                 fontWeight: 500,
                 fontSize: "clamp(52px, 9vw, 104px)",
-                color: "#2A2520",
                 lineHeight: 0.9,
               }}
             >
               {val}
             </div>
             <p
-              className="uppercase mt-3.5"
-              style={{ fontSize: 11, letterSpacing: "0.3em", color: "#6B5F49" }}
+              className="uppercase mt-3.5 text-tan-deep"
+              style={{ fontSize: 11, letterSpacing: "0.3em" }}
             >
               {label}
             </p>

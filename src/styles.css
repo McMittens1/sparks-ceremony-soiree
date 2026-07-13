@@ -308,11 +308,6 @@ details[data-anim][open] > .faq-body {
   pointer-events: none;
 }
 
-/* Legacy no-ops still supported */
-.draw-line { transform: scaleX(1); }
-.split-text .split-mask { display: inline; overflow: visible; }
-.split-text .split-unit { display: inline; transform: none; opacity: 1; }
-.editorial-heading { font-family: var(--font-serif); font-style: italic; font-weight: 500; letter-spacing: -0.01em; color: var(--color-ink); }
 
 .link-underline { position: relative; display: inline-block; }
 .link-underline::after {

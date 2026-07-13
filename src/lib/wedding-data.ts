@@ -130,3 +130,55 @@ export const FAQ_GUESTS: { q: string; a: string; open?: boolean }[] = [
   { q: "Are kids welcome?", a: "Yes. Add them to your party on the RSVP page and mark them as a child so we can plan headcount and meals." },
   { q: "What's the dress code?", a: "Cocktail attire in warm neutrals, lavender, or plum. Skip stilettos — the barn floor is uneven and the ceremony is on grass. Flats or block heels work great.", open: true },
 ];
+
+// ---------- Story timeline ----------
+// Text content for the Our Story section. Image assignment lives in
+// StoryTimeline.tsx (photoStart/photoCount index into its local PHOTOS array).
+
+type DatedStoryEntry = {
+  kind: "dated";
+  date: string;
+  place: string;
+  title: string;
+  body: string;
+  photoStart: number;
+  photoCount: number;
+};
+type MontageStoryEntry = {
+  kind: "montage";
+  label: string;
+  title: string;
+  body: string;
+  photoStart: number;
+  photoCount: number;
+};
+export type StoryEntry = DatedStoryEntry | MontageStoryEntry;
+
+export const STORY_ENTRIES: StoryEntry[] = [
+  { kind: "dated", date: "October 3, 2022", place: "Kinkaider Brewery · The Haymarket", title: "The first date", body: "We met on Hinge and our first date almost didn't happen — Addi had literally moved into a new house that day and probably should have been unpacking. We met at Kinkaider anyway, and right as we sat down at the outdoor patio her glasses snapped clean in half. We laughed about it, grabbed Canes on the way back to her place, and spent the night watching a scary movie surrounded by moving boxes while her dog Odin barked at me the entire time like he hadn't decided if I was allowed to be there.", photoStart: 0, photoCount: 3 },
+  { kind: "dated", date: "Mid-October 2022", place: "Copper meets Odin", title: "The dogs approve", body: "We were only about two weeks into dating when we decided it was time to introduce the dogs, half expecting it to go badly. It didn't. Copper and Odin got along right away — no growling, no standoff, just two dogs that seemed to already know they'd be seeing a lot more of each other. It felt like a good sign for the rest of us too.", photoStart: 1, photoCount: 2 },
+  { kind: "dated", date: "March 2023", place: "Odin comes around", title: "From her dog to ours", body: "He liked me pretty much from the start, but somewhere along the way, without either of us really noticing it happening, he stopped being just Addi's dog and started being mine too. By that spring he was waiting by the door when I showed up, the same way he did for her.", photoStart: 2, photoCount: 3 },
+  { kind: "montage", label: "The years in between", title: "A lot of good ones, stacked", body: "No single story covers this part — just a lot of good ones stacked on top of each other. Trips we took, holidays with both families, random Tuesdays that didn't need a reason to be good. We got better at being a team without really talking about it. Somewhere in the middle of it all, Odin and Copper went from dogs that tolerated each other to actual brothers.", photoStart: 3, photoCount: 9 },
+  { kind: "dated", date: "May 15, 2025", place: "The Joyo Theater", title: "The proposal", body: "I told her we were going to see a movie, which was technically true — except I'd rented out the whole theater first. She sat through a video I made and then a string of movie trailers that kept getting stranger, some real, some completely made up. When it ended I walked her outside, and the marquee out front read \u201CAddi, will you marry me?\u201D She said yes — and she'll be the first to tell you she saw it coming.", photoStart: 4, photoCount: 4 },
+  { kind: "montage", label: "Getting ready for forever", title: "The months after the yes", body: "Telling everyone the news, watching family get just as excited as we were, starting to actually picture what our place together would look like. It didn't feel like planning so much as looking forward to something we already knew was coming.", photoStart: 5, photoCount: 6 },
+  { kind: "dated", date: "October 2025", place: "Moved in together", title: "One roof, four of us", body: "We were surrounded by boxes again — except this time they weren't going anywhere. It took a minute to feel like our place instead of just her place with my stuff in it, but it did. Odin and Copper have been under one roof together ever since, and neither of them seems to remember a time it was any other way.", photoStart: 6, photoCount: 3 },
+  { kind: "montage", label: "Settling in", title: "Ordinary, in the best way", body: "Since then it's mostly been us figuring out what a real life together looks like — Odin and Copper included, the two of them fully inseparable now. Ordinary as it sounds, it's been our favorite part so far, and it's all been building toward something a lot bigger.", photoStart: 7, photoCount: 6 },
+  { kind: "dated", date: "October 10, 2026", place: "Sparks' Barn", title: "The next chapter starts here", body: "With everyone we love in one place to celebrate it with us.", photoStart: 0, photoCount: 2 },
+];
+
+// ---------- Day-of ----------
+
+export const DATE_CARDS: { n: string; cap: string }[] = [
+  { n: "10", cap: "Sat" },
+  { n: "10", cap: "Oct" },
+  { n: "26", cap: "MMXXVI" },
+];
+
+export const DAY_SCHEDULE: { time: string; label: string }[] = [
+  { time: "4:30", label: "Guests arrive" },
+  { time: "5:00", label: "Ceremony" },
+  { time: "5:45", label: "Cocktail hour" },
+  { time: "7:00", label: "Dinner & toasts" },
+  { time: "8:30", label: "First dance & open floor" },
+  { time: "11:30", label: "Send-off" },
+];

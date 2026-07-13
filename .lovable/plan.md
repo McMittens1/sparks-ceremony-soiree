@@ -1,59 +1,80 @@
-# Motion & Polish Pass (Desktop)
+# Refactor plan — tokens + component extraction
 
-Editorial, restrained motion — nothing bouncy. Everything respects `prefers-reduced-motion` (already gated in existing helpers like `Reveal`, `Parallax`, `Magnetic`).
+Goal: same look and behavior, cleaner structure. Every step is mechanical and independently verifiable.
 
-## 1. Reintroduce a few legacy helpers (already in repo, currently unused)
-Keep them; wire them into the new redesign selectively:
-- `Reveal` (fade/blur/mask variants) — section headings, story rows, party cards, hotel cards, registry cards, FAQ items. Staggered by index (60–120ms).
-- `Parallax` — hero portrait (`speed: -0.08`), Story montage photos (`0.05–0.12`), Getting There map illustration (`-0.06`). Subtle only.
-- `Magnetic` — RSVP CTA in header, "Send RSVP" submit button, Registry card CTAs. Strength 0.15–0.2 (subtle).
-- `SplitText` — hero couple names + section H2s: per-word mask reveal on first paint / on-enter.
+## Why now
 
-## 2. New motion pieces to add
-- **Spine active indicator**: animated vertical bar that morphs/slides between numerals as `useActiveSection` changes (transform + opacity, 400ms cubic-bezier).
-- **Header nav underline**: shared-layout style — active underline animates horizontally between items on click/scroll (single absolutely-positioned bar driven by refs).
-- **Hero portrait entrance**: image clip-path reveal (inset 100% 0 0 0 → 0) + slight scale-down from 1.04 → 1.0 over 900ms on load.
-- **Countdown digits**: flip/slide when a unit changes (translateY + fade on the old/new number).
-- **Story timeline connector**: SVG vertical line draws (`stroke-dashoffset`) as the section enters view; diamond markers pop in per row.
-- **Gallery hover**: image scale 1.0 → 1.03 with a slow (600ms) ease, plus caption slide-up from bottom on hover.
-- **Marquee band** (optional): reuse existing `Marquee` for a single ivory→ink strip between Party and Getting There with "Geovanni ✦ Addison ✦ 10.10.26 ✦ Louisville, NE".
-- **Lavender-wash section transitions**: as `#day` (deep lavender bleed) enters, background color of the outer wrapper cross-fades from ivory → deep lavender via IntersectionObserver (200–400ms).
-- **Diamond dividers**: rotate 45° → 90° and fade in when scrolled into view.
-- **Cursor**: keep off by default. It exists but felt heavy; leave removed unless you want it back.
+The homepage renders from a single 1042-line `src/routes/index.tsx`. The same palette (`#2A2520`, `#4C4066`, `#E1D6C3`, `#8779A3`, `#A39680`, `#F8F4EC`, etc.) is retyped as raw hex strings in `index.tsx`, `StoryTimeline.tsx`, `Header.tsx`, `Footer.tsx`, `rsvp.tsx` — even though `src/styles.css` already declares them as CSS variables and Tailwind v4 color tokens. Two sources of truth = drift risk. Story content also lives inside its rendering component instead of `wedding-data.ts` where the rest of the site content lives.
 
-## 3. Micro-interactions
-- Buttons/links: 150ms color transitions already present — add a 1px underline draw on nav hover (in addition to active state).
-- Form fields (RSVP): label lifts / border color fades to lavender on focus (already partially there — formalize).
-- FAQ `<details>`: animate chevron rotate + content height (use `interpolate-size` fallback via max-height transition).
+## Scope (in order)
 
-## 4. Files touched
-- `src/routes/index.tsx` — wrap headings/rows in `Reveal`, `SplitText`, `Parallax`, `Magnetic`.
-- `src/components/site/Header.tsx` — animated underline bar.
-- `src/components/site/Spine.tsx` — animated active indicator.
-- `src/components/site/Countdown.tsx` — digit flip.
-- `src/components/site/StoryTimeline.tsx` — SVG line draw.
-- `src/routes/rsvp.tsx` — Magnetic submit, focus transitions.
-- `src/styles.css` — keyframes for clip reveal, digit flip, chevron, marquee ivory variant; ensure reduced-motion overrides.
+### 1. One source of truth for the palette
 
-## 5. Guardrails
-- Desktop only (existing scope).
-- No layout shift; transforms + opacity only.
-- All observers disconnect after first reveal.
-- Reduced-motion: all animations collapse to instant opacity (existing pattern in `Reveal`).
+- Confirm `@theme inline` in `src/styles.css` exposes: `ink`, `ivory`, `hairline`, `lavender`, `lavender-deep`, `tan`, `tan-deep`, `gold`, `body`, `soft`. Add any missing (e.g. `ivory/75` variants are just Tailwind opacity modifiers, no new token needed).
+- Delete the local `const HAIRLINE/INK/IVORY/LAV/LAV_DEEP/TAN/TAN_DEEP/GOLD/BODY/SOFT` block in `src/routes/index.tsx`.
+- Sweep the codebase and replace every hardcoded hex from that palette with a Tailwind class (`text-ink`, `border-hairline`, `bg-ivory`, `text-lavender-deep`, etc.) or `var(--color-…)` inside a remaining inline `style` where a class doesn't apply (e.g. dynamic `boxShadow`).
+- Files touched: `index.tsx`, `StoryTimeline.tsx`, `Header.tsx`, `Footer.tsx`, `rsvp.tsx`, plus any other `src/components/site/*` that grep flags.
+- Ad-hoc one-offs (`#EFE9DD`, `#C9BB9F`, `#B7A6D4`, `rgba(248,244,236,…)`) stay as-is unless they're used more than twice — then promote to a token.
 
----
+### 2. Typography primitives
 
-# Suggested Next Work (after motion)
+Create small, dumb components in `src/components/site/typography.tsx`:
 
-1. **Mobile/tablet pass** — the explicit later phase. Header collapses to hamburger + slide-in drawer; two-col sections stack; Spine hides <1024px; hero image goes above/below text.
-2. **Real photos section** — wire the approved-photos server function that already exists (`src/lib/photos.functions.ts`) into a masonry grid with `Lightbox`. Currently the section is a stub.
-3. **Guest photo upload flow** — modal (`PhotoUploadModal.tsx` exists) → Supabase Storage → admin approval queue in `_authenticated/admin.tsx`.
-4. **RSVP polish** — success screen with couple monogram + "add to calendar" (.ics) download; email confirmation via Lovable AI Gateway/edge function.
-5. **Live weather widget** on Getting There — `api/public/weather.ts` already exists; surface a small forecast card for the wedding week.
-6. **SEO/OG** — generate a real og:image (hero portrait crop w/ names + date) and wire per-route metadata for `/rsvp`.
-7. **Spanish translations audit** — new copy added during redesign (story entries, hotels, FAQ groups, closing) needs ES parity in `dictionaries.ts`.
-8. **Print stylesheet** — one-page schedule + address card for guests who print.
-9. **Analytics** — anonymous page/section view tracking to see what guests actually read.
-10. **Perf**: convert engagement JPGs to responsive `<img srcset>` / AVIF; lazy-load below-fold photos.
+- `<Eyebrow color?>` — the `uppercase font-sans text-[11px] tracking-[0.3em]` label pattern (used 15+ times).
+- `<DisplayHeading size="md|lg|xl">` — `font-serif` heading with clamp() sizes (used 6+ times).
+- `<BodyProse>` — `font-sans text-[17px] leading-[1.8] text-body max-w-[560px]` (used in every story row and most sections).
 
-Approve and I'll implement the motion pass first; we can queue the rest.
+Replace inline-style copies of those patterns across `index.tsx` and `StoryTimeline.tsx`. Do not invent new visual variants — mirror what exists exactly.
+
+### 3. Extract homepage sections
+
+Split `src/routes/index.tsx` into `src/components/site/sections/`:
+
+```text
+sections/
+  HeroSection.tsx
+  CountdownSection.tsx
+  StorySection.tsx        // just the wrapper; StoryTimeline stays where it is
+  DaySection.tsx
+  PartySection.tsx
+  TravelSection.tsx
+  PhotosSection.tsx
+  RegistrySection.tsx
+  FaqSection.tsx
+```
+
+`index.tsx` becomes a thin composition file — imports, `head()`, and `<HeroSection/> <CountdownSection/> …`. Move the shared `SectionHeader` helper into `src/components/site/SectionHeader.tsx`. No prop shuffling — each section reads from `SITE`/`wedding-data` directly, same as today.
+
+### 4. Move story content into `wedding-data.ts`
+
+- Move `ENTRIES_RAW` and the `StoryEntry`/`Dated`/`Montage` types from `StoryTimeline.tsx` into `src/lib/wedding-data.ts` (which is already the shared source for registry, party, hotels, FAQ, and MCP tools).
+- `StoryTimeline.tsx` keeps only layout/animation and imports `STORY_ENTRIES`.
+- Also move the small inline arrays in `index.tsx`: the three date cards (`index.tsx:313-317`) and the day-of schedule (`index.tsx:366-373`) — same pattern.
+
+### 5. Dead-code sweep
+
+Grep each of these for imports; delete if unused: `PhotoUploadModal.tsx` (Photos section hand-rolls its own inline form), `SectionDivider.tsx` vs `DiamondDivider.tsx` (only one is likely live), `SplitText.tsx`, `ScrollProgress.tsx`, `Parallax.tsx`, `Marquee.tsx`, `Magnetic.tsx`, `Lightbox.tsx`, `Cursor.tsx`, `SectionRail.tsx`. Also remove the "Legacy no-ops still supported" block in `src/styles.css:311-315` if the grep confirms it's dead.
+
+### 6. Explicitly out of scope
+
+- Rewriting the `.rs-*` responsive utility layer in `src/styles.css` or removing `!important` overrides. Those exist because JSX uses inline `style={}` for grid layout; unwinding them is a bigger, riskier pass and belongs to a follow-up ("Heavy — align with Tailwind v4 idioms").
+- Any visual change. If a diff produces a visible difference, it's a bug in the refactor, not an intended change.
+- Route-level changes, data-loading changes, RSVP form logic, MCP tools.
+
+## Verification
+
+After each numbered step, run Playwright at 390 / 820 / 1440 against the homepage and RSVP page and diff against pre-refactor screenshots. Any pixel drift = revert and investigate. Typecheck must stay green after each step.
+
+## Deliverables
+
+- ~10 new files under `src/components/site/sections/` + 1 `SectionHeader.tsx` + 1 `typography.tsx`.
+- `index.tsx` shrinks from 1042 lines to roughly 60–80 lines.
+- `StoryTimeline.tsx` loses ~60 lines of inline style / hex constants and its content array.
+- `wedding-data.ts` gains `STORY_ENTRIES`, `DATE_CARDS`, `DAY_SCHEDULE`.
+- Zero hardcoded palette hex strings in `src/routes/*` and `src/components/site/*` outside `styles.css`.
+
+## Not doing (called out from the survey, deferred by choice)
+
+- Removing `.rs-*` classes / `!important` from `styles.css`.
+- Reworking `Header.tsx` hamburger into a subcomponent (only 3 lines, not worth it).
+- Any change to `src/integrations/supabase/*`, `src/lib/mcp/*`, `src/lib/*.functions.ts`.

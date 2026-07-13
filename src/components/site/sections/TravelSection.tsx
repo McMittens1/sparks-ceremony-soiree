@@ -1,0 +1,121 @@
+import { DiamondDivider } from "@/components/site/DiamondDivider";
+import { SectionHeader } from "@/components/site/SectionHeader";
+import { BodyProse, DisplayHeading, Eyebrow } from "@/components/site/typography";
+import { HOTELS } from "@/lib/wedding-data";
+import { SITE } from "@/lib/site";
+
+export function TravelSection() {
+  return (
+    <section
+      id="travel"
+      className="border-t border-hairline rs-section"
+      style={{ padding: "100px 64px", maxWidth: 1500, margin: "0 auto" }}
+    >
+      <SectionHeader
+        eyebrow="V · Getting There"
+        title="Getting There"
+        subhead="Sparks' Barn is in Louisville, Nebraska, about 25 minutes south of Omaha and 40 minutes east of Lincoln."
+      />
+      <DiamondDivider className="mt-9" />
+
+      <div
+        className="grid items-start rs-stack"
+        style={{ marginTop: 64, gridTemplateColumns: "5fr 7fr", gap: 64 }}
+      >
+        <div>
+          <Eyebrow color="lavender-deep" style={{ marginBottom: 14 }}>
+            Venue address
+          </Eyebrow>
+          <DisplayHeading as="h3" size="sm" italic style={{ margin: "0 0 8px", fontSize: 28, lineHeight: 1.3 }}>
+            Sparks&rsquo; Barn
+          </DisplayHeading>
+          <p className="font-sans text-ink-body" style={{ fontSize: 16, lineHeight: 1.7, margin: 0 }}>
+            13817 108th St
+            <br />
+            Louisville, NE 68037
+          </p>
+          <a
+            href={SITE.mapLink}
+            target="_blank"
+            rel="noopener"
+            className="mt-6 inline-block uppercase font-sans text-lavender-deep border-b border-lavender-deep"
+            style={{ fontSize: 10, letterSpacing: "0.2em", paddingBottom: 3 }}
+          >
+            Open in maps →
+          </a>
+        </div>
+        <div
+          style={{
+            aspectRatio: "16 / 7",
+            background: "#EFE9DD",
+            border: "1px solid #C9BB9F",
+            overflow: "hidden",
+          }}
+        >
+          <iframe
+            src={SITE.mapEmbed}
+            title="Sparks' Barn on the map"
+            className="w-full h-full"
+            style={{ border: 0, filter: "grayscale(0.2) sepia(0.1)" }}
+            loading="lazy"
+          />
+        </div>
+      </div>
+
+      <div style={{ marginTop: 72 }}>
+        <Eyebrow color="lavender-deep" style={{ marginBottom: 10 }}>
+          Where to stay
+        </Eyebrow>
+        <BodyProse maxWidth={760} style={{ margin: "0 0 40px", fontSize: 16, lineHeight: 1.75 }}>
+          We haven&rsquo;t blocked rooms anywhere. Most out-of-town guests stay in Lincoln or
+          Omaha, here are well-known options in each area.
+        </BodyProse>
+        <div className="grid rs-stack-3" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: 48 }}>
+          {HOTELS.map((group) => (
+            <div key={group.area}>
+              <p className="font-serif italic text-ink" style={{ fontSize: 22, margin: "0 0 4px" }}>
+                {group.area}
+              </p>
+              <Eyebrow color="tan" size="sm" style={{ marginBottom: 20, letterSpacing: "0.2em" }}>
+                {group.drive}
+              </Eyebrow>
+              {group.items.map((h) => (
+                <div key={h.name} className="border-t border-hairline" style={{ padding: "14px 0" }}>
+                  <p className="font-sans text-ink" style={{ fontSize: 15, margin: 0 }}>
+                    {h.name}
+                  </p>
+                  <p className="font-sans text-tan-deep" style={{ fontSize: 12, margin: "4px 0 0" }}>
+                    {h.city}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div
+        className="grid border-t border-hairline rs-stack-2"
+        style={{ marginTop: 72, gridTemplateColumns: "1fr 1fr", gap: 64, paddingTop: 48 }}
+      >
+        <div>
+          <Eyebrow color="lavender-deep" style={{ marginBottom: 10 }}>
+            Parking
+          </Eyebrow>
+          <BodyProse style={{ fontSize: 16, lineHeight: 1.75 }}>
+            Free on-site parking. You can leave a car overnight if you&rsquo;re getting a ride home.
+          </BodyProse>
+        </div>
+        <div>
+          <Eyebrow color="lavender-deep" style={{ marginBottom: 10 }}>
+            What to pack
+          </Eyebrow>
+          <BodyProse style={{ fontSize: 16, lineHeight: 1.75 }}>
+            The ceremony is outdoors and the barn cools off fast after sunset. Bring a light
+            jacket or wrap and shoes you can walk on grass in.
+          </BodyProse>
+        </div>
+      </div>
+    </section>
+  );
+}
