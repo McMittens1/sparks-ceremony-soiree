@@ -103,7 +103,7 @@ export function HeroSection() {
         }}
       >
         <div
-          className="flex flex-col justify-center min-w-0 rs-hero-text"
+          className="flex flex-col justify-center min-w-0 rs-hero-text text-center md:text-left"
           style={{ flex: "0 1 440px" }}
         >
           <p
@@ -159,7 +159,7 @@ export function HeroSection() {
             Sparks&rsquo; Barn <span className="text-tan">·</span> Louisville, NE
           </p>
           <div
-            className="flex items-center flex-wrap"
+            className="flex items-center flex-wrap justify-center md:justify-start"
             style={{
               marginTop: "clamp(16px, 3cqh, 32px)",
               gap: "clamp(16px, 2.5cqw, 26px)",
