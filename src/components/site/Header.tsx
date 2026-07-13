@@ -63,7 +63,7 @@ export function Header() {
                 key={n.id}
                 onClick={() => goToSection(n.id)}
                 aria-current={isActive ? "location" : undefined}
-                className="relative transition-colors py-2"
+                className="nav-link relative transition-colors py-2"
                 style={{ color: isActive ? "#4C4066" : "#2A2520" }}
               >
                 {t.nav[n.key]}
