@@ -1,5 +1,6 @@
 import { DATE_CARDS, DAY_SCHEDULE } from "@/lib/wedding-data";
 import { DisplayHeading, Eyebrow } from "@/components/site/typography";
+import barnAerial from "@/assets/venue/sparks-barn-aerial.jpg.asset.json";
 
 export function DaySection() {
   return (
