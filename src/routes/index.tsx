@@ -701,7 +701,7 @@ function Home() {
             >
               Up to 5 images, JPG or PNG, 10 MB each. Nothing goes public until we approve it.
             </p>
-            <div className="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
+            <div className="grid rs-stack-2" style={{ gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
               <div>
                 <label
                   htmlFor="photo-name"
