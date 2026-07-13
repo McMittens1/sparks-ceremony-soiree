@@ -396,6 +396,7 @@ function RsvpPage() {
                 )}
               </div>
             </form>
+            </fieldset>
           )}
 
           {/* Form */}
