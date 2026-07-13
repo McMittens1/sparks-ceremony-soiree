@@ -113,26 +113,27 @@ function DatedRow({
             height: 640,
           }}
         >
-          <div className="relative" style={{ flex: "0 0 62%" }}>
+          <Reveal variant={flip ? "right" : "left"} className="relative photo-zoom" style={undefined as never}>
             <img
               src={main}
               alt=""
               loading="lazy"
               className="w-full h-full object-cover border"
-              style={{ borderColor: "#E1D6C3" }}
+              style={{ borderColor: "#E1D6C3", height: 640 }}
             />
-          </div>
+          </Reveal>
           {rest.length > 0 && (
             <div className="flex-1 min-w-0 flex flex-col gap-3">
               {rest.map((src, j) => (
-                <img
-                  key={j}
-                  src={src}
-                  alt=""
-                  loading="lazy"
-                  className="flex-1 min-h-0 w-full object-cover border"
-                  style={{ borderColor: "#E1D6C3" }}
-                />
+                <div key={j} className="flex-1 min-h-0 photo-zoom">
+                  <img
+                    src={src}
+                    alt=""
+                    loading="lazy"
+                    className="w-full h-full object-cover border"
+                    style={{ borderColor: "#E1D6C3" }}
+                  />
+                </div>
               ))}
             </div>
           )}
@@ -140,25 +141,14 @@ function DatedRow({
 
         {/* Gutter with hairline + diamond */}
         <div className="flex items-center justify-center" style={{ order: 2 }}>
-          <div className="relative" style={{ width: 1, height: "70%", background: "#E1D6C3" }}>
-            <span
-              className="absolute"
-              aria-hidden
-              style={{
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%) rotate(45deg)",
-                width: 7,
-                height: 7,
-                background: "#8779A3",
-              }}
-            />
-          </div>
+          <StoryGutter />
         </div>
 
         {/* Text column */}
-        <div
+        <Reveal
+          variant={flip ? "left" : "right"}
           className="flex flex-col justify-center px-2"
+          // @ts-expect-error style pass-through not typed on Reveal
           style={{ order: flip ? 1 : 3 }}
         >
           <div className="flex items-center gap-3.5 mb-2.5">
