@@ -30,14 +30,17 @@ export const Route = createFileRoute("/rsvp")({
 
 type Stage = "lookup" | "form" | "done";
 
-const INK = "#2A2520";
-const IVORY = "#F8F4EC";
-const HAIRLINE = "#E1D6C3";
-const LAV = "#8779A3";
-const LAV_DEEP = "#4C4066";
-const TAN = "#A39680";
-const BODY = "#4A4238";
-const SOFT = "#6E6255";
+// CSS-variable shorthands for inline styles where a Tailwind class doesn't fit
+// (e.g. dynamic borderBottom, background). Class-based color usage below still
+// prefers text-ink / bg-ink / border-hairline etc.
+const INK = "var(--color-ink)";
+const IVORY = "var(--color-ivory)";
+const HAIRLINE = "var(--color-hairline)";
+const LAV = "var(--color-lavender)";
+const LAV_DEEP = "var(--color-lavender-deep)";
+const TAN = "var(--color-tan)";
+const BODY = "var(--color-ink-body)";
+const SOFT = "var(--color-ink-soft)";
 
 // Styled input (Cormorant italic on a hairline underline) matching the prototype.
 const inputStyle: React.CSSProperties = {
@@ -522,7 +525,7 @@ function RsvpPage() {
                     type="checkbox"
                     checked={addressConfirmed}
                     onChange={(e) => setAddressConfirmed(e.target.checked)}
-                    style={{ accentColor: "#4C4066", width: 16, height: 16 }}
+                    style={{ accentColor: "var(--color-lavender-deep)", width: 16, height: 16 }}
                   />
                   This address is correct.
                 </label>
