@@ -487,7 +487,7 @@ function Home() {
         <DiamondDivider className="mt-9" />
 
         <div
-          className="grid items-start"
+          className="grid items-start rs-stack"
           style={{ marginTop: 64, gridTemplateColumns: "5fr 7fr", gap: 64 }}
         >
           <div>
