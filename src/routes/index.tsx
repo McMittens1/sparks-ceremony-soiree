@@ -674,8 +674,14 @@ function Home() {
               sending photos the moment they take them.
             </p>
           </div>
-          <div className="border" style={{ padding: 40, borderColor: HAIRLINE }}>
+          <form
+            className="border"
+            style={{ padding: 40, borderColor: HAIRLINE }}
+            aria-labelledby="photo-share-heading"
+            onSubmit={(e) => e.preventDefault()}
+          >
             <p
+              id="photo-share-heading"
               className="uppercase font-sans"
               style={{ fontSize: 11, letterSpacing: "0.3em", color: LAV_DEEP, margin: "0 0 10px" }}
             >
@@ -689,31 +695,79 @@ function Home() {
             </p>
             <div className="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
               <div>
-                <p
-                  className="uppercase font-sans"
-                  style={{ fontSize: 10, letterSpacing: "0.2em", color: TAN, margin: "0 0 8px" }}
+                <label
+                  htmlFor="photo-name"
+                  className="block uppercase font-sans"
+                  style={{ fontSize: 10, letterSpacing: "0.2em", color: "#6B5F49", margin: "0 0 8px" }}
                 >
                   Your name
-                </p>
-                <div style={{ borderBottom: `1px solid ${TAN}`, height: 30 }} />
+                </label>
+                <input
+                  id="photo-name"
+                  type="text"
+                  disabled
+                  autoComplete="name"
+                  style={{
+                    width: "100%",
+                    height: 30,
+                    border: "none",
+                    borderBottom: `1px solid ${TAN}`,
+                    background: "transparent",
+                    fontFamily: "Cormorant, serif",
+                    fontSize: 17,
+                    color: INK,
+                  }}
+                />
               </div>
               <div>
-                <p
-                  className="uppercase font-sans"
-                  style={{ fontSize: 10, letterSpacing: "0.2em", color: TAN, margin: "0 0 8px" }}
+                <label
+                  htmlFor="photo-email"
+                  className="block uppercase font-sans"
+                  style={{ fontSize: 10, letterSpacing: "0.2em", color: "#6B5F49", margin: "0 0 8px" }}
                 >
                   Email (optional)
-                </p>
-                <div style={{ borderBottom: `1px solid ${TAN}`, height: 30 }} />
+                </label>
+                <input
+                  id="photo-email"
+                  type="email"
+                  disabled
+                  autoComplete="email"
+                  style={{
+                    width: "100%",
+                    height: 30,
+                    border: "none",
+                    borderBottom: `1px solid ${TAN}`,
+                    background: "transparent",
+                    fontFamily: "Cormorant, serif",
+                    fontSize: 17,
+                    color: INK,
+                  }}
+                />
               </div>
             </div>
-            <p
-              className="uppercase font-sans"
-              style={{ fontSize: 10, letterSpacing: "0.2em", color: TAN, margin: "0 0 8px" }}
+            <label
+              htmlFor="photo-caption"
+              className="block uppercase font-sans"
+              style={{ fontSize: 10, letterSpacing: "0.2em", color: "#6B5F49", margin: "0 0 8px" }}
             >
               Caption (optional)
-            </p>
-            <div style={{ borderBottom: `1px solid ${TAN}`, height: 30, marginBottom: 20 }} />
+            </label>
+            <input
+              id="photo-caption"
+              type="text"
+              disabled
+              style={{
+                width: "100%",
+                height: 30,
+                border: "none",
+                borderBottom: `1px solid ${TAN}`,
+                background: "transparent",
+                fontFamily: "Cormorant, serif",
+                fontSize: 17,
+                color: INK,
+                marginBottom: 20,
+              }}
+            />
             <div
               className="text-center"
               style={{
@@ -722,16 +776,17 @@ function Home() {
                 padding: 26,
                 marginBottom: 22,
               }}
+              aria-hidden="true"
             >
               <span
                 className="uppercase font-sans"
-                style={{ fontSize: 11, letterSpacing: "0.2em", color: "#8B7F68" }}
+                style={{ fontSize: 11, letterSpacing: "0.2em", color: "#6B5F49" }}
               >
                 Choose photos
               </span>
             </div>
             <button
-              type="button"
+              type="submit"
               className="block w-full text-center uppercase font-sans"
               style={{
                 background: INK,
@@ -740,14 +795,21 @@ function Home() {
                 fontSize: 11,
                 letterSpacing: "0.24em",
                 border: "none",
-                cursor: "pointer",
+                cursor: "not-allowed",
+                opacity: 0.7,
               }}
-              aria-label="Upload photo (not yet wired up)"
+              aria-label="Upload photo — not yet available, opens closer to the wedding"
               disabled
             >
               Upload
             </button>
-          </div>
+            <p
+              className="font-sans"
+              style={{ fontSize: 12, color: SOFT, marginTop: 12, textAlign: "center" }}
+            >
+              Uploads open closer to the wedding.
+            </p>
+          </form>
         </div>
       </section>
 

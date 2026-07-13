@@ -265,24 +265,28 @@ function RsvpPage() {
 
           {/* Lookup */}
           {stage === "lookup" && (
-            <form onSubmit={onLookupSubmit}>
+            <form onSubmit={onLookupSubmit} noValidate>
               <p
                 className="font-serif italic text-center"
                 style={{ fontSize: 22, color: INK, margin: "0 0 8px" }}
               >
                 {t.rsvp.lookupTitle}
               </p>
-              <p
-                className="text-center font-sans"
+              <label
+                htmlFor="rsvp-lookup"
+                className="block text-center font-sans"
                 style={{ fontSize: 14, color: SOFT, margin: "0 0 30px" }}
               >
                 {t.rsvp.lookupHint}
-              </p>
+              </label>
               <input
+                id="rsvp-lookup"
                 autoFocus
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t.rsvp.lookupPlaceholder}
+                aria-label={t.rsvp.lookupPlaceholder}
+                autoComplete="name"
                 maxLength={120}
                 style={inputStyle}
               />
@@ -305,7 +309,7 @@ function RsvpPage() {
               </button>
 
               {matches && matches.length > 1 && (
-                <div className="mt-8 space-y-2">
+                <div className="mt-8 space-y-2" role="group" aria-label="Matching guests">
                   <p style={eyebrow}>Is this you?</p>
                   {matches.map((m) => (
                     <button
@@ -326,14 +330,16 @@ function RsvpPage() {
                 </div>
               )}
 
-              {err && (
-                <div className="mt-6 font-sans" style={{ fontSize: 14, color: "#8b3a2f" }}>
-                  <p>{err}</p>
-                  <p className="mt-2 italic font-serif" style={{ color: SOFT, fontSize: 13 }}>
-                    {SITE.rsvpFallbackContact}
-                  </p>
-                </div>
-              )}
+              <div role="alert" aria-live="polite">
+                {err && (
+                  <div className="mt-6 font-sans" style={{ fontSize: 14, color: "#7a2f26" }}>
+                    <p>{err}</p>
+                    <p className="mt-2 italic font-serif" style={{ color: SOFT, fontSize: 13 }}>
+                      {SITE.rsvpFallbackContact}
+                    </p>
+                  </div>
+                )}
+              </div>
             </form>
           )}
 
@@ -372,6 +378,8 @@ function RsvpPage() {
                         value={a.name}
                         onChange={(e) => updateAttendee(i, { name: e.target.value })}
                         placeholder={t.rsvp.fullName}
+                        aria-label={`${t.rsvp.fullName} — guest ${i + 1}`}
+                        autoComplete="name"
                         maxLength={120}
                         style={inputStyle}
                       />
@@ -433,8 +441,11 @@ function RsvpPage() {
               </section>
 
               {/* Address */}
-              <section>
-                <p style={{ ...eyebrow, color: LAV_DEEP, letterSpacing: "0.3em", fontSize: 11 }}>
+              <section aria-labelledby="rsvp-address-heading">
+                <p
+                  id="rsvp-address-heading"
+                  style={{ ...eyebrow, color: LAV_DEEP, letterSpacing: "0.3em", fontSize: 11 }}
+                >
                   Mailing address
                 </p>
                 <p
@@ -449,6 +460,8 @@ function RsvpPage() {
                       value={address.line1 ?? ""}
                       onChange={(e) => setAddress({ ...address, line1: e.target.value })}
                       placeholder="Street address"
+                      aria-label="Street address"
+                      autoComplete="address-line1"
                       maxLength={200}
                       style={inputStyle}
                     />
@@ -458,6 +471,8 @@ function RsvpPage() {
                       value={address.line2 ?? ""}
                       onChange={(e) => setAddress({ ...address, line2: e.target.value })}
                       placeholder="Apt / suite (optional)"
+                      aria-label="Apartment or suite (optional)"
+                      autoComplete="address-line2"
                       maxLength={200}
                       style={inputStyle}
                     />
@@ -466,6 +481,8 @@ function RsvpPage() {
                     value={address.city ?? ""}
                     onChange={(e) => setAddress({ ...address, city: e.target.value })}
                     placeholder="City"
+                    aria-label="City"
+                    autoComplete="address-level2"
                     maxLength={120}
                     style={inputStyle}
                   />
@@ -473,6 +490,8 @@ function RsvpPage() {
                     value={address.state ?? ""}
                     onChange={(e) => setAddress({ ...address, state: e.target.value })}
                     placeholder="State"
+                    aria-label="State"
+                    autoComplete="address-level1"
                     maxLength={60}
                     style={inputStyle}
                   />
@@ -480,6 +499,8 @@ function RsvpPage() {
                     value={address.postal_code ?? ""}
                     onChange={(e) => setAddress({ ...address, postal_code: e.target.value })}
                     placeholder="ZIP / postal"
+                    aria-label="ZIP or postal code"
+                    autoComplete="postal-code"
                     maxLength={20}
                     style={inputStyle}
                   />
@@ -487,18 +508,21 @@ function RsvpPage() {
                     value={address.country ?? ""}
                     onChange={(e) => setAddress({ ...address, country: e.target.value })}
                     placeholder="Country (if not US)"
+                    aria-label="Country"
+                    autoComplete="country-name"
                     maxLength={60}
                     style={inputStyle}
                   />
                 </div>
                 <label
-                  className="mt-6 flex items-center gap-2 font-sans"
+                  className="mt-6 flex items-center gap-2 font-sans cursor-pointer"
                   style={{ fontSize: 14, color: BODY }}
                 >
                   <input
                     type="checkbox"
                     checked={addressConfirmed}
                     onChange={(e) => setAddressConfirmed(e.target.checked)}
+                    style={{ accentColor: "#4C4066", width: 16, height: 16 }}
                   />
                   This address is correct.
                 </label>
@@ -507,10 +531,15 @@ function RsvpPage() {
               {/* Extras */}
               <section className="space-y-6">
                 <div>
-                  <p style={{ ...eyebrow, color: LAV_DEEP, letterSpacing: "0.3em", fontSize: 11 }}>
+                  <label
+                    htmlFor="rsvp-song"
+                    className="block"
+                    style={{ ...eyebrow, color: LAV_DEEP, letterSpacing: "0.3em", fontSize: 11 }}
+                  >
                     Song request (optional)
-                  </p>
+                  </label>
                   <input
+                    id="rsvp-song"
                     value={songRequest}
                     onChange={(e) => setSongRequest(e.target.value)}
                     placeholder="One song that&rsquo;ll get you on the floor"
@@ -519,10 +548,15 @@ function RsvpPage() {
                   />
                 </div>
                 <div>
-                  <p style={{ ...eyebrow, color: LAV_DEEP, letterSpacing: "0.3em", fontSize: 11 }}>
+                  <label
+                    htmlFor="rsvp-message"
+                    className="block"
+                    style={{ ...eyebrow, color: LAV_DEEP, letterSpacing: "0.3em", fontSize: 11 }}
+                  >
                     {t.rsvp.message}
-                  </p>
+                  </label>
                   <textarea
+                    id="rsvp-message"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     rows={4}
@@ -537,11 +571,14 @@ function RsvpPage() {
                 </div>
               </section>
 
-              {err && (
-                <p className="font-sans" style={{ fontSize: 14, color: "#8b3a2f" }}>
-                  {err}
-                </p>
-              )}
+              <div role="alert" aria-live="polite">
+                {err && (
+                  <p className="font-sans" style={{ fontSize: 14, color: "#7a2f26" }}>
+                    {err}
+                  </p>
+                )}
+              </div>
+
 
               <div className="flex items-center justify-between gap-4">
                 <button

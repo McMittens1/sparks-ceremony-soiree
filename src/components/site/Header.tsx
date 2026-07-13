@@ -44,24 +44,36 @@ export function Header() {
         <button
           onClick={() => goToSection("hero")}
           className="flex items-center gap-2"
-          aria-label="Home"
+          aria-label="Back to top"
         >
-          <span className="font-serif italic text-[22px]" style={{ color: "#2A2520" }}>G</span>
-          <span className="diamond" />
-          <span className="font-serif italic text-[22px]" style={{ color: "#2A2520" }}>A</span>
+          <span className="font-serif italic text-[22px]" style={{ color: "#2A2520" }} aria-hidden="true">G</span>
+          <span className="diamond" aria-hidden="true" />
+          <span className="font-serif italic text-[22px]" style={{ color: "#2A2520" }} aria-hidden="true">A</span>
         </button>
 
-        <nav className="flex items-center gap-[22px] uppercase whitespace-nowrap" style={{ fontSize: 10, letterSpacing: "0.18em" }}>
+        <nav
+          aria-label="Primary"
+          className="flex items-center gap-[22px] uppercase whitespace-nowrap"
+          style={{ fontSize: 10, letterSpacing: "0.18em" }}
+        >
           {NAV.map((n) => {
             const isActive = onHome && active === n.id;
             return (
               <button
                 key={n.id}
                 onClick={() => goToSection(n.id)}
-                className="transition-colors py-2"
-                style={{ color: isActive ? "#8779A3" : "#4A4238" }}
+                aria-current={isActive ? "location" : undefined}
+                className="relative transition-colors py-2"
+                style={{ color: isActive ? "#4C4066" : "#2A2520" }}
               >
                 {t.nav[n.key]}
+                {isActive && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute left-0 right-0"
+                    style={{ bottom: 0, height: 1, background: "#4C4066" }}
+                  />
+                )}
               </button>
             );
           })}
@@ -75,11 +87,11 @@ export function Header() {
           </Link>
           <button
             onClick={() => setLang(lang === "en" ? "es" : "en")}
-            className="ml-1 px-1 transition-colors hover:text-ink"
-            style={{ fontSize: 9, color: "#A39680" }}
-            aria-label={t.common.language}
+            className="ml-1 px-1 transition-colors"
+            style={{ fontSize: 10, color: "#4C4066" }}
+            aria-label={`${t.common.language}: ${lang === "en" ? "switch to Spanish" : "switch to English"}`}
           >
-            {lang === "en" ? "EN / ES" : "ES / EN"}
+            <span aria-hidden="true">{lang === "en" ? "EN / ES" : "ES / EN"}</span>
           </button>
         </nav>
       </div>

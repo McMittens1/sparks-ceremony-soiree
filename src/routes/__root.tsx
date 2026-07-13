@@ -121,8 +121,9 @@ function RootComponent() {
           className="min-h-screen flex flex-col"
           style={{ marginLeft: isHome ? 52 : 0 }}
         >
+          <a href="#main-content" className="skip-link">Skip to main content</a>
           {!isRsvp && <Header />}
-          <main className="flex-1"><Outlet /></main>
+          <main id="main-content" tabIndex={-1} className="flex-1"><Outlet /></main>
           {!isRsvp && <Footer />}
         </div>
       </LanguageProvider>
