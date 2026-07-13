@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import favorite from "@/assets/engagement/Favorite.jpg.asset.json";
+import barnSunset from "@/assets/venue/sparks-barn-sunset.jpg.asset.json";
 
 export function HeroSection() {
   return (
