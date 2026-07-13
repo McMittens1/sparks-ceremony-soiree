@@ -66,6 +66,10 @@ const eyebrow: React.CSSProperties = {
   margin: "0 0 8px",
 };
 
+// Feature flag: when false, the RSVP form is shown in a read-only preview
+// state with a banner and all inputs disabled. Flip to true when RSVPs open.
+const RSVP_OPEN = false;
+
 function RsvpPage() {
   const t = useT();
   const search = useSearch({ from: "/rsvp" });
@@ -91,6 +95,7 @@ function RsvpPage() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
+    if (!RSVP_OPEN) return;
     if (search.g && stage === "lookup") loadSlug(search.g);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search.g]);
