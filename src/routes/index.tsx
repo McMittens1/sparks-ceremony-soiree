@@ -353,7 +353,7 @@ function Home() {
           </div>
 
           <div
-            className="grid"
+            className="grid rs-stack"
             style={{ marginTop: 70, gridTemplateColumns: "5fr 7fr", gap: 64 }}
           >
             <div>
