@@ -221,10 +221,14 @@ function Home() {
             <img
               src={favorite.url}
               alt="Geovanni and Addison"
-              className="h-full w-full object-cover border"
+              className="h-full w-full object-cover border hero-image-reveal"
               style={{ borderColor: HAIRLINE }}
               loading="eager"
               fetchPriority="high"
+              ref={(el) => {
+                if (!el) return;
+                requestAnimationFrame(() => el.classList.add("is-in"));
+              }}
             />
           </div>
         </div>
