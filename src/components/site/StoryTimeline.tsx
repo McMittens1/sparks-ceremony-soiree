@@ -113,15 +113,15 @@ function DatedRow({
             height: 640,
           }}
         >
-          <Reveal variant={flip ? "right" : "left"} className="relative photo-zoom" style={undefined as never}>
+          <div className="relative photo-zoom" style={{ flex: "0 0 62%" }}>
             <img
               src={main}
               alt=""
               loading="lazy"
               className="w-full h-full object-cover border"
-              style={{ borderColor: "#E1D6C3", height: 640 }}
+              style={{ borderColor: "#E1D6C3" }}
             />
-          </Reveal>
+          </div>
           {rest.length > 0 && (
             <div className="flex-1 min-w-0 flex flex-col gap-3">
               {rest.map((src, j) => (
