@@ -1,9 +1,10 @@
 import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Countdown } from "@/components/site/Countdown";
 import { StoryTimeline } from "@/components/site/StoryTimeline";
 import { WeddingParty } from "@/components/site/WeddingParty";
 import { DiamondDivider } from "@/components/site/DiamondDivider";
+import { Reveal } from "@/components/site/Reveal";
 import { SITE } from "@/lib/site";
 import { REGISTRY, HOTELS, FAQ_LOGISTICS, FAQ_GUESTS } from "@/lib/wedding-data";
 import favorite from "@/assets/engagement/Favorite.jpg.asset.json";
@@ -52,7 +53,7 @@ function SectionHeader({
   subheadColor?: string;
 }) {
   return (
-    <>
+    <Reveal variant="blur">
       <p
         className="uppercase font-sans"
         style={{ fontSize: 12, letterSpacing: "0.4em", color: eyebrowColor, margin: "0 0 18px" }}
@@ -76,7 +77,7 @@ function SectionHeader({
       >
         {subhead}
       </p>
-    </>
+    </Reveal>
   );
 }
 
@@ -220,10 +221,14 @@ function Home() {
             <img
               src={favorite.url}
               alt="Geovanni and Addison"
-              className="h-full w-full object-cover border"
+              className="h-full w-full object-cover border hero-image-reveal"
               style={{ borderColor: HAIRLINE }}
               loading="eager"
               fetchPriority="high"
+              ref={(el) => {
+                if (!el) return;
+                requestAnimationFrame(() => el.classList.add("is-in"));
+              }}
             />
           </div>
         </div>
@@ -939,6 +944,7 @@ function Home() {
                 {col.items.map((item, i) => (
                   <details
                     key={i}
+                    data-anim
                     className="border-t"
                     style={{ padding: "20px 0", borderColor: HAIRLINE }}
                     open={item.open}
@@ -949,7 +955,8 @@ function Home() {
                     >
                       {item.q}
                       <span
-                        className="flex-shrink-0"
+                        aria-hidden
+                        className="chev flex-shrink-0"
                         style={{
                           width: 6,
                           height: 6,
@@ -959,12 +966,14 @@ function Home() {
                         }}
                       />
                     </summary>
-                    <p
-                      className="font-sans"
-                      style={{ fontSize: 15, lineHeight: 1.75, color: BODY, margin: "14px 0 0" }}
-                    >
-                      {item.a}
-                    </p>
+                    <div className="faq-body">
+                      <p
+                        className="font-sans"
+                        style={{ fontSize: 15, lineHeight: 1.75, color: BODY, margin: "14px 0 0" }}
+                      >
+                        {item.a}
+                      </p>
+                    </div>
                   </details>
                 ))}
               </div>

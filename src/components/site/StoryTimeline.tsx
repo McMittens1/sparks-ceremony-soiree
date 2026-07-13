@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react";
+import { Reveal } from "@/components/site/Reveal";
 import fav from "@/assets/engagement/Favorite.jpg.asset.json";
 import eng74 from "@/assets/engagement/Geo_AddiEngagement-74.jpg.asset.json";
 import eng06 from "@/assets/engagement/Geo_AddiEngagement-06.jpg.asset.json";
@@ -111,7 +113,7 @@ function DatedRow({
             height: 640,
           }}
         >
-          <div className="relative" style={{ flex: "0 0 62%" }}>
+          <div className="relative photo-zoom" style={{ flex: "0 0 62%" }}>
             <img
               src={main}
               alt=""
@@ -123,14 +125,15 @@ function DatedRow({
           {rest.length > 0 && (
             <div className="flex-1 min-w-0 flex flex-col gap-3">
               {rest.map((src, j) => (
-                <img
-                  key={j}
-                  src={src}
-                  alt=""
-                  loading="lazy"
-                  className="flex-1 min-h-0 w-full object-cover border"
-                  style={{ borderColor: "#E1D6C3" }}
-                />
+                <div key={j} className="flex-1 min-h-0 photo-zoom">
+                  <img
+                    src={src}
+                    alt=""
+                    loading="lazy"
+                    className="w-full h-full object-cover border"
+                    style={{ borderColor: "#E1D6C3" }}
+                  />
+                </div>
               ))}
             </div>
           )}
@@ -138,20 +141,7 @@ function DatedRow({
 
         {/* Gutter with hairline + diamond */}
         <div className="flex items-center justify-center" style={{ order: 2 }}>
-          <div className="relative" style={{ width: 1, height: "70%", background: "#E1D6C3" }}>
-            <span
-              className="absolute"
-              aria-hidden
-              style={{
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%) rotate(45deg)",
-                width: 7,
-                height: 7,
-                background: "#8779A3",
-              }}
-            />
-          </div>
+          <StoryGutter />
         </div>
 
         {/* Text column */}
@@ -209,56 +199,105 @@ function DatedRow({
   );
 }
 
+function StoryGutter() {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === "undefined") {
+      el.classList.add("is-in");
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            el.classList.add("is-in");
+            io.disconnect();
+          }
+        }
+      },
+      { threshold: 0.25 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return (
+    <div className="relative" style={{ width: 1, height: "70%" }}>
+      <div
+        ref={ref}
+        className="story-line absolute inset-0"
+        style={{ background: "#E1D6C3" }}
+      />
+      <span
+        className="absolute diamond-in is-in"
+        aria-hidden
+        style={{
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%) rotate(45deg)",
+          width: 7,
+          height: 7,
+          background: "#8779A3",
+        }}
+      />
+    </div>
+  );
+}
+
 function MontageRow({ entry }: { entry: Montage }) {
   return (
-    <div className="text-center" style={{ marginTop: 110 }}>
-      <p
-        className="uppercase font-sans"
-        style={{ fontSize: 11, letterSpacing: "0.4em", color: "#A39680", marginBottom: 16 }}
-      >
-        — {entry.label} —
-      </p>
-      <h3
-        className="font-serif italic"
-        style={{
-          fontWeight: 500,
-          fontSize: "clamp(32px, 5vw, 52px)",
-          color: "#2A2520",
-          margin: "0 0 20px",
-        }}
-      >
-        {entry.title}
-      </h3>
-      <p
-        className="font-sans mx-auto"
-        style={{
-          fontSize: 17,
-          lineHeight: 1.8,
-          color: "#4A4238",
-          maxWidth: 640,
-          margin: "0 auto 44px",
-        }}
-      >
-        {entry.body}
-      </p>
-      <div
-        className="grid gap-3.5 text-left"
-        style={{
-          gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
-          gridAutoRows: 200,
-        }}
-      >
-        {entry.photos.map((src, i) => (
-          <img
-            key={i}
-            src={src}
-            alt=""
-            loading="lazy"
-            className="w-full h-full object-cover border"
-            style={{ borderColor: "#E1D6C3" }}
-          />
-        ))}
+    <Reveal variant="up" className="text-center block" >
+      <div style={{ marginTop: 110 }}>
+        <p
+          className="uppercase font-sans"
+          style={{ fontSize: 11, letterSpacing: "0.4em", color: "#A39680", marginBottom: 16 }}
+        >
+          — {entry.label} —
+        </p>
+        <h3
+          className="font-serif italic"
+          style={{
+            fontWeight: 500,
+            fontSize: "clamp(32px, 5vw, 52px)",
+            color: "#2A2520",
+            margin: "0 0 20px",
+          }}
+        >
+          {entry.title}
+        </h3>
+        <p
+          className="font-sans mx-auto"
+          style={{
+            fontSize: 17,
+            lineHeight: 1.8,
+            color: "#4A4238",
+            maxWidth: 640,
+            margin: "0 auto 44px",
+          }}
+        >
+          {entry.body}
+        </p>
+        <div
+          className="grid gap-3.5 text-left"
+          style={{
+            gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+            gridAutoRows: 200,
+          }}
+        >
+          {entry.photos.map((src, i) => (
+            <div key={i} className="photo-zoom w-full h-full">
+              <img
+                src={src}
+                alt=""
+                loading="lazy"
+                className="w-full h-full object-cover border"
+                style={{ borderColor: "#E1D6C3" }}
+              />
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
+    </Reveal>
   );
 }
