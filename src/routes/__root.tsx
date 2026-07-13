@@ -117,12 +117,12 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
         {isHome && (
-          <div className="hidden md:block">
+          <div className="hidden xl:block">
             <Spine />
           </div>
         )}
         <div
-          className={`min-h-screen flex flex-col ${isHome ? "md:ml-[52px]" : ""}`}
+          className={`min-h-screen flex flex-col ${isHome ? "xl:ml-[52px]" : ""}`}
         >
           <a href="#main-content" className="skip-link">Skip to main content</a>
           {!isRsvp && <Header />}
