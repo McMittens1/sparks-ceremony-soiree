@@ -1,34 +1,12 @@
 import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
-import { useEffect, useRef, useState, useCallback } from "react";
-import { useServerFn } from "@tanstack/react-start";
-import { useT } from "@/i18n/context";
-import { SITE } from "@/lib/site";
-import { Reveal } from "@/components/site/Reveal";
+import { useEffect, useState } from "react";
 import { Countdown } from "@/components/site/Countdown";
-import { PhotoUploadModal } from "@/components/site/PhotoUploadModal";
-import { Lightbox } from "@/components/site/Lightbox";
-import { SectionRail } from "@/components/site/SectionRail";
-import { Parallax } from "@/components/site/Parallax";
-import { SplitText } from "@/components/site/SplitText";
-import { Magnetic } from "@/components/site/Magnetic";
 import { StoryTimeline } from "@/components/site/StoryTimeline";
-import { listApprovedPhotos, type GalleryPhoto } from "@/lib/photos.functions";
-import { REGISTRY as registryItems, PARTY } from "@/lib/wedding-data";
-
+import { WeddingParty } from "@/components/site/WeddingParty";
+import { DiamondDivider } from "@/components/site/DiamondDivider";
+import { SITE } from "@/lib/site";
+import { REGISTRY, HOTELS, FAQ_LOGISTICS, FAQ_GUESTS } from "@/lib/wedding-data";
 import favorite from "@/assets/engagement/Favorite.jpg.asset.json";
-import eng74 from "@/assets/engagement/Geo_AddiEngagement-74.jpg.asset.json";
-import eng06 from "@/assets/engagement/Geo_AddiEngagement-06.jpg.asset.json";
-import eng94 from "@/assets/engagement/Geo_AddiEngagement-94.jpg.asset.json";
-import eng82 from "@/assets/engagement/Geo_AddiEngagement-82.jpg.asset.json";
-import eng75 from "@/assets/engagement/Geo_AddiEngagement-75.jpg.asset.json";
-import eng27 from "@/assets/engagement/Geo_AddiEngagement-27.jpg.asset.json";
-import eng19 from "@/assets/engagement/Geo_AddiEngagement-19.jpg.asset.json";
-import eng15 from "@/assets/engagement/Geo_AddiEngagement-15.jpg.asset.json";
-import eng13 from "@/assets/engagement/Geo_AddiEngagement-13.jpg.asset.json";
-import eng10 from "@/assets/engagement/Geo_AddiEngagement-10.jpg.asset.json";
-const hero = favorite.url;
-const florals = eng06.url;
-const engagementStrip = [eng74, eng94, eng82, eng75, eng27, eng19, eng15, eng13, eng10];
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -46,56 +24,67 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
+const HAIRLINE = "#E1D6C3";
+const INK = "#2A2520";
+const IVORY = "#F8F4EC";
+const LAV = "#8779A3";
+const LAV_DEEP = "#4C4066";
+const TAN = "#A39680";
+const TAN_DEEP = "#6B5F49";
+const GOLD = "#D9C9A0";
+const BODY = "#4A4238";
+const SOFT = "#6E6255";
+
+/** Section header used by every numbered section. */
+function SectionHeader({
+  eyebrow,
+  title,
+  subhead,
+  eyebrowColor = TAN_DEEP,
+  titleColor = INK,
+  subheadColor = SOFT,
+}: {
+  eyebrow: string;
+  title: string;
+  subhead: string;
+  eyebrowColor?: string;
+  titleColor?: string;
+  subheadColor?: string;
+}) {
+  return (
+    <>
+      <p
+        className="uppercase font-sans"
+        style={{ fontSize: 12, letterSpacing: "0.4em", color: eyebrowColor, margin: "0 0 18px" }}
+      >
+        {eyebrow}
+      </p>
+      <h2
+        className="font-serif italic"
+        style={{
+          fontWeight: 500,
+          fontSize: "clamp(44px, 7vw, 76px)",
+          color: titleColor,
+          margin: 0,
+        }}
+      >
+        {title}
+      </h2>
+      <p
+        className="font-serif italic"
+        style={{ fontSize: 22, color: subheadColor, margin: "18px 0 0" }}
+      >
+        {subhead}
+      </p>
+    </>
+  );
+}
 
 function Home() {
-  const t = useT();
   const location = useLocation();
-  const [uploadOpen, setUploadOpen] = useState(false);
-  const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const loadPhotos = useServerFn(listApprovedPhotos);
-  const heroImgRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => { loadPhotos().then(setPhotos).catch(() => {}); }, [loadPhotos]);
-
-  const openLightbox = useCallback((index: number) => setLightboxIndex(index), []);
-  const closeLightbox = useCallback(() => setLightboxIndex(null), []);
-  const nextPhoto = useCallback(() => {
-    setLightboxIndex((i) => (i === null || photos.length === 0 ? null : (i + 1) % photos.length));
-  }, [photos.length]);
-  const prevPhoto = useCallback(() => {
-    setLightboxIndex((i) => (i === null || photos.length === 0 ? null : (i - 1 + photos.length) % photos.length));
-  }, [photos.length]);
-
-  // Cursor-linked parallax on the hero image — gated so it doesn't fight the entrance animation
   useEffect(() => {
-    const el = heroImgRef.current;
-    if (!el) return;
-    const parent = el.parentElement;
-    if (!parent) return;
-    const onMove = (e: MouseEvent) => {
-      const rect = el.getBoundingClientRect();
-      const cx = (e.clientX - rect.left) / rect.width - 0.5;
-      const cy = (e.clientY - rect.top) / rect.height - 0.5;
-      el.style.transform = `translate3d(${cx * -14}px, ${cy * -14}px, 0) scale(1.04)`;
-    };
-    const onLeave = () => { el.style.transform = ""; };
-    const timer = setTimeout(() => {
-      parent.addEventListener("mousemove", onMove);
-      parent.addEventListener("mouseleave", onLeave);
-    }, 900);
-    return () => {
-      clearTimeout(timer);
-      parent.removeEventListener("mousemove", onMove);
-      parent.removeEventListener("mouseleave", onLeave);
-    };
-  }, []);
-
-  // Scroll to hash on load / hash change
-  useEffect(() => {
-    const hash = location.hash;
-    if (!hash) return;
-    const id = hash.replace(/^#/, "");
+    if (!location.hash) return;
+    const id = location.hash.replace(/^#/, "");
     requestAnimationFrame(() => {
       const el = document.getElementById(id);
       if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -103,606 +92,876 @@ function Home() {
   }, [location.hash]);
 
   return (
-    <div id="home">
-      <SectionRail />
-      {/* ============ HERO — editorial framed portrait ============ */}
-      <section className="relative pt-12 pb-16 sm:pt-16 sm:pb-24 lg:pt-20 lg:pb-28 overflow-hidden">
-        <div className="mx-auto max-w-[1400px] px-6 lg:px-12">
-          {/* Kicker */}
-          <p className="text-center text-[10px] uppercase tracking-[0.5em] text-accent animate-rise" style={{ animationDelay: "0.05s" }}>
-            {t.home.kicker}
-          </p>
-
-          {/* Editorial name block — overlaps the photo on desktop */}
-          <h1
-            aria-label="Geovanni and Addison"
-            className="relative z-10 mt-6 sm:mt-8 editorial-heading leading-[0.85] text-center lg:text-left"
+    <div>
+      {/* ============ HERO ============ */}
+      <section
+        id="hero"
+        style={{
+          height: "calc(100vh - 73px)",
+          minHeight: 560,
+          display: "flex",
+          flexDirection: "column",
+          containerType: "size",
+        }}
+      >
+        <div
+          className="flex-1 min-h-0 flex items-stretch justify-center"
+          style={{
+            gap: "clamp(28px, 5cqw, 72px)",
+            padding: "0 clamp(20px, 5cqw, 64px)",
+            maxWidth: 1800,
+            margin: "0 auto",
+            width: "100%",
+            boxSizing: "border-box",
+          }}
+        >
+          <div
+            className="flex flex-col justify-center min-w-0"
+            style={{ flex: "0 1 440px" }}
           >
-            <span
-              className="block text-[14vw] sm:text-[12vw] lg:text-[9vw] xl:text-[10rem] animate-rise lg:pl-[4%]"
-              style={{ animationDelay: "0.15s" }}
+            <p
+              className="uppercase font-sans"
+              style={{
+                fontSize: "clamp(9px, 1.3cqh, 12px)",
+                letterSpacing: "0.42em",
+                color: TAN,
+                margin: "0 0 clamp(10px, 2cqh, 22px)",
+              }}
             >
-              Geovanni
-            </span>
-            <span
-              className="block italic text-primary-soft text-[12vw] sm:text-[10vw] lg:text-[7vw] xl:text-[8rem] animate-rise lg:pl-[38%] -mt-2 lg:-mt-4"
-              style={{ animationDelay: "0.3s" }}
-            >
-              &amp;
-            </span>
-            <span
-              className="block text-[14vw] sm:text-[12vw] lg:text-[9vw] xl:text-[10rem] animate-rise lg:pl-[30%] -mt-2 lg:-mt-6"
-              style={{ animationDelay: "0.45s" }}
-            >
-              Addison
-            </span>
-          </h1>
-
-          {/* Framed portrait — pulls up under the names on desktop */}
-          <div className="relative mt-6 sm:mt-10 lg:-mt-10 animate-rise" style={{ animationDelay: "0.55s" }}>
-            {/* accent block behind */}
-            <div aria-hidden className="absolute -bottom-5 -left-5 sm:-bottom-8 sm:-left-8 w-24 h-24 sm:w-40 sm:h-40 bg-accent -z-10" />
-            <div className="relative bg-background p-2 sm:p-3 shadow-2xl border border-accent/25 overflow-hidden">
-              <div className="relative aspect-[5/4] sm:aspect-[4/3] lg:aspect-[16/10] w-full overflow-hidden bg-muted">
-                <div ref={heroImgRef} className="absolute inset-0 transition-transform duration-500 ease-out will-change-transform">
-                  <img
-                    src={hero}
-                    alt="Geovanni Moreno and Addison Hillman."
-                    className="h-full w-full object-cover"
-                    loading="eager"
-                    fetchPriority="high"
-                    width={1920}
-                    height={1200}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Museum-plate caption bar */}
-          <div className="mt-8 sm:mt-10 grid gap-6 sm:grid-cols-3 sm:items-center animate-rise" style={{ animationDelay: "0.7s" }}>
-            <div className="text-center sm:text-left">
-              <p className="text-[10px] uppercase tracking-[0.3em] text-foreground/60 font-semibold">
-                {t.home.title}
-              </p>
-              <p className="mt-2 font-serif italic text-xl sm:text-2xl text-primary leading-tight">
-                {t.home.dateLine}
-              </p>
-            </div>
-            <div className="text-center text-[10px] uppercase tracking-[0.35em] text-foreground/70 sm:border-x sm:border-accent/25 sm:px-6">
-              <a href={SITE.mapLink} target="_blank" rel="noopener" className="link-underline">
-                Sparks' Barn
-                <span className="mx-2 text-accent">·</span>
-                Louisville, NE
-              </a>
-            </div>
-            <div className="flex flex-wrap items-center justify-center sm:justify-end gap-5">
-              <Magnetic strength={0.25}>
-                <Link
-                  to="/rsvp"
-                  search={{}}
-                  className="inline-block border border-primary bg-primary text-primary-foreground px-7 py-3.5 text-[10px] uppercase tracking-[0.3em] hover:bg-transparent hover:text-primary transition-colors"
-                >
-                  {t.home.rsvpCta} →
-                </Link>
-              </Magnetic>
-              <a
-                href="#countdown"
-                className="link-underline text-[10px] uppercase tracking-[0.3em] text-primary"
+              The Wedding Of
+            </p>
+            <h1 style={{ margin: 0, fontWeight: "normal" }}>
+              <div
+                className="font-serif"
+                style={{
+                  fontWeight: 500,
+                  fontSize: "clamp(30px, 9.5cqh, 92px)",
+                  lineHeight: 1,
+                  color: INK,
+                }}
               >
-                {t.home.detailsCta} →
+                Geovanni
+              </div>
+              <div
+                className="font-serif"
+                style={{
+                  fontWeight: 500,
+                  fontSize: "clamp(30px, 9.5cqh, 92px)",
+                  lineHeight: 1.05,
+                  color: INK,
+                  marginTop: "clamp(2px, 0.6cqh, 8px)",
+                }}
+              >
+                <span style={{ fontStyle: "italic", color: LAV }}>&amp;</span> Addison
+              </div>
+            </h1>
+            <p
+              className="font-serif italic"
+              style={{
+                margin: "clamp(14px, 3cqh, 32px) 0 0",
+                fontSize: "clamp(15px, 2.6cqh, 24px)",
+                color: LAV_DEEP,
+              }}
+            >
+              October 10, 2026
+            </p>
+            <p
+              className="uppercase font-sans"
+              style={{
+                margin: "clamp(4px, 1cqh, 10px) 0 0",
+                fontSize: "clamp(10px, 1.3cqh, 13px)",
+                letterSpacing: "0.22em",
+                color: BODY,
+              }}
+            >
+              Sparks&rsquo; Barn <span style={{ color: TAN }}>·</span> Louisville, NE
+            </p>
+            <div
+              className="flex items-center flex-wrap"
+              style={{
+                marginTop: "clamp(16px, 3cqh, 32px)",
+                gap: "clamp(16px, 2.5cqw, 26px)",
+              }}
+            >
+              <Link
+                to="/rsvp"
+                search={{}}
+                className="inline-block uppercase font-sans"
+                style={{
+                  background: INK,
+                  color: IVORY,
+                  padding: "clamp(10px, 1.8cqh, 16px) clamp(20px, 3cqw, 32px)",
+                  fontSize: "clamp(9px, 1.3cqh, 11px)",
+                  letterSpacing: "0.26em",
+                  border: `1px solid ${INK}`,
+                }}
+              >
+                RSVP now
+              </Link>
+              <a
+                href="#day"
+                className="uppercase font-sans"
+                style={{
+                  fontSize: "clamp(9px, 1.2cqh, 11px)",
+                  letterSpacing: "0.2em",
+                  color: LAV_DEEP,
+                  borderBottom: `1px solid ${LAV_DEEP}`,
+                  paddingBottom: 2,
+                }}
+              >
+                See details
               </a>
             </div>
           </div>
-
-          {/* Intro paragraph */}
-          <p className="mx-auto mt-10 sm:mt-14 max-w-2xl text-center text-foreground/75 leading-relaxed animate-rise" style={{ animationDelay: "0.85s" }}>
-            {t.home.intro}
-          </p>
+          <div
+            className="min-w-0"
+            style={{ flex: "1 1 560px", padding: "clamp(20px, 4cqh, 40px) 0", boxSizing: "border-box" }}
+          >
+            <img
+              src={favorite.url}
+              alt="Geovanni and Addison"
+              className="h-full w-full object-cover border"
+              style={{ borderColor: HAIRLINE }}
+              loading="eager"
+              fetchPriority="high"
+            />
+          </div>
         </div>
       </section>
 
-
-      {/* ============ COUNTDOWN — hero moment ============ */}
-      <section id="countdown" className="relative border-y border-accent/20 bg-gradient-to-b from-background via-accent/5 to-background overflow-hidden">
-        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-          <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[800px] h-[800px] rounded-full bg-primary/5 blur-3xl animate-float" />
-        </div>
-        <div className="mx-auto max-w-[1500px] px-6 lg:px-12 py-20 sm:py-28 lg:py-32">
-          <Reveal>
-            <div className="flex flex-col items-center text-center">
-              <p className="text-[10px] uppercase tracking-[0.4em] text-accent">01 / Countdown</p>
-              <SplitText
-                as="h2"
-                text={t.home.countdownLabel}
-                className="mt-6 editorial-heading text-5xl sm:text-7xl md:text-8xl lg:text-[9rem] leading-[0.9] block"
-                stagger={70}
-              />
-              <div className="mt-6 h-px w-24 bg-accent draw-line origin-center" />
-            </div>
-          </Reveal>
-          <Reveal delay={200}>
-            <div className="mt-14 sm:mt-20">
-              <Countdown />
-            </div>
-          </Reveal>
+      {/* ============ COUNTDOWN ============ */}
+      <section
+        id="countdown"
+        className="text-center border-t"
+        style={{ padding: "72px 32px", borderColor: HAIRLINE }}
+      >
+        <p
+          className="uppercase font-sans"
+          style={{ fontSize: 12, letterSpacing: "0.4em", color: TAN, margin: "0 0 40px" }}
+        >
+          I · Counting Down
+        </p>
+        <Countdown />
+        <div className="max-w-[600px] mx-auto" style={{ marginTop: 48 }}>
+          <DiamondDivider />
         </div>
       </section>
-
 
       {/* ============ OUR STORY ============ */}
-      <section id="story" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-20 border-t border-accent/20">
-        <Reveal>
-          <p className="text-[10px] uppercase tracking-[0.4em] text-accent">02 / Our Story</p>
-        </Reveal>
-        <SplitText as="h2" text={t.story.title} className="mt-4 editorial-heading text-5xl sm:text-6xl md:text-7xl lg:text-8xl max-w-4xl block" stagger={70} />
-        <Reveal delay={200}>
-          <p className="mt-6 max-w-xl text-foreground/70 text-lg font-serif italic">{t.story.lead}</p>
-        </Reveal>
-        <div className="mt-16">
-          <StoryTimeline />
-        </div>
+      <section
+        id="story"
+        className="border-t"
+        style={{
+          padding: "100px 64px",
+          maxWidth: 1500,
+          margin: "0 auto",
+          borderColor: HAIRLINE,
+        }}
+      >
+        <SectionHeader
+          eyebrow="II · Our Story"
+          title="Our Story"
+          subhead="How we got from a first hello to forever."
+        />
+        <DiamondDivider className="mt-9" />
+        <StoryTimeline />
       </section>
 
+      {/* ============ THE DAY ============ */}
+      <section
+        id="day"
+        className="border-t"
+        style={{ padding: "100px 64px", background: LAV_DEEP, borderColor: HAIRLINE }}
+      >
+        <div className="mx-auto" style={{ maxWidth: 1400 }}>
+          <p
+            className="uppercase font-sans"
+            style={{ fontSize: 12, letterSpacing: "0.4em", color: GOLD, margin: "0 0 18px" }}
+          >
+            III · The Day
+          </p>
+          <h2
+            className="font-serif italic"
+            style={{ fontWeight: 500, fontSize: "clamp(44px, 7vw, 76px)", color: IVORY, margin: 0 }}
+          >
+            The Day
+          </h2>
+          <p
+            className="font-serif italic"
+            style={{ fontSize: 22, color: "rgba(248,244,236,0.75)", margin: "18px 0 0" }}
+          >
+            Everything happens at Sparks&rsquo; Barn: ceremony, dinner, dancing.
+          </p>
 
-      {/* ============ ENGAGEMENT STRIP ============ */}
-      <section aria-label="Engagement photos" className="py-16 border-t border-accent/20 overflow-hidden">
-        <div className="mx-auto max-w-[1600px] px-6 lg:px-12">
-          <Reveal>
-            <p className="text-[10px] uppercase tracking-[0.4em] text-accent">Engagement · MMXXV</p>
-          </Reveal>
-        </div>
-        <div className="mt-8 flex gap-4 overflow-x-auto snap-x snap-mandatory px-6 lg:px-12 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {engagementStrip.map((img, i) => (
-            <Reveal key={i} variant="scale" delay={i * 60}>
-              <div className="snap-start shrink-0 w-[70vw] sm:w-[38vw] lg:w-[26vw] aspect-[3/4] overflow-hidden group">
-                <img src={img.url} alt="Geovanni and Addison" loading="lazy" className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110" />
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* ============ DETAILS ============ */}
-      <section id="details" className="relative py-20 bg-primary text-primary-foreground overflow-hidden grain">
-
-        <div className="mx-auto max-w-[1600px] px-6 lg:px-12 relative">
-          <Reveal>
-            <p className="text-[10px] uppercase tracking-[0.4em] text-accent">03 / The Day</p>
-          </Reveal>
-          <SplitText as="h2" text={t.details.title} className="mt-4 editorial-heading text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-primary-foreground block" stagger={70} />
-          <Reveal delay={200}>
-            <p className="mt-6 max-w-xl text-primary-foreground/80 text-lg font-serif italic">{t.details.lead}</p>
-          </Reveal>
-
-          {/* Integrated date lockup — draws itself in on scroll */}
-          <Reveal variant="up" delay={280}>
-            <div className="mt-10 flex flex-wrap items-end gap-x-4 gap-y-6 sm:gap-x-8 md:gap-x-10 border-t border-primary-foreground/15 pt-10">
-              {[
-                { n: "10", cap: "Sat" },
-                { n: "10", cap: "Oct" },
-                { n: "26", cap: "MMXXVI" },
-              ].map((d, i) => (
-                <div key={i} className="flex items-end gap-4 sm:gap-8 md:gap-10">
-                  <div className="text-center">
-                    <div className="editorial-heading text-primary-foreground text-[14vw] sm:text-[11vw] md:text-[9vw] lg:text-[8vw] leading-[0.8]">{d.n}</div>
-                    <div className="mt-2 text-[9px] sm:text-[10px] uppercase tracking-[0.35em] sm:tracking-[0.4em] text-accent">{d.cap}</div>
+          <div
+            className="flex items-end flex-wrap"
+            style={{
+              marginTop: 56,
+              gap: "clamp(20px, 5vw, 56px)",
+              borderTop: "1px solid rgba(248,244,236,0.18)",
+              paddingTop: 44,
+            }}
+          >
+            {[
+              { n: "10", cap: "Sat" },
+              { n: "10", cap: "Oct" },
+              { n: "26", cap: "MMXXVI" },
+            ].map((d, i) => (
+              <div key={i} className="flex items-end" style={{ gap: "clamp(20px, 5vw, 56px)" }}>
+                {i > 0 && (
+                  <span
+                    className="font-serif"
+                    style={{ fontSize: 64, color: "rgba(248,244,236,0.35)", paddingBottom: 16 }}
+                  >
+                    ·
+                  </span>
+                )}
+                <div className="text-center">
+                  <div
+                    className="font-serif"
+                    style={{
+                      fontWeight: 500,
+                      fontSize: "clamp(60px, 9vw, 120px)",
+                      color: IVORY,
+                      lineHeight: 0.8,
+                    }}
+                  >
+                    {d.n}
                   </div>
-                  {i < 2 && <span className="editorial-heading text-primary-foreground/40 text-[8vw] sm:text-[6vw] md:text-[5vw] pb-4 sm:pb-6">·</span>}
+                  <div
+                    className="uppercase font-sans"
+                    style={{
+                      marginTop: 10,
+                      fontSize: 11,
+                      letterSpacing: "0.4em",
+                      color: GOLD,
+                    }}
+                  >
+                    {d.cap}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div
+            className="grid"
+            style={{ marginTop: 70, gridTemplateColumns: "5fr 7fr", gap: 64 }}
+          >
+            <div>
+              <p
+                className="uppercase font-sans"
+                style={{ fontSize: 11, letterSpacing: "0.3em", color: GOLD, margin: "0 0 20px" }}
+              >
+                Day-of schedule
+              </p>
+              {[
+                { time: "4:30", label: "Guests arrive" },
+                { time: "5:00", label: "Ceremony" },
+                { time: "5:45", label: "Cocktail hour" },
+                { time: "7:00", label: "Dinner & toasts" },
+                { time: "8:30", label: "First dance & open floor" },
+                { time: "11:30", label: "Send-off" },
+              ].map((s, i, arr) => (
+                <div
+                  key={i}
+                  className="grid items-baseline"
+                  style={{
+                    gridTemplateColumns: "88px 1fr",
+                    gap: 20,
+                    padding: "16px 0",
+                    borderTop: "1px solid rgba(248,244,236,0.15)",
+                    borderBottom: i === arr.length - 1 ? "1px solid rgba(248,244,236,0.15)" : undefined,
+                  }}
+                >
+                  <span className="font-serif italic" style={{ fontSize: 22, color: GOLD }}>
+                    {s.time}
+                  </span>
+                  <span
+                    className="font-sans"
+                    style={{ fontSize: 16, color: "rgba(248,244,236,0.92)" }}
+                  >
+                    {s.label}
+                  </span>
                 </div>
               ))}
             </div>
-
-            <div className="draw-line mt-4 h-px bg-accent origin-left" />
-          </Reveal>
-
-          <div className="mt-12 grid gap-10 lg:grid-cols-12">
-            <div className="lg:col-span-5">
-              <Reveal>
-                <p className="text-[10px] uppercase tracking-[0.35em] text-accent">{t.details.scheduleTitle}</p>
-              </Reveal>
-              <ul className="mt-6">
-                {t.details.schedule.map((s, i) => (
-                  <Reveal key={i} delay={80 + i * 40}>
-                    <li className="grid grid-cols-[80px_1fr] sm:grid-cols-[100px_1fr] gap-4 sm:gap-6 items-baseline py-4 border-t border-primary-foreground/15">
-                      <span className="font-serif italic text-xl sm:text-2xl text-accent tabular-nums">{s.time}</span>
-                      <span className="text-primary-foreground/90 text-base sm:text-lg font-serif">{s.label}</span>
-                    </li>
-
-                  </Reveal>
-                ))}
-              </ul>
-            </div>
-            <div className="lg:col-span-7 grid gap-10 content-start lg:pl-8">
-              <Reveal variant="mask">
-                <div className="aspect-[16/10] overflow-hidden">
-                  <Parallax speed={-0.12} className="h-full w-full">
-                    <img src={eng82.url} alt="Geovanni and Addison" className="h-full w-full object-cover scale-110" />
-                  </Parallax>
-                </div>
-              </Reveal>
-              <Reveal>
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.35em] text-accent">{t.details.dressTitle}</p>
-                  <p className="mt-3 text-primary-foreground/85 leading-relaxed">{t.details.dressBody}</p>
-                </div>
-              </Reveal>
-              <Reveal>
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.35em] text-accent">{t.details.venueTitle}</p>
-                  <p className="mt-3 text-primary-foreground/85 leading-relaxed">{t.details.venueBody}</p>
-                </div>
-              </Reveal>
+            <div className="grid content-start" style={{ gap: 36 }}>
+              <div
+                className="flex items-center justify-center"
+                style={{
+                  aspectRatio: "16 / 10",
+                  background: "rgba(248,244,236,0.06)",
+                  border: "1px dashed rgba(217,201,160,0.5)",
+                }}
+              >
+                <span
+                  className="uppercase font-sans text-center"
+                  style={{ fontSize: 11, letterSpacing: "0.2em", color: GOLD, padding: "0 20px" }}
+                >
+                  Photo needed · the barn
+                </span>
+              </div>
+              <div>
+                <p
+                  className="uppercase font-sans"
+                  style={{ fontSize: 11, letterSpacing: "0.3em", color: GOLD, margin: "0 0 10px" }}
+                >
+                  Dress code
+                </p>
+                <p
+                  className="font-sans"
+                  style={{ fontSize: 16, lineHeight: 1.75, color: "rgba(248,244,236,0.88)", margin: 0 }}
+                >
+                  Cocktail attire in warm neutrals, lavender, or plum. Skip the stilettos, the barn
+                  floor is uneven and the lawn is grass.
+                </p>
+              </div>
+              <div>
+                <p
+                  className="uppercase font-sans"
+                  style={{ fontSize: 11, letterSpacing: "0.3em", color: GOLD, margin: "0 0 10px" }}
+                >
+                  The venue
+                </p>
+                <p
+                  className="font-sans"
+                  style={{ fontSize: 16, lineHeight: 1.75, color: "rgba(248,244,236,0.88)", margin: 0 }}
+                >
+                  Sparks&rsquo; Barn is an open-air barn on farmland outside Louisville, Nebraska.
+                  The ceremony happens outdoors on the lawn, then dinner and dancing move inside
+                  the barn.
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* ============ WEDDING PARTY ============ */}
-      <section id="party" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-20 border-t border-accent/20">
-        <div className="grid gap-12 lg:grid-cols-12">
-          <div className="lg:col-span-4">
-            <Reveal>
-              <p className="text-[10px] uppercase tracking-[0.4em] text-accent">04 / Wedding Party</p>
-            </Reveal>
-            <SplitText as="h2" text={t.party.title} className="mt-4 editorial-heading text-5xl sm:text-6xl md:text-7xl block" stagger={70} />
-            <Reveal delay={200}>
-              <p className="mt-6 max-w-md text-foreground/70 text-lg font-serif italic">{t.party.lead}</p>
-            </Reveal>
-          </div>
-          <div className="lg:col-span-8 space-y-16">
-            {(() => {
-              const featured = PARTY.filter((p) => ["Maid of Honor", "Best Man"].includes(p.role));
-              const bridesmaids = PARTY.filter((p) => p.role === "Bridesmaid");
-              const groomsmen = PARTY.filter((p) => p.role === "Groomsman");
-              const kids = PARTY.filter((p) => ["Flower Girl", "Ring Bearer"].includes(p.role));
-              const ushers = PARTY.filter((p) => p.role === "Usher");
-
-              const initials = (n: string) =>
-                n.split(" ").map((s) => s[0]).slice(0, 2).join("").toUpperCase();
-
-              const Portrait = ({
-                p,
-                size = "md",
-              }: {
-                p: (typeof PARTY)[number];
-                size?: "sm" | "md" | "lg";
-              }) => {
-                const sizeClass =
-                  size === "lg"
-                    ? "text-3xl sm:text-4xl"
-                    : size === "sm"
-                      ? "text-lg"
-                      : "text-2xl";
-                return (
-                  <div className="group">
-                    <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-accent/10 ring-1 ring-accent/20">
-                      {p.photo ? (
-                        <img
-                          src={p.photo}
-                          alt={p.name}
-                          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center">
-                          <span className="editorial-heading text-4xl sm:text-5xl text-accent/60">
-                            {initials(p.name)}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <p className={`mt-4 font-serif italic text-primary ${sizeClass}`}>{p.name}</p>
-                    <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mt-1">
-                      {p.role}
-                    </p>
-                  </div>
-                );
-              };
-
-              return (
-                <>
-                  {/* Featured: Maid of Honor & Best Man */}
-                  {featured.length > 0 && (
-                    <Reveal variant="up">
-                      <div>
-                        <p className="text-[10px] uppercase tracking-[0.35em] text-accent mb-6">Standing closest</p>
-                        <div className="grid gap-8 sm:grid-cols-2">
-                          {featured.map((p) => (
-                            <Portrait key={p.name} p={p} size="lg" />
-                          ))}
-                        </div>
-                      </div>
-                    </Reveal>
-                  )}
-
-                  {/* Bridesmaids */}
-                  {bridesmaids.length > 0 && (
-                    <Reveal variant="up" delay={100}>
-                      <div>
-                        <p className="text-[10px] uppercase tracking-[0.35em] text-accent mb-6">Bridesmaids</p>
-                        <div className="grid gap-6 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-                          {bridesmaids.map((p) => (
-                            <Portrait key={p.name} p={p} size="sm" />
-                          ))}
-                        </div>
-                      </div>
-                    </Reveal>
-                  )}
-
-                  {/* Groomsmen */}
-                  {groomsmen.length > 0 && (
-                    <Reveal variant="up" delay={150}>
-                      <div>
-                        <p className="text-[10px] uppercase tracking-[0.35em] text-accent mb-6">Groomsmen</p>
-                        <div className="grid gap-6 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-                          {groomsmen.map((p) => (
-                            <Portrait key={p.name} p={p} size="sm" />
-                          ))}
-                        </div>
-                      </div>
-                    </Reveal>
-                  )}
-
-                  {/* Flower Girl & Ring Bearer */}
-                  {kids.length > 0 && (
-                    <Reveal variant="up" delay={200}>
-                      <div>
-                        <p className="text-[10px] uppercase tracking-[0.35em] text-accent mb-6">Down the aisle first</p>
-                        <div className="grid gap-6 grid-cols-2 sm:max-w-md">
-                          {kids.map((p) => (
-                            <Portrait key={p.name} p={p} size="sm" />
-                          ))}
-                        </div>
-                      </div>
-                    </Reveal>
-                  )}
-
-                  {/* Ushers */}
-                  {ushers.length > 0 && (
-                    <Reveal delay={250}>
-                      <div className="pt-10 border-t border-accent/20">
-                        <p className="text-[10px] uppercase tracking-[0.35em] text-accent mb-4">Ushers</p>
-                        <p className="text-sm sm:text-base text-foreground/70 leading-relaxed">
-                          {ushers.map((p) => p.name).join(" · ")}
-                        </p>
-                      </div>
-                    </Reveal>
-                  )}
-                </>
-              );
-            })()}
-          </div>
+      <section
+        id="party"
+        className="border-t"
+        style={{
+          padding: "100px 64px",
+          maxWidth: 1500,
+          margin: "0 auto",
+          borderColor: HAIRLINE,
+        }}
+      >
+        <SectionHeader
+          eyebrow="IV · Wedding Party"
+          title="Wedding Party"
+          subhead="The friends and family standing with us that night."
+        />
+        <DiamondDivider className="mt-9" />
+        <div className="mt-16">
+          <WeddingParty />
         </div>
       </section>
 
+      {/* ============ GETTING THERE ============ */}
+      <section
+        id="travel"
+        className="border-t"
+        style={{
+          padding: "100px 64px",
+          maxWidth: 1500,
+          margin: "0 auto",
+          borderColor: HAIRLINE,
+        }}
+      >
+        <SectionHeader
+          eyebrow="V · Getting There"
+          title="Getting There"
+          subhead="Sparks' Barn is in Louisville, Nebraska, about 25 minutes south of Omaha and 40 minutes east of Lincoln."
+        />
+        <DiamondDivider className="mt-9" />
 
-
-      {/* ============ TRAVEL ============ */}
-      <section id="travel" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-20 border-t border-accent/20 overflow-hidden">
-        <div className="grid gap-10 lg:grid-cols-12 items-start">
-          <div className="lg:col-span-5">
-            <Reveal>
-              <p className="text-[10px] uppercase tracking-[0.4em] text-accent">05 / Getting There</p>
-            </Reveal>
-            <SplitText as="h2" text={t.travel.title} className="mt-4 editorial-heading text-5xl sm:text-6xl md:text-7xl block" stagger={60} />
-            <Reveal delay={180}>
-              <p className="mt-6 text-foreground/70 font-serif italic text-lg">{t.travel.lead}</p>
-            </Reveal>
-            <div className="mt-12 space-y-6">
-              <Reveal variant="left">
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.3em] text-accent">{t.travel.addressLabel}</p>
-                  <p className="mt-3 text-foreground/80 leading-relaxed">
-                    <span className="font-serif text-lg text-primary">{SITE.venue}</span>
-                    <br />
-                    <a
-                      href={SITE.mapLink}
-                      target="_blank"
-                      rel="noopener"
-                      className="link-underline"
-                    >
-                      {SITE.address}
-                    </a>
-                  </p>
-                </div>
-              </Reveal>
-              <Reveal variant="left" delay={60}>
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.3em] text-accent">{t.travel.hotelsTitle}</p>
-                  <p className="mt-3 text-foreground/80 leading-relaxed">{t.travel.hotelsBody}</p>
-                  <div className="mt-5 space-y-5">
-                    {t.travel.hotelGroups.map((group) => (
-                      <div key={group.area}>
-                        <p className="text-[11px] uppercase tracking-[0.25em] text-primary/80">
-                          {group.area} <span className="text-foreground/50 normal-case tracking-normal">· {group.drive}</span>
-                        </p>
-                        <ul className="mt-2 space-y-1 text-sm text-foreground/80">
-                          {group.items.map((h) => (
-                            <li key={h.name}>
-                              <span className="text-foreground">{h.name}</span>
-                              <span className="text-foreground/55"> — {h.city}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </Reveal>
-              <Reveal variant="left" delay={120}>
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.3em] text-accent">{t.travel.parkingTitle}</p>
-                  <p className="mt-3 text-foreground/80 leading-relaxed">{t.travel.parkingBody}</p>
-                </div>
-              </Reveal>
-              <Reveal variant="left" delay={180}>
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.3em] text-accent">{t.travel.weatherTitle}</p>
-                  <p className="mt-3 text-foreground/80 leading-relaxed">{t.travel.weatherAdvice}</p>
-                </div>
-              </Reveal>
-            </div>
+        <div
+          className="grid items-start"
+          style={{ marginTop: 64, gridTemplateColumns: "5fr 7fr", gap: 64 }}
+        >
+          <div>
+            <p
+              className="uppercase font-sans"
+              style={{ fontSize: 11, letterSpacing: "0.3em", color: LAV_DEEP, margin: "0 0 14px" }}
+            >
+              Venue address
+            </p>
+            <p
+              className="font-serif italic"
+              style={{ fontSize: 28, color: INK, margin: "0 0 8px", lineHeight: 1.3 }}
+            >
+              Sparks&rsquo; Barn
+            </p>
+            <p
+              className="font-sans"
+              style={{ fontSize: 16, lineHeight: 1.7, color: BODY, margin: 0 }}
+            >
+              13817 108th St
+              <br />
+              Louisville, NE 68037
+            </p>
+            <a
+              href={SITE.mapLink}
+              target="_blank"
+              rel="noopener"
+              className="mt-6 inline-block uppercase font-sans"
+              style={{
+                fontSize: 10,
+                letterSpacing: "0.2em",
+                color: LAV_DEEP,
+                borderBottom: `1px solid ${LAV_DEEP}`,
+                paddingBottom: 3,
+              }}
+            >
+              Open in maps →
+            </a>
           </div>
-          <Reveal variant="right" delay={120} className="lg:col-span-7 lg:col-start-6">
-            <div className="aspect-[4/3] overflow-hidden border border-accent/20 group">
-              <iframe
-                src={SITE.mapEmbed}
-                title={t.travel.mapTitle}
-                className="w-full h-full grayscale group-hover:grayscale-0 transition-all duration-1000"
-                loading="lazy"
-              />
-            </div>
-          </Reveal>
+          <div
+            style={{
+              aspectRatio: "16 / 7",
+              background: "#EFE9DD",
+              border: "1px solid #C9BB9F",
+              overflow: "hidden",
+            }}
+          >
+            <iframe
+              src={SITE.mapEmbed}
+              title="Sparks' Barn on the map"
+              className="w-full h-full"
+              style={{ border: 0, filter: "grayscale(0.2) sepia(0.1)" }}
+              loading="lazy"
+            />
+          </div>
+        </div>
 
+        <div style={{ marginTop: 72 }}>
+          <p
+            className="uppercase font-sans"
+            style={{ fontSize: 11, letterSpacing: "0.3em", color: LAV_DEEP, margin: "0 0 10px" }}
+          >
+            Where to stay
+          </p>
+          <p
+            className="font-sans"
+            style={{ fontSize: 16, lineHeight: 1.75, color: BODY, maxWidth: 760, margin: "0 0 40px" }}
+          >
+            We haven&rsquo;t blocked rooms anywhere. Most out-of-town guests stay in Lincoln or
+            Omaha, here are well-known options in each area.
+          </p>
+          <div className="grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: 48 }}>
+            {HOTELS.map((group) => (
+              <div key={group.area}>
+                <p
+                  className="font-serif italic"
+                  style={{ fontSize: 22, color: INK, margin: "0 0 4px" }}
+                >
+                  {group.area}
+                </p>
+                <p
+                  className="uppercase font-sans"
+                  style={{ fontSize: 10, letterSpacing: "0.2em", color: TAN, margin: "0 0 20px" }}
+                >
+                  {group.drive}
+                </p>
+                {group.items.map((h) => (
+                  <div
+                    key={h.name}
+                    className="border-t"
+                    style={{ padding: "14px 0", borderColor: HAIRLINE }}
+                  >
+                    <p className="font-sans" style={{ fontSize: 15, color: INK, margin: 0 }}>
+                      {h.name}
+                    </p>
+                    <p
+                      className="font-sans"
+                      style={{ fontSize: 12, color: TAN_DEEP, margin: "4px 0 0" }}
+                    >
+                      {h.city}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
 
+        <div
+          className="grid border-t"
+          style={{
+            marginTop: 72,
+            gridTemplateColumns: "1fr 1fr",
+            gap: 64,
+            paddingTop: 48,
+            borderColor: HAIRLINE,
+          }}
+        >
+          <div>
+            <p
+              className="uppercase font-sans"
+              style={{ fontSize: 11, letterSpacing: "0.3em", color: LAV_DEEP, margin: "0 0 10px" }}
+            >
+              Parking
+            </p>
+            <p
+              className="font-sans"
+              style={{ fontSize: 16, lineHeight: 1.75, color: BODY, margin: 0 }}
+            >
+              Free on-site parking. You can leave a car overnight if you&rsquo;re getting a ride home.
+            </p>
+          </div>
+          <div>
+            <p
+              className="uppercase font-sans"
+              style={{ fontSize: 11, letterSpacing: "0.3em", color: LAV_DEEP, margin: "0 0 10px" }}
+            >
+              What to pack
+            </p>
+            <p
+              className="font-sans"
+              style={{ fontSize: 16, lineHeight: 1.75, color: BODY, margin: 0 }}
+            >
+              The ceremony is outdoors and the barn cools off fast after sunset. Bring a light
+              jacket or wrap and shoes you can walk on grass in.
+            </p>
+          </div>
         </div>
       </section>
 
       {/* ============ PHOTOS ============ */}
-      <section id="photos" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-20">
-        <div className="flex flex-wrap items-end justify-between gap-6">
-          <div>
-            <Reveal>
-              <p className="text-[10px] uppercase tracking-[0.4em] text-accent">06 / Photos</p>
-            </Reveal>
-            <SplitText as="h2" text={t.photos.title} className="mt-4 editorial-heading text-5xl sm:text-6xl md:text-7xl lg:text-8xl block" stagger={70} />
-            <Reveal delay={200}>
-              <p className="mt-6 max-w-xl text-foreground/70 text-lg font-serif italic">{t.photos.lead}</p>
-            </Reveal>
-          </div>
-          {/* Upload button hidden pre-wedding; re-enable closer to the day. */}
-        </div>
+      <section
+        id="photos"
+        className="border-t"
+        style={{
+          padding: "100px 64px",
+          maxWidth: 1500,
+          margin: "0 auto",
+          borderColor: HAIRLINE,
+        }}
+      >
+        <SectionHeader
+          eyebrow="VI · Photos"
+          title="Photos"
+          subhead="A shared gallery, coming after the wedding. We'll open uploads closer to the day."
+        />
+        <DiamondDivider className="mt-9" />
 
-        {photos.length === 0 ? (
-          <Reveal>
-            <div className="mt-12 aspect-[16/6] border border-dashed border-accent/40 flex items-center justify-center text-center px-6">
-              <p className="font-serif italic text-2xl text-primary/60 max-w-md">{t.photos.empty}</p>
-            </div>
-          </Reveal>
-        ) : (
-          <div className="mt-10 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {photos.map((p, i) => (
-              <Reveal key={p.id} variant="scale" delay={i * 40}>
-                <button
-                  onClick={() => openLightbox(i)}
-                  className="block w-full overflow-hidden group relative text-left focus:outline-none focus:ring-2 focus:ring-primary/50"
-                >
-                  <img src={p.url} alt={p.caption ?? ""} loading="lazy" className="w-full h-auto object-cover aspect-square transition-transform duration-700 group-hover:scale-110" />
-                  <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/20 transition-colors duration-500" />
-                </button>
-              </Reveal>
-            ))}
+        <div className="grid" style={{ marginTop: 64, gridTemplateColumns: "5fr 7fr", gap: 64 }}>
+          <div className="flex flex-col justify-center">
+            <span
+              className="flex-shrink-0"
+              style={{ width: 10, height: 10, background: LAV, transform: "rotate(45deg)" }}
+            />
+            <p
+              className="font-serif italic"
+              style={{ fontSize: 30, color: INK, margin: "24px 0 0", lineHeight: 1.3 }}
+            >
+              Photos will appear here after the wedding.
+            </p>
+            <p
+              className="font-sans"
+              style={{
+                fontSize: 15,
+                lineHeight: 1.75,
+                color: SOFT,
+                margin: "20px 0 0",
+                maxWidth: 420,
+              }}
+            >
+              In the meantime, this is exactly where the upload form lives, so guests can start
+              sending photos the moment they take them.
+            </p>
           </div>
-        )}
+          <div className="border" style={{ padding: 40, borderColor: HAIRLINE }}>
+            <p
+              className="uppercase font-sans"
+              style={{ fontSize: 11, letterSpacing: "0.3em", color: LAV_DEEP, margin: "0 0 10px" }}
+            >
+              Share a photo
+            </p>
+            <p
+              className="font-sans"
+              style={{ fontSize: 14, lineHeight: 1.7, color: SOFT, margin: "0 0 26px" }}
+            >
+              Up to 5 images, JPG or PNG, 10 MB each. Nothing goes public until we approve it.
+            </p>
+            <div className="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
+              <div>
+                <p
+                  className="uppercase font-sans"
+                  style={{ fontSize: 10, letterSpacing: "0.2em", color: TAN, margin: "0 0 8px" }}
+                >
+                  Your name
+                </p>
+                <div style={{ borderBottom: `1px solid ${TAN}`, height: 30 }} />
+              </div>
+              <div>
+                <p
+                  className="uppercase font-sans"
+                  style={{ fontSize: 10, letterSpacing: "0.2em", color: TAN, margin: "0 0 8px" }}
+                >
+                  Email (optional)
+                </p>
+                <div style={{ borderBottom: `1px solid ${TAN}`, height: 30 }} />
+              </div>
+            </div>
+            <p
+              className="uppercase font-sans"
+              style={{ fontSize: 10, letterSpacing: "0.2em", color: TAN, margin: "0 0 8px" }}
+            >
+              Caption (optional)
+            </p>
+            <div style={{ borderBottom: `1px solid ${TAN}`, height: 30, marginBottom: 20 }} />
+            <div
+              className="text-center"
+              style={{
+                border: "1px dashed #C9BB9F",
+                background: "#EFE9DD",
+                padding: 26,
+                marginBottom: 22,
+              }}
+            >
+              <span
+                className="uppercase font-sans"
+                style={{ fontSize: 11, letterSpacing: "0.2em", color: "#8B7F68" }}
+              >
+                Choose photos
+              </span>
+            </div>
+            <button
+              type="button"
+              className="block w-full text-center uppercase font-sans"
+              style={{
+                background: INK,
+                color: IVORY,
+                padding: "15px 0",
+                fontSize: 11,
+                letterSpacing: "0.24em",
+                border: "none",
+                cursor: "pointer",
+              }}
+              aria-label="Upload photo (not yet wired up)"
+              disabled
+            >
+              Upload
+            </button>
+          </div>
+        </div>
       </section>
 
-      {lightboxIndex !== null && (
-        <Lightbox
-          photos={photos}
-          currentIndex={lightboxIndex}
-          onClose={closeLightbox}
-          onNext={nextPhoto}
-          onPrev={prevPhoto}
-        />
-      )}
-
       {/* ============ REGISTRY ============ */}
-      <section id="registry" className="relative py-20 bg-accent/10 border-y border-accent/20">
-        <div className="mx-auto max-w-[1600px] px-6 lg:px-12">
-          <Reveal>
-            <p className="text-[10px] uppercase tracking-[0.4em] text-accent">07 / Registry</p>
-          </Reveal>
-          <SplitText as="h2" text={t.registry.title} className="mt-4 editorial-heading text-5xl sm:text-6xl md:text-7xl lg:text-8xl block" stagger={70} />
-          <Reveal delay={200}>
-            <p className="mt-6 max-w-xl text-foreground/70 text-lg font-serif italic">{t.registry.lead}</p>
-          </Reveal>
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
-            {registryItems.map((it, i) => (
-              <Reveal key={it.name} variant="blur" delay={i * 120}>
-                <a
-                  href={it.href ?? "#"}
-                  target={it.href ? "_blank" : undefined}
-                  rel={it.href ? "noopener" : undefined}
-                  aria-disabled={it.href ? undefined : true}
-                  onClick={(e) => { if (!it.href) e.preventDefault(); }}
-                  className="relative block bg-background border border-accent/30 p-8 transition-all h-full group overflow-hidden hover:-translate-y-2 hover:shadow-2xl"
+      <section
+        id="registry"
+        className="border-t"
+        style={{
+          padding: "100px 64px",
+          maxWidth: 1500,
+          margin: "0 auto",
+          borderColor: HAIRLINE,
+        }}
+      >
+        <SectionHeader
+          eyebrow="VII · Registry"
+          title="Registry"
+          subhead="Your presence is the gift. If you'd like to do more, these are the places we've registered."
+        />
+        <DiamondDivider className="mt-9" />
+
+        <div className="grid" style={{ marginTop: 64, gridTemplateColumns: "repeat(4, 1fr)", gap: 24 }}>
+          {REGISTRY.map((r) => {
+            const lead = r.lead === true;
+            const bg = lead ? "#EAE3F1" : IVORY;
+            const borderColor = lead ? LAV_DEEP : HAIRLINE;
+            const dotColor = lead ? LAV_DEEP : TAN;
+            const dotSize = lead ? 8 : 6;
+            const titleSize = lead ? 32 : 26;
+            return (
+              <div
+                key={r.name}
+                className="flex flex-col border"
+                style={{ padding: "40px 32px", background: bg, borderColor }}
+              >
+                <span
+                  className="flex-shrink-0"
+                  style={{
+                    width: dotSize,
+                    height: dotSize,
+                    background: dotColor,
+                    transform: "rotate(45deg)",
+                  }}
+                />
+                <p
+                  className="font-serif italic"
+                  style={{ fontSize: titleSize, color: INK, margin: "22px 0 0" }}
                 >
-                  <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-accent to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-700 origin-left" />
-                  <div className="text-[10px] uppercase tracking-[0.3em] text-accent">{String(i + 1).padStart(2, "0")}</div>
-                  <div className="mt-4 editorial-heading text-4xl transition-transform duration-500 group-hover:translate-x-1">{it.name}</div>
-                  <p className="mt-4 text-sm text-foreground/75 leading-relaxed">{it.note}</p>
-                  <div className="mt-8 text-[10px] uppercase tracking-[0.3em] text-primary link-underline">
-                    {it.href ? "Visit →" : "Details coming soon"}
-                  </div>
-                </a>
-              </Reveal>
-            ))}
-          </div>
+                  {r.name}
+                </p>
+                <p
+                  className="font-sans"
+                  style={{ fontSize: 14, lineHeight: 1.7, color: BODY, margin: "16px 0 0", flex: 1 }}
+                >
+                  {r.note}
+                </p>
+                {r.href ? (
+                  <a
+                    href={r.href}
+                    target="_blank"
+                    rel="noopener"
+                    className="uppercase font-sans"
+                    style={
+                      lead
+                        ? {
+                            display: "inline-block",
+                            textAlign: "center",
+                            marginTop: 24,
+                            background: INK,
+                            color: IVORY,
+                            padding: "14px 0",
+                            fontSize: 10,
+                            letterSpacing: "0.24em",
+                            border: `1px solid ${INK}`,
+                          }
+                        : {
+                            display: "inline-block",
+                            alignSelf: "flex-start",
+                            marginTop: 24,
+                            fontSize: 10,
+                            letterSpacing: "0.2em",
+                            color: LAV_DEEP,
+                            borderBottom: `1px solid ${LAV_DEEP}`,
+                            paddingBottom: 3,
+                          }
+                    }
+                  >
+                    {r.cta ?? "Visit"}
+                  </a>
+                ) : null}
+              </div>
+            );
+          })}
         </div>
       </section>
 
       {/* ============ FAQ ============ */}
-      <section id="faq" className="mx-auto max-w-[1600px] px-6 lg:px-12 py-20">
-        <Reveal>
-          <p className="text-[10px] uppercase tracking-[0.4em] text-accent">08 / FAQ</p>
-        </Reveal>
-        <SplitText as="h2" text={t.faq.title} className="mt-4 editorial-heading text-5xl sm:text-6xl md:text-7xl lg:text-8xl block" stagger={70} />
-        <Reveal delay={200}>
-          <p className="mt-6 max-w-xl text-foreground/70 text-lg font-serif italic">{t.faq.lead}</p>
-        </Reveal>
-        <div className="mt-10 grid gap-0 lg:grid-cols-2 lg:gap-x-16">
-          {t.faq.items.map((item, i) => (
-            <Reveal key={i} variant="up" delay={i * 60}>
-              <details className="group border-t border-accent/20 py-6 [&_summary::-webkit-details-marker]:hidden transition-colors hover:border-accent">
-                <summary className="flex items-baseline justify-between gap-6 cursor-pointer list-none">
-                  <span className="font-serif italic text-xl text-primary leading-snug transition-transform duration-500 group-hover:translate-x-1">{item.q}</span>
-                  <span className="text-accent text-2xl transition-transform duration-500 group-open:rotate-45">+</span>
-                </summary>
-                <p className="mt-4 text-foreground/80 leading-relaxed">{item.a}</p>
-              </details>
-            </Reveal>
-          ))}
-        </div>
-        <Reveal delay={200}>
-          <p className="mt-12 text-center text-sm text-foreground/60 font-serif italic">
-            Still have a question? {SITE.rsvpFallbackContact}
-          </p>
-        </Reveal>
-      </section>
+      <section id="faq" className="border-t" style={{ borderColor: HAIRLINE }}>
+        <div
+          style={{
+            padding: "100px 64px",
+            maxWidth: 1500,
+            margin: "0 auto",
+          }}
+        >
+          <SectionHeader
+            eyebrow="VIII · FAQ"
+            title="FAQ"
+            subhead="The questions we've been getting most."
+          />
+          <DiamondDivider className="mt-9" />
 
-      {/* ============ FINAL CTA ============ */}
-      <section className="relative py-20 sm:py-28 lg:py-32 text-center border-t border-accent/20 overflow-hidden">
-        <div aria-hidden className="absolute inset-0 -z-10">
-          <img src={eng10.url} alt="" className="h-full w-full object-cover object-center opacity-20" />
-          <div className="absolute inset-0 bg-gradient-to-b from-background via-background/70 to-background" />
-        </div>
-        <div className="relative mx-auto max-w-2xl px-6">
-          <Reveal>
-            <p className="text-[10px] uppercase tracking-[0.4em] text-accent">See you soon</p>
-          </Reveal>
-          <SplitText as="h2" text="Won't be the same without you." className="mt-6 editorial-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl block" stagger={65} />
-          <Reveal delay={400}>
-            <div className="mt-12 flex flex-col items-center gap-6">
-              <Magnetic strength={0.3}>
-                <Link
-                  to="/rsvp"
-                  search={{}}
-                  className="inline-block border border-primary bg-primary text-primary-foreground px-10 py-4 text-[11px] uppercase tracking-[0.35em] hover:bg-transparent hover:text-primary transition-colors"
+          <div className="grid" style={{ marginTop: 60, gridTemplateColumns: "1fr 1fr", gap: 64 }}>
+            {(
+              [
+                { title: "Logistics", items: FAQ_LOGISTICS },
+                { title: "Attire & guests", items: FAQ_GUESTS },
+              ] as const
+            ).map((col) => (
+              <div key={col.title}>
+                <p
+                  className="uppercase font-sans"
+                  style={{ fontSize: 11, letterSpacing: "0.3em", color: LAV_DEEP, margin: "0 0 8px" }}
                 >
-                  {t.home.rsvpCta} →
-                </Link>
-              </Magnetic>
-              <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{t.rsvp.deadlineLine}</p>
-              <div className="draw-line h-px w-24 bg-accent origin-left" />
-              <Link to="/rsvp" search={{}} className="text-[10px] uppercase tracking-[0.3em] text-primary link-underline">See RSVP page →</Link>
-            </div>
-          </Reveal>
+                  {col.title}
+                </p>
+                {col.items.map((item, i) => (
+                  <details
+                    key={i}
+                    className="border-t"
+                    style={{ padding: "20px 0", borderColor: HAIRLINE }}
+                    open={item.open}
+                  >
+                    <summary
+                      className="flex justify-between gap-5 cursor-pointer font-serif italic"
+                      style={{ fontSize: 21, color: INK }}
+                    >
+                      {item.q}
+                      <span
+                        className="flex-shrink-0"
+                        style={{
+                          width: 6,
+                          height: 6,
+                          background: LAV,
+                          transform: "rotate(45deg)",
+                          marginTop: 9,
+                        }}
+                      />
+                    </summary>
+                    <p
+                      className="font-sans"
+                      style={{ fontSize: 15, lineHeight: 1.75, color: BODY, margin: "14px 0 0" }}
+                    >
+                      {item.a}
+                    </p>
+                  </details>
+                ))}
+              </div>
+            ))}
+          </div>
+          <p
+            className="text-center font-serif italic"
+            style={{ marginTop: 56, fontSize: 16, color: SOFT }}
+          >
+            Still have a question? Text Addi or Geo directly, we&rsquo;ll get you sorted.
+          </p>
+        </div>
+
+        {/* Closing CTA */}
+        <div className="text-center" style={{ padding: "130px 64px", background: "#EAE3F1" }}>
+          <p
+            className="uppercase font-sans"
+            style={{ fontSize: 12, letterSpacing: "0.4em", color: LAV_DEEP, margin: "0 0 26px" }}
+          >
+            See you soon
+          </p>
+          <h2
+            className="font-serif italic mx-auto"
+            style={{
+              fontWeight: 500,
+              fontSize: "clamp(32px, 6vw, 60px)",
+              color: INK,
+              margin: 0,
+              maxWidth: 720,
+              lineHeight: 1.15,
+            }}
+          >
+            Won&rsquo;t be the same without you.
+          </h2>
+          <div style={{ marginTop: 44 }}>
+            <Link
+              to="/rsvp"
+              search={{}}
+              className="inline-block uppercase font-sans"
+              style={{
+                background: INK,
+                color: IVORY,
+                padding: "19px 44px",
+                fontSize: 12,
+                letterSpacing: "0.3em",
+                border: `1px solid ${INK}`,
+              }}
+            >
+              RSVP now
+            </Link>
+          </div>
+          <p
+            className="uppercase font-sans"
+            style={{ margin: "26px 0 0", fontSize: 11, letterSpacing: "0.24em", color: SOFT }}
+          >
+            Please respond by September 15, 2026
+          </p>
         </div>
       </section>
-
-
-      <PhotoUploadModal open={uploadOpen} onClose={() => setUploadOpen(false)} />
     </div>
   );
 }
