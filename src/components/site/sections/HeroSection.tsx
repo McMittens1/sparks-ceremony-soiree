@@ -30,7 +30,7 @@ function HeroCountdown() {
   ];
   return (
     <div
-      className="md:hidden"
+      className="lg:hidden"
       style={{ marginTop: "clamp(24px, 4cqh, 36px)" }}
       aria-label="Countdown to the wedding"
     >
