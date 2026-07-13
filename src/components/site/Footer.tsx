@@ -11,7 +11,7 @@ export function Footer() {
           <span className="font-serif italic text-[26px] text-ink">A</span>
         </div>
         <p className="mt-2.5 uppercase text-tan" style={{ fontSize: 10, letterSpacing: "0.24em" }}>
-          October · MMXXVI
+          October · 2026
         </p>
       </div>
       <p className="uppercase text-tan" style={{ fontSize: 10, letterSpacing: "0.24em" }}>
