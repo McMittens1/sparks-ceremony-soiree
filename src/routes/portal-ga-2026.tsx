@@ -7,7 +7,7 @@ import { Reveal } from "@/components/site/Reveal";
 import { claimAdminIfFirst } from "@/lib/admin.functions";
 
 
-export const Route = createFileRoute("/auth")({
+export const Route = createFileRoute("/portal-ga-2026")({
   head: () => ({ meta: [
     { title: "Admin sign-in" },
     { name: "robots", content: "noindex,nofollow" },
