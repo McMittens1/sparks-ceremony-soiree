@@ -9,7 +9,7 @@ export function TravelSection() {
     <section
       id="travel"
       className="border-t border-hairline rs-section"
-      style={{ padding: "100px 64px", maxWidth: 1500, margin: "0 auto" }}
+      style={{ padding: "80px 56px", maxWidth: 1500, margin: "0 auto" }}
     >
       <SectionHeader
         eyebrow="V · Getting There"

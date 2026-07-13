@@ -7,7 +7,7 @@ import { FAQ_LOGISTICS, FAQ_GUESTS } from "@/lib/wedding-data";
 export function FaqSection() {
   return (
     <section id="faq" className="border-t border-hairline">
-      <div className="rs-section" style={{ padding: "100px 64px", maxWidth: 1500, margin: "0 auto" }}>
+      <div className="rs-section" style={{ padding: "80px 56px", maxWidth: 1500, margin: "0 auto" }}>
         <SectionHeader
           eyebrow="VIII · FAQ"
           title="FAQ"
