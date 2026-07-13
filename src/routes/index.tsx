@@ -278,7 +278,7 @@ function Home() {
       {/* ============ THE DAY ============ */}
       <section
         id="day"
-        className="border-t"
+        className="border-t rs-section"
         style={{ padding: "100px 64px", background: LAV_DEEP, borderColor: HAIRLINE }}
       >
         <div className="mx-auto" style={{ maxWidth: 1400 }}>
