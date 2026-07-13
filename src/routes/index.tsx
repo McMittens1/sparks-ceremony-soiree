@@ -449,7 +449,7 @@ function Home() {
       {/* ============ WEDDING PARTY ============ */}
       <section
         id="party"
-        className="border-t"
+        className="border-t rs-section"
         style={{
           padding: "100px 64px",
           maxWidth: 1500,
