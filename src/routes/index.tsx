@@ -931,7 +931,7 @@ function Home() {
           />
           <DiamondDivider className="mt-9" />
 
-          <div className="grid" style={{ marginTop: 60, gridTemplateColumns: "1fr 1fr", gap: 64 }}>
+          <div className="grid rs-stack-2" style={{ marginTop: 60, gridTemplateColumns: "1fr 1fr", gap: 64 }}>
             {(
               [
                 { title: "Logistics", items: FAQ_LOGISTICS },
