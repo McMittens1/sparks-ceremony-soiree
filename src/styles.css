@@ -363,15 +363,8 @@ details[data-anim][open] > .faq-body {
     padding: 32px 24px 48px !important;
     height: auto !important;
   }
-  .rs-hero-text {
-    flex: 1 1 auto !important;
-    font-size: 16px;
-  }
-  .rs-hero-text > p,
-  .rs-hero-text > h1 > div,
-  .rs-hero-text a {
-    font-size: revert !important;
-  }
+  .rs-hero-text { flex: 1 1 auto !important; }
+
   .rs-hero-image {
     flex: 1 1 auto !important;
     padding: 0 !important;
