@@ -49,7 +49,8 @@ export function Countdown() {
           )}
           <div className="text-center">
             <div
-              className="font-serif tabular-nums"
+              key={val}
+              className="font-serif tabular-nums count-digit"
               style={{
                 fontWeight: 500,
                 fontSize: "clamp(52px, 9vw, 104px)",
