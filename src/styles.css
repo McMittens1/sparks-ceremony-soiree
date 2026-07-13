@@ -381,36 +381,39 @@ details[data-anim][open] > .faq-body {
   .rs-day-dates .rs-day-date-num { font-size: 56px !important; }
   .rs-day-dates .rs-day-sep { display: none !important; }
 
-  /* Story timeline rows: single column, images below text */
+  /* Story timeline rows: single column, images below text, compact */
+  .rs-story-entry { margin-top: 56px !important; }
   .rs-story-row {
     grid-template-columns: 1fr !important;
-    gap: 24px !important;
+    gap: 20px !important;
   }
   .rs-story-gutter { display: none !important; }
   .rs-story-photos {
     order: 2 !important;
     height: auto !important;
     flex-direction: column !important;
-    gap: 12px !important;
+    gap: 10px !important;
   }
   .rs-story-photos > .rs-story-photo-main {
     flex: 0 0 auto !important;
+    width: 100%;
     aspect-ratio: 4/5;
-    max-height: 70vh;
+    max-height: 56vh;
   }
   .rs-story-photos > .rs-story-photo-main > img { object-position: center top; }
   .rs-story-photos > .rs-story-photo-rest {
     flex-direction: row !important;
     flex: 0 0 auto !important;
-    gap: 10px !important;
+    gap: 8px !important;
   }
   .rs-story-photos > .rs-story-photo-rest > * {
-    aspect-ratio: 3/4;
+    aspect-ratio: 1/1;
     min-height: 0 !important;
-    max-height: 40vh;
+    max-height: 28vh;
   }
   .rs-story-text { order: 1 !important; padding: 0 !important; }
   .rs-story-big-num { font-size: 22vw !important; top: -12px !important; left: -6px !important; }
+
 
   /* Montage grid: fewer cols, shorter rows so text stays visible */
   .rs-montage-grid {

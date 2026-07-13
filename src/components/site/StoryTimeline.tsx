@@ -85,7 +85,7 @@ function DatedRow({
 }) {
   const [main, ...rest] = entry.photos;
   return (
-    <div className="relative" style={{ marginTop: 110 }}>
+    <div className="relative rs-story-entry" style={{ marginTop: 110 }}>
       <span
         aria-hidden
         className="absolute font-serif select-none pointer-events-none rs-story-big-num"
@@ -248,7 +248,7 @@ function StoryGutter() {
 function MontageRow({ entry }: { entry: Montage }) {
   return (
     <Reveal variant="up" className="text-center block" >
-      <div style={{ marginTop: 110 }}>
+      <div className="rs-story-entry" style={{ marginTop: 110 }}>
         <p
           className="uppercase font-sans"
           style={{ fontSize: 11, letterSpacing: "0.4em", color: "#A39680", marginBottom: 16 }}
