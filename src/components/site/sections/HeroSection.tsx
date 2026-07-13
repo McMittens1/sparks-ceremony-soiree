@@ -1,4 +1,68 @@
 import { Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { SITE } from "@/lib/site";
+
+function diff(target: number) {
+  const ms = Math.max(0, target - Date.now());
+  return {
+    d: Math.floor(ms / 86_400_000),
+    h: Math.floor((ms % 86_400_000) / 3_600_000),
+    m: Math.floor((ms % 3_600_000) / 60_000),
+    s: Math.floor((ms % 60_000) / 1000),
+  };
+}
+const pad = (n: number | null) => (n === null ? "--" : String(n).padStart(2, "0"));
+
+function HeroCountdown() {
+  const target = new Date(SITE.eventDate).getTime();
+  const [tick, setTick] = useState<ReturnType<typeof diff> | null>(null);
+  useEffect(() => {
+    setTick(diff(target));
+    const id = setInterval(() => setTick(diff(target)), 1000);
+    return () => clearInterval(id);
+  }, [target]);
+  const items: [string, string][] = [
+    [pad(tick?.d ?? null), "Days"],
+    [pad(tick?.h ?? null), "Hrs"],
+    [pad(tick?.m ?? null), "Min"],
+    [pad(tick?.s ?? null), "Sec"],
+  ];
+  return (
+    <div
+      className="md:hidden flex items-baseline justify-start flex-wrap"
+      style={{ marginTop: "clamp(20px, 3.5cqh, 32px)", gap: "clamp(14px, 4vw, 22px)" }}
+      aria-label="Countdown to the wedding"
+    >
+      {items.map(([val, label], i) => (
+        <div key={label} className="flex items-baseline" style={{ gap: "clamp(14px, 4vw, 22px)" }}>
+          {i > 0 && (
+            <span
+              className="font-serif italic self-center text-lavender"
+              style={{ fontSize: 24 }}
+              aria-hidden
+            >
+              ·
+            </span>
+          )}
+          <div className="text-center">
+            <div
+              className="font-serif tabular-nums text-ink"
+              style={{ fontWeight: 500, fontSize: "clamp(28px, 4.5cqh, 40px)", lineHeight: 0.9 }}
+            >
+              {val}
+            </div>
+            <p
+              className="uppercase text-tan-deep"
+              style={{ fontSize: 9, letterSpacing: "0.28em", marginTop: 6 }}
+            >
+              {label}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export function HeroSection() {
   return (
