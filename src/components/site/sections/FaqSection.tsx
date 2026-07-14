@@ -7,7 +7,7 @@ import { FAQ_LOGISTICS, FAQ_GUESTS } from "@/lib/wedding-data";
 export function FaqSection() {
   return (
     <section id="faq" className="border-t border-hairline">
-      <div className="rs-section" style={{ padding: "80px 56px", maxWidth: 1500, margin: "0 auto" }}>
+      <div className="rs-section">
         <SectionHeader
           eyebrow="VIII · FAQ"
           title="FAQ"
@@ -15,7 +15,8 @@ export function FaqSection() {
         />
         <DiamondDivider className="mt-9" />
 
-        <div className="grid rs-stack-2" style={{ marginTop: 60, gridTemplateColumns: "1fr 1fr", gap: 64 }}>
+        <div className="grid rs-stack-2" style={{ marginTop: 60 }}>
+
           {(
             [
               { title: "Logistics", items: FAQ_LOGISTICS },
