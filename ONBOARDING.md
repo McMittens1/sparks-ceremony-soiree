@@ -363,50 +363,23 @@ This is the living sprint plan. Pick up the next uncompleted sprint rather than 
 
 ## 8. Git & branching workflow
 
-**Goal:** Keep Lovable and any external AI (Claude Code, Cursor, etc.) in sync without stepping on each other.
+**Policy:** Work directly on `main`. No feature branches, no dev branch, no pull requests.
 
-**How Lovable sync works:**
-- Lovable is connected to GitHub and syncs one branch at a time (currently `main`).
-- Commits pushed to `main` appear in the Lovable editor automatically.
-- Lovable's version history covers small in-editor edits; those edits commit straight to `main`.
+**Why:** Lovable is connected to GitHub and syncs `main` bidirectionally. Any commit pushed to `main` appears in the Lovable editor, and any edit made in Lovable commits straight back to `main`. Branching and PRs add friction without benefit for this project.
 
-**Recommended model:**
-- `main` = published / canonical. Keep Lovable connected to `main`.
-- External AI work happens on short-lived feature branches: `feat/<short-name>`.
-- Open a GitHub PR from the feature branch into `main`.
-- The user reviews and merges the PR.
-- The merge syncs back to Lovable automatically.
+**Rules for every AI assistant (Lovable, Claude Code, Cursor, etc.):**
+1. Make sure you are on `main` before editing: `git checkout main && git pull`.
+2. Make changes, commit them, and push directly to `main`.
+3. Do not create `feat/*`, `dev`, or any other branch.
+4. Do not open pull requests.
+5. Never force-push, rebase, amend, or squash commits already pushed to `main`.
+6. Keep `main` in a working state: run `bun run build:dev` before pushing if possible, and do not push broken code.
 
-**One-time setup (do this once in your local clone or GitHub UI):**
+**Lovable sync note:**
+- If you edit inside the Lovable UI, those commits go straight to `main` on GitHub.
+- If you edit in Claude Code, Cursor, or another local editor, push to `main`; the changes will sync back to Lovable automatically.
+- Because everyone writes to `main`, pull before you start and push frequently in small commits to reduce the chance of conflicts.
 
-```text
-# 1. Make sure you have the repo cloned from GitHub and Lovable sync is on.
-# 2. Run these commands once to create a persistent dev branch (optional):
-git checkout main
-git pull
-git checkout -b dev
-git push -u origin dev
-```
-
-If you do not want a persistent `dev` branch, skip those commands and create feature branches directly off `main`:
-
-```text
-git checkout main
-git pull
-git checkout -b feat/short-description
-git push -u origin feat/short-description
-```
-
-**For the AI assistant:**
-1. Before editing, run `git branch --show-current` and confirm you are on a feature branch, not `main`.
-2. Make changes, commit them to the feature branch, and push.
-3. Open a PR into `main` with a clear description.
-4. Do not commit directly to `main` unless the change is a trivial one-line fix the user explicitly approves.
-5. Never force-push, rebase, amend, or squash commits already pushed to `main` or any shared branch.
-
-**Merging:**
-- Use the GitHub PR UI. "Squash and merge" or "Create a merge commit" are both fine.
-- Do not rewrite history on `main` after Lovable has seen it.
 
 ---
 
@@ -418,9 +391,11 @@ Before writing or changing code:
 2. Read `AGENTS.md` for Lovable-specific git guardrails.
 3. Read `src/lib/site.ts` and `src/lib/wedding-data.ts` to understand the data model.
 4. Read `src/styles.css` to internalize the color/type tokens.
-5. Run `git branch --show-current` and ensure you are on a feature branch, not `main`.
-6. Run `bun run build` or `bun run build:dev` after any change to verify the project compiles.
-7. If you touch RSVP, admin, or email logic, test the affected flow in the browser or via the existing server functions.
+5. Run `bun run build` or `bun run build:dev` after any change to verify the project compiles.
+6. If you touch RSVP, admin, or email logic, test the affected flow in the browser or via the existing server functions.
+
+Note: Work directly on `main`. Do not create feature branches or open PRs. See §8 for the full git workflow.
+
 
 ---
 
@@ -436,8 +411,7 @@ BEFORE you make any code changes, do the following:
 2. Read AGENTS.md for git guardrails.
 3. Read src/lib/site.ts and src/lib/wedding-data.ts.
 4. Read src/styles.css to understand the color/type tokens.
-5. Run `git branch --show-current`. You MUST be on a feature branch, not `main`, before editing. If you are on `main`, create and switch to `feat/<short-description>` first.
-6. Read §3 of ONBOARDING.md (Remaining work / roadmap) and pick up the next uncompleted sprint rather than inventing new work.
+5. Read §3 of ONBOARDING.md (Remaining work / roadmap) and pick up the next uncompleted sprint rather than inventing new work.
 
 PROJECT ESSENTIALS:
 - Tech stack: TanStack Start v1, React 19, Vite 8, Tailwind CSS v4, TypeScript strict, Lovable Cloud (Supabase-backed but never say "Supabase" to users).
@@ -460,10 +434,9 @@ DESIGN RULES:
 - Preserve the existing stationery/minimal aesthetic. Do not introduce generic AI gradients or Inter/Poppins defaults.
 
 GIT WORKFLOW:
-- Lovable syncs from `main`. Treat `main` as published/canonical.
-- Do all work on feature branches (`feat/<name>`) and open PRs into `main`.
-- Never force-push, rebase, amend, or squash commits already on `main` or any shared branch.
-- After merging, changes sync back to Lovable automatically.
+- Work directly on `main`. Do not create feature branches or open PRs.
+- Pull before you start; commit and push to `main` frequently in small commits.
+- Never force-push, rebase, amend, or squash commits already on `main`.
 
 NEVER DO:
 - Do not expose "Supabase" terminology to end users.
@@ -474,6 +447,7 @@ NEVER DO:
 
 When you are ready to propose a change, explain it briefly, then implement it. After editing, run `bun run build` (or `bun run build:dev`) to verify the project compiles. If you touch RSVP/admin/email, test the affected flow.
 ```
+
 
 ---
 
