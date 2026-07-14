@@ -6,6 +6,15 @@ import { HOTELS } from "@/lib/wedding-data";
 import { SITE } from "@/lib/site";
 
 export function TravelSection() {
+  const [copied, setCopied] = useState(false);
+  const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(SITE.address)}`;
+  async function copyAddress() {
+    try {
+      await navigator.clipboard.writeText(SITE.address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch { /* ignore */ }
+  }
   return (
     <section id="travel" className="border-t border-hairline rs-section">
       <SectionHeader
