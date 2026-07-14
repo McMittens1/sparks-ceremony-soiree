@@ -6,11 +6,7 @@ import { SITE } from "@/lib/site";
 
 export function TravelSection() {
   return (
-    <section
-      id="travel"
-      className="border-t border-hairline rs-section"
-      style={{ padding: "80px 56px", maxWidth: 1500, margin: "0 auto" }}
-    >
+    <section id="travel" className="border-t border-hairline rs-section">
       <SectionHeader
         eyebrow="V · Getting There"
         title="Getting There"
@@ -18,10 +14,8 @@ export function TravelSection() {
       />
       <DiamondDivider className="mt-9" />
 
-      <div
-        className="grid items-start rs-stack"
-        style={{ marginTop: 64, gridTemplateColumns: "5fr 7fr", gap: 64 }}
-      >
+      <div className="grid items-start rs-stack" style={{ marginTop: 64 }}>
+
         <div>
           <Eyebrow color="lavender-deep" style={{ marginBottom: 14 }}>
             Venue address
