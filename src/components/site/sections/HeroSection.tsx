@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { SITE } from "@/lib/site";
-import favorite from "@/assets/engagement/Favorite.jpg.asset.json";
+import heroPortrait from "@/assets/engagement/hero-portrait.png.asset.json";
 
 function diff(target: number) {
   const ms = Math.max(0, target - Date.now());
@@ -200,17 +200,17 @@ export function HeroSection() {
           }}
         >
           <img
-            src={favorite.url}
-            alt="Geovanni and Addison, engaged"
+            src={heroPortrait.url}
+            alt="Pencil illustration of Geovanni Moreno and Addison Hillman"
             loading="eager"
             fetchPriority="high"
             style={{
               width: "100%",
+              height: "auto",
               maxHeight: "100%",
-              aspectRatio: "3 / 2",
-              objectFit: "cover",
-              objectPosition: "center 35%",
+              objectFit: "contain",
               display: "block",
+              mixBlendMode: "multiply",
             }}
           />
         </div>
