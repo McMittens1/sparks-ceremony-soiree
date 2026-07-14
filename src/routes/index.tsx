@@ -1,5 +1,5 @@
 import { createFileRoute, useLocation } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import favorite from "@/assets/engagement/Favorite.jpg.asset.json";
 import { HeroSection } from "@/components/site/sections/HeroSection";
 import { CountdownSection } from "@/components/site/sections/CountdownSection";
@@ -29,7 +29,19 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const location = useLocation();
+  const hasMountedRef = useRef(false);
+
   useEffect(() => {
+    // On first mount, always land at the top of the hero. Ignore any hash the
+    // browser restored from a prior visit. Only in-session hash changes (from
+    // header nav) should smooth-scroll to a section.
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      if (typeof window !== "undefined") {
+        window.scrollTo(0, 0);
+      }
+      return;
+    }
     if (!location.hash) return;
     const id = location.hash.replace(/^#/, "");
     requestAnimationFrame(() => {
@@ -52,3 +64,4 @@ function Home() {
     </div>
   );
 }
+

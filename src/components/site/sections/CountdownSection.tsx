@@ -6,7 +6,7 @@ export function CountdownSection() {
   return (
     <section
       id="countdown"
-      className="hidden lg:block text-center border-t border-hairline"
+      className="hidden md:block text-center border-t border-hairline"
       style={{
         paddingBlock: "clamp(56px, 8svh, 88px)",
         paddingInline: "clamp(20px, 4vw, 32px)",
