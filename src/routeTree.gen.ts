@@ -19,6 +19,7 @@ import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
+import { Route as RsvpEditTokenRouteImport } from './routes/rsvp/edit.$token'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicWeatherRouteImport } from './routes/api/public/weather'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
@@ -79,6 +80,11 @@ const Char91DotmcpChar93ListToolsRoute =
     path: '/.mcp/list-tools',
     getParentRoute: () => rootRouteImport,
   } as any)
+const RsvpEditTokenRoute = RsvpEditTokenRouteImport.update({
+  id: '/edit/$token',
+  path: '/edit/$token',
+  getParentRoute: () => RsvpRoute,
+} as any)
 const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   id: '/lovable/email/suppression',
   path: '/lovable/email/suppression',
@@ -128,7 +134,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/mcp': typeof McpRoute
   '/portal-ga-2026': typeof PortalGa2026Route
-  '/rsvp': typeof RsvpRoute
+  '/rsvp': typeof RsvpRouteWithChildren
   '/unsubscribe': typeof UnsubscribeRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
@@ -137,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/weather': typeof ApiPublicWeatherRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/rsvp/edit/$token': typeof RsvpEditTokenRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -147,7 +154,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/mcp': typeof McpRoute
   '/portal-ga-2026': typeof PortalGa2026Route
-  '/rsvp': typeof RsvpRoute
+  '/rsvp': typeof RsvpRouteWithChildren
   '/unsubscribe': typeof UnsubscribeRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
@@ -156,6 +163,7 @@ export interface FileRoutesByTo {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/weather': typeof ApiPublicWeatherRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/rsvp/edit/$token': typeof RsvpEditTokenRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -168,7 +176,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/mcp': typeof McpRoute
   '/portal-ga-2026': typeof PortalGa2026Route
-  '/rsvp': typeof RsvpRoute
+  '/rsvp': typeof RsvpRouteWithChildren
   '/unsubscribe': typeof UnsubscribeRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
@@ -177,6 +185,7 @@ export interface FileRoutesById {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/weather': typeof ApiPublicWeatherRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/rsvp/edit/$token': typeof RsvpEditTokenRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -198,6 +207,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/api/public/weather'
     | '/lovable/email/suppression'
+    | '/rsvp/edit/$token'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -217,6 +227,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/api/public/weather'
     | '/lovable/email/suppression'
+    | '/rsvp/edit/$token'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -237,6 +248,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/api/public/weather'
     | '/lovable/email/suppression'
+    | '/rsvp/edit/$token'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -249,7 +261,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   McpRoute: typeof McpRoute
   PortalGa2026Route: typeof PortalGa2026Route
-  RsvpRoute: typeof RsvpRoute
+  RsvpRoute: typeof RsvpRouteWithChildren
   UnsubscribeRoute: typeof UnsubscribeRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
@@ -336,6 +348,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rsvp/edit/$token': {
+      id: '/rsvp/edit/$token'
+      path: '/edit/$token'
+      fullPath: '/rsvp/edit/$token'
+      preLoaderRoute: typeof RsvpEditTokenRouteImport
+      parentRoute: typeof RsvpRoute
+    }
     '/lovable/email/suppression': {
       id: '/lovable/email/suppression'
       path: '/lovable/email/suppression'
@@ -406,12 +425,22 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface RsvpRouteChildren {
+  RsvpEditTokenRoute: typeof RsvpEditTokenRoute
+}
+
+const RsvpRouteChildren: RsvpRouteChildren = {
+  RsvpEditTokenRoute: RsvpEditTokenRoute,
+}
+
+const RsvpRouteWithChildren = RsvpRoute._addFileChildren(RsvpRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   McpRoute: McpRoute,
   PortalGa2026Route: PortalGa2026Route,
-  RsvpRoute: RsvpRoute,
+  RsvpRoute: RsvpRouteWithChildren,
   UnsubscribeRoute: UnsubscribeRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
