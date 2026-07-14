@@ -78,7 +78,7 @@ export async function verifyRsvpToken(token: string): Promise<TokenVerifyResult>
   if (!Number.isFinite(expMs)) return { ok: false, reason: "malformed" };
   const key = await getKey();
   const expected = new Uint8Array(
-    await crypto.subtle.sign("HMAC", key, textToBytes(`${guestId}|${expStr}`)),
+    await crypto.subtle.sign("HMAC", key, toBuf(textToBytes(`${guestId}|${expStr}`))),
   );
   if (!timingSafeEqual(sig, expected)) return { ok: false, reason: "invalid" };
   if (Date.now() > expMs) return { ok: false, reason: "expired" };
