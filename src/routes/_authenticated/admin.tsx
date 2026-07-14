@@ -197,9 +197,10 @@ function RsvpsPanel() {
     return { attending, declined, pending, adults, children };
   }, [rows]);
 
-  const buildRsvpUrl = useCallback((slug: string) => {
-    if (typeof window === "undefined") return `/rsvp?g=${slug}`;
-    return `${window.location.origin}/rsvp?g=${slug}`;
+  const buildRsvpUrl = useCallback((row: AdminGuestRow) => {
+    const path = `/rsvp/edit/${row.edit_token}`;
+    if (typeof window === "undefined") return path;
+    return `${window.location.origin}${path}`;
   }, []);
 
   function toCsv(list: AdminGuestRow[]) {
