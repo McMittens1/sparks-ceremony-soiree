@@ -42,7 +42,7 @@ async function getKey(): Promise<CryptoKey> {
   if (!secret) throw new Error("RSVP_EDIT_SECRET not configured");
   return crypto.subtle.importKey(
     "raw",
-    textToBytes(secret),
+    toBuf(textToBytes(secret)),
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign", "verify"],
