@@ -50,7 +50,7 @@ function ics(): string {
   ].join("\r\n");
 }
 
-export const Route = createFileRoute("/api/public/wedding/ics")({
+export const Route = createFileRoute("/api/public/wedding.ics")({
   server: {
     handlers: {
       GET: async () => {

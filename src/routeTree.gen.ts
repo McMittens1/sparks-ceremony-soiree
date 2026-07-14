@@ -21,6 +21,7 @@ import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } fr
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as RsvpEditTokenRouteImport } from './routes/rsvp/edit.$token'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
+import { Route as ApiPublicWeddingDoticsRouteImport } from './routes/api/public/wedding[.]ics'
 import { Route as ApiPublicWeatherRouteImport } from './routes/api/public/weather'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
@@ -28,7 +29,6 @@ import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/l
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
-import { Route as ApiPublicWeddingIcsRouteImport } from './routes/api/public/wedding.ics'
 
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
   id: '/unsubscribe',
@@ -91,6 +91,11 @@ const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   path: '/lovable/email/suppression',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicWeddingDoticsRoute = ApiPublicWeddingDoticsRouteImport.update({
+  id: '/api/public/wedding.ics',
+  path: '/api/public/wedding.ics',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicWeatherRoute = ApiPublicWeatherRouteImport.update({
   id: '/api/public/weather',
   path: '/api/public/weather',
@@ -130,11 +135,6 @@ const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   path: '/lovable/email/auth/preview',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicWeddingIcsRoute = ApiPublicWeddingIcsRouteImport.update({
-  id: '/api/public/wedding/ics',
-  path: '/api/public/wedding/ics',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -148,9 +148,9 @@ export interface FileRoutesByFullPath {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/weather': typeof ApiPublicWeatherRoute
+  '/api/public/wedding.ics': typeof ApiPublicWeddingDoticsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/rsvp/edit/$token': typeof RsvpEditTokenRoute
-  '/api/public/wedding/ics': typeof ApiPublicWeddingIcsRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -169,9 +169,9 @@ export interface FileRoutesByTo {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/weather': typeof ApiPublicWeatherRoute
+  '/api/public/wedding.ics': typeof ApiPublicWeddingDoticsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/rsvp/edit/$token': typeof RsvpEditTokenRoute
-  '/api/public/wedding/ics': typeof ApiPublicWeddingIcsRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -192,9 +192,9 @@ export interface FileRoutesById {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/weather': typeof ApiPublicWeatherRoute
+  '/api/public/wedding.ics': typeof ApiPublicWeddingDoticsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/rsvp/edit/$token': typeof RsvpEditTokenRoute
-  '/api/public/wedding/ics': typeof ApiPublicWeddingIcsRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -215,9 +215,9 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/.mcp/invoke-tool/$tool'
     | '/api/public/weather'
+    | '/api/public/wedding.ics'
     | '/lovable/email/suppression'
     | '/rsvp/edit/$token'
-    | '/api/public/wedding/ics'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -236,9 +236,9 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/.mcp/invoke-tool/$tool'
     | '/api/public/weather'
+    | '/api/public/wedding.ics'
     | '/lovable/email/suppression'
     | '/rsvp/edit/$token'
-    | '/api/public/wedding/ics'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -258,9 +258,9 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/.mcp/invoke-tool/$tool'
     | '/api/public/weather'
+    | '/api/public/wedding.ics'
     | '/lovable/email/suppression'
     | '/rsvp/edit/$token'
-    | '/api/public/wedding/ics'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -280,8 +280,8 @@ export interface RootRouteChildren {
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicWeatherRoute: typeof ApiPublicWeatherRoute
+  ApiPublicWeddingDoticsRoute: typeof ApiPublicWeddingDoticsRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
-  ApiPublicWeddingIcsRoute: typeof ApiPublicWeddingIcsRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -375,6 +375,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailSuppressionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/wedding.ics': {
+      id: '/api/public/wedding.ics'
+      path: '/api/public/wedding.ics'
+      fullPath: '/api/public/wedding.ics'
+      preLoaderRoute: typeof ApiPublicWeddingDoticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/weather': {
       id: '/api/public/weather'
       path: '/api/public/weather'
@@ -424,13 +431,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/wedding/ics': {
-      id: '/api/public/wedding/ics'
-      path: '/api/public/wedding/ics'
-      fullPath: '/api/public/wedding/ics'
-      preLoaderRoute: typeof ApiPublicWeddingIcsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -468,8 +468,8 @@ const rootRouteChildren: RootRouteChildren = {
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicWeatherRoute: ApiPublicWeatherRoute,
+  ApiPublicWeddingDoticsRoute: ApiPublicWeddingDoticsRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
-  ApiPublicWeddingIcsRoute: ApiPublicWeddingIcsRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
