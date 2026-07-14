@@ -1,9 +1,19 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/i18n/context";
-import { getAdminPhotos, setPhotoStatus, type AdminPhoto } from "@/lib/admin.functions";
+import {
+  getAdminPhotos,
+  setPhotoStatus,
+  bulkSetPhotoStatus,
+  updatePhotoCaption,
+  deletePhoto,
+  bulkDeletePhotos,
+  getPhotoCounts,
+  getRecentActivity,
+  type AdminPhoto,
+} from "@/lib/admin.functions";
 import {
   listGuestsWithRsvps,
   upsertGuest,
@@ -48,6 +58,8 @@ function Admin() {
         </button>
       </div>
 
+      <ActivityStrip />
+
       <div className="mt-6 flex gap-2 border-b border-border/40">
         {(["rsvps", "photos"] as const).map((k) => (
           <button
@@ -67,7 +79,35 @@ function Admin() {
   );
 }
 
+// ================== Activity strip ==================
+
+function ActivityStrip() {
+  const loadActivity = useServerFn(getRecentActivity);
+  const [a, setA] = useState<Awaited<ReturnType<typeof loadActivity>> | null>(null);
+  useEffect(() => { loadActivity({}).then(setA).catch(() => {}); }, [loadActivity]);
+  if (!a) return null;
+  const items = [
+    ["RSVPs · last 24h", a.rsvps_last_24h],
+    ["RSVPs · last 7d", a.rsvps_last_7d],
+    ["Photos pending", a.photos_pending],
+    ["Photos · last 7d", a.photos_last_7d],
+  ] as const;
+  return (
+    <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {items.map(([label, n]) => (
+        <div key={label} className="border border-border/40 p-3 text-center bg-card/40">
+          <div className="text-xl font-serif text-primary">{n}</div>
+          <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mt-1">{label}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ================== RSVPs ==================
+
+type SortKey = "name" | "status" | "party" | "submitted" | "city";
+type SortDir = "asc" | "desc";
 
 function RsvpsPanel() {
   const t = useT();
@@ -75,22 +115,36 @@ function RsvpsPanel() {
   const [rows, setRows] = useState<AdminGuestRow[] | null>(null);
   const [filter, setFilter] = useState<"all" | "attending" | "not_attending" | "no_response">("all");
   const [search, setSearch] = useState("");
+  const [partySize, setPartySize] = useState<"any" | "1" | "2" | "3plus">("any");
+  const [cityFilter, setCityFilter] = useState("");
+  const [addrOnly, setAddrOnly] = useState(false);
+  const [songOnly, setSongOnly] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>("submitted");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [editing, setEditing] = useState<AdminGuestRow | "new" | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   async function refresh() {
     const next = await loadRows({});
     setRows(next);
   }
 
-  useEffect(() => {
-    refresh().catch(() => {});
-  }, []);
+  useEffect(() => { refresh().catch(() => {}); }, []);
 
   const filtered = useMemo(() => {
     if (!rows) return [];
-    return rows.filter((r) => {
-      if (search && !r.primary_name.toLowerCase().includes(search.toLowerCase())) return false;
+    const q = search.trim().toLowerCase();
+    const cq = cityFilter.trim().toLowerCase();
+    const list = rows.filter((r) => {
+      if (q && !r.primary_name.toLowerCase().includes(q)) return false;
+      if (cq && !(r.city ?? "").toLowerCase().includes(cq)) return false;
+      const size = r.party_members.length || 1;
+      if (partySize === "1" && size !== 1) return false;
+      if (partySize === "2" && size !== 2) return false;
+      if (partySize === "3plus" && size < 3) return false;
+      if (addrOnly && r.rsvp?.address_confirmed) return false;
+      if (songOnly && !(r.rsvp?.song_request ?? "").trim()) return false;
       if (filter === "all") return true;
       if (filter === "no_response") return !r.rsvp;
       if (!r.rsvp) return false;
@@ -98,7 +152,35 @@ function RsvpsPanel() {
       if (filter === "not_attending") return r.rsvp.status === "not_attending";
       return true;
     });
-  }, [rows, search, filter]);
+    const dir = sortDir === "asc" ? 1 : -1;
+    const statusRank = (r: AdminGuestRow) =>
+      !r.rsvp ? 0 : r.rsvp.status === "attending" ? 3 : r.rsvp.status === "partial" ? 2 : 1;
+    list.sort((a, b) => {
+      let av: string | number = "";
+      let bv: string | number = "";
+      if (sortKey === "name") { av = a.primary_name.toLowerCase(); bv = b.primary_name.toLowerCase(); }
+      else if (sortKey === "status") { av = statusRank(a); bv = statusRank(b); }
+      else if (sortKey === "party") { av = a.party_members.length || 1; bv = b.party_members.length || 1; }
+      else if (sortKey === "city") { av = (a.city ?? "").toLowerCase(); bv = (b.city ?? "").toLowerCase(); }
+      else if (sortKey === "submitted") {
+        av = a.rsvp?.submitted_at ? new Date(a.rsvp.submitted_at).getTime() : 0;
+        bv = b.rsvp?.submitted_at ? new Date(b.rsvp.submitted_at).getTime() : 0;
+      }
+      if (av < bv) return -1 * dir;
+      if (av > bv) return 1 * dir;
+      return 0;
+    });
+    return list;
+  }, [rows, search, cityFilter, partySize, addrOnly, songOnly, filter, sortKey, sortDir]);
+
+  // Drop selection entries no longer visible
+  useEffect(() => {
+    if (!selected.size) return;
+    const visible = new Set(filtered.map((r) => r.id));
+    const next = new Set<string>();
+    for (const id of selected) if (visible.has(id)) next.add(id);
+    if (next.size !== selected.size) setSelected(next);
+  }, [filtered, selected]);
 
   const totals = useMemo(() => {
     if (!rows) return { attending: 0, declined: 0, pending: 0, adults: 0, children: 0 };
@@ -115,19 +197,23 @@ function RsvpsPanel() {
     return { attending, declined, pending, adults, children };
   }, [rows]);
 
-  function downloadCsv() {
-    if (!rows) return;
+  const buildRsvpUrl = useCallback((slug: string) => {
+    if (typeof window === "undefined") return `/rsvp?g=${slug}`;
+    return `${window.location.origin}/rsvp?g=${slug}`;
+  }, []);
+
+  function toCsv(list: AdminGuestRow[]) {
     const header = [
       "primary_name", "slug", "status", "attending_names", "child_count",
       "phone", "email", "address_confirmed",
       "address_line1", "address_line2", "city", "state", "postal_code", "country",
-      "song_request", "message", "submitted_at",
+      "song_request", "message", "submitted_at", "rsvp_url",
     ];
     const esc = (s: string | null | undefined) => {
       const v = s ?? "";
       return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
     };
-    const body = rows.map((r) => {
+    const body = list.map((r) => {
       const attending = r.rsvp?.attendees.filter((a) => a.attending) ?? [];
       const addr = r.rsvp?.address ?? {
         line1: r.address_line1, line2: r.address_line2, city: r.city,
@@ -140,17 +226,41 @@ function RsvpsPanel() {
         r.phone, r.email, r.rsvp?.address_confirmed ? "yes" : "no",
         addr.line1, addr.line2, addr.city, addr.state, addr.postal_code, addr.country,
         r.rsvp?.song_request, r.rsvp?.message, r.rsvp?.submitted_at,
+        buildRsvpUrl(r.slug),
       ].map((v) => esc(typeof v === "string" ? v : v ?? "")).join(",");
     });
-    const csv = [header.join(","), ...body].join("\n");
+    return [header.join(","), ...body].join("\n");
+  }
+
+  function downloadCsv(list: AdminGuestRow[], suffix = "") {
+    const csv = toCsv(list);
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `rsvps-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `rsvps${suffix}-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
+
+  async function copySelectedLinks() {
+    const links = filtered.filter((r) => selected.has(r.id)).map((r) => `${r.primary_name}\t${buildRsvpUrl(r.slug)}`).join("\n");
+    if (!links) return;
+    try { await navigator.clipboard.writeText(links); } catch { /* ignore */ }
+  }
+
+  function toggleSort(k: SortKey) {
+    if (k === sortKey) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortKey(k); setSortDir(k === "submitted" ? "desc" : "asc"); }
+  }
+
+  const allVisibleSelected = filtered.length > 0 && filtered.every((r) => selected.has(r.id));
+  function toggleAllVisible() {
+    if (allVisibleSelected) setSelected(new Set());
+    else setSelected(new Set(filtered.map((r) => r.id)));
+  }
+
+  const selectedRows = filtered.filter((r) => selected.has(r.id));
 
   return (
     <div className="mt-8">
@@ -182,11 +292,36 @@ function RsvpsPanel() {
           onChange={(e) => setFilter(e.target.value as typeof filter)}
           className="border border-input bg-background px-3 py-2 text-sm"
         >
-          <option value="all">All</option>
+          <option value="all">All statuses</option>
           <option value="attending">Attending</option>
           <option value="not_attending">Declined</option>
           <option value="no_response">No response</option>
         </select>
+        <select
+          value={partySize}
+          onChange={(e) => setPartySize(e.target.value as typeof partySize)}
+          className="border border-input bg-background px-3 py-2 text-sm"
+          title="Party size"
+        >
+          <option value="any">Any size</option>
+          <option value="1">1 guest</option>
+          <option value="2">2 guests</option>
+          <option value="3plus">3+ guests</option>
+        </select>
+        <input
+          value={cityFilter}
+          onChange={(e) => setCityFilter(e.target.value)}
+          placeholder="City filter…"
+          className="border border-input bg-background px-3 py-2 text-sm w-32"
+        />
+        <label className="text-xs text-muted-foreground flex items-center gap-1">
+          <input type="checkbox" checked={addrOnly} onChange={(e) => setAddrOnly(e.target.checked)} />
+          Address unconfirmed
+        </label>
+        <label className="text-xs text-muted-foreground flex items-center gap-1">
+          <input type="checkbox" checked={songOnly} onChange={(e) => setSongOnly(e.target.checked)} />
+          Has song request
+        </label>
         <button
           onClick={() => setEditing("new")}
           className="ml-auto text-xs uppercase tracking-[0.2em] border border-primary text-primary px-3 py-2 hover:bg-primary hover:text-primary-foreground"
@@ -200,12 +335,28 @@ function RsvpsPanel() {
           Import CSV
         </button>
         <button
-          onClick={downloadCsv}
+          onClick={() => downloadCsv(filtered, "-filtered")}
+          className="text-xs uppercase tracking-[0.2em] border border-border text-foreground px-3 py-2"
+          title="Export the currently filtered rows"
+        >
+          Export filtered
+        </button>
+        <button
+          onClick={() => rows && downloadCsv(rows)}
           className="text-xs uppercase tracking-[0.2em] border border-border text-foreground px-3 py-2"
         >
-          {t.admin.exportCsv}
+          {t.admin.exportCsv} (all)
         </button>
       </div>
+
+      {selected.size > 0 && (
+        <div className="mt-4 flex flex-wrap items-center gap-3 border border-primary/40 bg-primary/5 px-4 py-2 text-xs">
+          <span className="uppercase tracking-[0.2em] text-primary">{selected.size} selected</span>
+          <button onClick={() => downloadCsv(selectedRows, "-selected")} className="border border-primary text-primary px-3 py-1 uppercase tracking-[0.2em]">Export selected</button>
+          <button onClick={copySelectedLinks} className="border border-border text-foreground px-3 py-1 uppercase tracking-[0.2em]">Copy RSVP links</button>
+          <button onClick={() => setSelected(new Set())} className="ml-auto text-muted-foreground uppercase tracking-[0.2em]">Clear</button>
+        </div>
+      )}
 
       {rows === null ? (
         <p className="mt-8 text-sm text-muted-foreground">{t.common.loading}</p>
@@ -216,25 +367,45 @@ function RsvpsPanel() {
           <table className="w-full text-sm">
             <thead className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
               <tr className="border-b border-border/40">
-                <th className="text-left py-2 pr-4">{t.admin.partyCol}</th>
-                <th className="text-left py-2 pr-4">Status</th>
-                <th className="text-left py-2 pr-4">Attending</th>
-                <th className="text-left py-2 pr-4">Address</th>
-                <th className="text-left py-2 pr-4">Link code</th>
-                <th className="text-left py-2 pr-4"></th>
+                <th className="w-8 py-2 pr-2">
+                  <input type="checkbox" checked={allVisibleSelected} onChange={toggleAllVisible} aria-label="Select all visible" />
+                </th>
+                <SortHeader label={t.admin.partyCol} k="name" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
+                <SortHeader label="Status" k="status" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
+                <SortHeader label="Party" k="party" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
+                <SortHeader label="Attending" k={null} />
+                <SortHeader label="City" k="city" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
+                <SortHeader label="Submitted" k="submitted" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
+                <SortHeader label="Link" k={null} />
+                <SortHeader label="" k={null} />
               </tr>
             </thead>
             <tbody>
               {filtered.map((r) => {
                 const attending = r.rsvp?.attendees.filter((a) => a.attending) ?? [];
+                const isSel = selected.has(r.id);
                 return (
-                  <tr key={r.id} className="border-b border-border/20 align-top">
+                  <tr key={r.id} className={`border-b border-border/20 align-top ${isSel ? "bg-primary/5" : ""}`}>
+                    <td className="py-3 pr-2">
+                      <input
+                        type="checkbox"
+                        checked={isSel}
+                        onChange={(e) => {
+                          setSelected((prev) => {
+                            const next = new Set(prev);
+                            if (e.target.checked) next.add(r.id); else next.delete(r.id);
+                            return next;
+                          });
+                        }}
+                        aria-label={`Select ${r.primary_name}`}
+                      />
+                    </td>
                     <td className="py-3 pr-4">
                       <div className="font-serif text-primary">{r.primary_name}</div>
                       <div className="text-[11px] text-muted-foreground">
-                        Invited {r.party_members.length || 1}{r.rsvp ? ` · ${attending.length} attending` : ""}
-                        {r.phone ? ` · ${r.phone}` : ""}
-                        {r.email ? ` · ${r.email}` : ""}
+                        {r.phone ? `${r.phone}` : ""}
+                        {r.phone && r.email ? " · " : ""}
+                        {r.email ? r.email : ""}
                       </div>
                     </td>
                     <td className="py-3 pr-4">
@@ -251,14 +422,30 @@ function RsvpsPanel() {
                       )}
                     </td>
                     <td className="py-3 pr-4 text-xs">
+                      {r.party_members.length || 1}
+                      {r.rsvp ? <span className="text-muted-foreground"> · {attending.length}✓</span> : null}
+                    </td>
+                    <td className="py-3 pr-4 text-xs">
                       {attending.length === 0 ? "—" : attending.map((a) => (
                         <div key={a.name}>{a.name}{a.is_child ? " (child)" : ""}</div>
                       ))}
                     </td>
+                    <td className="py-3 pr-4 text-xs">{r.city ?? "—"}</td>
                     <td className="py-3 pr-4 text-xs">
-                      {r.rsvp?.address_confirmed ? "✓ confirmed" : "not confirmed"}
+                      {r.rsvp?.submitted_at ? new Date(r.rsvp.submitted_at).toLocaleDateString() : "—"}
+                      {r.rsvp?.address_confirmed ? <div className="text-[10px] text-muted-foreground">✓ addr</div> : null}
                     </td>
-                    <td className="py-3 pr-4 text-xs font-mono">{r.slug}</td>
+                    <td className="py-3 pr-4 text-xs font-mono">
+                      <button
+                        onClick={() => {
+                          navigator.clipboard?.writeText(buildRsvpUrl(r.slug)).catch(() => {});
+                        }}
+                        className="text-primary link-underline"
+                        title="Copy RSVP link"
+                      >
+                        {r.slug}
+                      </button>
+                    </td>
                     <td className="py-3 pr-4">
                       <button
                         onClick={() => setEditing(r)}
@@ -280,6 +467,32 @@ function RsvpsPanel() {
     </div>
   );
 }
+
+function SortHeader({
+  label, k, sortKey, sortDir, onClick,
+}: {
+  label: string;
+  k: SortKey | null;
+  sortKey?: SortKey;
+  sortDir?: SortDir;
+  onClick?: (k: SortKey) => void;
+}) {
+  if (!k) return <th className="text-left py-2 pr-4">{label}</th>;
+  const active = sortKey === k;
+  const arrow = active ? (sortDir === "asc" ? "↑" : "↓") : "";
+  return (
+    <th className="text-left py-2 pr-4">
+      <button
+        type="button"
+        onClick={() => onClick?.(k)}
+        className={`uppercase tracking-[0.2em] ${active ? "text-primary" : "text-muted-foreground"}`}
+      >
+        {label} {arrow}
+      </button>
+    </th>
+  );
+}
+
 
 // ================== Guest editor ==================
 
@@ -479,59 +692,292 @@ function CsvImporter({ onClose, onDone }: { onClose: () => void; onDone: () => v
   );
 }
 
-// ================== Photos (unchanged behavior) ==================
+// ================== Photos ==================
+
+type PhotoTab = "pending" | "approved" | "rejected";
 
 function PhotosPanel() {
   const t = useT();
   const loadPhotos = useServerFn(getAdminPhotos);
+  const loadCounts = useServerFn(getPhotoCounts);
   const setStatus = useServerFn(setPhotoStatus);
-  const [photoTab, setPhotoTab] = useState<"pending" | "approved" | "rejected">("pending");
+  const runBulkStatus = useServerFn(bulkSetPhotoStatus);
+  const runUpdateCaption = useServerFn(updatePhotoCaption);
+  const runDelete = useServerFn(deletePhoto);
+  const runBulkDelete = useServerFn(bulkDeletePhotos);
+
+  const [photoTab, setPhotoTab] = useState<PhotoTab>("pending");
   const [photos, setPhotos] = useState<AdminPhoto[]>([]);
+  const [counts, setCounts] = useState<{ pending: number; approved: number; rejected: number } | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [lightbox, setLightbox] = useState<number | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [editingCaption, setEditingCaption] = useState<string | null>(null);
+  const [captionDraft, setCaptionDraft] = useState("");
 
-  useEffect(() => {
-    loadPhotos({ data: { status: photoTab } }).then(setPhotos).catch(() => {});
-  }, [photoTab, loadPhotos]);
+  const refreshCounts = useCallback(() => {
+    loadCounts({}).then(setCounts).catch(() => {});
+  }, [loadCounts]);
 
-  async function updatePhoto(id: string, s: "approved" | "rejected") {
-    await setStatus({ data: { id, status: s } });
+  const refreshPhotos = useCallback(async () => {
     const next = await loadPhotos({ data: { status: photoTab } });
     setPhotos(next);
+    // prune selection to visible ids
+    setSelected((prev) => {
+      const visible = new Set(next.map((p) => p.id));
+      const nextSet = new Set<string>();
+      for (const id of prev) if (visible.has(id)) nextSet.add(id);
+      return nextSet;
+    });
+  }, [loadPhotos, photoTab]);
+
+  useEffect(() => { refreshPhotos().catch(() => {}); }, [refreshPhotos]);
+  useEffect(() => { refreshCounts(); }, [refreshCounts]);
+
+  const setOne = useCallback(async (id: string, s: "approved" | "rejected") => {
+    setBusy(true);
+    try {
+      await setStatus({ data: { id, status: s } });
+      await Promise.all([refreshPhotos(), Promise.resolve(refreshCounts())]);
+    } finally { setBusy(false); }
+  }, [setStatus, refreshPhotos, refreshCounts]);
+
+  const deleteOne = useCallback(async (id: string) => {
+    if (!confirm("Delete this photo permanently? This removes the file too.")) return;
+    setBusy(true);
+    try {
+      await runDelete({ data: { id } });
+      await Promise.all([refreshPhotos(), Promise.resolve(refreshCounts())]);
+    } finally { setBusy(false); }
+  }, [runDelete, refreshPhotos, refreshCounts]);
+
+  async function bulkStatus(status: "approved" | "rejected" | "pending") {
+    if (!selected.size) return;
+    setBusy(true);
+    try {
+      await runBulkStatus({ data: { ids: Array.from(selected), status } });
+      await Promise.all([refreshPhotos(), Promise.resolve(refreshCounts())]);
+    } finally { setBusy(false); }
   }
+
+  async function bulkDelete() {
+    if (!selected.size) return;
+    if (!confirm(`Delete ${selected.size} photos permanently? This removes the files too.`)) return;
+    setBusy(true);
+    try {
+      await runBulkDelete({ data: { ids: Array.from(selected) } });
+      await Promise.all([refreshPhotos(), Promise.resolve(refreshCounts())]);
+    } finally { setBusy(false); }
+  }
+
+  async function saveCaption(id: string) {
+    setBusy(true);
+    try {
+      await runUpdateCaption({ data: { id, caption: captionDraft } });
+      setEditingCaption(null);
+      await refreshPhotos();
+    } finally { setBusy(false); }
+  }
+
+  const allSelected = photos.length > 0 && photos.every((p) => selected.has(p.id));
+  function toggleAll() {
+    if (allSelected) setSelected(new Set());
+    else setSelected(new Set(photos.map((p) => p.id)));
+  }
+
+  // Keyboard shortcuts (only when lightbox open)
+  useEffect(() => {
+    if (lightbox === null) return;
+    function onKey(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (lightbox === null) return;
+      const p = photos[lightbox];
+      if (!p) return;
+      if (e.key === "Escape") setLightbox(null);
+      else if (e.key === "ArrowLeft") setLightbox((i) => (i === null ? null : Math.max(0, i - 1)));
+      else if (e.key === "ArrowRight") setLightbox((i) => (i === null ? null : Math.min(photos.length - 1, i + 1)));
+      else if (e.key.toLowerCase() === "a" && photoTab !== "approved") { void setOne(p.id, "approved"); }
+      else if (e.key.toLowerCase() === "r" && photoTab !== "rejected") { void setOne(p.id, "rejected"); }
+      else if (e.key.toLowerCase() === "d") { void deleteOne(p.id); }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [lightbox, photos, photoTab, setOne, deleteOne]);
+
+  const tabLabel = (s: PhotoTab) => {
+    const base = s === "pending" ? t.admin.pending : s === "approved" ? t.admin.approved : t.admin.rejected;
+    const n = counts?.[s];
+    return n === undefined ? base : `${base} (${n})`;
+  };
 
   return (
     <div className="mt-8">
-      <div className="flex gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {(["pending", "approved", "rejected"] as const).map((s) => (
           <button
             key={s} onClick={() => setPhotoTab(s)}
             className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.2em] ${photoTab === s ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"}`}
           >
-            {s === "pending" ? t.admin.pending : s === "approved" ? t.admin.approved : t.admin.rejected}
+            {tabLabel(s)}
           </button>
         ))}
+        {photos.length > 0 && (
+          <label className="ml-4 text-xs text-muted-foreground flex items-center gap-2">
+            <input type="checkbox" checked={allSelected} onChange={toggleAll} />
+            Select all ({photos.length})
+          </label>
+        )}
       </div>
+
+      {selected.size > 0 && (
+        <div className="mt-4 sticky top-2 z-20 flex flex-wrap items-center gap-3 border border-primary/40 bg-primary/5 backdrop-blur px-4 py-2 text-xs">
+          <span className="uppercase tracking-[0.2em] text-primary">{selected.size} selected</span>
+          {photoTab !== "approved" && (
+            <button disabled={busy} onClick={() => bulkStatus("approved")} className="border border-primary text-primary px-3 py-1 uppercase tracking-[0.2em] disabled:opacity-50">Approve {selected.size}</button>
+          )}
+          {photoTab !== "rejected" && (
+            <button disabled={busy} onClick={() => bulkStatus("rejected")} className="border border-border text-foreground px-3 py-1 uppercase tracking-[0.2em] disabled:opacity-50">Reject {selected.size}</button>
+          )}
+          {photoTab !== "pending" && (
+            <button disabled={busy} onClick={() => bulkStatus("pending")} className="border border-border text-foreground px-3 py-1 uppercase tracking-[0.2em] disabled:opacity-50">Move to pending</button>
+          )}
+          <button disabled={busy} onClick={bulkDelete} className="border border-destructive text-destructive px-3 py-1 uppercase tracking-[0.2em] disabled:opacity-50">Delete {selected.size}</button>
+          <button onClick={() => setSelected(new Set())} className="ml-auto text-muted-foreground uppercase tracking-[0.2em]">Clear</button>
+        </div>
+      )}
+
       {photos.length === 0 ? (
         <p className="mt-8 text-sm text-muted-foreground">{t.admin.noPhotos}</p>
       ) : (
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {photos.map((p) => (
-            <div key={p.id} className="rounded-sm border border-border/60 bg-card overflow-hidden">
-              <img src={p.url} alt="" className="w-full aspect-square object-cover" />
-              <div className="p-3 space-y-2">
-                <div className="text-sm">{p.uploader_name}</div>
-                {p.uploader_email && <div className="text-xs text-muted-foreground">{p.uploader_email}</div>}
-                {p.caption && <p className="text-xs text-foreground/80">{p.caption}</p>}
-                {photoTab === "pending" && (
-                  <div className="flex gap-2 pt-2">
-                    <button onClick={() => updatePhoto(p.id, "approved")} className="flex-1 rounded-full bg-primary text-primary-foreground text-xs uppercase tracking-[0.15em] py-2">{t.admin.approve}</button>
-                    <button onClick={() => updatePhoto(p.id, "rejected")} className="flex-1 rounded-full border border-input text-xs uppercase tracking-[0.15em] py-2">{t.admin.reject}</button>
+          {photos.map((p, idx) => {
+            const isSel = selected.has(p.id);
+            return (
+              <div key={p.id} className={`relative rounded-sm border ${isSel ? "border-primary" : "border-border/60"} bg-card overflow-hidden group`}>
+                <label className="absolute top-2 left-2 z-10 bg-background/80 backdrop-blur rounded-sm px-1.5 py-0.5">
+                  <input
+                    type="checkbox"
+                    checked={isSel}
+                    onChange={(e) => {
+                      setSelected((prev) => {
+                        const next = new Set(prev);
+                        if (e.target.checked) next.add(p.id); else next.delete(p.id);
+                        return next;
+                      });
+                    }}
+                    aria-label={`Select photo from ${p.uploader_name}`}
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setLightbox(idx)}
+                  className="block w-full aspect-square overflow-hidden focus:outline-none"
+                  aria-label="Open larger view"
+                >
+                  <img
+                    src={p.url}
+                    alt={p.caption ?? `Photo from ${p.uploader_name}`}
+                    loading="lazy"
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                </button>
+                <div className="p-3 space-y-2">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <div className="text-sm truncate">{p.uploader_name}</div>
+                    <div className="text-[10px] text-muted-foreground shrink-0">
+                      {new Date(p.created_at).toLocaleDateString()}
+                    </div>
                   </div>
-                )}
+                  {p.uploader_email && <div className="text-xs text-muted-foreground truncate">{p.uploader_email}</div>}
+
+                  {editingCaption === p.id ? (
+                    <div className="space-y-1">
+                      <textarea
+                        value={captionDraft}
+                        onChange={(e) => setCaptionDraft(e.target.value)}
+                        rows={2}
+                        maxLength={300}
+                        className="w-full border border-input bg-background px-2 py-1 text-xs"
+                      />
+                      <div className="flex gap-2">
+                        <button disabled={busy} onClick={() => saveCaption(p.id)} className="text-[10px] uppercase tracking-[0.2em] text-primary">Save</button>
+                        <button onClick={() => setEditingCaption(null)} className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Cancel</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { setEditingCaption(p.id); setCaptionDraft(p.caption ?? ""); }}
+                      className="block text-left w-full text-xs text-foreground/80 min-h-[1.25rem] hover:text-primary"
+                      title="Click to edit caption"
+                    >
+                      {p.caption || <span className="italic text-muted-foreground">Add caption…</span>}
+                    </button>
+                  )}
+
+                  <div className="flex gap-2 pt-1">
+                    {photoTab !== "approved" && (
+                      <button disabled={busy} onClick={() => setOne(p.id, "approved")} className="flex-1 rounded-full bg-primary text-primary-foreground text-xs uppercase tracking-[0.15em] py-1.5 disabled:opacity-50">{t.admin.approve}</button>
+                    )}
+                    {photoTab !== "rejected" && (
+                      <button disabled={busy} onClick={() => setOne(p.id, "rejected")} className="flex-1 rounded-full border border-input text-xs uppercase tracking-[0.15em] py-1.5 disabled:opacity-50">{t.admin.reject}</button>
+                    )}
+                    <button disabled={busy} onClick={() => deleteOne(p.id)} className="rounded-full border border-destructive text-destructive text-xs uppercase tracking-[0.15em] py-1.5 px-3 disabled:opacity-50" title="Delete permanently">×</button>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
+
+      {lightbox !== null && photos[lightbox] && (
+        <PhotoLightbox
+          photo={photos[lightbox]}
+          index={lightbox}
+          total={photos.length}
+          onClose={() => setLightbox(null)}
+          onPrev={() => setLightbox((i) => (i === null ? null : Math.max(0, i - 1)))}
+          onNext={() => setLightbox((i) => (i === null ? null : Math.min(photos.length - 1, i + 1)))}
+        />
+      )}
+
+      <p className="mt-6 text-[10px] text-muted-foreground">
+        Keyboard shortcuts (in lightbox): <span className="font-mono">← →</span> navigate ·
+        <span className="font-mono"> A</span> approve · <span className="font-mono">R</span> reject ·
+        <span className="font-mono"> D</span> delete · <span className="font-mono">Esc</span> close
+      </p>
     </div>
   );
 }
+
+function PhotoLightbox({
+  photo, index, total, onClose, onPrev, onNext,
+}: {
+  photo: AdminPhoto;
+  index: number;
+  total: number;
+  onClose: () => void;
+  onPrev: () => void;
+  onNext: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col items-center justify-center p-4" onClick={onClose}>
+      <div className="w-full max-w-5xl flex items-center justify-between text-xs uppercase tracking-[0.2em] text-muted-foreground pb-2">
+        <div>{index + 1} / {total}</div>
+        <button onClick={(e) => { e.stopPropagation(); onClose(); }}>Close</button>
+      </div>
+      <div className="flex-1 flex items-center gap-3 w-full max-w-5xl" onClick={(e) => e.stopPropagation()}>
+        <button onClick={onPrev} disabled={index === 0} className="text-2xl text-muted-foreground disabled:opacity-30 px-2">←</button>
+        <img src={photo.url} alt={photo.caption ?? ""} className="flex-1 max-h-[80vh] object-contain" />
+        <button onClick={onNext} disabled={index === total - 1} className="text-2xl text-muted-foreground disabled:opacity-30 px-2">→</button>
+      </div>
+      <div className="w-full max-w-5xl pt-3 text-sm text-center">
+        <div className="font-serif text-primary">{photo.uploader_name}</div>
+        {photo.caption && <p className="text-xs text-foreground/80 mt-1">{photo.caption}</p>}
+      </div>
+    </div>
+  );
+}
+
