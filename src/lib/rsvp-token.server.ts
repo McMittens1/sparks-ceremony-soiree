@@ -23,6 +23,13 @@ function textToBytes(s: string): Uint8Array {
 function bytesToText(b: Uint8Array): string {
   return new TextDecoder().decode(b);
 }
+// Copy into a fresh ArrayBuffer so the value satisfies BufferSource on
+// TS lib.dom types that require Uint8Array<ArrayBuffer> (not ArrayBufferLike).
+function toBuf(b: Uint8Array): ArrayBuffer {
+  const out = new ArrayBuffer(b.byteLength);
+  new Uint8Array(out).set(b);
+  return out;
+}
 function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {
   if (a.length !== b.length) return false;
   let out = 0;
