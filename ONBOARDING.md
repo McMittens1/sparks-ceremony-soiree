@@ -391,9 +391,11 @@ Before writing or changing code:
 2. Read `AGENTS.md` for Lovable-specific git guardrails.
 3. Read `src/lib/site.ts` and `src/lib/wedding-data.ts` to understand the data model.
 4. Read `src/styles.css` to internalize the color/type tokens.
-5. Run `git branch --show-current` and ensure you are on a feature branch, not `main`.
-6. Run `bun run build` or `bun run build:dev` after any change to verify the project compiles.
-7. If you touch RSVP, admin, or email logic, test the affected flow in the browser or via the existing server functions.
+5. Run `bun run build` or `bun run build:dev` after any change to verify the project compiles.
+6. If you touch RSVP, admin, or email logic, test the affected flow in the browser or via the existing server functions.
+
+Note: Work directly on `main`. Do not create feature branches or open PRs. See §8 for the full git workflow.
+
 
 ---
 
@@ -409,8 +411,7 @@ BEFORE you make any code changes, do the following:
 2. Read AGENTS.md for git guardrails.
 3. Read src/lib/site.ts and src/lib/wedding-data.ts.
 4. Read src/styles.css to understand the color/type tokens.
-5. Run `git branch --show-current`. You MUST be on a feature branch, not `main`, before editing. If you are on `main`, create and switch to `feat/<short-description>` first.
-6. Read §3 of ONBOARDING.md (Remaining work / roadmap) and pick up the next uncompleted sprint rather than inventing new work.
+5. Read §3 of ONBOARDING.md (Remaining work / roadmap) and pick up the next uncompleted sprint rather than inventing new work.
 
 PROJECT ESSENTIALS:
 - Tech stack: TanStack Start v1, React 19, Vite 8, Tailwind CSS v4, TypeScript strict, Lovable Cloud (Supabase-backed but never say "Supabase" to users).
@@ -433,10 +434,9 @@ DESIGN RULES:
 - Preserve the existing stationery/minimal aesthetic. Do not introduce generic AI gradients or Inter/Poppins defaults.
 
 GIT WORKFLOW:
-- Lovable syncs from `main`. Treat `main` as published/canonical.
-- Do all work on feature branches (`feat/<name>`) and open PRs into `main`.
-- Never force-push, rebase, amend, or squash commits already on `main` or any shared branch.
-- After merging, changes sync back to Lovable automatically.
+- Work directly on `main`. Do not create feature branches or open PRs.
+- Pull before you start; commit and push to `main` frequently in small commits.
+- Never force-push, rebase, amend, or squash commits already on `main`.
 
 NEVER DO:
 - Do not expose "Supabase" terminology to end users.
@@ -447,6 +447,7 @@ NEVER DO:
 
 When you are ready to propose a change, explain it briefly, then implement it. After editing, run `bun run build` (or `bun run build:dev`) to verify the project compiles. If you touch RSVP/admin/email, test the affected flow.
 ```
+
 
 ---
 
