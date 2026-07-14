@@ -61,6 +61,7 @@ export interface AdminGuestRow {
   invite_notes: string | null;
   created_at: string;
   rsvp: PublicRsvp | null;
+  edit_token: string;
 }
 
 // ---------- Helpers ----------
@@ -223,127 +224,206 @@ const submitSchema = z.object({
   message: z.string().trim().max(1000).optional().or(z.literal("")),
 });
 
+const editSchema = submitSchema.omit({ slug: true });
+type EditRsvpInput = z.infer<typeof editSchema>;
+
+// Shared write path used by public submit and token-based edit.
+async function writeRsvp(guestId: string, data: EditRsvpInput, invitationSlug: string, siteOrigin: string): Promise<void> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { signRsvpToken } = await import("@/lib/rsvp-token.server");
+
+  const { data: g, error: gErr } = await supabaseAdmin
+    .from("guests").select("id, primary_name, party_members").eq("id", guestId).maybeSingle();
+  if (gErr || !g) throw new Error("Guest not found");
+
+  const maxAllowed = Math.max(
+    1,
+    (Array.isArray(g.party_members) ? (g.party_members as unknown[]).length : 1) + 1,
+  );
+  if (data.attendees.length > maxAllowed) throw new Error("Too many guests for this invite");
+
+  const anyYes = data.attendees.some((a) => a.attending);
+  const anyNo = data.attendees.some((a) => !a.attending);
+  const status: PublicRsvp["status"] = anyYes && anyNo ? "partial" : anyYes ? "attending" : "not_attending";
+
+  const guestPatch: {
+    email?: string | null;
+    address_line1?: string | null;
+    address_line2?: string | null;
+    city?: string | null;
+    state?: string | null;
+    postal_code?: string | null;
+    country?: string | null;
+  } = {};
+  if (typeof data.email === "string") guestPatch.email = data.email.trim() || null;
+  if (data.address) {
+    guestPatch.address_line1 = data.address.line1?.trim() || null;
+    guestPatch.address_line2 = data.address.line2?.trim() || null;
+    guestPatch.city = data.address.city?.trim() || null;
+    guestPatch.state = data.address.state?.trim() || null;
+    guestPatch.postal_code = data.address.postal_code?.trim() || null;
+    guestPatch.country = data.address.country?.trim() || null;
+  }
+  if (Object.keys(guestPatch).length > 0) {
+    await supabaseAdmin.from("guests").update(guestPatch).eq("id", g.id);
+  }
+
+  const now = new Date().toISOString();
+  const { error } = await supabaseAdmin.from("rsvps").upsert(
+    {
+      guest_id: g.id,
+      status,
+      attendees: data.attendees,
+      address_confirmed: data.address_confirmed,
+      address: data.address ?? null,
+      song_request: data.song_request?.trim() || null,
+      message: data.message?.trim() || null,
+      submitted_at: now,
+      updated_at: now,
+    },
+    { onConflict: "guest_id" },
+  );
+  if (error) throw new Error(error.message);
+
+  try {
+    const { enqueueAppEmail, getAdminNotificationEmails } = await import("@/lib/email/enqueue.server");
+    const guestEmail = (typeof data.email === "string" ? data.email.trim() : "") || null;
+    const idemBase = `rsvp-${g.id}-${now}`;
+    const token = await signRsvpToken(g.id);
+    const editUrl = `${siteOrigin}/rsvp/edit/${token}`;
+
+    if (guestEmail) {
+      await enqueueAppEmail({
+        templateName: "rsvp-confirmation",
+        to: guestEmail,
+        idempotencyKey: `${idemBase}-guest`,
+        data: {
+          guestName: g.primary_name,
+          status,
+          attendees: data.attendees,
+          slug: invitationSlug,
+          editUrl,
+          eventDate: "October 10, 2026",
+          venue: "Sparks' Barn",
+          address: "13817 108th St, Louisville, NE 68037",
+        },
+      });
+    }
+
+    const admins = getAdminNotificationEmails();
+    if (admins.length > 0) {
+      const yesCount = data.attendees.filter((a) => a.attending).length;
+      const statusLabel =
+        status === "attending" ? "Attending" : status === "partial" ? "Partial" : "Not attending";
+      const details = [
+        { label: "Status", value: statusLabel },
+        { label: "Party size", value: `${data.attendees.length} (${yesCount} attending)` },
+        { label: "Attendees", value: data.attendees.map((a) => `${a.name}${a.attending ? "" : " (no)"}`).join(", ") },
+      ];
+      if (data.song_request?.trim()) details.push({ label: "Song request", value: data.song_request.trim() });
+      if (data.message?.trim()) details.push({ label: "Message", value: data.message.trim() });
+      if (guestEmail) details.push({ label: "Email", value: guestEmail });
+
+      await Promise.all(
+        admins.map((to) =>
+          enqueueAppEmail({
+            templateName: "admin-notification",
+            to,
+            idempotencyKey: `${idemBase}-admin-${to}`,
+            data: {
+              kind: "rsvp",
+              headline: `New RSVP: ${g.primary_name} — ${statusLabel}`,
+              summary: `${g.primary_name} just submitted an RSVP.`,
+              details,
+              adminUrl: `${siteOrigin}/admin`,
+            },
+          }),
+        ),
+      );
+    }
+  } catch (e) {
+    console.error("RSVP email notification failed", e);
+  }
+}
+
+const SITE_ORIGIN = "https://morenowedding2026.com";
+
 export const submitRsvp = createServerFn({ method: "POST" })
   .validator((d: unknown) => submitSchema.parse(d))
   .handler(async ({ data }): Promise<{ ok: true }> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
     const { data: g, error: gErr } = await supabaseAdmin
-      .from("guests").select("id, primary_name, party_members").eq("slug", data.slug.toUpperCase()).maybeSingle();
+      .from("guests").select("id").eq("slug", data.slug.toUpperCase()).maybeSingle();
     if (gErr || !g) throw new Error("Guest not found");
-
-    // Cap attendees at invited party size + 1 for a plus-one buffer.
-    const maxAllowed = Math.max(
-      1,
-      (Array.isArray(g.party_members) ? (g.party_members as unknown[]).length : 1) + 1,
-    );
-    if (data.attendees.length > maxAllowed) throw new Error("Too many guests for this invite");
-
-    const anyYes = data.attendees.some((a) => a.attending);
-    const anyNo = data.attendees.some((a) => !a.attending);
-    const status: PublicRsvp["status"] = anyYes && anyNo ? "partial" : anyYes ? "attending" : "not_attending";
-
-    // Persist email + address updates back to the guest record so we can reach them later.
-    const guestPatch: {
-      email?: string | null;
-      address_line1?: string | null;
-      address_line2?: string | null;
-      city?: string | null;
-      state?: string | null;
-      postal_code?: string | null;
-      country?: string | null;
-    } = {};
-    if (typeof data.email === "string") guestPatch.email = data.email.trim() || null;
-    if (data.address) {
-      guestPatch.address_line1 = data.address.line1?.trim() || null;
-      guestPatch.address_line2 = data.address.line2?.trim() || null;
-      guestPatch.city = data.address.city?.trim() || null;
-      guestPatch.state = data.address.state?.trim() || null;
-      guestPatch.postal_code = data.address.postal_code?.trim() || null;
-      guestPatch.country = data.address.country?.trim() || null;
-    }
-    if (Object.keys(guestPatch).length > 0) {
-      await supabaseAdmin.from("guests").update(guestPatch).eq("id", g.id);
-    }
-
-    const now = new Date().toISOString();
-    const { error } = await supabaseAdmin.from("rsvps").upsert(
-      {
-        guest_id: g.id,
-        status,
-        attendees: data.attendees,
-        address_confirmed: data.address_confirmed,
-        address: data.address ?? null,
-        song_request: data.song_request?.trim() || null,
-        message: data.message?.trim() || null,
-        submitted_at: now,
-        updated_at: now,
-      },
-      { onConflict: "guest_id" },
-    );
-    if (error) throw new Error(error.message);
-
-    // Fire-and-forget email notifications. Never let a failed email break the RSVP.
-    try {
-      const { enqueueAppEmail, getAdminNotificationEmails } = await import("@/lib/email/enqueue.server");
-      const guestEmail = (typeof data.email === "string" ? data.email.trim() : "") || null;
-      const idemBase = `rsvp-${g.id}-${now}`;
-
-      if (guestEmail) {
-        await enqueueAppEmail({
-          templateName: "rsvp-confirmation",
-          to: guestEmail,
-          idempotencyKey: `${idemBase}-guest`,
-          data: {
-            guestName: g.primary_name,
-            status,
-            attendees: data.attendees,
-            slug: data.slug.toUpperCase(),
-            editUrl: `https://morenowedding2026.com/rsvp?g=${data.slug.toUpperCase()}`,
-            eventDate: "October 10, 2026",
-            venue: "Sparks' Barn",
-            address: "13817 108th St, Louisville, NE 68037",
-          },
-        });
-      }
-
-      const admins = getAdminNotificationEmails();
-      if (admins.length > 0) {
-        const yesCount = data.attendees.filter((a) => a.attending).length;
-        const statusLabel =
-          status === "attending" ? "Attending" : status === "partial" ? "Partial" : "Not attending";
-        const details = [
-          { label: "Status", value: statusLabel },
-          { label: "Party size", value: `${data.attendees.length} (${yesCount} attending)` },
-          { label: "Attendees", value: data.attendees.map((a) => `${a.name}${a.attending ? "" : " (no)"}`).join(", ") },
-        ];
-        if (data.song_request?.trim()) details.push({ label: "Song request", value: data.song_request.trim() });
-        if (data.message?.trim()) details.push({ label: "Message", value: data.message.trim() });
-        if (guestEmail) details.push({ label: "Email", value: guestEmail });
-
-        await Promise.all(
-          admins.map((to) =>
-            enqueueAppEmail({
-              templateName: "admin-notification",
-              to,
-              idempotencyKey: `${idemBase}-admin-${to}`,
-              data: {
-                kind: "rsvp",
-                headline: `New RSVP: ${g.primary_name} — ${statusLabel}`,
-                summary: `${g.primary_name} just submitted an RSVP.`,
-                details,
-                adminUrl: "https://morenowedding2026.com/admin",
-              },
-            }),
-          ),
-        );
-      }
-    } catch (e) {
-      console.error("RSVP email notification failed", e);
-    }
-
+    const { slug: _slug, ...rest } = data;
+    await writeRsvp(g.id, rest, data.slug.toUpperCase(), SITE_ORIGIN);
     return { ok: true };
   });
+
+// ---------- Token-based edit (signed link, no login) ----------
+
+export const getRsvpByToken = createServerFn({ method: "POST" })
+  .validator((d: { token: string }) =>
+    z.object({ token: z.string().min(10).max(400) }).parse(d),
+  )
+  .handler(async ({ data }): Promise<
+    | { ok: true; guest: PublicGuest; rsvp: PublicRsvp | null }
+    | { ok: false; reason: "malformed" | "invalid" | "expired" | "not_found" }
+  > => {
+    const { verifyRsvpToken } = await import("@/lib/rsvp-token.server");
+    const v = await verifyRsvpToken(data.token);
+    if (!v.ok) return { ok: false, reason: v.reason };
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: g } = await supabaseAdmin
+      .from("guests")
+      .select("id, slug, primary_name, party_members, email, phone, address_line1, address_line2, city, state, postal_code, country")
+      .eq("id", v.guestId)
+      .maybeSingle();
+    if (!g) return { ok: false, reason: "not_found" };
+
+    const guest = mapGuestRow(g);
+    const { data: r } = await supabaseAdmin
+      .from("rsvps")
+      .select("status, attendees, address_confirmed, address, song_request, message, submitted_at, updated_at")
+      .eq("guest_id", g.id)
+      .maybeSingle();
+
+    const rsvp: PublicRsvp | null = r
+      ? {
+          status: r.status as PublicRsvp["status"],
+          attendees: (Array.isArray(r.attendees) ? (r.attendees as unknown as AttendeeChoice[]) : []),
+          address_confirmed: !!r.address_confirmed,
+          address: (r.address as unknown as GuestAddress | null) ?? null,
+          song_request: r.song_request,
+          message: r.message,
+          submitted_at: r.submitted_at,
+          updated_at: r.updated_at,
+        }
+      : null;
+    return { ok: true, guest, rsvp };
+  });
+
+const editByTokenSchema = editSchema.extend({ token: z.string().min(10).max(400) });
+
+export const updateRsvpByToken = createServerFn({ method: "POST" })
+  .validator((d: unknown) => editByTokenSchema.parse(d))
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { verifyRsvpToken } = await import("@/lib/rsvp-token.server");
+    const v = await verifyRsvpToken(data.token);
+    if (!v.ok) throw new Error(v.reason === "expired" ? "This edit link has expired." : "Invalid edit link.");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: g } = await supabaseAdmin
+      .from("guests").select("slug").eq("id", v.guestId).maybeSingle();
+    if (!g) throw new Error("Guest not found");
+
+    const { token: _t, ...rest } = data;
+    await writeRsvp(v.guestId, rest, g.slug, SITE_ORIGIN);
+    return { ok: true };
+  });
+
+
 
 // ---------- Admin server functions ----------
 
@@ -371,7 +451,10 @@ export const listGuestsWithRsvps = createServerFn({ method: "POST" })
         updated_at: r.updated_at,
       });
     }
-    return (guests ?? []).map((g): AdminGuestRow => ({
+    const { signRsvpToken } = await import("@/lib/rsvp-token.server");
+    const rows = guests ?? [];
+    const tokens = await Promise.all(rows.map((g) => signRsvpToken(g.id)));
+    return rows.map((g, i): AdminGuestRow => ({
       id: g.id,
       slug: g.slug,
       primary_name: g.primary_name,
@@ -387,6 +470,7 @@ export const listGuestsWithRsvps = createServerFn({ method: "POST" })
       invite_notes: g.invite_notes,
       created_at: g.created_at,
       rsvp: rsvpByGuest.get(g.id) ?? null,
+      edit_token: tokens[i],
     }));
   });
 

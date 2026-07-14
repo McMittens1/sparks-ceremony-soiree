@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { DiamondDivider } from "@/components/site/DiamondDivider";
 import { SectionHeader } from "@/components/site/SectionHeader";
 import { BodyProse, DisplayHeading, Eyebrow } from "@/components/site/typography";
@@ -5,6 +6,15 @@ import { HOTELS } from "@/lib/wedding-data";
 import { SITE } from "@/lib/site";
 
 export function TravelSection() {
+  const [copied, setCopied] = useState(false);
+  const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(SITE.address)}`;
+  async function copyAddress() {
+    try {
+      await navigator.clipboard.writeText(SITE.address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch { /* ignore */ }
+  }
   return (
     <section id="travel" className="border-t border-hairline rs-section">
       <SectionHeader
@@ -28,15 +38,48 @@ export function TravelSection() {
             <br />
             Louisville, NE 68037
           </p>
-          <a
-            href={SITE.mapLink}
-            target="_blank"
-            rel="noopener"
-            className="mt-6 inline-block uppercase font-sans text-lavender-deep border-b border-lavender-deep"
-            style={{ fontSize: 10, letterSpacing: "0.2em", paddingBottom: 3 }}
-          >
-            Open in maps →
-          </a>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <a
+              href={directionsUrl}
+              target="_blank"
+              rel="noopener"
+              className="uppercase font-sans"
+              style={{
+                fontSize: 10,
+                letterSpacing: "0.2em",
+                color: "var(--color-ivory)",
+                background: "var(--color-lavender-deep)",
+                padding: "10px 16px",
+              }}
+            >
+              Get directions →
+            </a>
+            <button
+              type="button"
+              onClick={copyAddress}
+              className="uppercase font-sans"
+              style={{
+                fontSize: 10,
+                letterSpacing: "0.2em",
+                color: "var(--color-lavender-deep)",
+                border: "1px solid var(--color-lavender-deep)",
+                background: "transparent",
+                padding: "10px 16px",
+              }}
+              aria-live="polite"
+            >
+              {copied ? "Copied ✓" : "Copy address"}
+            </button>
+            <a
+              href={SITE.mapLink}
+              target="_blank"
+              rel="noopener"
+              className="uppercase font-sans self-center"
+              style={{ fontSize: 10, letterSpacing: "0.2em", color: "var(--color-tan-deep)" }}
+            >
+              Open in maps →
+            </a>
+          </div>
         </div>
         <div
           style={{

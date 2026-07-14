@@ -197,9 +197,10 @@ function RsvpsPanel() {
     return { attending, declined, pending, adults, children };
   }, [rows]);
 
-  const buildRsvpUrl = useCallback((slug: string) => {
-    if (typeof window === "undefined") return `/rsvp?g=${slug}`;
-    return `${window.location.origin}/rsvp?g=${slug}`;
+  const buildRsvpUrl = useCallback((row: AdminGuestRow) => {
+    const path = `/rsvp/edit/${row.edit_token}`;
+    if (typeof window === "undefined") return path;
+    return `${window.location.origin}${path}`;
   }, []);
 
   function toCsv(list: AdminGuestRow[]) {
@@ -226,7 +227,7 @@ function RsvpsPanel() {
         r.phone, r.email, r.rsvp?.address_confirmed ? "yes" : "no",
         addr.line1, addr.line2, addr.city, addr.state, addr.postal_code, addr.country,
         r.rsvp?.song_request, r.rsvp?.message, r.rsvp?.submitted_at,
-        buildRsvpUrl(r.slug),
+        buildRsvpUrl(r),
       ].map((v) => esc(typeof v === "string" ? v : v ?? "")).join(",");
     });
     return [header.join(","), ...body].join("\n");
@@ -244,7 +245,7 @@ function RsvpsPanel() {
   }
 
   async function copySelectedLinks() {
-    const links = filtered.filter((r) => selected.has(r.id)).map((r) => `${r.primary_name}\t${buildRsvpUrl(r.slug)}`).join("\n");
+    const links = filtered.filter((r) => selected.has(r.id)).map((r) => `${r.primary_name}\t${buildRsvpUrl(r)}`).join("\n");
     if (!links) return;
     try { await navigator.clipboard.writeText(links); } catch { /* ignore */ }
   }
@@ -438,7 +439,7 @@ function RsvpsPanel() {
                     <td className="py-3 pr-4 text-xs font-mono">
                       <button
                         onClick={() => {
-                          navigator.clipboard?.writeText(buildRsvpUrl(r.slug)).catch(() => {});
+                          navigator.clipboard?.writeText(buildRsvpUrl(r)).catch(() => {});
                         }}
                         className="text-primary link-underline"
                         title="Copy RSVP link"

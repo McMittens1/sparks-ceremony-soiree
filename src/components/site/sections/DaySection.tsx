@@ -85,6 +85,40 @@ export function DaySection() {
                 </span>
               </div>
             ))}
+            <div className="flex flex-wrap gap-3" style={{ marginTop: 24 }}>
+              <a
+                href="/api/public/wedding.ics"
+                className="uppercase font-sans inline-block"
+                style={{
+                  fontSize: 10,
+                  letterSpacing: "0.22em",
+                  color: "var(--color-ivory)",
+                  border: "1px solid rgba(248,244,236,0.5)",
+                  padding: "10px 16px",
+                }}
+              >
+                Add to calendar (.ics)
+              </a>
+              <a
+                href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
+                  "Geovanni & Addison — Wedding",
+                )}&dates=20261010T220000Z/20261011T043000Z&location=${encodeURIComponent(
+                  "Sparks' Barn, 13817 108th St, Louisville, NE 68037",
+                )}&details=${encodeURIComponent("The wedding of Geo & Addi. See morenowedding2026.com.")}`}
+                target="_blank"
+                rel="noopener"
+                className="uppercase font-sans inline-block"
+                style={{
+                  fontSize: 10,
+                  letterSpacing: "0.22em",
+                  color: "var(--color-ivory)",
+                  border: "1px solid rgba(248,244,236,0.5)",
+                  padding: "10px 16px",
+                }}
+              >
+                Google Calendar
+              </a>
+            </div>
           </div>
           <div className="grid content-start" style={{ gap: 36 }}>
             <figure style={{ margin: 0 }}>
