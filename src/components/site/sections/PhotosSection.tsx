@@ -4,11 +4,7 @@ import { Eyebrow } from "@/components/site/typography";
 
 export function PhotosSection() {
   return (
-    <section
-      id="photos"
-      className="border-t border-hairline rs-section"
-      style={{ padding: "80px 56px", maxWidth: 1500, margin: "0 auto" }}
-    >
+    <section id="photos" className="border-t border-hairline rs-section">
       <SectionHeader
         eyebrow="VI · Photos"
         title="Photos"
@@ -16,7 +12,8 @@ export function PhotosSection() {
       />
       <DiamondDivider className="mt-9" />
 
-      <div className="grid rs-stack" style={{ marginTop: 64, gridTemplateColumns: "5fr 7fr", gap: 64 }}>
+      <div className="grid rs-stack" style={{ marginTop: 64 }}>
+
         <div className="flex flex-col justify-center">
           <span
             className="flex-shrink-0 bg-lavender"
