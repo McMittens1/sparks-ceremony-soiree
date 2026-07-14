@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as RsvpRouteImport } from './routes/rsvp'
 import { Route as PortalGa2026RouteImport } from './routes/portal-ga-2026'
 import { Route as McpRouteImport } from './routes/mcp'
@@ -27,6 +28,11 @@ import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/e
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 
+const UnsubscribeRoute = UnsubscribeRouteImport.update({
+  id: '/unsubscribe',
+  path: '/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RsvpRoute = RsvpRouteImport.update({
   id: '/rsvp',
   path: '/rsvp',
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/mcp': typeof McpRoute
   '/portal-ga-2026': typeof PortalGa2026Route
   '/rsvp': typeof RsvpRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -141,6 +148,7 @@ export interface FileRoutesByTo {
   '/mcp': typeof McpRoute
   '/portal-ga-2026': typeof PortalGa2026Route
   '/rsvp': typeof RsvpRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -161,6 +169,7 @@ export interface FileRoutesById {
   '/mcp': typeof McpRoute
   '/portal-ga-2026': typeof PortalGa2026Route
   '/rsvp': typeof RsvpRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
@@ -181,6 +190,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/portal-ga-2026'
     | '/rsvp'
+    | '/unsubscribe'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/admin'
@@ -199,6 +209,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/portal-ga-2026'
     | '/rsvp'
+    | '/unsubscribe'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/admin'
@@ -218,6 +229,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/portal-ga-2026'
     | '/rsvp'
+    | '/unsubscribe'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/_authenticated/admin'
@@ -238,6 +250,7 @@ export interface RootRouteChildren {
   McpRoute: typeof McpRoute
   PortalGa2026Route: typeof PortalGa2026Route
   RsvpRoute: typeof RsvpRoute
+  UnsubscribeRoute: typeof UnsubscribeRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
@@ -253,6 +266,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/unsubscribe': {
+      id: '/unsubscribe'
+      path: '/unsubscribe'
+      fullPath: '/unsubscribe'
+      preLoaderRoute: typeof UnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rsvp': {
       id: '/rsvp'
       path: '/rsvp'
@@ -392,6 +412,7 @@ const rootRouteChildren: RootRouteChildren = {
   McpRoute: McpRoute,
   PortalGa2026Route: PortalGa2026Route,
   RsvpRoute: RsvpRoute,
+  UnsubscribeRoute: UnsubscribeRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
