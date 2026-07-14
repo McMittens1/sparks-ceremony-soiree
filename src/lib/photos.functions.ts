@@ -19,6 +19,7 @@ export const uploadGuestPhotos = createServerFn({ method: "POST" })
     if (data.honeypot && data.honeypot.trim().length > 0) return { ok: true };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    let uploaded = 0;
     for (const f of data.files) {
       const base64 = f.dataUrl.split(",")[1] ?? "";
       const bytes = Buffer.from(base64, "base64");
@@ -36,7 +37,55 @@ export const uploadGuestPhotos = createServerFn({ method: "POST" })
         caption: data.caption ?? null,
         status: "pending",
       });
+      uploaded++;
     }
+
+    // Fire-and-forget notifications. Never let email failures break the upload.
+    if (uploaded > 0) {
+      try {
+        const { enqueueAppEmail, getAdminNotificationEmails } = await import("@/lib/email/enqueue.server");
+        const idemBase = `photo-${new Date().toISOString()}-${data.uploaderName}`;
+
+        if (data.uploaderEmail) {
+          await enqueueAppEmail({
+            templateName: "photo-received",
+            to: data.uploaderEmail,
+            idempotencyKey: `${idemBase}-uploader`,
+            data: { uploaderName: data.uploaderName, count: uploaded },
+          });
+        }
+
+        const admins = getAdminNotificationEmails();
+        if (admins.length > 0) {
+          const details = [
+            { label: "Uploader", value: data.uploaderName },
+            { label: "Photos", value: String(uploaded) },
+          ];
+          if (data.uploaderEmail) details.push({ label: "Email", value: data.uploaderEmail });
+          if (data.caption) details.push({ label: "Caption", value: data.caption });
+
+          await Promise.all(
+            admins.map((to) =>
+              enqueueAppEmail({
+                templateName: "admin-notification",
+                to,
+                idempotencyKey: `${idemBase}-admin-${to}`,
+                data: {
+                  kind: "photo",
+                  headline: `${uploaded} new photo${uploaded > 1 ? "s" : ""} from ${data.uploaderName}`,
+                  summary: `Pending moderation in the admin dashboard.`,
+                  details,
+                  adminUrl: "https://morenowedding2026.com/admin",
+                },
+              }),
+            ),
+          );
+        }
+      } catch (e) {
+        console.error("Photo email notification failed", e);
+      }
+    }
+
     return { ok: true };
   });
 

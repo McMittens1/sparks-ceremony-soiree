@@ -229,7 +229,7 @@ export const submitRsvp = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: g, error: gErr } = await supabaseAdmin
-      .from("guests").select("id, party_members").eq("slug", data.slug.toUpperCase()).maybeSingle();
+      .from("guests").select("id, primary_name, party_members").eq("slug", data.slug.toUpperCase()).maybeSingle();
     if (gErr || !g) throw new Error("Guest not found");
 
     // Cap attendees at invited party size + 1 for a plus-one buffer.
@@ -282,6 +282,66 @@ export const submitRsvp = createServerFn({ method: "POST" })
       { onConflict: "guest_id" },
     );
     if (error) throw new Error(error.message);
+
+    // Fire-and-forget email notifications. Never let a failed email break the RSVP.
+    try {
+      const { enqueueAppEmail, getAdminNotificationEmails } = await import("@/lib/email/enqueue.server");
+      const guestEmail = (typeof data.email === "string" ? data.email.trim() : "") || null;
+      const idemBase = `rsvp-${g.id}-${now}`;
+
+      if (guestEmail) {
+        await enqueueAppEmail({
+          templateName: "rsvp-confirmation",
+          to: guestEmail,
+          idempotencyKey: `${idemBase}-guest`,
+          data: {
+            guestName: g.primary_name,
+            status,
+            attendees: data.attendees,
+            slug: data.slug.toUpperCase(),
+            editUrl: `https://morenowedding2026.com/rsvp?g=${data.slug.toUpperCase()}`,
+            eventDate: "October 10, 2026",
+            venue: "Sparks' Barn",
+            address: "13817 108th St, Louisville, NE 68037",
+          },
+        });
+      }
+
+      const admins = getAdminNotificationEmails();
+      if (admins.length > 0) {
+        const yesCount = data.attendees.filter((a) => a.attending).length;
+        const statusLabel =
+          status === "attending" ? "Attending" : status === "partial" ? "Partial" : "Not attending";
+        const details = [
+          { label: "Status", value: statusLabel },
+          { label: "Party size", value: `${data.attendees.length} (${yesCount} attending)` },
+          { label: "Attendees", value: data.attendees.map((a) => `${a.name}${a.attending ? "" : " (no)"}`).join(", ") },
+        ];
+        if (data.song_request?.trim()) details.push({ label: "Song request", value: data.song_request.trim() });
+        if (data.message?.trim()) details.push({ label: "Message", value: data.message.trim() });
+        if (guestEmail) details.push({ label: "Email", value: guestEmail });
+
+        await Promise.all(
+          admins.map((to) =>
+            enqueueAppEmail({
+              templateName: "admin-notification",
+              to,
+              idempotencyKey: `${idemBase}-admin-${to}`,
+              data: {
+                kind: "rsvp",
+                headline: `New RSVP: ${g.primary_name} — ${statusLabel}`,
+                summary: `${g.primary_name} just submitted an RSVP.`,
+                details,
+                adminUrl: "https://morenowedding2026.com/admin",
+              },
+            }),
+          ),
+        );
+      }
+    } catch (e) {
+      console.error("RSVP email notification failed", e);
+    }
+
     return { ok: true };
   });
 
