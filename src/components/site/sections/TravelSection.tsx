@@ -90,8 +90,9 @@ export function TravelSection() {
 
       <div
         className="grid border-t border-hairline rs-stack-2"
-        style={{ marginTop: 72, gridTemplateColumns: "1fr 1fr", gap: 64, paddingTop: 48 }}
+        style={{ marginTop: 72, paddingTop: 48 }}
       >
+
         <div>
           <Eyebrow color="lavender-deep" style={{ marginBottom: 10 }}>
             Parking
