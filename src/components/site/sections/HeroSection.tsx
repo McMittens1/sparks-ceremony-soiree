@@ -124,6 +124,8 @@ export function HeroSection() {
                 objectFit: "contain",
                 display: "block",
                 mixBlendMode: "multiply",
+                WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 85%, transparent 100%)",
+                maskImage: "linear-gradient(to bottom, black 0%, black 85%, transparent 100%)",
               }}
             />
           </div>
@@ -233,6 +235,8 @@ export function HeroSection() {
               objectFit: "contain",
               display: "block",
               mixBlendMode: "multiply",
+              WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 85%, transparent 100%)",
+              maskImage: "linear-gradient(to bottom, black 0%, black 85%, transparent 100%)",
             }}
           />
         </div>
