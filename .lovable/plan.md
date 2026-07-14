@@ -1,118 +1,62 @@
-# Expand onboarding package with a comprehensive sprint roadmap
+# Update onboarding docs to reflect direct-on-main workflow
 
 ## Goal
 
-Replace the short "Remaining work / roadmap" list in `ONBOARDING.md` with a detailed, prioritized sprint plan that captures every known piece of unfinished work — not just the four items previously listed — so any future AI assistant can pick up exactly where the project left off.
+Remove all dev-branch and feature-branch instructions from the onboarding package. Document that every AI assistant — whether inside Lovable, Claude Code, Cursor, or any other editor — works directly on `main` and pushes commits straight to `main`.
 
-## Why now
+## Why
 
-The current `ONBOARDING.md` only lists four backlog items (performance, analytics, email branding, Spanish proofread). From inspecting the codebase, several larger features are still disabled or placeholder-level:
-
-- `RSVP_OPEN = false` in `src/routes/rsvp.tsx` — the entire RSVP flow is in preview mode.
-- `PhotosSection.tsx` has a disabled upload form and no live approved-photo gallery.
-- Transactional emails (`rsvp-confirmation.tsx`) use generic hardcoded styling, not the stationery brand.
-- Spanish copy exists but is marked as needing a native-speaker proofread.
-- No analytics or performance tooling is installed yet.
-
-A future assistant needs a single source of truth for what is actually left to do.
+The user explicitly decided against a dev-branch workflow. Keeping branch instructions in `ONBOARDING.md` and `.lovable/plan.md` would mislead future agents into creating branches and PRs, which the user does not want.
 
 ## Work to do
 
-### 1. Audit remaining work and organize it into sprints
+### 1. Rewrite `ONBOARDING.md` §8 — Git & branching workflow
 
-Review the following areas and confirm what is shipped vs. what is still pending:
+Replace the current section with a short, direct policy:
 
-- Public homepage sections (`src/components/site/sections/`)
-- RSVP flow (`src/routes/rsvp.tsx`, `src/routes/rsvp/edit.$token.tsx`, `src/lib/rsvp.functions.ts`)
-- Guest photo upload/gallery (`src/components/site/sections/PhotosSection.tsx`, `src/lib/photos.functions.ts`, `src/lib/admin.functions.ts`)
-- Admin dashboard (`src/routes/_authenticated/admin.tsx`)
-- Email templates (`src/lib/email-templates/`)
-- i18n Spanish copy (`src/i18n/dictionaries.ts`)
-- Performance/analytics (package.json, build output, no current tooling)
-- SEO/social metadata (`src/routes/index.tsx`, `src/routes/__root.tsx`)
+- `main` is the only branch we use.
+- Lovable, GitHub, and any external editor all read/write `main`.
+- Every agent commits directly to `main`.
+- Do not create `dev`, `feat/*`, or any other branches.
+- Do not open pull requests.
+- Keep `main` in a working state: run `bun run build:dev` before pushing if possible, and never rewrite published history (no force-push, rebase, amend, or squash of already-pushed commits).
 
-### 2. Rewrite `ONBOARDING.md` §3 as a detailed sprint roadmap
+### 2. Update `ONBOARDING.md` §9 — Recommended first steps for a new AI
 
-Replace the current four-item list with a sprint-style plan. Each sprint should include:
+Remove step 5 ("Run `git branch --show-current` and ensure you are on a feature branch"). Adjust the numbering of the remaining steps.
 
-- Sprint name and goal
-- Scope (what is in and what is out)
-- Acceptance criteria (when is it done)
-- Key files involved
-- Dependencies/blockers
-- Estimated priority order
+### 3. Update `ONBOARDING.md` §10 — Reusable onboarding prompt
 
-Proposed sprints (subject to refinement during implementation):
+Edit the pasted prompt block:
 
-#### Sprint 1 — Content & Copy Freeze
-- Final copy review of all public sections against `src/lib/wedding-data.ts` and `src/i18n/dictionaries.ts`.
-- Native-speaker proofread of the Spanish (`es`) dictionary.
-- Verify dates, venue address, schedule, registry links, and contact info in `src/lib/site.ts`.
-- Add any missing wedding party photos or notes in `src/lib/wedding-data.ts`.
-- Acceptance: all copy is final and both languages read naturally.
+- Remove the instruction to check `git branch --show-current` and create a `feat/<name>` branch.
+- Replace the `GIT WORKFLOW` bullets with a single direct-on-main policy:
+  - Work directly on `main`.
+  - Commit and push to `main`.
+  - Never rewrite published git history.
+- Keep the rest of the prompt intact.
 
-#### Sprint 2 — RSVP Launch Readiness
-- Change `RSVP_OPEN` from `false` to `true` in `src/routes/rsvp.tsx`.
-- Import the real guest list via the admin CSV import or a seed migration.
-- End-to-end test lookup, submit, edit-token, and confirmation email flows.
-- Verify admin dashboard counts, filters, and CSV export.
-- Acceptance: a guest can look up their name, submit, edit, and receive a branded confirmation email.
+### 4. Update `.lovable/plan.md`
 
-#### Sprint 3 — Guest Photo Upload & Public Gallery
-- Wire the disabled `PhotosSection.tsx` form to the existing upload server function.
-- Build a public gallery that displays approved photos from the backend.
-- Test the admin approve/reject/delete workflow and mobile upload.
-- Acceptance: guests can upload from the public site; approved photos appear in the gallery.
+Replace the current roadmap-expansion plan with a short plan that records the workflow decision:
 
-#### Sprint 4 — Performance & Analytics
-- Audit images for lazy loading, sizing, and format (engagement photos, venue photos, party portraits).
-- Run a bundle-size check and remove unused dependencies if any.
-- Add lightweight, privacy-friendly event tracking for RSVP submissions, photo uploads, calendar clicks, and registry clicks.
-- Acceptance: no layout shift from images, bundle size is reasonable, and key events are trackable.
+- State that the project now uses a direct-on-main workflow.
+- List the files to edit (`ONBOARDING.md` §8, §9, §10; `AGENTS.md` if needed).
+- Note that no code changes are required.
 
-#### Sprint 5 — Email Branding & Template Polish
-- Apply the stationery design tokens (ivory, ink, lavender, Cormorant/Work Sans) to `rsvp-confirmation.tsx` and other transactional templates.
-- Ensure email preview data matches real content.
-- Test rendering in common clients.
-- Acceptance: confirmation emails look on-brand and display correctly on mobile and desktop.
+### 5. Verify `AGENTS.md`
 
-#### Sprint 6 — Pre-Launch QA
-- Accessibility audit (form labels, focus states, color contrast, alt text).
-- SEO/social metadata review (title, description, og:image, canonical, twitter card) on every route.
-- Cross-device testing at 440px and 1280px.
-- Final admin workflow verification (first-admin claim, sign-in, sign-out).
-- Acceptance: site passes manual QA and is ready to publish.
-
-#### Sprint 7 — Post-Wedding
-- Reopen or keep photo uploads live for guests after the event.
-- Curate and approve batch-uploaded photos from the wedding day.
-- Optionally add a thank-you note or recap section to the homepage.
-- Acceptance: post-event gallery is live and manageable from the admin dashboard.
-
-### 3. Update `.lovable/plan.md`
-
-Replace the previous onboarding/Git-workflow plan with this expanded roadmap plan, so Lovable's internal plan file stays in sync with `ONBOARDING.md`.
-
-### 4. Update the reusable onboarding prompt
-
-Add a line to the reusable prompt in `ONBOARDING.md` §10 instructing the AI to read the sprint roadmap in §3 before choosing what to work on.
-
-### 5. Review for consistency
-
-- Ensure sprint names and file paths in the roadmap match the actual codebase.
-- Keep the tone and format consistent with the rest of `ONBOARDING.md`.
-- Verify no placeholder language remains in the new sections.
+`AGENTS.md` only warns against rewriting published history and keeping the connected branch in a working state. That guidance remains correct for direct-on-main work, so no change is needed unless the user wants an explicit "work on `main` only" line added there too.
 
 ## Out of scope
 
-- Actually implementing any of the sprints (this plan is documentation only).
-- Changing application code, feature flags, or environment variables.
-- Creating Git branches or opening PRs.
+- No code changes.
+- No feature flags, environment variables, or migrations.
+- No branch creation or deletion.
 
 ## Verification
 
-- `ONBOARDING.md` contains a new §3 with detailed sprint descriptions.
-- `.lovable/plan.md` reflects the expanded roadmap.
-- The reusable prompt references the sprint roadmap.
-- `bun run build:dev` still passes (documentation-only change should not affect build).
-- No broken internal links or duplicated content.
+- `ONBOARDING.md` no longer mentions feature branches, PRs, or a `dev` branch.
+- `ONBOARDING.md` §10 reusable prompt matches the direct-on-main policy.
+- `.lovable/plan.md` reflects the workflow decision.
+- `bun run build:dev` still passes (documentation-only change).

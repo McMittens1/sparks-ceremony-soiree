@@ -363,50 +363,23 @@ This is the living sprint plan. Pick up the next uncompleted sprint rather than 
 
 ## 8. Git & branching workflow
 
-**Goal:** Keep Lovable and any external AI (Claude Code, Cursor, etc.) in sync without stepping on each other.
+**Policy:** Work directly on `main`. No feature branches, no dev branch, no pull requests.
 
-**How Lovable sync works:**
-- Lovable is connected to GitHub and syncs one branch at a time (currently `main`).
-- Commits pushed to `main` appear in the Lovable editor automatically.
-- Lovable's version history covers small in-editor edits; those edits commit straight to `main`.
+**Why:** Lovable is connected to GitHub and syncs `main` bidirectionally. Any commit pushed to `main` appears in the Lovable editor, and any edit made in Lovable commits straight back to `main`. Branching and PRs add friction without benefit for this project.
 
-**Recommended model:**
-- `main` = published / canonical. Keep Lovable connected to `main`.
-- External AI work happens on short-lived feature branches: `feat/<short-name>`.
-- Open a GitHub PR from the feature branch into `main`.
-- The user reviews and merges the PR.
-- The merge syncs back to Lovable automatically.
+**Rules for every AI assistant (Lovable, Claude Code, Cursor, etc.):**
+1. Make sure you are on `main` before editing: `git checkout main && git pull`.
+2. Make changes, commit them, and push directly to `main`.
+3. Do not create `feat/*`, `dev`, or any other branch.
+4. Do not open pull requests.
+5. Never force-push, rebase, amend, or squash commits already pushed to `main`.
+6. Keep `main` in a working state: run `bun run build:dev` before pushing if possible, and do not push broken code.
 
-**One-time setup (do this once in your local clone or GitHub UI):**
+**Lovable sync note:**
+- If you edit inside the Lovable UI, those commits go straight to `main` on GitHub.
+- If you edit in Claude Code, Cursor, or another local editor, push to `main`; the changes will sync back to Lovable automatically.
+- Because everyone writes to `main`, pull before you start and push frequently in small commits to reduce the chance of conflicts.
 
-```text
-# 1. Make sure you have the repo cloned from GitHub and Lovable sync is on.
-# 2. Run these commands once to create a persistent dev branch (optional):
-git checkout main
-git pull
-git checkout -b dev
-git push -u origin dev
-```
-
-If you do not want a persistent `dev` branch, skip those commands and create feature branches directly off `main`:
-
-```text
-git checkout main
-git pull
-git checkout -b feat/short-description
-git push -u origin feat/short-description
-```
-
-**For the AI assistant:**
-1. Before editing, run `git branch --show-current` and confirm you are on a feature branch, not `main`.
-2. Make changes, commit them to the feature branch, and push.
-3. Open a PR into `main` with a clear description.
-4. Do not commit directly to `main` unless the change is a trivial one-line fix the user explicitly approves.
-5. Never force-push, rebase, amend, or squash commits already pushed to `main` or any shared branch.
-
-**Merging:**
-- Use the GitHub PR UI. "Squash and merge" or "Create a merge commit" are both fine.
-- Do not rewrite history on `main` after Lovable has seen it.
 
 ---
 
