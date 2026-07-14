@@ -30,8 +30,8 @@ function HeroCountdown() {
   ];
   return (
     <div
-      className="lg:hidden w-full"
-      style={{ marginTop: "clamp(20px, 4svh, 40px)" }}
+      className="lg:hidden w-full mx-auto"
+      style={{ maxWidth: 460, marginTop: "clamp(20px, 4svh, 40px)" }}
       aria-label="Countdown to the wedding"
     >
       <p
@@ -105,6 +105,28 @@ export function HeroSection() {
           className="flex flex-col justify-center min-w-0 rs-hero-text text-center lg:text-left w-full"
           style={{ flex: "0 1 440px" }}
         >
+          <div
+            className="lg:hidden mx-auto"
+            style={{
+              width: "clamp(180px, 44vw, 300px)",
+              marginBottom: "clamp(14px, 3svh, 26px)",
+            }}
+            aria-hidden="true"
+          >
+            <img
+              src={heroPortrait.url}
+              alt=""
+              loading="eager"
+              fetchPriority="high"
+              style={{
+                width: "100%",
+                height: "auto",
+                objectFit: "contain",
+                display: "block",
+                mixBlendMode: "multiply",
+              }}
+            />
+          </div>
           <p
             className="uppercase font-sans text-tan"
             style={{
