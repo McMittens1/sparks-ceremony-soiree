@@ -11,6 +11,7 @@ import {
   Text,
 } from "@react-email/components";
 import type { TemplateEntry } from "./registry";
+import { EMAIL_COLORS } from "./tokens";
 
 interface AdminNotificationProps {
   kind?: "rsvp" | "photo";
@@ -77,31 +78,31 @@ export const template = {
 
 export default AdminNotificationEmail;
 
-const main = { backgroundColor: "#ffffff", fontFamily: "Arial, sans-serif" };
+const main = { backgroundColor: EMAIL_COLORS.ivory, fontFamily: "Arial, sans-serif" };
 const container = { padding: "40px 32px", maxWidth: 560 };
 const eyebrow = {
   fontSize: "10px",
   letterSpacing: "0.24em",
   textTransform: "uppercase" as const,
-  color: "#8A7A5C",
+  color: EMAIL_COLORS.tanDeep,
   margin: "0 0 18px",
 };
 const h1 = {
   fontFamily: "Georgia, 'Times New Roman', serif",
   fontStyle: "italic" as const,
   fontSize: "26px",
-  color: "#2A2520",
+  color: EMAIL_COLORS.ink,
   margin: "0 0 20px",
   lineHeight: 1.3,
 };
-const text = { fontSize: "14px", color: "#4A423A", lineHeight: 1.6, margin: "0 0 16px" };
+const text = { fontSize: "14px", color: EMAIL_COLORS.inkBody, lineHeight: 1.6, margin: "0 0 16px" };
 const block = {
   margin: "20px 0",
   padding: "16px 20px",
-  background: "#F8F4EC",
-  border: "1px solid #E5DFD0",
+  background: EMAIL_COLORS.lavenderWash,
+  border: `1px solid ${EMAIL_COLORS.hairline}`,
 };
-const row = { fontSize: "14px", color: "#2A2520", margin: "4px 0" };
-const rowLabel = { color: "#7A6F5F", fontWeight: "bold" as const };
-const rowValue = { color: "#2A2520" };
-const link = { color: "#6B5DAF", textDecoration: "underline" };
+const row = { fontSize: "14px", color: EMAIL_COLORS.ink, margin: "4px 0" };
+const rowLabel = { color: EMAIL_COLORS.inkSoft, fontWeight: "bold" as const };
+const rowValue = { color: EMAIL_COLORS.ink };
+const link = { color: EMAIL_COLORS.tanDeep, textDecoration: "underline" };

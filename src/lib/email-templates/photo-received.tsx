@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Body, Container, Head, Heading, Html, Preview, Text } from "@react-email/components";
 import type { TemplateEntry } from "./registry";
+import { EMAIL_COLORS } from "./tokens";
 
 interface PhotoReceivedProps {
   uploaderName?: string;
@@ -42,29 +43,29 @@ export const template = {
 
 export default PhotoReceivedEmail;
 
-const main = { backgroundColor: "#ffffff", fontFamily: "Georgia, 'Times New Roman', serif" };
+const main = { backgroundColor: EMAIL_COLORS.ivory, fontFamily: "Georgia, 'Times New Roman', serif" };
 const container = { padding: "40px 32px", maxWidth: 560 };
 const eyebrow = {
   fontFamily: "Arial, sans-serif",
   fontSize: "10px",
   letterSpacing: "0.24em",
   textTransform: "uppercase" as const,
-  color: "#8A7A5C",
+  color: EMAIL_COLORS.tanDeep,
   margin: "0 0 18px",
 };
 const h1 = {
   fontFamily: "Georgia, 'Times New Roman', serif",
   fontStyle: "italic" as const,
   fontSize: "30px",
-  color: "#2A2520",
+  color: EMAIL_COLORS.ink,
   margin: "0 0 24px",
   lineHeight: 1.2,
 };
-const text = { fontSize: "15px", color: "#4A423A", lineHeight: 1.7, margin: "0 0 16px" };
+const text = { fontSize: "15px", color: EMAIL_COLORS.inkBody, lineHeight: 1.7, margin: "0 0 16px" };
 const footer = {
   fontFamily: "Georgia, serif",
   fontStyle: "italic" as const,
   fontSize: "16px",
-  color: "#2A2520",
+  color: EMAIL_COLORS.ink,
   margin: "32px 0 0",
 };
