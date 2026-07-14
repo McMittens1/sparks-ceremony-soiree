@@ -1,9 +1,19 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/i18n/context";
-import { getAdminPhotos, setPhotoStatus, type AdminPhoto } from "@/lib/admin.functions";
+import {
+  getAdminPhotos,
+  setPhotoStatus,
+  bulkSetPhotoStatus,
+  updatePhotoCaption,
+  deletePhoto,
+  bulkDeletePhotos,
+  getPhotoCounts,
+  getRecentActivity,
+  type AdminPhoto,
+} from "@/lib/admin.functions";
 import {
   listGuestsWithRsvps,
   upsertGuest,
@@ -48,6 +58,8 @@ function Admin() {
         </button>
       </div>
 
+      <ActivityStrip />
+
       <div className="mt-6 flex gap-2 border-b border-border/40">
         {(["rsvps", "photos"] as const).map((k) => (
           <button
@@ -64,6 +76,420 @@ function Admin() {
 
       {tab === "rsvps" ? <RsvpsPanel /> : <PhotosPanel />}
     </div>
+  );
+}
+
+// ================== Activity strip ==================
+
+function ActivityStrip() {
+  const loadActivity = useServerFn(getRecentActivity);
+  const [a, setA] = useState<Awaited<ReturnType<typeof loadActivity>> | null>(null);
+  useEffect(() => { loadActivity({}).then(setA).catch(() => {}); }, [loadActivity]);
+  if (!a) return null;
+  const items = [
+    ["RSVPs · last 24h", a.rsvps_last_24h],
+    ["RSVPs · last 7d", a.rsvps_last_7d],
+    ["Photos pending", a.photos_pending],
+    ["Photos · last 7d", a.photos_last_7d],
+  ] as const;
+  return (
+    <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {items.map(([label, n]) => (
+        <div key={label} className="border border-border/40 p-3 text-center bg-card/40">
+          <div className="text-xl font-serif text-primary">{n}</div>
+          <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mt-1">{label}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ================== RSVPs ==================
+
+type SortKey = "name" | "status" | "party" | "submitted" | "city";
+type SortDir = "asc" | "desc";
+
+function RsvpsPanel() {
+  const t = useT();
+  const loadRows = useServerFn(listGuestsWithRsvps);
+  const [rows, setRows] = useState<AdminGuestRow[] | null>(null);
+  const [filter, setFilter] = useState<"all" | "attending" | "not_attending" | "no_response">("all");
+  const [search, setSearch] = useState("");
+  const [partySize, setPartySize] = useState<"any" | "1" | "2" | "3plus">("any");
+  const [cityFilter, setCityFilter] = useState("");
+  const [addrOnly, setAddrOnly] = useState(false);
+  const [songOnly, setSongOnly] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>("submitted");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [editing, setEditing] = useState<AdminGuestRow | "new" | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  async function refresh() {
+    const next = await loadRows({});
+    setRows(next);
+  }
+
+  useEffect(() => { refresh().catch(() => {}); }, []);
+
+  const filtered = useMemo(() => {
+    if (!rows) return [];
+    const q = search.trim().toLowerCase();
+    const cq = cityFilter.trim().toLowerCase();
+    const list = rows.filter((r) => {
+      if (q && !r.primary_name.toLowerCase().includes(q)) return false;
+      if (cq && !(r.city ?? "").toLowerCase().includes(cq)) return false;
+      const size = r.party_members.length || 1;
+      if (partySize === "1" && size !== 1) return false;
+      if (partySize === "2" && size !== 2) return false;
+      if (partySize === "3plus" && size < 3) return false;
+      if (addrOnly && r.rsvp?.address_confirmed) return false;
+      if (songOnly && !(r.rsvp?.song_request ?? "").trim()) return false;
+      if (filter === "all") return true;
+      if (filter === "no_response") return !r.rsvp;
+      if (!r.rsvp) return false;
+      if (filter === "attending") return r.rsvp.status === "attending" || r.rsvp.status === "partial";
+      if (filter === "not_attending") return r.rsvp.status === "not_attending";
+      return true;
+    });
+    const dir = sortDir === "asc" ? 1 : -1;
+    const statusRank = (r: AdminGuestRow) =>
+      !r.rsvp ? 0 : r.rsvp.status === "attending" ? 3 : r.rsvp.status === "partial" ? 2 : 1;
+    list.sort((a, b) => {
+      let av: string | number = "";
+      let bv: string | number = "";
+      if (sortKey === "name") { av = a.primary_name.toLowerCase(); bv = b.primary_name.toLowerCase(); }
+      else if (sortKey === "status") { av = statusRank(a); bv = statusRank(b); }
+      else if (sortKey === "party") { av = a.party_members.length || 1; bv = b.party_members.length || 1; }
+      else if (sortKey === "city") { av = (a.city ?? "").toLowerCase(); bv = (b.city ?? "").toLowerCase(); }
+      else if (sortKey === "submitted") {
+        av = a.rsvp?.submitted_at ? new Date(a.rsvp.submitted_at).getTime() : 0;
+        bv = b.rsvp?.submitted_at ? new Date(b.rsvp.submitted_at).getTime() : 0;
+      }
+      if (av < bv) return -1 * dir;
+      if (av > bv) return 1 * dir;
+      return 0;
+    });
+    return list;
+  }, [rows, search, cityFilter, partySize, addrOnly, songOnly, filter, sortKey, sortDir]);
+
+  // Drop selection entries no longer visible
+  useEffect(() => {
+    if (!selected.size) return;
+    const visible = new Set(filtered.map((r) => r.id));
+    const next = new Set<string>();
+    for (const id of selected) if (visible.has(id)) next.add(id);
+    if (next.size !== selected.size) setSelected(next);
+  }, [filtered, selected]);
+
+  const totals = useMemo(() => {
+    if (!rows) return { attending: 0, declined: 0, pending: 0, adults: 0, children: 0 };
+    let attending = 0, declined = 0, pending = 0, adults = 0, children = 0;
+    for (const r of rows) {
+      if (!r.rsvp) { pending++; continue; }
+      if (r.rsvp.status === "not_attending") { declined++; continue; }
+      attending++;
+      for (const a of r.rsvp.attendees) {
+        if (!a.attending) continue;
+        if (a.is_child) children++; else adults++;
+      }
+    }
+    return { attending, declined, pending, adults, children };
+  }, [rows]);
+
+  const buildRsvpUrl = useCallback((slug: string) => {
+    if (typeof window === "undefined") return `/rsvp?g=${slug}`;
+    return `${window.location.origin}/rsvp?g=${slug}`;
+  }, []);
+
+  function toCsv(list: AdminGuestRow[]) {
+    const header = [
+      "primary_name", "slug", "status", "attending_names", "child_count",
+      "phone", "email", "address_confirmed",
+      "address_line1", "address_line2", "city", "state", "postal_code", "country",
+      "song_request", "message", "submitted_at", "rsvp_url",
+    ];
+    const esc = (s: string | null | undefined) => {
+      const v = s ?? "";
+      return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
+    };
+    const body = list.map((r) => {
+      const attending = r.rsvp?.attendees.filter((a) => a.attending) ?? [];
+      const addr = r.rsvp?.address ?? {
+        line1: r.address_line1, line2: r.address_line2, city: r.city,
+        state: r.state, postal_code: r.postal_code, country: r.country,
+      };
+      return [
+        r.primary_name, r.slug, r.rsvp?.status ?? "no_response",
+        attending.filter((a) => !a.is_child).map((a) => a.name).join("; "),
+        String(attending.filter((a) => a.is_child).length),
+        r.phone, r.email, r.rsvp?.address_confirmed ? "yes" : "no",
+        addr.line1, addr.line2, addr.city, addr.state, addr.postal_code, addr.country,
+        r.rsvp?.song_request, r.rsvp?.message, r.rsvp?.submitted_at,
+        buildRsvpUrl(r.slug),
+      ].map((v) => esc(typeof v === "string" ? v : v ?? "")).join(",");
+    });
+    return [header.join(","), ...body].join("\n");
+  }
+
+  function downloadCsv(list: AdminGuestRow[], suffix = "") {
+    const csv = toCsv(list);
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `rsvps${suffix}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function copySelectedLinks() {
+    const links = filtered.filter((r) => selected.has(r.id)).map((r) => `${r.primary_name}\t${buildRsvpUrl(r.slug)}`).join("\n");
+    if (!links) return;
+    try { await navigator.clipboard.writeText(links); } catch { /* ignore */ }
+  }
+
+  function toggleSort(k: SortKey) {
+    if (k === sortKey) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortKey(k); setSortDir(k === "submitted" ? "desc" : "asc"); }
+  }
+
+  const allVisibleSelected = filtered.length > 0 && filtered.every((r) => selected.has(r.id));
+  function toggleAllVisible() {
+    if (allVisibleSelected) setSelected(new Set());
+    else setSelected(new Set(filtered.map((r) => r.id)));
+  }
+
+  const selectedRows = filtered.filter((r) => selected.has(r.id));
+
+  return (
+    <div className="mt-8">
+      {/* Totals */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        {[
+          [t.admin.totalsAttending, totals.attending],
+          [t.admin.totalsDeclined, totals.declined],
+          [t.admin.totalsPending, totals.pending],
+          [t.admin.totalsAdults, totals.adults],
+          [t.admin.totalsChildren, totals.children],
+        ].map(([label, n]) => (
+          <div key={label as string} className="border border-border/40 p-4 text-center">
+            <div className="text-2xl font-serif text-primary">{n}</div>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mt-1">{label}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-6 flex flex-wrap gap-3 items-center">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search names…"
+          className="border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+        />
+        <select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value as typeof filter)}
+          className="border border-input bg-background px-3 py-2 text-sm"
+        >
+          <option value="all">All statuses</option>
+          <option value="attending">Attending</option>
+          <option value="not_attending">Declined</option>
+          <option value="no_response">No response</option>
+        </select>
+        <select
+          value={partySize}
+          onChange={(e) => setPartySize(e.target.value as typeof partySize)}
+          className="border border-input bg-background px-3 py-2 text-sm"
+          title="Party size"
+        >
+          <option value="any">Any size</option>
+          <option value="1">1 guest</option>
+          <option value="2">2 guests</option>
+          <option value="3plus">3+ guests</option>
+        </select>
+        <input
+          value={cityFilter}
+          onChange={(e) => setCityFilter(e.target.value)}
+          placeholder="City filter…"
+          className="border border-input bg-background px-3 py-2 text-sm w-32"
+        />
+        <label className="text-xs text-muted-foreground flex items-center gap-1">
+          <input type="checkbox" checked={addrOnly} onChange={(e) => setAddrOnly(e.target.checked)} />
+          Address unconfirmed
+        </label>
+        <label className="text-xs text-muted-foreground flex items-center gap-1">
+          <input type="checkbox" checked={songOnly} onChange={(e) => setSongOnly(e.target.checked)} />
+          Has song request
+        </label>
+        <button
+          onClick={() => setEditing("new")}
+          className="ml-auto text-xs uppercase tracking-[0.2em] border border-primary text-primary px-3 py-2 hover:bg-primary hover:text-primary-foreground"
+        >
+          + Add invitation
+        </button>
+        <button
+          onClick={() => setImportOpen(true)}
+          className="text-xs uppercase tracking-[0.2em] border border-border text-foreground px-3 py-2"
+        >
+          Import CSV
+        </button>
+        <button
+          onClick={() => downloadCsv(filtered, "-filtered")}
+          className="text-xs uppercase tracking-[0.2em] border border-border text-foreground px-3 py-2"
+          title="Export the currently filtered rows"
+        >
+          Export filtered
+        </button>
+        <button
+          onClick={() => rows && downloadCsv(rows)}
+          className="text-xs uppercase tracking-[0.2em] border border-border text-foreground px-3 py-2"
+        >
+          {t.admin.exportCsv} (all)
+        </button>
+      </div>
+
+      {selected.size > 0 && (
+        <div className="mt-4 flex flex-wrap items-center gap-3 border border-primary/40 bg-primary/5 px-4 py-2 text-xs">
+          <span className="uppercase tracking-[0.2em] text-primary">{selected.size} selected</span>
+          <button onClick={() => downloadCsv(selectedRows, "-selected")} className="border border-primary text-primary px-3 py-1 uppercase tracking-[0.2em]">Export selected</button>
+          <button onClick={copySelectedLinks} className="border border-border text-foreground px-3 py-1 uppercase tracking-[0.2em]">Copy RSVP links</button>
+          <button onClick={() => setSelected(new Set())} className="ml-auto text-muted-foreground uppercase tracking-[0.2em]">Clear</button>
+        </div>
+      )}
+
+      {rows === null ? (
+        <p className="mt-8 text-sm text-muted-foreground">{t.common.loading}</p>
+      ) : filtered.length === 0 ? (
+        <p className="mt-8 text-sm text-muted-foreground">{t.admin.noRsvps}</p>
+      ) : (
+        <div className="mt-6 overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              <tr className="border-b border-border/40">
+                <th className="w-8 py-2 pr-2">
+                  <input type="checkbox" checked={allVisibleSelected} onChange={toggleAllVisible} aria-label="Select all visible" />
+                </th>
+                <SortHeader label={t.admin.partyCol} k="name" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
+                <SortHeader label="Status" k="status" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
+                <SortHeader label="Party" k="party" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
+                <SortHeader label="Attending" k={null} />
+                <SortHeader label="City" k="city" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
+                <SortHeader label="Submitted" k="submitted" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
+                <SortHeader label="Link" k={null} />
+                <SortHeader label="" k={null} />
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((r) => {
+                const attending = r.rsvp?.attendees.filter((a) => a.attending) ?? [];
+                const isSel = selected.has(r.id);
+                return (
+                  <tr key={r.id} className={`border-b border-border/20 align-top ${isSel ? "bg-primary/5" : ""}`}>
+                    <td className="py-3 pr-2">
+                      <input
+                        type="checkbox"
+                        checked={isSel}
+                        onChange={(e) => {
+                          setSelected((prev) => {
+                            const next = new Set(prev);
+                            if (e.target.checked) next.add(r.id); else next.delete(r.id);
+                            return next;
+                          });
+                        }}
+                        aria-label={`Select ${r.primary_name}`}
+                      />
+                    </td>
+                    <td className="py-3 pr-4">
+                      <div className="font-serif text-primary">{r.primary_name}</div>
+                      <div className="text-[11px] text-muted-foreground">
+                        {r.phone ? `${r.phone}` : ""}
+                        {r.phone && r.email ? " · " : ""}
+                        {r.email ? r.email : ""}
+                      </div>
+                    </td>
+                    <td className="py-3 pr-4">
+                      {r.rsvp ? (
+                        <span className={`text-[10px] uppercase tracking-[0.2em] px-2 py-1 border ${
+                          r.rsvp.status === "attending" ? "border-primary text-primary" :
+                          r.rsvp.status === "partial" ? "border-accent text-accent" :
+                          "border-muted-foreground text-muted-foreground"
+                        }`}>
+                          {r.rsvp.status.replace("_", " ")}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">no response</span>
+                      )}
+                    </td>
+                    <td className="py-3 pr-4 text-xs">
+                      {r.party_members.length || 1}
+                      {r.rsvp ? <span className="text-muted-foreground"> · {attending.length}✓</span> : null}
+                    </td>
+                    <td className="py-3 pr-4 text-xs">
+                      {attending.length === 0 ? "—" : attending.map((a) => (
+                        <div key={a.name}>{a.name}{a.is_child ? " (child)" : ""}</div>
+                      ))}
+                    </td>
+                    <td className="py-3 pr-4 text-xs">{r.city ?? "—"}</td>
+                    <td className="py-3 pr-4 text-xs">
+                      {r.rsvp?.submitted_at ? new Date(r.rsvp.submitted_at).toLocaleDateString() : "—"}
+                      {r.rsvp?.address_confirmed ? <div className="text-[10px] text-muted-foreground">✓ addr</div> : null}
+                    </td>
+                    <td className="py-3 pr-4 text-xs font-mono">
+                      <button
+                        onClick={() => {
+                          navigator.clipboard?.writeText(buildRsvpUrl(r.slug)).catch(() => {});
+                        }}
+                        className="text-primary link-underline"
+                        title="Copy RSVP link"
+                      >
+                        {r.slug}
+                      </button>
+                    </td>
+                    <td className="py-3 pr-4">
+                      <button
+                        onClick={() => setEditing(r)}
+                        className="text-[10px] uppercase tracking-[0.2em] text-primary link-underline"
+                      >
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {editing && <GuestEditor row={editing === "new" ? null : editing} onClose={() => setEditing(null)} onSaved={refresh} />}
+      {importOpen && <CsvImporter onClose={() => setImportOpen(false)} onDone={refresh} />}
+    </div>
+  );
+}
+
+function SortHeader({
+  label, k, sortKey, sortDir, onClick,
+}: {
+  label: string;
+  k: SortKey | null;
+  sortKey?: SortKey;
+  sortDir?: SortDir;
+  onClick?: (k: SortKey) => void;
+}) {
+  if (!k) return <th className="text-left py-2 pr-4">{label}</th>;
+  const active = sortKey === k;
+  const arrow = active ? (sortDir === "asc" ? "↑" : "↓") : "";
+  return (
+    <th className="text-left py-2 pr-4">
+      <button
+        type="button"
+        onClick={() => onClick?.(k)}
+        className={`uppercase tracking-[0.2em] ${active ? "text-primary" : "text-muted-foreground"}`}
+      >
+        {label} {arrow}
+      </button>
+    </th>
   );
 }
 
