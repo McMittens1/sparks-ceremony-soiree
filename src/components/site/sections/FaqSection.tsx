@@ -59,7 +59,11 @@ export function FaqSection() {
       </div>
 
       {/* Closing CTA */}
-      <div className="text-center rs-section-bleed bg-lavender-wash">
+      <div
+        className="text-center rs-section-bleed bg-lavender-wash"
+        style={{ paddingBlock: "clamp(80px, 14svh, 130px)" }}
+      >
+
         <Eyebrow color="lavender-deep" size="lg" style={{ marginBottom: 26 }}>
           See you soon
         </Eyebrow>
