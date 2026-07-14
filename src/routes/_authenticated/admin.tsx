@@ -245,7 +245,7 @@ function RsvpsPanel() {
   }
 
   async function copySelectedLinks() {
-    const links = filtered.filter((r) => selected.has(r.id)).map((r) => `${r.primary_name}\t${buildRsvpUrl(r.slug)}`).join("\n");
+    const links = filtered.filter((r) => selected.has(r.id)).map((r) => `${r.primary_name}\t${buildRsvpUrl(r)}`).join("\n");
     if (!links) return;
     try { await navigator.clipboard.writeText(links); } catch { /* ignore */ }
   }
