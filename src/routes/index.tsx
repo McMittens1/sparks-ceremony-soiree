@@ -1,6 +1,6 @@
 import { createFileRoute, useLocation } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
-import favorite from "@/assets/engagement/Favorite.jpg.asset.json";
+import heroPortrait from "@/assets/engagement/hero-portrait.png.asset.json";
 import { HeroSection } from "@/components/site/sections/HeroSection";
 import { CountdownSection } from "@/components/site/sections/CountdownSection";
 import { StorySection } from "@/components/site/sections/StorySection";
