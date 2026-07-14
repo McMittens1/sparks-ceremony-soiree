@@ -45,7 +45,7 @@ export function PhotosSection() {
           <p className="font-sans text-ink-soft" style={{ fontSize: 14, lineHeight: 1.7, margin: "0 0 26px" }}>
             Up to 5 images, JPG or PNG, 10 MB each. Nothing goes public until we approve it.
           </p>
-          <div className="grid rs-stack-2" style={{ gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
+          <div className="grid rs-stack-2" style={{ marginBottom: 20 }}>
             <div>
               <label htmlFor="photo-name" className="block">
                 <Eyebrow color="tan-deep" size="sm" as="span" style={{ letterSpacing: "0.2em" }}>
