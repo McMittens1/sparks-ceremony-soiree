@@ -79,17 +79,180 @@ A single source of truth for continuing this project with any AI assistant (Clau
 
 ## 3. Remaining work / roadmap
 
-Priority-ordered backlog (from the current `.lovable/plan.md`):
+This is the living sprint plan. Pick up the next uncompleted sprint rather than inventing new work. Each sprint lists the goal, scope, acceptance criteria, key files, and blockers.
 
-1. **Performance pass** — image optimization, lazy loading audit, bundle size.
-2. **Analytics** — lightweight event tracking for RSVPs, photo uploads, calendar clicks.
-3. **Auth email branding** — custom transactional email styling if desired.
-4. **Spanish proofread** — have a native speaker review `src/i18n/dictionaries.ts` `es` copy.
+### Out of scope unless explicitly requested
 
-Out of scope unless explicitly requested:
 - Multi-admin accounts (the app intentionally supports only one admin).
 - Changing the admin URL (`/portal-ga-2026`).
 - Replacing the single-page composition with separate page routes.
+- Adding a public sign-up flow.
+
+---
+
+### Sprint 1 — Content & Copy Freeze
+
+**Goal:** Finalize every word on the public site before any feature goes live.
+
+**Scope:**
+- Review all copy in `src/i18n/dictionaries.ts` against the actual site sections.
+- Have a native speaker proofread the Spanish (`es`) dictionary. Current Spanish is functional but marked as needing a naturalness pass.
+- Verify `src/lib/site.ts` (couple names, venue, address, date, RSVP deadline, fallback contact).
+- Verify `src/lib/wedding-data.ts` (schedule, registry links, hotels, FAQ, wedding party, story timeline).
+- Add or update wedding party portraits/notes in `src/lib/wedding-data.ts` if the couple provides photos.
+
+**Acceptance criteria:**
+- No placeholder copy remains on `src/routes/index.tsx` or in section components.
+- Both `en` and `es` dictionaries read naturally and are culturally appropriate.
+- All external links (registry, maps, Venmo) resolve correctly.
+
+**Key files:** `src/i18n/dictionaries.ts`, `src/lib/site.ts`, `src/lib/wedding-data.ts`, `src/components/site/sections/*`
+
+**Blockers:** Needs final copy and any wedding party photos from the couple.
+
+---
+
+### Sprint 2 — RSVP Launch Readiness
+
+**Goal:** Make the RSVP flow fully operational for real guests.
+
+**Scope:**
+- Flip `RSVP_OPEN` from `false` to `true` in `src/routes/rsvp.tsx`.
+- Import the real guest list. Options:
+  - Use the admin CSV import in `/_authenticated/admin`, or
+  - Add a one-time seed migration for the `guests` table (keep it private; do not commit real guest PII).
+- End-to-end test lookup by name, lookup by slug (`?g=<slug>`), submission, and edit-token flow (`/rsvp/edit/$token`).
+- Test the RSVP confirmation email (`src/lib/email-templates/rsvp-confirmation.tsx`) and verify the edit link works.
+- Verify admin dashboard counts, filters, CSV export, and the `rsvp_url` edit-link column.
+
+**Acceptance criteria:**
+- A guest can find their invitation, submit a response, receive a confirmation email, and edit their RSVP.
+- Admin can see the new RSVP in the dashboard immediately.
+- The late-RSVP notice works correctly after the deadline in `src/lib/site.ts`.
+
+**Key files:** `src/routes/rsvp.tsx`, `src/routes/rsvp/edit.$token.tsx`, `src/lib/rsvp.functions.ts`, `src/lib/rsvp-token.server.ts`, `src/lib/email-templates/rsvp-confirmation.tsx`, `src/routes/_authenticated/admin.tsx`
+
+**Blockers:** Real guest list must be available; `RSVP_EDIT_SECRET` env var must be set in production.
+
+---
+
+### Sprint 3 — Guest Photo Upload & Public Gallery
+
+**Goal:** Let guests upload photos from the public site and display approved photos in a gallery.
+
+**Scope:**
+- Replace the disabled placeholder form in `src/components/site/sections/PhotosSection.tsx` with a working upload form.
+- Wire the form to the existing upload server function in `src/lib/photos.functions.ts`.
+- Build a public gallery that fetches and displays approved photos from the backend.
+- Test the admin approve/reject/delete workflow and bulk actions.
+- Ensure mobile upload works (camera access, file size validation, multiple files).
+
+**Acceptance criteria:**
+- Guests can upload up to 5 JPG/PNG images from the Photos section.
+- Uploads land in a pending state.
+- Approved photos appear in the public gallery; rejected/deleted photos do not.
+- Admin can manage uploads from the Photos tab in `/_authenticated/admin`.
+
+**Key files:** `src/components/site/sections/PhotosSection.tsx`, `src/lib/photos.functions.ts`, `src/lib/admin.functions.ts`, `src/routes/_authenticated/admin.tsx`
+
+**Blockers:** Storage bucket and RLS policies for photos must already be configured in Lovable Cloud.
+
+---
+
+### Sprint 4 — Performance & Analytics
+
+**Goal:** Make the site fast and add lightweight, privacy-friendly event tracking.
+
+**Scope:**
+- Audit images (engagement photos, venue photos, party portraits) for lazy loading, sizing, and modern formats.
+- Add `loading="lazy"` and responsive `srcset` where appropriate; keep the hero preloaded.
+- Run a bundle-size check (`bun run build` and inspect `.output/` or use `vite-bundle-visualizer`) and remove unused dependencies if any.
+- Add minimal analytics. Prefer a privacy-friendly approach:
+  - Server-side counters for RSVP submissions and photo uploads, or
+  - A small custom event logger to Lovable Cloud, or
+  - A lightweight third-party option that does not require a cookie banner.
+- Track at minimum: RSVP submit, photo upload start/complete, calendar click, registry click.
+
+**Acceptance criteria:**
+- No layout shift from images; above-the-fold images are prioritized.
+- Bundle size is reasonable (no unused large libraries).
+- Key user actions are observable in the admin dashboard or an analytics view.
+
+**Key files:** `src/components/site/sections/*`, `src/routes/index.tsx`, `src/routes/rsvp.tsx`, `src/lib/photos.functions.ts`, `src/lib/admin.functions.ts`
+
+**Blockers:** Decide whether to use server-side counters, a third-party analytics provider, or both.
+
+---
+
+### Sprint 5 — Email Branding & Template Polish
+
+**Goal:** Make transactional emails match the stationery-inspired visual identity.
+
+**Scope:**
+- Apply the design tokens from `src/styles.css` to `src/lib/email-templates/rsvp-confirmation.tsx` (ivory background, ink headings, lavender accents, Cormorant/Work Sans typography).
+- Remove hardcoded hex values from email styles where possible; use the same palette as the site.
+- Ensure email preview data in each template matches real content.
+- Test rendering in common clients (Gmail, Apple Mail, Outlook web).
+- If Spanish confirmations are required, decide whether to add a bilingual template or keep emails English-only.
+
+**Acceptance criteria:**
+- RSVP confirmation email looks on-brand and displays correctly on mobile and desktop.
+- All transactional templates have consistent header/footers.
+- No broken links or placeholder values in preview data.
+
+**Key files:** `src/lib/email-templates/rsvp-confirmation.tsx`, `src/lib/email-templates/*.tsx`, `src/lib/email-templates/registry.ts`
+
+**Blockers:** Couple must approve the email design direction.
+
+---
+
+### Sprint 6 — Pre-Launch QA
+
+**Goal:** Ship a polished, accessible, SEO-ready site.
+
+**Scope:**
+- Accessibility audit: form labels, focus states, color contrast, alt text on images, semantic headings.
+- SEO/social metadata review on every route:
+  - `src/routes/index.tsx` (home)
+  - `src/routes/rsvp.tsx`
+  - `src/routes/rsvp/edit.$token.tsx`
+  - `src/routes/portal-ga-2026.tsx`
+  - `src/routes/__root.tsx`
+- Verify `og:image` is absolute and meaningful on leaf routes.
+- Cross-device testing at 440px and 1280px.
+- Final admin workflow verification: first-admin claim, sign-in, sign-out, session persistence.
+- Verify the `.ics` calendar file and Google Calendar link.
+
+**Acceptance criteria:**
+- No critical accessibility issues.
+- Every public route has unique title/description and valid canonical/og tags.
+- Site looks and works correctly on mobile and desktop.
+- Admin can sign in and manage RSVPs/photos without errors.
+
+**Key files:** `src/routes/__root.tsx`, `src/routes/index.tsx`, `src/routes/rsvp.tsx`, `src/routes/rsvp/edit.$token.tsx`, `src/routes/portal-ga-2026.tsx`, `src/routes/_authenticated/admin.tsx`, `src/routes/api/public/wedding[.]ics.ts`
+
+**Blockers:** Should be the last sprint before inviting real guests.
+
+---
+
+### Sprint 7 — Post-Wedding
+
+**Goal:** Convert the site into a post-event photo hub.
+
+**Scope:**
+- Keep or reopen photo uploads so guests can share wedding-day photos.
+- Batch-approve photos from the wedding day in the admin dashboard.
+- Optionally add a thank-you note or recap section to `src/routes/index.tsx`.
+- Optionally disable RSVP edits after a final cutoff while preserving read-only access.
+
+**Acceptance criteria:**
+- Post-event gallery is live and manageable from the admin dashboard.
+- Upload flow remains simple for guests on mobile.
+- Any new homepage section matches the existing design language.
+
+**Key files:** `src/components/site/sections/PhotosSection.tsx`, `src/routes/_authenticated/admin.tsx`, `src/routes/index.tsx`
+
+**Blockers:** Wedding must have happened and photos must be available.
 
 ---
 
@@ -274,6 +437,7 @@ BEFORE you make any code changes, do the following:
 3. Read src/lib/site.ts and src/lib/wedding-data.ts.
 4. Read src/styles.css to understand the color/type tokens.
 5. Run `git branch --show-current`. You MUST be on a feature branch, not `main`, before editing. If you are on `main`, create and switch to `feat/<short-description>` first.
+6. Read §3 of ONBOARDING.md (Remaining work / roadmap) and pick up the next uncompleted sprint rather than inventing new work.
 
 PROJECT ESSENTIALS:
 - Tech stack: TanStack Start v1, React 19, Vite 8, Tailwind CSS v4, TypeScript strict, Lovable Cloud (Supabase-backed but never say "Supabase" to users).
