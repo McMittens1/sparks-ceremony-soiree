@@ -26,6 +26,11 @@ export default defineMcp({
   name: "geo-addi-wedding-mcp",
   title: "Geovanni & Addison Wedding",
   version: "0.2.0",
+  auth: auth.oauth.issuer({
+    issuer: `${SUPABASE_URL}/auth/v1`,
+    acceptedAudiences: "authenticated",
+    resourceName: "Geovanni & Addison Wedding MCP",
+  }),
   instructions:
     "Tools for the Geovanni & Addison wedding site. Use get_wedding_info and get_countdown for the basics; get_schedule, get_dress_code, get_travel_info, and get_weather_forecast for day-of planning; get_faq to answer guest questions; get_wedding_party and get_registry_links for people and gifts; get_approved_photos for the public gallery.",
   tools: [
