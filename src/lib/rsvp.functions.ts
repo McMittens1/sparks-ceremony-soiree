@@ -61,6 +61,7 @@ export interface AdminGuestRow {
   invite_notes: string | null;
   created_at: string;
   rsvp: PublicRsvp | null;
+  edit_token: string;
 }
 
 // ---------- Helpers ----------
