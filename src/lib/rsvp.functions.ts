@@ -451,7 +451,10 @@ export const listGuestsWithRsvps = createServerFn({ method: "POST" })
         updated_at: r.updated_at,
       });
     }
-    return (guests ?? []).map((g): AdminGuestRow => ({
+    const { signRsvpToken } = await import("@/lib/rsvp-token.server");
+    const rows = guests ?? [];
+    const tokens = await Promise.all(rows.map((g) => signRsvpToken(g.id)));
+    return rows.map((g, i): AdminGuestRow => ({
       id: g.id,
       slug: g.slug,
       primary_name: g.primary_name,
@@ -467,6 +470,7 @@ export const listGuestsWithRsvps = createServerFn({ method: "POST" })
       invite_notes: g.invite_notes,
       created_at: g.created_at,
       rsvp: rsvpByGuest.get(g.id) ?? null,
+      edit_token: tokens[i],
     }));
   });
 
