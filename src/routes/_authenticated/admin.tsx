@@ -439,7 +439,7 @@ function RsvpsPanel() {
                     <td className="py-3 pr-4 text-xs font-mono">
                       <button
                         onClick={() => {
-                          navigator.clipboard?.writeText(buildRsvpUrl(r.slug)).catch(() => {});
+                          navigator.clipboard?.writeText(buildRsvpUrl(r)).catch(() => {});
                         }}
                         className="text-primary link-underline"
                         title="Copy RSVP link"
