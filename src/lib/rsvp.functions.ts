@@ -541,13 +541,21 @@ export const deleteGuest = createServerFn({ method: "POST" })
 
 // Import CSV as text: columns primary_name, party_members (semicolon-separated names, append " (child)" for kids), phone, email, address_line1, address_line2, city, state, postal_code, country, invite_notes
 // A missing column is fine. The first row is treated as a header when it contains "primary_name".
+function normalizeEmail(v: string): string {
+  return v.trim().toLowerCase();
+}
+
+function normalizePhone(v: string): string {
+  return v.replace(/\D/g, "");
+}
+
 export const importGuestsCsv = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: { csv: string }) => z.object({ csv: z.string().min(1).max(200_000) }).parse(d))
-  .handler(async ({ data, context }): Promise<{ inserted: number; skipped: number }> => {
+  .handler(async ({ data, context }): Promise<{ inserted: number; skipped: number; duplicates: number }> => {
     const sb = await ensureAdmin(context.userId);
     const rows = parseCsv(data.csv);
-    if (!rows.length) return { inserted: 0, skipped: 0 };
+    if (!rows.length) return { inserted: 0, skipped: 0, duplicates: 0 };
 
     let header: string[];
     let body: string[][];
@@ -559,12 +567,31 @@ export const importGuestsCsv = createServerFn({ method: "POST" })
       body = rows;
     }
 
+    // Dedupe against existing guests (by email or phone only — never by name,
+    // since two real invitees can share a name) and against rows already
+    // inserted earlier in this same import.
+    const { data: existing } = await sb.from("guests").select("email, phone");
+    const seenEmails = new Set<string>();
+    const seenPhones = new Set<string>();
+    for (const g of existing ?? []) {
+      if (g.email) seenEmails.add(normalizeEmail(g.email));
+      if (g.phone) seenPhones.add(normalizePhone(g.phone));
+    }
+
     let inserted = 0;
     let skipped = 0;
+    let duplicates = 0;
     for (const cols of body) {
       const rec: Record<string, string> = {};
       header.forEach((h, i) => { rec[h] = (cols[i] ?? "").trim(); });
       if (!rec.primary_name) { skipped++; continue; }
+
+      const email = rec.email ? normalizeEmail(rec.email) : "";
+      const phone = rec.phone ? normalizePhone(rec.phone) : "";
+      if ((email && seenEmails.has(email)) || (phone && seenPhones.has(phone))) {
+        duplicates++;
+        continue;
+      }
 
       const partyRaw = rec.party_members ?? "";
       const party_members: PartyMember[] = partyRaw
@@ -595,9 +622,14 @@ export const importGuestsCsv = createServerFn({ method: "POST" })
         if (!error) { inserted++; success = true; }
         else if (!error.message.toLowerCase().includes("duplicate")) { skipped++; break; }
       }
-      if (!success && inserted === 0) skipped++;
+      if (success) {
+        if (email) seenEmails.add(email);
+        if (phone) seenPhones.add(phone);
+      } else if (inserted === 0) {
+        skipped++;
+      }
     }
-    return { inserted, skipped };
+    return { inserted, skipped, duplicates };
   });
 
 // Minimal CSV parser: handles quoted fields, commas, newlines, and doubled quotes.

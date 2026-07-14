@@ -652,7 +652,7 @@ function CsvImporter({ onClose, onDone }: { onClose: () => void; onDone: () => v
     setBusy(true);
     try {
       const r = await runImport({ data: { csv } });
-      setResult(`Imported ${r.inserted}, skipped ${r.skipped}.`);
+      setResult(`Imported ${r.inserted}, skipped ${r.skipped}, ${r.duplicates} duplicate${r.duplicates === 1 ? "" : "s"} ignored.`);
       await onDone();
     } catch (e) {
       setResult(e instanceof Error ? e.message : "Import failed");
