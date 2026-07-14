@@ -229,7 +229,7 @@ export const submitRsvp = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: g, error: gErr } = await supabaseAdmin
-      .from("guests").select("id, party_members").eq("slug", data.slug.toUpperCase()).maybeSingle();
+      .from("guests").select("id, primary_name, party_members").eq("slug", data.slug.toUpperCase()).maybeSingle();
     if (gErr || !g) throw new Error("Guest not found");
 
     // Cap attendees at invited party size + 1 for a plus-one buffer.
