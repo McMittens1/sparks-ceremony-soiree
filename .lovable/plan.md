@@ -1,52 +1,57 @@
-# Sprint 2 Wedge — Guest self-service edits + calendar/maps polish
+# Update onboarding package with Git branching workflow
 
-Picking the two highest-leverage items still open from the Sprint 2 backlog (roadmap #12 and #13). Both are guest-facing, both remove real friction, and neither needs new infra.
+## Answers to your questions
 
-## Why these two now
+1. **Will Claude Code changes sync back to Lovable?**
+   Yes. Lovable has two-way GitHub sync on the connected branch (currently `main`). If Claude Code commits to a feature branch, opens a PR into `main`, and you merge it, the merged changes appear in Lovable automatically.
 
-- Admin dashboard + photo moderation just shipped, so the couple can manage the backend. The remaining pain is on the **guest side**: today a guest who mistypes their RSVP has to email you to fix it, and "add to calendar" / "get directions" are missing on a mobile-first wedding site.
-- #14 (perf pass) and #15 (analytics) are worth doing but lower urgency until more guests are on the site.
+2. **Should you wait for the dev branch before I recreate the plan?**
+   No. The branch creation is a one-time setup step you perform outside Lovable (I cannot run stateful git commands). The onboarding package should document that setup so any future AI knows the workflow before touching code.
 
-## Scope
+## Recommended branching model
 
-### 1. Signed RSVP edit links (#12)
+- Keep Lovable connected to `main`.
+- Treat `main` as the published/canonical branch.
+- Do all Claude Code / external-AI work on short-lived feature branches (`feat/<name>`) that merge into `main` via GitHub PR.
+- Small edits made directly inside Lovable can still go straight to `main`; Lovable’s version history covers rollback for those.
+- Never force-push, rebase, amend, or squash commits already on `main`. Use normal merge or squash-on-merge via the GitHub PR UI only.
 
-Let each guest re-open their RSVP from a personal link without a login.
+## Work to do
 
-- New server fn `getRsvpByToken({ token })` — verifies an HMAC-signed token (guest_id + expiry), returns the current RSVP so the form can prefill.
-- New server fn `updateRsvpByToken({ token, ... })` — same validator as the public submit, but scoped to the token's guest_id. No admin bypass.
-- Token format: `base64url(guest_id).base64url(exp).base64url(hmac_sha256(guest_id|exp, RSVP_EDIT_SECRET))`. 90-day expiry, regenerated on each admin CSV export.
-- New env secret `RSVP_EDIT_SECRET` (request via add_secret if missing).
-- Route: `/rsvp/edit/$token` — reuses the existing RSVP form component in "edit" mode (prefilled, submit button says "Update RSVP").
-- Admin CSV `rsvp_url` column starts emitting the signed edit URL instead of a bare guest link so the couple can paste it into a text/email.
-- Confirmation email (`rsvp-confirmation.tsx`) gains an "Edit your RSVP" button using the same token.
+1. **Add a Git & Branching Workflow section to `ONBOARDING.md`**
+   - Explain the one-branch sync limitation.
+   - Document the `feat/<name>` → PR → `main` → Lovable sync flow.
+   - Include the one-time setup commands:
+     ```text
+     git checkout main
+     git pull
+     git checkout -b dev
+     git push -u origin dev
+     ```
+   - Clarify that `dev` is optional; feature branches off `main` are enough. If the user wants a persistent `dev` branch, document how to keep it in sync.
+   - Add guardrails: no force-push to `main`, no rewriting published history.
 
-### 2. Calendar + maps polish (#13)
+2. **Update the reusable onboarding prompt**
+   - Instruct the AI to verify which branch it is on before editing.
+   - Tell it to create a feature branch for any non-trivial change and open a PR into `main` rather than committing directly to `main`.
+   - Remind it that Lovable syncs from `main`, so only merged work appears in the editor.
 
-- New public route `/api/public/wedding.ics` — returns a static VCALENDAR built from `src/lib/wedding-data.ts` (event title, start/end, venue address, description, organizer). Cached with `Cache-Control: public, max-age=3600`.
-- "Add to Calendar" button in `DaySection` linking to `/api/public/wedding.ics` (works on iOS/macOS/Outlook) plus a Google Calendar template URL fallback.
-- Travel section: swap the plain address for a "Get directions" button that opens `https://www.google.com/maps/dir/?api=1&destination=<encoded address>` on desktop and the native maps app on mobile via `maps://` fallback for iOS.
-- Copy-address-to-clipboard affordance next to the venue address.
+3. **Add a one-time setup checklist**
+   - A short ordered list the user can follow once to prepare the repo for Claude Code work.
+   - Include a note that the setup must be done by the user because the assistant cannot run `git checkout/push` commands in this environment.
+
+4. **Review `ONBOARDING.md` for consistency**
+   - Ensure the new section links cleanly to the existing project overview, current state, and remaining work sections.
+   - Keep the tone and format consistent with the rest of the document.
 
 ## Out of scope
 
-- #14 perf pass, #15 analytics — next wedge.
-- Auth email branding, EN/ES proofread — small standalone tasks.
-- No schema changes, no new tables, no RLS changes.
-
-## Technical details
-
-- Token verify uses Web Crypto `crypto.subtle.importKey` + `sign('HMAC', ...)` — Worker-safe (no Node `crypto` needed in the hot path). Constant-time compare via `timingSafeEqual`-style loop.
-- Edit route is public (`/rsvp/edit/$token`), not under `_authenticated`. Server fn is the ONLY authority — never trust the client's decoded guest_id.
-- `.ics` route lives under `/api/public/` per the public-endpoints rule; no auth, signature not required (public info).
-- All new client copy added to both `en` and `es` in `i18n/dictionaries.ts`.
+- Actually creating the Git branch or opening a PR (requires user action in their GitHub/local environment).
+- Changing the Lovable Git sync connection or branch.
+- Any application code changes.
 
 ## Verification
 
-- Typecheck clean.
-- Generate a token for a real guest, open `/rsvp/edit/<token>`, edit, confirm the DB row updated and admin dashboard reflects the change.
-- Tampered token (flip one char) → 401, form does not render.
-- Expired token → friendly "link expired, contact the couple" page.
-- `/api/public/wedding.ics` opens in Apple Calendar and imports the correct date/venue.
-- "Get directions" opens Google Maps on desktop and the native app on iOS/Android.
-- Security scan re-run: no new findings.
+- `ONBOARDING.md` renders correctly and contains the new §8 Git & Branching Workflow.
+- The reusable prompt includes branch-related instructions.
+- No broken internal links or duplicated content.
