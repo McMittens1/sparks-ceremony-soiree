@@ -1,16 +1,4 @@
 import { defineMcp, auth } from "@lovable.dev/mcp-js";
-
-// Supabase Auth issues the JWTs we accept. Requiring OAuth here means every
-// tools/list and tools/call request must present a valid signed-in user token
-// (aud: "authenticated"); unauthenticated MCP clients get a 401 with the
-// protected-resource metadata pointer instead of tool payloads. Guest data
-// (approved photos with uploader names, venue address, party details, etc.)
-// stays behind sign-in.
-const SUPABASE_URL =
-  process.env.SUPABASE_URL ?? (import.meta as { env?: Record<string, string> }).env?.VITE_SUPABASE_URL;
-if (!SUPABASE_URL) {
-  throw new Error("SUPABASE_URL is required to configure MCP OAuth");
-}
 import weddingInfoTool from "./tools/wedding-info";
 import countdownTool from "./tools/countdown";
 import scheduleTool from "./tools/schedule";
@@ -21,6 +9,20 @@ import faqTool from "./tools/faq";
 import weddingPartyTool from "./tools/wedding-party";
 import registryTool from "./tools/registry";
 import approvedPhotosTool from "./tools/approved-photos";
+
+// Supabase Auth issues the JWTs we accept. Requiring OAuth here means every
+// tools/list and tools/call request must present a valid signed-in user token
+// (aud: "authenticated"); unauthenticated MCP clients get a 401 with the
+// protected-resource metadata pointer instead of tool payloads. Guest data
+// (approved photos with uploader names, venue address, party details, etc.)
+// stays behind sign-in.
+const SUPABASE_URL =
+  process.env.SUPABASE_URL ??
+  (import.meta as unknown as { env?: Record<string, string | undefined> }).env
+    ?.VITE_SUPABASE_URL;
+if (!SUPABASE_URL) {
+  throw new Error("SUPABASE_URL is required to configure MCP OAuth");
+}
 
 export default defineMcp({
   name: "geo-addi-wedding-mcp",
