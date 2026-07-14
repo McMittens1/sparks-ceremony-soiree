@@ -2,7 +2,7 @@
 
 ## Goal
 
-Replace the short "Remaining work / roadmap" list in `ONBOARDING.md` with a detailed, prioritized sprint plan that captures every known piece of unfinished work — not just the four items currently listed — so any future AI assistant can pick up exactly where the project left off.
+Replace the short "Remaining work / roadmap" list in `ONBOARDING.md` with a detailed, prioritized sprint plan that captures every known piece of unfinished work — not just the four items previously listed — so any future AI assistant can pick up exactly where the project left off.
 
 ## Why now
 
@@ -91,7 +91,7 @@ Proposed sprints (subject to refinement during implementation):
 
 ### 3. Update `.lovable/plan.md`
 
-Replace the current "Update onboarding package with Git branching workflow" plan with a new plan that reflects the expanded roadmap work, so Lovable's internal plan file stays in sync with `ONBOARDING.md`.
+Replace the previous onboarding/Git-workflow plan with this expanded roadmap plan, so Lovable's internal plan file stays in sync with `ONBOARDING.md`.
 
 ### 4. Update the reusable onboarding prompt
 
