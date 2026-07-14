@@ -52,7 +52,7 @@ async function getKey(): Promise<CryptoKey> {
 export async function signRsvpToken(guestId: string, ttlMs: number = DEFAULT_TTL_MS): Promise<string> {
   const exp = String(Date.now() + ttlMs);
   const key = await getKey();
-  const sig = await crypto.subtle.sign("HMAC", key, textToBytes(`${guestId}|${exp}`));
+  const sig = await crypto.subtle.sign("HMAC", key, toBuf(textToBytes(`${guestId}|${exp}`)));
   return `${b64urlEncode(textToBytes(guestId))}.${b64urlEncode(textToBytes(exp))}.${b64urlEncode(sig)}`;
 }
 
