@@ -14,14 +14,14 @@ import { FaqSection } from "@/components/site/sections/FaqSection";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { property: "og:image", content: `https://sparks-ceremony-soiree.lovable.app${favorite.url}` },
-      { property: "og:image:alt", content: "Geovanni Moreno and Addison Hillman." },
+      { property: "og:image", content: `https://sparks-ceremony-soiree.lovable.app${heroPortrait.url}` },
+      { property: "og:image:alt", content: "Pencil illustration of Geovanni Moreno and Addison Hillman." },
       { property: "og:url", content: "https://sparks-ceremony-soiree.lovable.app/" },
-      { name: "twitter:image", content: `https://sparks-ceremony-soiree.lovable.app${favorite.url}` },
+      { name: "twitter:image", content: `https://sparks-ceremony-soiree.lovable.app${heroPortrait.url}` },
     ],
     links: [
       { rel: "canonical", href: "https://sparks-ceremony-soiree.lovable.app/" },
-      { rel: "preload", as: "image", href: favorite.url, fetchpriority: "high" },
+      { rel: "preload", as: "image", href: heroPortrait.url, fetchpriority: "high" },
     ],
   }),
   component: Home,
