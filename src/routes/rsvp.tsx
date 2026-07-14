@@ -68,7 +68,7 @@ const eyebrow: React.CSSProperties = {
 
 // Feature flag: when false, the RSVP form is shown in a read-only preview
 // state with a banner and all inputs disabled. Flip to true when RSVPs open.
-const RSVP_OPEN = false;
+const RSVP_OPEN = true;
 
 function RsvpPage() {
   const t = useT();
