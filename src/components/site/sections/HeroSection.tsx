@@ -31,8 +31,7 @@ function HeroCountdown() {
   return (
     <div
       className="lg:hidden w-full mx-auto"
-      style={{ maxWidth: 460 }}
-      style={{ marginTop: "clamp(20px, 4svh, 40px)" }}
+      style={{ maxWidth: 460, marginTop: "clamp(20px, 4svh, 40px)" }}
       aria-label="Countdown to the wedding"
     >
       <p
