@@ -58,18 +58,20 @@ function DatedRow({
   photos: string[];
 }) {
   const [main, ...rest] = photos;
-  const photosOrder = flip ? "lg:order-3" : "lg:order-1";
-  const textOrder = flip ? "lg:order-1" : "lg:order-3";
+  // Design contract: two-column + gutter layout promotes at md (768px), NOT lg.
+  // Below md, single column with text above photos.
+  const photosOrder = flip ? "md:order-3" : "md:order-1";
+  const textOrder = flip ? "md:order-1" : "md:order-3";
   return (
-    <div className="relative mt-16 lg:mt-28">
+    <div className="relative mt-16 md:mt-24 lg:mt-28">
       <span
         aria-hidden
-        className="absolute font-serif select-none pointer-events-none text-lavender/10"
+        className="absolute font-serif select-none pointer-events-none"
         style={{
-          top: "-46px",
-          left: "-8px",
+          top: "-32px",
+          left: "-4px",
           fontWeight: 500,
-          fontSize: "clamp(120px, 34vw, 380px)",
+          fontSize: "clamp(96px, 22vw, 320px)",
           lineHeight: 1,
           color: "rgba(135,121,163,0.08)",
           zIndex: 0,
@@ -78,25 +80,25 @@ function DatedRow({
         {numLabel}
       </span>
 
-      <div className="relative z-[1] flex flex-col gap-6 lg:grid lg:grid-cols-[1fr_88px_1fr] lg:items-stretch lg:gap-0">
-        {/* Photos: mobile order-2 (below text), desktop flipped */}
+      <div className="relative z-[1] flex flex-col gap-6 md:grid md:grid-cols-[1fr_72px_1fr] md:items-stretch md:gap-0 lg:grid-cols-[1fr_88px_1fr]">
+        {/* Photos: mobile order-2 (below text), md+ flipped */}
         <div
-          className={`order-2 flex flex-col gap-2 sm:gap-3 lg:flex-row lg:gap-3.5 lg:h-[640px] ${photosOrder}`}
+          className={`order-2 flex flex-col gap-2 sm:gap-3 md:flex-row md:gap-3 md:h-[520px] lg:h-[640px] lg:gap-3.5 ${photosOrder}`}
         >
-          <div className="relative photo-zoom w-full aspect-[4/5] max-h-[52svh] lg:aspect-auto lg:max-h-none lg:h-full lg:w-auto lg:flex-[0_0_62%]">
+          <div className="relative photo-zoom w-full aspect-[4/5] md:aspect-auto md:h-full md:w-auto md:flex-[0_0_62%]">
             <img
               src={main}
               alt=""
               loading="lazy"
-              className="w-full h-full object-cover object-top lg:object-center border border-hairline"
+              className="w-full h-full object-cover object-top md:object-center border border-hairline"
             />
           </div>
           {rest.length > 0 && (
-            <div className="flex flex-row gap-2 sm:gap-3 lg:flex-col lg:gap-3 lg:flex-1 lg:min-w-0">
+            <div className="flex flex-row gap-2 sm:gap-3 md:flex-col md:gap-3 md:flex-1 md:min-w-0">
               {rest.map((src, j) => (
                 <div
                   key={j}
-                  className="flex-1 aspect-square max-h-[22svh] lg:aspect-auto lg:max-h-none lg:min-h-0 photo-zoom"
+                  className="flex-1 aspect-square md:aspect-auto md:min-h-0 photo-zoom"
                 >
                   <img
                     src={src}
@@ -110,14 +112,14 @@ function DatedRow({
           )}
         </div>
 
-        {/* Gutter — desktop only */}
-        <div className="hidden lg:flex lg:items-center lg:justify-center lg:order-2">
+        {/* Gutter — md+ only */}
+        <div className="hidden md:flex md:items-center md:justify-center md:order-2">
           <StoryGutter />
         </div>
 
-        {/* Text: mobile order-1 (above photos), desktop flipped */}
-        <div className={`order-1 flex flex-col justify-center lg:px-2 ${textOrder}`}>
-          <div className="flex items-center gap-3.5 mb-1.5 lg:mb-2.5">
+        {/* Text: mobile order-1 (above photos), md+ flipped */}
+        <div className={`order-1 flex flex-col justify-center md:px-2 ${textOrder}`}>
+          <div className="flex items-center gap-3.5 mb-1.5 md:mb-2.5">
             <Eyebrow as="span" size="md" color="lavender-deep">
               {numLabel}
             </Eyebrow>

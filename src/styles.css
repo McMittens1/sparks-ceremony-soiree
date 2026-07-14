@@ -343,6 +343,13 @@ details[data-anim][open] > .faq-body {
   padding-block: clamp(64px, 8svh, 96px);
 }
 
+/* Responsive grid contract (do not change without design review):
+ *   .rs-stack   — asymmetric content/sidebar. 1 col → 5/7 at lg (1024px)
+ *   .rs-stack-2 — 1 col → 2 cols at sm (640px)
+ *   .rs-stack-3 — 1 col → 2 cols at sm (640px) → 3 cols at md (768px)
+ *   .rs-stack-4 — 1 col → 2 cols at sm (640px) → 4 cols at md (768px)
+ * Sections should not override these with inline gridTemplateColumns.
+ */
 .rs-stack,
 .rs-stack-2,
 .rs-stack-3,
@@ -356,10 +363,13 @@ details[data-anim][open] > .faq-body {
   .rs-stack-3 { grid-template-columns: repeat(2, 1fr); }
   .rs-stack-4 { grid-template-columns: repeat(2, 1fr); }
 }
+@media (min-width: 768px) {
+  .rs-stack-3 { grid-template-columns: repeat(3, 1fr); gap: clamp(28px, 3.5vw, 44px); }
+  .rs-stack-4 { grid-template-columns: repeat(4, 1fr); }
+}
 @media (min-width: 1024px) {
   .rs-stack   { grid-template-columns: 5fr 7fr; gap: clamp(40px, 5vw, 64px); }
-  .rs-stack-3 { grid-template-columns: repeat(3, 1fr); gap: clamp(32px, 4vw, 48px); }
-  .rs-stack-4 { grid-template-columns: repeat(4, 1fr); }
+  .rs-stack-3 { gap: clamp(32px, 4vw, 48px); }
 }
 
 /* Mobile menu drawer */
