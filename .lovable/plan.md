@@ -1,52 +1,47 @@
-## Recommendation
+## 1. Mobile hero — honest recommendation: leave it unchanged
 
-Use **`favorite_pencil_cropped_1.png`** as the hero image. Reasoning:
+The current mobile hero is already doing a lot in one viewport: eyebrow, two-line serif name lockup, italic date, venue line, RSVP + See details, and the 4-cell countdown strip pinned near the bottom. It fills `100svh` cleanly with real hierarchy and breathing room.
 
-- **Composition**: Balanced 5:4 crop. Both subjects framed evenly with generous headroom, arms and torsos anchored, natural fade at the bottom. Neither too square (image 2) nor too airy/wide (image 3, where subjects float small and off-center).
-- **Scale on the hero column**: The current right-side hero image slot is roughly 3:2 landscape at ~520px+ wide. Image 1's proportions read as a portrait-leaning mid-crop that fits the column beautifully once we let it size to its natural aspect (see layout note below). Image 3 is too wide and would leave subjects tiny; image 2 is too tight and would feel cramped next to the tall headline.
-- **Elegance/tone**: The pencil-sketch treatment on ivory is the strongest possible fit for the wedding site's paper-and-ink palette (`ivory #F8F4EC` · `ink #2A2520` · `lavender #8779A3`). It reads as commissioned, timeless, and editorial — exactly the design language of the rest of the site.
+Ways I considered adding the cutout on mobile, and why each weakens the design:
 
-## Hero background color
+- **Above the headline** — pushes the name below the fold on smaller phones (375×667), breaks the "name is the hero" hierarchy, and forces the cutout to shrink to ~180px tall where the pencil linework loses fidelity.
+- **Behind the text as a faded background** — the pencil lines cross directly through "Geovanni & Addison" and the RSVP button. Even at 15–20% opacity it muddies contrast on ivory and fights the typography instead of supporting it.
+- **Below the countdown** — requires a second scroll or breaks the full-viewport hero contract you deliberately built.
+- **Small inset next to the eyebrow** — reads as a decorative sticker, not editorial. Cheapens the desktop treatment by association.
 
-`--background: oklch(0.958 0.014 82)` = **`#F8F4EC`** (`ivory`). The hero section inherits the page background — no per-section override. This is what the image needs to blend into.
+The desktop hero works precisely because the image gets its own 520px+ column. Phones don't have a second column to give it. **My recommendation: keep mobile as it is.** The typography-only mobile hero is already elegant and intentional — adding the image would be additive noise, not design improvement.
 
-## How to make the cutout blend seamlessly (no image editing needed)
+If you disagree and want to try one anyway, tell me which of the four options above you'd like me to prototype and I'll build it.
 
-The three uploads are pencil art on **pure white (#FFFFFF)**, not on ivory (`#F8F4EC`). Two ways to reconcile the ~4% brightness gap:
+## 2. Desktop image bottom — soft arched mask, no palette change
 
-1. **CSS `mix-blend-mode: multiply`** on the `<img>`. On line art over a tinted paper background, multiply is the standard trick: white pixels vanish (become the ivory beneath), pencil marks darken naturally, negative space between arms/hair reads as ivory automatically. Zero image processing, zero re-uploads, works perfectly on every viewport. **This is the recommended approach.**
-2. **Re-render the PNG with ivory background baked in** via `imagegen--edit_image`. Heavier, produces a new asset, and any future palette tweak requires re-editing. Only worth it if `mix-blend-mode` shows any artifact on a specific device (it shouldn't for grayscale line art).
+Your instinct is right that the straight horizontal cutoff reads as accidental. The fix I recommend is different from the red-sketch mockup in one important way: **don't introduce lavender as a large section background.** Here's why:
 
-I'll ship option 1 and fall back to option 2 only if visual QA reveals a problem.
+- The site's palette is ivory-dominant with lavender as a small accent (the `&`, "October 10, 2026", "See details" underline, story dots). Turning the bottom third of the hero + the entire Counting Down section lavender would flip that ratio and make lavender the loudest color on the page. It would look great in isolation and wrong in context — every downstream section (Story, Day, Party) would suddenly feel disconnected from a saturated hero.
+- The Counting Down section is currently a quiet ivory beat that lets the countdown numerals breathe. A lavender wash there overpowers the numerals.
 
-## Plan
+Instead, do the same job (intentional, artistic ending; conceals only the minimum of the image; blends seamlessly into the next section) with a CSS mask on the image itself:
 
-### A. Upload the chosen cutout as a Lovable asset
-- `lovable-assets create --file /mnt/user-uploads/favorite_pencil_cropped_1.png --filename hero-portrait.png > src/assets/engagement/hero-portrait.png.asset.json`
+- Apply `mask-image` to the `<img>` in `HeroSection.tsx` using an SVG or radial gradient shaped as a **soft asymmetric arch** rising from the bottom-right and dipping across the bottom-left.
+- The mask fades the image to transparency along that curve — so the pencil linework literally dissolves into the ivory background instead of being chopped by a rectangle. No new color, no new section, no straight edge.
+- Because it's a mask (not a crop), we can tune it to cover only ~8–14% of the image height at its deepest point, well below the torsos, keeping arms and clothing intact.
+- The Counting Down section stays ivory. The transition works because there is no visible edge at all — the image simply ends the way pencil ends on paper.
 
-### B. Swap the hero image (`src/components/site/sections/HeroSection.tsx`)
-- Replace the `favorite` import with the new `hero-portrait` asset pointer.
-- Change the image container: drop the forced `aspectRatio: "3 / 2"` and `objectFit: cover` (those were tuned to a full photograph). Let the cutout size to its intrinsic ~5:4 ratio with `height: auto`, `maxHeight: 100%`, `objectFit: contain`, so we don't crop faces or hands.
-- Add `style={{ mixBlendMode: "multiply" }}` on the `<img>` so white blends into ivory.
-- Keep the desktop-only visibility (`hidden lg:flex`) exactly as it is — mobile hero already omits the image and shows the inline countdown. No mobile behavior changes.
-- Keep the OG/preload link in `src/routes/index.tsx` pointing at the same new asset URL so the social share preview matches the new hero.
+If after seeing that you still want an actual colored arch, we layer a second refinement on top: a **very thin lavender hairline curve** (2px stroke, `lavender-deep` at ~30% opacity) tracing just above where the mask fades, echoing the DiamondDivider language elsewhere on the site. That gives the "intentional composed line" your sketch is reaching for without introducing a color block.
 
-### C. Update the OG image (`src/routes/index.tsx`)
-- Replace the `favorite` import + the two `og:image` / `twitter:image` / preload references with the new `hero-portrait` asset. Alt text: "Pencil illustration of Geovanni Moreno and Addison Hillman."
+### What I'll change
 
-### D. Leave everything else untouched
-- No changes to typography, buttons, spacing, layout grid, countdown, or any other section.
-- The old `favorite` engagement photo asset stays in the repo (it's still used elsewhere — Photos section — so we don't delete it).
+- `src/components/site/sections/HeroSection.tsx` — add an inline SVG mask (or `-webkit-mask-image` + `mask-image` with a radial/linear gradient) to the hero `<img>`. Keep `mixBlendMode: multiply`, `objectFit: contain`, and the `hidden lg:flex` visibility rule.
+- No changes to `CountdownSection.tsx`, `styles.css` tokens, or the palette.
+- No new image asset needed — the mask is applied in CSS, so we don't need you to re-export the PNG. If after review you want a harder, more sculpted arch that CSS masks can't quite hit, I'll then ask you for a 1600×1200 PNG with a pre-baked alpha curve at the bottom.
 
-## Verification
+### Verification
 
-Playwright screenshot pass at 1024, 1280, 1568 (current viewport), 1920:
-- Hero left column (headline / date / RSVP / countdown) unchanged.
-- Right column shows the cutout at natural aspect, centered, with no visible white rectangle — negative space reads as ivory.
-- Retake at 375 / 768 to confirm mobile/tablet layouts are unchanged (image hidden below `lg`).
-- Confirm no horizontal overflow at any width.
+- Playwright screenshots at 1024 / 1280 / 1568 / 1920 desktop widths — confirm the bottom of the cutout dissolves smoothly into ivory, no visible horizontal edge, torsos untouched, headline column unchanged.
+- Screenshots at 768 and 375 to confirm mobile hero is untouched (image still hidden below `lg:`).
+- Check the seam between the hero and the Counting Down section is invisible.
 
-## Technical notes
+## Summary of what I'm proposing
 
-- `mix-blend-mode: multiply` is universally supported and safe for a grayscale image over a solid light background. It has no effect if the parent has a non-solid backdrop, which is why we only rely on it here in the hero (the ivory `--background` is solid).
-- The new PNG will be served over the same CDN pipeline as the other engagement assets — no build config changes needed.
+- **Mobile**: no change. The typography-only hero is stronger than any way I can add the cutout.
+- **Desktop bottom**: a CSS mask that softly dissolves the cutout into ivory along an asymmetric arch, keeping the palette and the next section exactly as they are today. Optional lavender hairline curve as a follow-up if you want more visible articulation.

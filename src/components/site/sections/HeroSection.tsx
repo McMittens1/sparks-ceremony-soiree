@@ -211,6 +211,17 @@ export function HeroSection() {
               objectFit: "contain",
               display: "block",
               mixBlendMode: "multiply",
+              // Soft asymmetric arch mask so the pencil illustration
+              // dissolves into the ivory background at the bottom instead
+              // of ending on a straight horizontal edge.
+              WebkitMaskImage:
+                "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'><defs><filter id='b' x='-5%' y='-5%' width='110%' height='110%'><feGaussianBlur stdDeviation='0.9'/></filter></defs><path d='M0,0 L100,0 L100,84 C82,78 60,96 34,92 C20,90 10,94 0,88 Z' fill='white' filter='url(%23b)'/></svg>\")",
+              maskImage:
+                "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'><defs><filter id='b' x='-5%' y='-5%' width='110%' height='110%'><feGaussianBlur stdDeviation='0.9'/></filter></defs><path d='M0,0 L100,0 L100,84 C82,78 60,96 34,92 C20,90 10,94 0,88 Z' fill='white' filter='url(%23b)'/></svg>\")",
+              WebkitMaskSize: "100% 100%",
+              maskSize: "100% 100%",
+              WebkitMaskRepeat: "no-repeat",
+              maskRepeat: "no-repeat",
             }}
           />
         </div>
