@@ -58,16 +58,18 @@ function DatedRow({
   photos: string[];
 }) {
   const [main, ...rest] = photos;
+  const photosOrder = flip ? "lg:order-3" : "lg:order-1";
+  const textOrder = flip ? "lg:order-1" : "lg:order-3";
   return (
-    <div className="relative rs-story-entry" style={{ marginTop: 110 }}>
+    <div className="relative mt-16 lg:mt-28">
       <span
         aria-hidden
-        className="absolute font-serif select-none pointer-events-none rs-story-big-num"
+        className="absolute font-serif select-none pointer-events-none text-lavender/10"
         style={{
-          top: -56,
-          left: -16,
+          top: "-46px",
+          left: "-8px",
           fontWeight: 500,
-          fontSize: "min(28vw, 380px)",
+          fontSize: "clamp(120px, 34vw, 380px)",
           lineHeight: 1,
           color: "rgba(135,121,163,0.08)",
           zIndex: 0,
@@ -75,27 +77,27 @@ function DatedRow({
       >
         {numLabel}
       </span>
-      <div
-        className="relative grid items-stretch rs-story-row"
-        style={{ gridTemplateColumns: "1fr 88px 1fr", zIndex: 1 }}
-      >
-        {/* Photo stage — fixed 640px height, hero 62% + filmstrip fills rest */}
+
+      <div className="relative z-[1] flex flex-col gap-6 lg:grid lg:grid-cols-[1fr_88px_1fr] lg:items-stretch lg:gap-0">
+        {/* Photos: mobile order-2 (below text), desktop flipped */}
         <div
-          className="flex gap-3.5 rs-story-photos"
-          style={{ order: flip ? 3 : 1, height: 640 }}
+          className={`order-2 flex flex-col gap-2 sm:gap-3 lg:flex-row lg:gap-3.5 lg:h-[640px] ${photosOrder}`}
         >
-          <div className="relative photo-zoom rs-story-photo-main" style={{ flex: "0 0 62%" }}>
+          <div className="relative photo-zoom w-full aspect-[4/5] max-h-[52svh] lg:aspect-auto lg:max-h-none lg:h-full lg:w-auto lg:flex-[0_0_62%]">
             <img
               src={main}
               alt=""
               loading="lazy"
-              className="w-full h-full object-cover border border-hairline"
+              className="w-full h-full object-cover object-top lg:object-center border border-hairline"
             />
           </div>
           {rest.length > 0 && (
-            <div className="flex-1 min-w-0 flex flex-col gap-3 rs-story-photo-rest">
+            <div className="flex flex-row gap-2 sm:gap-3 lg:flex-col lg:gap-3 lg:flex-1 lg:min-w-0">
               {rest.map((src, j) => (
-                <div key={j} className="flex-1 min-h-0 photo-zoom">
+                <div
+                  key={j}
+                  className="flex-1 aspect-square max-h-[22svh] lg:aspect-auto lg:max-h-none lg:min-h-0 photo-zoom"
+                >
                   <img
                     src={src}
                     alt=""
@@ -108,22 +110,22 @@ function DatedRow({
           )}
         </div>
 
-        {/* Gutter with hairline + diamond */}
-        <div className="flex items-center justify-center rs-story-gutter" style={{ order: 2 }}>
+        {/* Gutter — desktop only */}
+        <div className="hidden lg:flex lg:items-center lg:justify-center lg:order-2">
           <StoryGutter />
         </div>
 
-        {/* Text column */}
-        <div
-          className="flex flex-col justify-center px-2 rs-story-text"
-          style={{ order: flip ? 1 : 3 }}
-        >
-          <div className="flex items-center gap-3.5 mb-2.5">
+        {/* Text: mobile order-1 (above photos), desktop flipped */}
+        <div className={`order-1 flex flex-col justify-center lg:px-2 ${textOrder}`}>
+          <div className="flex items-center gap-3.5 mb-1.5 lg:mb-2.5">
             <Eyebrow as="span" size="md" color="lavender-deep">
               {numLabel}
             </Eyebrow>
             <div className="w-8 h-px bg-tan" />
-            <time className="font-serif italic text-lavender-deep" style={{ fontSize: 19 }}>
+            <time
+              className="font-serif italic text-lavender-deep"
+              style={{ fontSize: "clamp(16px, 2vw, 19px)" }}
+            >
               {entry.date}
             </time>
           </div>
@@ -135,7 +137,7 @@ function DatedRow({
             italic={false}
             size="sm"
             color="ink"
-            style={{ margin: "0 0 22px" }}
+            style={{ margin: "0 0 18px" }}
           >
             {entry.title}
           </DisplayHeading>
@@ -196,25 +198,21 @@ function MontageRow({
 }) {
   return (
     <Reveal variant="up" className="text-center block">
-      <div className="rs-story-entry" style={{ marginTop: 110 }}>
+      <div className="mt-16 lg:mt-28">
         <Eyebrow color="tan" size="lg" className="mb-4">
           — {entry.label} —
         </Eyebrow>
         <DisplayHeading as="h3" size="md" color="ink" style={{ margin: "0 0 20px" }}>
           {entry.title}
         </DisplayHeading>
-        <BodyProse
-          className="mx-auto"
-          maxWidth={640}
-          style={{ margin: "0 auto 44px" }}
-        >
+        <BodyProse className="mx-auto" maxWidth={640} style={{ margin: "0 auto 44px" }}>
           {entry.body}
         </BodyProse>
         <div
-          className="grid gap-3.5 text-left rs-montage-grid"
+          className="grid gap-2 sm:gap-3 lg:gap-3.5 text-left"
           style={{
-            gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
-            gridAutoRows: 200,
+            gridTemplateColumns: "repeat(auto-fill, minmax(clamp(120px, 42vw, 160px), 1fr))",
+            gridAutoRows: "clamp(150px, 40vw, 200px)",
           }}
         >
           {photos.map((src, i) => (
