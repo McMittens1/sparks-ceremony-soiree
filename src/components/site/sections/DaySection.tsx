@@ -6,10 +6,10 @@ export function DaySection() {
   return (
     <section
       id="day"
-      className="border-t border-hairline rs-section bg-lavender-deep"
-      style={{ padding: "80px 56px" }}
+      className="border-t border-hairline rs-section-bleed bg-lavender-deep"
     >
       <div className="mx-auto" style={{ maxWidth: 1400 }}>
+
         <Eyebrow color="gold" size="lg" style={{ marginBottom: 18 }}>
           III · The Day
         </Eyebrow>
@@ -59,10 +59,8 @@ export function DaySection() {
           ))}
         </div>
 
-        <div
-          className="grid rs-stack"
-          style={{ marginTop: 70, gridTemplateColumns: "5fr 7fr", gap: 64 }}
-        >
+        <div className="grid rs-stack" style={{ marginTop: 70 }}>
+
           <div>
             <Eyebrow color="gold" size="md" style={{ marginBottom: 20 }}>
               Day-of schedule

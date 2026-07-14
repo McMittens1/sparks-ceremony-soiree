@@ -6,11 +6,7 @@ import { SITE } from "@/lib/site";
 
 export function TravelSection() {
   return (
-    <section
-      id="travel"
-      className="border-t border-hairline rs-section"
-      style={{ padding: "80px 56px", maxWidth: 1500, margin: "0 auto" }}
-    >
+    <section id="travel" className="border-t border-hairline rs-section">
       <SectionHeader
         eyebrow="V · Getting There"
         title="Getting There"
@@ -18,10 +14,8 @@ export function TravelSection() {
       />
       <DiamondDivider className="mt-9" />
 
-      <div
-        className="grid items-start rs-stack"
-        style={{ marginTop: 64, gridTemplateColumns: "5fr 7fr", gap: 64 }}
-      >
+      <div className="grid items-start rs-stack" style={{ marginTop: 64 }}>
+
         <div>
           <Eyebrow color="lavender-deep" style={{ marginBottom: 14 }}>
             Venue address
@@ -70,7 +64,7 @@ export function TravelSection() {
           We haven&rsquo;t blocked rooms anywhere. Most out-of-town guests stay in Lincoln or
           Omaha, here are well-known options in each area.
         </BodyProse>
-        <div className="grid rs-stack-3" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: 48 }}>
+        <div className="grid rs-stack-3">
           {HOTELS.map((group) => (
             <div key={group.area}>
               <p className="font-serif italic text-ink" style={{ fontSize: 22, margin: "0 0 4px" }}>
@@ -96,8 +90,9 @@ export function TravelSection() {
 
       <div
         className="grid border-t border-hairline rs-stack-2"
-        style={{ marginTop: 72, gridTemplateColumns: "1fr 1fr", gap: 64, paddingTop: 48 }}
+        style={{ marginTop: 72, paddingTop: 48 }}
       >
+
         <div>
           <Eyebrow color="lavender-deep" style={{ marginBottom: 10 }}>
             Parking

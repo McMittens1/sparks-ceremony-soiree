@@ -4,11 +4,7 @@ import { WeddingParty } from "@/components/site/WeddingParty";
 
 export function PartySection() {
   return (
-    <section
-      id="party"
-      className="border-t border-hairline rs-section"
-      style={{ padding: "80px 56px", maxWidth: 1500, margin: "0 auto" }}
-    >
+    <section id="party" className="border-t border-hairline rs-section">
       <SectionHeader
         eyebrow="IV · Wedding Party"
         title="Wedding Party"

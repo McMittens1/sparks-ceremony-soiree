@@ -4,11 +4,7 @@ import { Eyebrow } from "@/components/site/typography";
 
 export function PhotosSection() {
   return (
-    <section
-      id="photos"
-      className="border-t border-hairline rs-section"
-      style={{ padding: "80px 56px", maxWidth: 1500, margin: "0 auto" }}
-    >
+    <section id="photos" className="border-t border-hairline rs-section">
       <SectionHeader
         eyebrow="VI · Photos"
         title="Photos"
@@ -16,7 +12,8 @@ export function PhotosSection() {
       />
       <DiamondDivider className="mt-9" />
 
-      <div className="grid rs-stack" style={{ marginTop: 64, gridTemplateColumns: "5fr 7fr", gap: 64 }}>
+      <div className="grid rs-stack" style={{ marginTop: 64 }}>
+
         <div className="flex flex-col justify-center">
           <span
             className="flex-shrink-0 bg-lavender"
@@ -48,7 +45,7 @@ export function PhotosSection() {
           <p className="font-sans text-ink-soft" style={{ fontSize: 14, lineHeight: 1.7, margin: "0 0 26px" }}>
             Up to 5 images, JPG or PNG, 10 MB each. Nothing goes public until we approve it.
           </p>
-          <div className="grid rs-stack-2" style={{ gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
+          <div className="grid rs-stack-2" style={{ marginBottom: 20 }}>
             <div>
               <label htmlFor="photo-name" className="block">
                 <Eyebrow color="tan-deep" size="sm" as="span" style={{ letterSpacing: "0.2em" }}>

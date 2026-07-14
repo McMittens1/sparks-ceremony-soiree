@@ -4,11 +4,7 @@ import { REGISTRY } from "@/lib/wedding-data";
 
 export function RegistrySection() {
   return (
-    <section
-      id="registry"
-      className="border-t border-hairline rs-section"
-      style={{ padding: "80px 56px", maxWidth: 1500, margin: "0 auto" }}
-    >
+    <section id="registry" className="border-t border-hairline rs-section">
       <SectionHeader
         eyebrow="VII · Registry"
         title="Registry"
@@ -16,7 +12,8 @@ export function RegistrySection() {
       />
       <DiamondDivider className="mt-9" />
 
-      <div className="grid rs-stack-4" style={{ marginTop: 64, gridTemplateColumns: "repeat(4, 1fr)", gap: 24 }}>
+      <div className="grid rs-stack-4" style={{ marginTop: 64 }}>
+
         {REGISTRY.map((r) => {
           const lead = r.lead === true;
           return (

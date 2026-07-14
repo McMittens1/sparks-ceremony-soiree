@@ -4,11 +4,7 @@ import { StoryTimeline } from "@/components/site/StoryTimeline";
 
 export function StorySection() {
   return (
-    <section
-      id="story"
-      className="border-t border-hairline rs-section"
-      style={{ padding: "80px 56px", maxWidth: 1500, margin: "0 auto" }}
-    >
+    <section id="story" className="border-t border-hairline rs-section">
       <SectionHeader
         eyebrow="II · Our Story"
         title="Our Story"

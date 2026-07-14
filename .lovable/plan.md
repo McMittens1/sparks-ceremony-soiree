@@ -1,69 +1,131 @@
-## Root cause
 
-The hero is being controlled in three places that fight each other, so its "fill the screen" behavior only works at desktop and breaks on tablet/mobile:
+# Responsive Refactor — Site-Wide Consolidation
 
-1. `src/components/site/sections/HeroSection.tsx` sets `height: calc(100vh - 73px)` + `minHeight: 560` + `containerType: size` inline.
-2. `src/styles.css` under `@media (max-width: 1023px)` overrides that with `height: auto !important; min-height: 0 !important; container-type: normal !important; display: block !important;` and gives `.rs-hero-inner` its own padding.
-3. `.rs-hero-title` has a `!important` font-size rule in `@media (max-width: 767px)` that overrides the inline `clamp()` typography set in the component.
+## Problem (root cause, not symptoms)
 
-Consequences that match what you're seeing:
+The site mixes three layout systems that fight each other:
 
-- On tablet/mobile the hero collapses to its content height, so Section II — Our Story is visible on initial load.
-- `100vh` is wrong on mobile browsers (address bar) and the subtracted `73px` header assumes desktop header padding; on mobile the header is shorter, so even the desktop rule is off by a few px.
-- Typography is defined twice (inline `clamp` + `!important` media query), so tweaks in one place silently do nothing.
-- The countdown lives in two components (`HeroSection`'s `HeroCountdown` for `<lg`, `CountdownSection` for `≥lg`) — that's fine as a pattern, but only if the hero height rule is consistent, otherwise the mobile countdown sits inside a collapsed hero and Story shows through.
+1. **Inline `style={{ padding: "80px 56px", fontSize: 30, margin: "24px 0 0" }}`** on nearly every section (Story, Photos, Registry, Travel, FAQ, Day, Party, StoryTimeline, WeddingParty). These are fixed pixel values with no responsive scaling.
+2. **`!important` overrides in `src/styles.css`** under `@media (max-width: 767px)`, `≤640px`, `≤639px`, `640–1023px` that exist *only* to beat those inline styles back down for smaller screens (`.rs-section`, `.rs-stack`, `.rs-stack-2/3/4`, `.rs-story-*`, `.rs-day-*`, `.rs-montage-grid`, section `h2`).
+3. **Ad-hoc breakpoints** — some rules split at 640, some at 767, some at 1023, some at 1024 (Tailwind `lg`). Registry/hotels use one set; Story uses another; hero uses yet another. No shared scale.
 
-## Fix — one source of truth per concern
+The Hero already went through this refactor (svh + clamp + `--header-h`, no `!important`). The rest of the site hasn't. Every future change risks a new inline value that requires a new `!important` override.
 
-Refactor so each concern is owned in exactly one place. No `!important` overrides for layout.
+## Goal
 
-### Hero height (owned by HeroSection.tsx)
+One responsive source of truth per concern (section padding, section max-width, stack grids, typography scale, spacing rhythm). No `!important` outside true edge cases (motion reduce, mobile-menu display). Inline styles reserved for one-off dynamic values only.
 
-- Use `min-height: 100svh` (small viewport height — stable across mobile browser chrome), with a `@supports` fallback to `100vh`.
-- Subtract the actual header height via a CSS variable `--header-h` set on `:root` (default `64px`, `md: 73px`) instead of hard-coding `73px`.
-- Apply the same rule at every breakpoint. Delete the `@media (max-width: 1023px)` hero override block in `styles.css` entirely.
-- Keep `display: flex; flex-direction: column` at all sizes so the inner content vertically centers within the full-viewport hero. Drop `containerType: size` (it was only needed for the desktop `cqh` typography trick — replace with `svh`-based `clamp` so units work at every size).
+## Approach
 
-### Hero inner layout (owned by HeroSection.tsx)
+### 1. Section shell utility (`.rs-section`)
 
-- Single flex container that is `flex-direction: column` below `lg` and `flex-direction: row` at `lg+`. No CSS override needed.
-- Padding uses `clamp()` in the component; remove the mobile padding override in CSS.
+Move to a single definition in `styles.css` using `clamp()` — no media queries, no `!important`:
 
-### Hero image visibility + cropping (owned by HeroSection.tsx)
+```css
+@utility rs-section {
+  padding-inline: clamp(24px, 5vw, 56px);
+  padding-block: clamp(64px, 8svh, 96px);
+  max-width: 1500px;
+  margin-inline: auto;
+}
+```
 
-- Rendered only at `lg+` via `hidden lg:flex` (already correct).
-- Keep the `aspect-ratio: 3/2`, `object-fit: cover`, `object-position: center 35%`. This is the only place image styling lives; the old `.rs-hero-image` mobile rules in CSS are already gone — verify none re-appear.
+Remove every `style={{ padding: "80px 56px", maxWidth: 1500, margin: "0 auto" }}` from StorySection, PhotosSection, RegistrySection, TravelSection, DaySection, FaqSection, PartySection. Keep only the `border-t border-hairline` class where it exists.
 
-### Countdown placement (owned by breakpoint, not by duplicated logic)
+Delete the `@media (max-width: 767px) .rs-section { padding-*: … !important }` block.
 
-- `HeroCountdown` inside `HeroSection` renders `lg:hidden` (already correct).
-- `CountdownSection` renders `hidden lg:block` (already correct).
-- Because the hero now always fills the viewport, on `<lg` the countdown sits inside the full-viewport hero — Story stays below the fold. No additional change needed once the height rule is fixed.
+### 2. Responsive stack utilities
 
-### Responsive typography + spacing (owned by HeroSection.tsx)
+Replace `.rs-stack`, `.rs-stack-2`, `.rs-stack-3`, `.rs-stack-4` inline `gridTemplateColumns` values with utilities that already carry breakpoints:
 
-- Replace `cqh`-based `clamp()` values (which depend on `container-type: size`) with `svh` + `vw`-based `clamp()` so they scale correctly at every viewport without needing container queries.
-- Delete the `.rs-hero-title { font-size: … !important }` rule from `styles.css` so the component's `clamp()` is the only source.
-- Tighten the small-viewport clamp floors so title, subtitle, buttons, and countdown remain visually balanced on a 360px phone up through a 1024px tablet.
+```css
+@utility rs-stack       { display: grid; gap: clamp(24px, 4vw, 64px); grid-template-columns: 1fr; }
+@utility rs-stack-2     { display: grid; gap: clamp(20px, 3vw, 32px); grid-template-columns: 1fr; }
+@utility rs-stack-3     { display: grid; gap: clamp(20px, 3vw, 32px); grid-template-columns: 1fr; }
+@utility rs-stack-4     { display: grid; gap: clamp(20px, 3vw, 32px); grid-template-columns: 1fr; }
+@media (min-width: 640px) {
+  .rs-stack-2 { grid-template-columns: 1fr 1fr; }
+  .rs-stack-3 { grid-template-columns: repeat(2, 1fr); }
+  .rs-stack-4 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1024px) {
+  .rs-stack   { grid-template-columns: 5fr 7fr; }   /* Photos-style split */
+  .rs-stack-3 { grid-template-columns: repeat(3, 1fr); }
+  .rs-stack-4 { grid-template-columns: repeat(4, 1fr); }
+}
+```
 
-### Section II transition
+Remove inline `gridTemplateColumns` and `gap` from the JSX and drop the `!important` overrides. Where a section needs a different split (e.g., FAQ 1fr 1fr), give it a variant class rather than an inline value.
 
-- No structural change. Once the hero is always `min-height: 100svh - header`, Section II — Our Story naturally sits below the fold on initial load at every breakpoint.
+### 3. Section header rhythm
+
+Section titles currently use `.rs-section h2 { font-size: clamp(36px, 8vw, 52px) !important }` only at ≤767px. Move a single `clamp(32px, 6vw, 60px)` rule onto the shared `DisplayHeading`/`SectionHeader` sizes so titles scale everywhere without `!important`.
+
+### 4. StoryTimeline
+
+The biggest offender: 20+ `!important` rules re-arrange the row on mobile. Restructure `StoryTimeline.tsx` so mobile is the default (single column, photos stacked) and desktop is the enhancement:
+
+- Base: `flex flex-col` with photos block and text block in source order (text first).
+- `lg:` promote to the 3-column `grid-cols-[1fr_88px_1fr]` layout with `order` swaps.
+- Move `marginTop: 110` → `mt-16 lg:mt-28`.
+- Move `height: 640` on the photo cluster → `lg:h-[640px]` (auto on mobile).
+- Big background number: express with `clamp(120px, 34vw, 360px)` and drop the mobile override.
+
+Result: every `.rs-story-*` `!important` line in `styles.css` can be deleted.
+
+### 5. Fixed pixel typography → clamp
+
+Replace inline `fontSize: 11 / 15 / 16 / 19 / 21 / 30` scattered through Photos, FAQ, Story, WeddingParty with the existing `Eyebrow`/`BodyProse`/`DisplayHeading` size variants (extending them if a size is missing). No inline `fontSize` in section components after refactor.
+
+### 6. Viewport units
+
+Standardize on `svh` for anything measured against the viewport (hero already does this; CountdownSection uses fixed `72px 32px`). Add a `--section-pad-y: clamp(64px, 8svh, 96px)` variable so all vertical rhythm is comparable.
+
+### 7. Breakpoint scale
+
+Adopt a single scale used everywhere:
+
+- `sm` 640 — 1→2 columns for card grids
+- `md` 768 — header layout change (already used by `--header-h`)
+- `lg` 1024 — 2→3/4 columns, hero image appears, StoryTimeline promotes to 3-col
+
+Delete stray `@media (max-width: 639px)` / `(min-width: 640px) and (max-width: 1023px)` blocks; they collapse into the utilities above.
+
+### 8. Keep as-is (explicitly out of scope)
+
+- `HeroSection.tsx` (already refactored last turn).
+- Header mobile drawer CSS (`.mobile-menu-panel`, backdrop) — it's already a single source of truth.
+- Reveal/motion utilities.
+- shadcn tokens in `@theme inline`.
+- `prefers-reduced-motion` block (legitimate `!important`).
+- RSVP page (frozen per prior instruction).
 
 ## Files touched
 
-- `src/components/site/sections/HeroSection.tsx` — rewrite height + clamp values; remove `containerType`; keep image + countdown wiring.
-- `src/styles.css` — delete the `.rs-hero-section` / `.rs-hero-inner` / `.rs-hero-text` block inside `@media (max-width: 1023px)`; delete the `.rs-hero-title { … !important }` inside `@media (max-width: 767px)`; add `:root { --header-h: 64px } @media (min-width: 768px) { :root { --header-h: 73px } }`.
-- No changes to `CountdownSection.tsx`, `Header.tsx`, `StorySection.tsx`, or any other section — the refactor is scoped to the hero.
+- `src/styles.css` — rewrite `.rs-section` / `.rs-stack*` as `@utility` with intrinsic breakpoints; delete the `≤767`, `≤640`, `≤639`, `640–1023` override blocks (except mobile-menu display + reduce-motion).
+- `src/components/site/sections/{Story,Photos,Registry,Travel,Day,Faq,Party,Countdown}Section.tsx` — remove inline padding/maxWidth/gap/gridTemplateColumns; drop inline fontSize where a typography component covers it.
+- `src/components/site/StoryTimeline.tsx` — mobile-first restructure, kill order/height overrides.
+- `src/components/site/WeddingParty.tsx` — replace inline `fontSize`/`margin` with typography components + utility spacing.
+- `src/components/site/typography.tsx` — add any missing `Eyebrow`/`BodyProse` sizes needed to absorb inline values.
 
-## Verification (Playwright, per-viewport reloads, not window resize)
+Approximate delta: `styles.css` shrinks ~120 lines; section components lose ~80 lines of inline `style` props.
 
-For each of `375×812` (mobile), `430×932` (large mobile), `768×1024` (tablet portrait), `1024×1366` (tablet landscape), `1280×800` (laptop), `1920×1080` (desktop):
+## Verification
 
-1. Load `/`, screenshot above-the-fold.
-2. Assert `document.getElementById('story').getBoundingClientRect().top >= window.innerHeight` (Story is below the fold).
-3. Assert hero image is visible only at `≥1024px`.
-4. Assert countdown is visible in the hero at `<1024px` and in `#countdown` at `≥1024px`.
-5. Reload twice; confirm layout is stable (no CLS between reloads).
+Playwright screenshot pass at `375×812`, `430×932`, `768×1024`, `1024×1366`, `1280×800`, `1920×1080`. For each viewport:
 
-Report screenshots + the numeric assertions per viewport before declaring done.
+1. Home page scroll to Story, Day, Party, Travel, Photos, Registry, FAQ — no overflow, consistent gutters, titles legible.
+2. Hero unchanged (regression check).
+3. Mobile drawer opens with solid ivory background, covers full height (regression check).
+4. RSVP page renders identically (frozen).
+5. Computed style spot-check: no leftover `!important` on `.rs-section`, `.rs-stack*`, `.rs-story-*`.
+
+## Risk
+
+Story timeline restructure is the highest-risk change (touching order/flex/height across breakpoints). Mitigation: build mobile layout first, verify at 375px, then add `lg:` promotion and verify at 1280px before deleting the old CSS overrides.
+
+## Not doing
+
+- No design changes (colors, fonts, copy).
+- No component API changes beyond adding typography size variants.
+- No changes to routing, data, RSVP, or backend code.
