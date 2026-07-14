@@ -227,7 +227,7 @@ function RsvpsPanel() {
         r.phone, r.email, r.rsvp?.address_confirmed ? "yes" : "no",
         addr.line1, addr.line2, addr.city, addr.state, addr.postal_code, addr.country,
         r.rsvp?.song_request, r.rsvp?.message, r.rsvp?.submitted_at,
-        buildRsvpUrl(r.slug),
+        buildRsvpUrl(r),
       ].map((v) => esc(typeof v === "string" ? v : v ?? "")).join(",");
     });
     return [header.join(","), ...body].join("\n");
