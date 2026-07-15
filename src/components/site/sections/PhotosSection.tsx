@@ -141,6 +141,7 @@ function UploadFormLive() {
   const [files, setFiles] = useState<File[]>([]);
   const [status, setStatus] = useState<"idle" | "submitting" | "done">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [uploadSummary, setUploadSummary] = useState<{ uploaded: number; total: number } | null>(null);
 
   function onFilesChange(e: React.ChangeEvent<HTMLInputElement>) {
     const picked = Array.from(e.target.files ?? []);
@@ -190,7 +191,7 @@ function UploadFormLive() {
           dataUrl: await fileToDataUrl(f),
         })),
       );
-      await runUpload({
+      const result = await runUpload({
         data: {
           uploaderName: name.trim(),
           uploaderEmail: email.trim() || undefined,
@@ -199,6 +200,7 @@ function UploadFormLive() {
           files: encoded,
         },
       });
+      setUploadSummary({ uploaded: result.uploaded, total: encoded.length });
       setStatus("done");
       setName("");
       setEmail("");
@@ -219,6 +221,12 @@ function UploadFormLive() {
         <p className="font-sans text-ink-soft" style={{ fontSize: 14, marginTop: 10 }}>
           Your photos are in — we&rsquo;ll take a look before they go live.
         </p>
+        {uploadSummary && uploadSummary.uploaded < uploadSummary.total && (
+          <p className="font-sans" style={{ fontSize: 12, color: "#7a2f26", marginTop: 10 }}>
+            {uploadSummary.uploaded} of {uploadSummary.total} photos made it through — the rest may
+            have failed. Feel free to try those again.
+          </p>
+        )}
         <button
           type="button"
           onClick={() => setStatus("idle")}

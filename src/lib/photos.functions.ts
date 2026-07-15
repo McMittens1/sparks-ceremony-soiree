@@ -15,8 +15,8 @@ const uploadSchema = z.object({
 
 export const uploadGuestPhotos = createServerFn({ method: "POST" })
   .validator((data: unknown) => uploadSchema.parse(data))
-  .handler(async ({ data }): Promise<{ ok: boolean }> => {
-    if (data.honeypot && data.honeypot.trim().length > 0) return { ok: true };
+  .handler(async ({ data }): Promise<{ ok: boolean; uploaded: number }> => {
+    if (data.honeypot && data.honeypot.trim().length > 0) return { ok: true, uploaded: 0 };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     let uploaded = 0;
@@ -38,6 +38,12 @@ export const uploadGuestPhotos = createServerFn({ method: "POST" })
         status: "pending",
       });
       uploaded++;
+    }
+
+    // Every file failed (bad payload, storage error, etc.) — don't report
+    // success when nothing actually landed.
+    if (uploaded === 0) {
+      throw new Error("We couldn't upload your photos. Please try again.");
     }
 
     // Fire-and-forget notifications. Never let email failures break the upload.
@@ -86,7 +92,7 @@ export const uploadGuestPhotos = createServerFn({ method: "POST" })
       }
     }
 
-    return { ok: true };
+    return { ok: true, uploaded };
   });
 
 export interface GalleryPhoto { id: string; url: string; caption: string | null; uploader_name: string }
