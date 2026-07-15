@@ -44,7 +44,7 @@ export interface Dict {
     errRequired: string; errEmail: string; errName: string; errNoName: string; errGeneric: string;
   };
   admin: {
-    title: string; signOut: string; rsvpsTab: string; photosTab: string;
+    title: string; signOut: string; rsvpsTab: string; photosTab: string; featuresTab: string;
     totalsAttending: string; totalsDeclined: string; totalsPending: string;
     totalsAdults: string; totalsChildren: string; exportCsv: string;
     partyCol: string; guestsCol: string; contactCol: string; submittedCol: string;
@@ -195,7 +195,7 @@ const en: Dict = {
     errGeneric: "Something went wrong. Please try again in a moment.",
   },
   admin: {
-    title: "Admin", signOut: "Sign out", rsvpsTab: "RSVPs", photosTab: "Photo queue",
+    title: "Admin", signOut: "Sign out", rsvpsTab: "RSVPs", photosTab: "Photo queue", featuresTab: "Features",
     totalsAttending: "Attending", totalsDeclined: "Declined", totalsPending: "Pending",
     totalsAdults: "Adults", totalsChildren: "Children", exportCsv: "Export CSV",
     partyCol: "Invitation", guestsCol: "Guests", contactCol: "Contact", submittedCol: "Submitted",
@@ -343,7 +343,7 @@ const es: Dict = {
     errGeneric: "Algo salió mal. Intenta de nuevo en un momento.",
   },
   admin: {
-    title: "Administración", signOut: "Cerrar sesión", rsvpsTab: "RSVPs", photosTab: "Cola de fotos",
+    title: "Administración", signOut: "Cerrar sesión", rsvpsTab: "RSVPs", photosTab: "Cola de fotos", featuresTab: "Funciones",
     totalsAttending: "Asistirán", totalsDeclined: "No asisten", totalsPending: "Pendientes",
     totalsAdults: "Adultos", totalsChildren: "Niños", exportCsv: "Exportar CSV",
     partyCol: "Grupo", guestsCol: "Invitados", contactCol: "Contacto", submittedCol: "Enviado",

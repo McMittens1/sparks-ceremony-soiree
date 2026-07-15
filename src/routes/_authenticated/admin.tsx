@@ -22,6 +22,8 @@ import {
   type AdminGuestRow,
   type PartyMember,
 } from "@/lib/rsvp.functions";
+import { getFeatureFlags, setFeatureFlag, type FeatureFlag } from "@/lib/feature-flags.functions";
+import { Switch } from "@/components/ui/switch";
 import { SITE } from "@/lib/site";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -34,7 +36,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: Admin,
 });
 
-type Tab = "rsvps" | "photos";
+type Tab = "rsvps" | "photos" | "features";
 
 function Admin() {
   const t = useT();
@@ -61,7 +63,7 @@ function Admin() {
       <ActivityStrip />
 
       <div className="mt-6 flex gap-2 border-b border-border/40">
-        {(["rsvps", "photos"] as const).map((k) => (
+        {(["rsvps", "photos", "features"] as const).map((k) => (
           <button
             key={k}
             onClick={() => setTab(k)}
@@ -69,12 +71,12 @@ function Admin() {
               tab === k ? "border-b-2 border-primary text-primary" : "text-muted-foreground"
             }`}
           >
-            {k === "rsvps" ? t.admin.rsvpsTab : t.admin.photosTab}
+            {k === "rsvps" ? t.admin.rsvpsTab : k === "photos" ? t.admin.photosTab : t.admin.featuresTab}
           </button>
         ))}
       </div>
 
-      {tab === "rsvps" ? <RsvpsPanel /> : <PhotosPanel />}
+      {tab === "rsvps" ? <RsvpsPanel /> : tab === "photos" ? <PhotosPanel /> : <FeatureFlagsPanel />}
     </div>
   );
 }
@@ -977,6 +979,64 @@ function PhotoLightbox({
       <div className="w-full max-w-5xl pt-3 text-sm text-center">
         <div className="font-serif text-primary">{photo.uploader_name}</div>
         {photo.caption && <p className="text-xs text-foreground/80 mt-1">{photo.caption}</p>}
+      </div>
+    </div>
+  );
+}
+
+// ================== Feature flags ==================
+
+function FeatureFlagsPanel() {
+  const loadFlags = useServerFn(getFeatureFlags);
+  const saveFlag = useServerFn(setFeatureFlag);
+  const [flags, setFlags] = useState<FeatureFlag[] | null>(null);
+  const [busyKey, setBusyKey] = useState<string | null>(null);
+
+  const refresh = useCallback(() => {
+    loadFlags({}).then(setFlags).catch(() => {});
+  }, [loadFlags]);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  async function toggle(key: string, enabled: boolean) {
+    setBusyKey(key);
+    setFlags((prev) => prev?.map((f) => (f.key === key ? { ...f, enabled } : f)) ?? prev);
+    try {
+      await saveFlag({ data: { key, enabled } });
+    } catch {
+      setFlags((prev) => prev?.map((f) => (f.key === key ? { ...f, enabled: !enabled } : f)) ?? prev);
+    } finally {
+      setBusyKey(null);
+    }
+  }
+
+  return (
+    <div className="mt-8">
+      <p className="text-xs text-muted-foreground max-w-2xl">
+        Control which guest-facing features are live on the public site. Changes take effect immediately — no deploy required.
+      </p>
+      <div className="mt-4 border border-border/40 divide-y divide-border/40">
+        {flags === null ? (
+          <div className="p-4 text-xs text-muted-foreground">Loading…</div>
+        ) : flags.length === 0 ? (
+          <div className="p-4 text-xs text-muted-foreground">No feature flags yet.</div>
+        ) : (
+          flags.map((f) => (
+            <div key={f.key} className="flex items-center justify-between gap-4 p-4">
+              <div className="min-w-0">
+                <div className="text-sm text-foreground">{f.label}</div>
+                {f.description && (
+                  <div className="text-xs text-muted-foreground mt-1">{f.description}</div>
+                )}
+              </div>
+              <Switch
+                checked={f.enabled}
+                disabled={busyKey === f.key}
+                onCheckedChange={(checked) => toggle(f.key, checked)}
+              />
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
