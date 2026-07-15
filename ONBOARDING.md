@@ -2,6 +2,8 @@
 
 A single source of truth for continuing this project with any AI assistant (Claude Code, Cursor, etc.). Read this file in full before making changes. A companion document, `HANDOFF.md`, captures narrative context, judgment calls, and lessons learned from the most recent development session — read that too if it exists.
 
+> **Git policy — read this first:** All work on this project happens directly on the `main` branch. No feature branches, no dev branch, no pull requests, ever — commit and push straight to `main`. This isn't a default you should second-guess; it's a deliberate choice tied to how this repo syncs bidirectionally with Lovable (see §8). If you're about to run `git checkout -b`, stop.
+
 ---
 
 ## 1. Project overview

@@ -2,6 +2,8 @@
 
 Written at the end of a development session that took this project from "RSVP disabled, no feature flags, generic wedding-party avatars" to "RSVP + photo uploads live behind a real feature-flag system, a from-scratch collectible-card wedding party section, and a full pre-launch QA pass." This document is for whichever AI picks the project up next. Read `ONBOARDING.md` too — it's the structured reference (sprint plan, file table, never-do rules); this document is the narrative: why things are built the way they are, what almost went wrong, and what to watch out for. If the two ever disagree, trust `ONBOARDING.md` for current state and this file for reasoning — and if you finish reading this and it feels stale, fold whatever's still true into `ONBOARDING.md` and archive or delete this file rather than let two sources of truth drift apart.
 
+**You will be doing all work directly on the `main` branch.** No feature branches, no PRs — every session on this project, including this one, commits and pushes straight to `main`. See `ONBOARDING.md` §8 for the full policy and why it matters here specifically.
+
 ---
 
 ## 1. Project summary
