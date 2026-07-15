@@ -13,10 +13,18 @@ const uploadSchema = z.object({
   })).min(1).max(5),
 });
 
+async function isGuestPhotoUploadsOpen(): Promise<boolean> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
+    .from("feature_flags").select("enabled").eq("key", "guest_photo_uploads").maybeSingle();
+  return data?.enabled ?? false;
+}
+
 export const uploadGuestPhotos = createServerFn({ method: "POST" })
   .validator((data: unknown) => uploadSchema.parse(data))
   .handler(async ({ data }): Promise<{ ok: boolean; uploaded: number }> => {
     if (data.honeypot && data.honeypot.trim().length > 0) return { ok: true, uploaded: 0 };
+    if (!(await isGuestPhotoUploadsOpen())) throw new Error("Photo uploads aren't open right now.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     let uploaded = 0;
