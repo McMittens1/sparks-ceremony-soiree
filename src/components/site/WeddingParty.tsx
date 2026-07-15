@@ -38,7 +38,6 @@ export function WeddingParty() {
             photo={moh.photo}
             headline={moh.coverHeadline}
             subline={moh.coverSubline}
-            scale={1.15}
             collectorsEdition
           />
         </div>
@@ -96,7 +95,6 @@ export function WeddingParty() {
                 photo={bestMan.photo}
                 attributes={bestMan.cardAttributes}
                 ability={bestMan.cardAbility}
-                scale={1.1}
                 legendary
               />
             </div>
@@ -104,7 +102,11 @@ export function WeddingParty() {
 
           <div
             className="grid"
-            style={{ gridTemplateColumns: "repeat(auto-fill, minmax(232px, 1fr))", gap: 24 }}
+            style={{
+              gridTemplateColumns: "repeat(auto-fit, minmax(232px, 232px))",
+              justifyContent: "center",
+              gap: 24,
+            }}
           >
             {groomsmen.map((p, i) => (
               <GroomsmanCard
