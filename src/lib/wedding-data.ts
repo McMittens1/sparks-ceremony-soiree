@@ -70,7 +70,7 @@ export const PARTY: PartyMember[] = [
   { name: "Ryane Needles", role: "Bridesmaid" },
   { name: "Jetta Tegeler", role: "Bridesmaid" },
   { name: "Ivy Smith", role: "Flower Girl" },
-  { name: "Andres Moreno", role: "Best Man", featured: true },
+  { name: "Andres Moreno", role: "Best Man", cardRarity: "Legendary" },
   { name: "Nathan Asselin", role: "Groomsman" },
   { name: "Nathan Merritt", role: "Groomsman" },
   { name: "Joey Buresh", role: "Groomsman" },

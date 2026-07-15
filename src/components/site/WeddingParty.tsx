@@ -8,6 +8,7 @@ export function WeddingParty() {
 
   const featured = PARTY.filter((p) => p.featured);
   const bridesmaids = PARTY.filter((p) => p.role === "Bridesmaid");
+  const bestMan = PARTY.find((p) => p.role === "Best Man");
   const groomsmen = PARTY.filter((p) => p.role === "Groomsman");
   const kids = PARTY.filter((p) => p.role === "Flower Girl" || p.role === "Ring Bearer");
   const ushers = PARTY.filter((p) => p.role === "Usher");
@@ -40,6 +41,23 @@ export function WeddingParty() {
               Tap a card to flip it →
             </p>
           </div>
+
+          {bestMan && (
+            <div className="flex justify-center" style={{ marginBottom: 40 }}>
+              <GroomsmanCard
+                name={bestMan.name}
+                role={bestMan.role}
+                rarity={bestMan.cardRarity}
+                edition="1/1"
+                photo={bestMan.photo}
+                attributes={bestMan.cardAttributes}
+                ability={bestMan.cardAbility}
+                scale={1.3}
+                legendary
+              />
+            </div>
+          )}
+
           <div
             className="grid"
             style={{ gridTemplateColumns: "repeat(auto-fill, minmax(232px, 1fr))", gap: 24 }}
