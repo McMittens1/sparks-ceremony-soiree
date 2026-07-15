@@ -348,9 +348,17 @@ async function writeRsvp(guestId: string, data: EditRsvpInput, invitationSlug: s
 
 const SITE_ORIGIN = "https://morenowedding2026.com";
 
+async function isRsvpOpen(): Promise<boolean> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
+    .from("feature_flags").select("enabled").eq("key", "rsvp_open").maybeSingle();
+  return data?.enabled ?? false;
+}
+
 export const submitRsvp = createServerFn({ method: "POST" })
   .validator((d: unknown) => submitSchema.parse(d))
   .handler(async ({ data }): Promise<{ ok: true }> => {
+    if (!(await isRsvpOpen())) throw new Error("RSVP submissions aren't open yet.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: g, error: gErr } = await supabaseAdmin
       .from("guests").select("id").eq("slug", data.slug.toUpperCase()).maybeSingle();

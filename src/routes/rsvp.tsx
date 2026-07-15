@@ -2,6 +2,7 @@ import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useT } from "@/i18n/context";
+import { useFeatureFlag } from "@/hooks/use-feature-flags";
 import { SITE } from "@/lib/site";
 import {
   lookupGuest,
@@ -66,16 +67,15 @@ const eyebrow: React.CSSProperties = {
   margin: "0 0 8px",
 };
 
-// Feature flag: when false, the RSVP form is shown in a read-only preview
-// state with a banner and all inputs disabled. Flip to true when RSVPs open.
-const RSVP_OPEN = true;
-
 function RsvpPage() {
   const t = useT();
   const search = useSearch({ from: "/rsvp" });
   const runLookup = useServerFn(lookupGuest);
   const runGet = useServerFn(getGuestBySlug);
   const runSubmit = useServerFn(submitRsvp);
+  // Admin-controlled via the Features tab. When off, the form renders in a
+  // read-only preview state with a banner and all inputs disabled.
+  const { enabled: rsvpOpen, loading: rsvpFlagLoading } = useFeatureFlag("rsvp_open");
 
   const isLate = Date.now() > new Date(SITE.rsvpDeadline).getTime();
 
@@ -95,10 +95,10 @@ function RsvpPage() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    if (!RSVP_OPEN) return;
+    if (!rsvpOpen) return;
     if (search.g && stage === "lookup") loadSlug(search.g);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search.g]);
+  }, [search.g, rsvpOpen]);
 
   async function loadSlug(slug: string) {
     setLoading(true);
@@ -274,7 +274,13 @@ function RsvpPage() {
             <div className="flex-1 h-px" style={{ background: HAIRLINE }} />
           </div>
 
-          {!RSVP_OPEN && (
+          {rsvpFlagLoading ? (
+            <div className="text-center" style={{ padding: "48px 0" }}>
+              <p className="font-sans" style={{ fontSize: 14, color: SOFT }}>{t.common.loading}</p>
+            </div>
+          ) : (
+          <>
+          {!rsvpOpen && (
             <div
               role="status"
               className="text-center"
@@ -309,15 +315,15 @@ function RsvpPage() {
           {/* Lookup */}
           {stage === "lookup" && (
             <fieldset
-              disabled={!RSVP_OPEN}
-              aria-disabled={!RSVP_OPEN}
+              disabled={!rsvpOpen}
+              aria-disabled={!rsvpOpen}
               style={{
                 border: "none",
                 padding: 0,
                 margin: 0,
                 minInlineSize: "auto",
-                opacity: RSVP_OPEN ? 1 : 0.55,
-                pointerEvents: RSVP_OPEN ? "auto" : "none",
+                opacity: rsvpOpen ? 1 : 0.55,
+                pointerEvents: rsvpOpen ? "auto" : "none",
               }}
             >
             <form onSubmit={onLookupSubmit} noValidate>
@@ -724,6 +730,8 @@ function RsvpPage() {
                 </Link>
               </div>
             </div>
+          )}
+          </>
           )}
         </div>
       </div>

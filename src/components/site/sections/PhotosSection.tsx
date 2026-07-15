@@ -10,7 +10,7 @@ const MAX_FILES = 5;
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
 export function PhotosSection() {
-  const uploadsOpen = useFeatureFlag("guest_photo_uploads");
+  const { enabled: uploadsOpen } = useFeatureFlag("guest_photo_uploads");
 
   return (
     <section id="photos" className="border-t border-hairline rs-section">
