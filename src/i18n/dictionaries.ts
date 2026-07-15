@@ -35,6 +35,10 @@ export interface Dict {
   rsvp: {
     title: string; deadlineLine: string; closedTitle: string; closedBody: string;
     lookupTitle: string; lookupHint: string; lookupPlaceholder: string; lookupCta: string; lookupNotFound: string;
+    verifyTitle: string; verifyHint: string; verifyPlaceholder: string; verifyCta: string; verifying: string;
+    verifyInvalid: string; verifyLocked: string; verifyBack: string;
+    addressAddCta: string; addressEditCta: string; addressSaveCta: string; addressSaving: string;
+    addressSaved: string; addressNotOnFile: string; addressCancel: string;
     partyTitle: string; partySubtitle: string; maxGuestsHint: string; tooManyGuests: string;
     addGuest: string; remove: string; fullName: string; adult: string; child: string;
     attending: string; notAttending: string; undecided: string;
@@ -173,6 +177,21 @@ const en: Dict = {
     lookupPlaceholder: "e.g. Alex Rivera",
     lookupCta: "Continue",
     lookupNotFound: "We couldn't find that name. Double-check the spelling or try a nickname.",
+    verifyTitle: "Verify your household",
+    verifyHint: "Enter the last 4 digits of the phone number on file for your household.",
+    verifyPlaceholder: "••••",
+    verifyCta: "Continue",
+    verifying: "Checking…",
+    verifyInvalid: "That doesn't match what we have on file. Please try again.",
+    verifyLocked: "Too many attempts. Please wait a bit and try again, or contact us directly.",
+    verifyBack: "← Not you? Search again",
+    addressAddCta: "Add address",
+    addressEditCta: "Edit address",
+    addressSaveCta: "Save address",
+    addressSaving: "Saving…",
+    addressSaved: "Address saved.",
+    addressNotOnFile: "We don't have an address on file for you yet.",
+    addressCancel: "Cancel",
     partyTitle: "Your party",
     partySubtitle: "Update each person, add anyone missing (kids or plus-ones), and let us know who's coming.",
     maxGuestsHint: "You can RSVP for up to {n} people.",
@@ -321,6 +340,21 @@ const es: Dict = {
     lookupPlaceholder: "ej. Alex Rivera",
     lookupCta: "Continuar",
     lookupNotFound: "No encontramos ese nombre. Revisa la ortografía o intenta con un apodo.",
+    verifyTitle: "Verifica tu hogar",
+    verifyHint: "Escribe los últimos 4 dígitos del teléfono registrado para tu hogar.",
+    verifyPlaceholder: "••••",
+    verifyCta: "Continuar",
+    verifying: "Verificando…",
+    verifyInvalid: "Eso no coincide con lo que tenemos registrado. Intenta de nuevo.",
+    verifyLocked: "Demasiados intentos. Espera un momento e intenta de nuevo, o contáctanos directamente.",
+    verifyBack: "← ¿No eres tú? Buscar de nuevo",
+    addressAddCta: "Agregar dirección",
+    addressEditCta: "Editar dirección",
+    addressSaveCta: "Guardar dirección",
+    addressSaving: "Guardando…",
+    addressSaved: "Dirección guardada.",
+    addressNotOnFile: "Aún no tenemos una dirección registrada para ti.",
+    addressCancel: "Cancelar",
     partyTitle: "Tu grupo",
     partySubtitle: "Actualiza a cada persona, agrega a quien falte (niños o acompañantes) y dinos quién asistirá.",
     maxGuestsHint: "Puedes confirmar hasta {n} personas.",

@@ -163,8 +163,10 @@ export type Database = {
       }
       guests: {
         Row: {
+          address_confirmed_at: string | null
           address_line1: string | null
           address_line2: string | null
+          address_updated_at: string | null
           city: string | null
           country: string | null
           created_at: string
@@ -172,7 +174,10 @@ export type Database = {
           id: string
           invite_notes: string | null
           party_members: Json
-          phone: string | null
+          phone: string
+          phone_verify_failed_attempts: number
+          phone_verify_last_success_at: string | null
+          phone_verify_locked_until: string | null
           postal_code: string | null
           primary_name: string
           slug: string
@@ -180,8 +185,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          address_confirmed_at?: string | null
           address_line1?: string | null
           address_line2?: string | null
+          address_updated_at?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
@@ -189,7 +196,10 @@ export type Database = {
           id?: string
           invite_notes?: string | null
           party_members?: Json
-          phone?: string | null
+          phone: string
+          phone_verify_failed_attempts?: number
+          phone_verify_last_success_at?: string | null
+          phone_verify_locked_until?: string | null
           postal_code?: string | null
           primary_name: string
           slug: string
@@ -197,8 +207,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          address_confirmed_at?: string | null
           address_line1?: string | null
           address_line2?: string | null
+          address_updated_at?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
@@ -206,7 +218,10 @@ export type Database = {
           id?: string
           invite_notes?: string | null
           party_members?: Json
-          phone?: string | null
+          phone?: string
+          phone_verify_failed_attempts?: number
+          phone_verify_last_success_at?: string | null
+          phone_verify_locked_until?: string | null
           postal_code?: string | null
           primary_name?: string
           slug?: string

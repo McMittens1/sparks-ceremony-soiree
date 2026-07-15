@@ -19,6 +19,7 @@ import {
   upsertGuest,
   deleteGuest,
   importGuestsCsv,
+  unlockGuestPhoneVerify,
   type AdminGuestRow,
   type PartyMember,
 } from "@/lib/rsvp.functions";
@@ -114,6 +115,7 @@ type SortDir = "asc" | "desc";
 function RsvpsPanel() {
   const t = useT();
   const loadRows = useServerFn(listGuestsWithRsvps);
+  const runUnlock = useServerFn(unlockGuestPhoneVerify);
   const [rows, setRows] = useState<AdminGuestRow[] | null>(null);
   const [filter, setFilter] = useState<"all" | "attending" | "not_attending" | "no_response">("all");
   const [search, setSearch] = useState("");
@@ -130,6 +132,11 @@ function RsvpsPanel() {
   async function refresh() {
     const next = await loadRows({});
     setRows(next);
+  }
+
+  async function unlock(id: string) {
+    await runUnlock({ data: { id } });
+    await refresh();
   }
 
   useEffect(() => { refresh().catch(() => {}); }, []);
@@ -205,12 +212,21 @@ function RsvpsPanel() {
     return `${window.location.origin}${path}`;
   }, []);
 
+  // The pre-invitation link for TextMyWedding — lands directly on the
+  // household's phone-verification step, skipping name search. Long-lived
+  // (see VERIFY_LINK_TTL_MS), safe to send well before RSVP opens.
+  const buildVerifyUrl = useCallback((row: AdminGuestRow) => {
+    const path = `/rsvp?t=${row.verify_token}`;
+    if (typeof window === "undefined") return path;
+    return `${window.location.origin}${path}`;
+  }, []);
+
   function toCsv(list: AdminGuestRow[]) {
     const header = [
       "primary_name", "slug", "status", "attending_names", "child_count",
       "phone", "email", "address_confirmed",
       "address_line1", "address_line2", "city", "state", "postal_code", "country",
-      "song_request", "message", "submitted_at", "rsvp_url",
+      "song_request", "message", "submitted_at", "rsvp_url", "verify_url",
     ];
     const esc = (s: string | null | undefined) => {
       const v = s ?? "";
@@ -229,7 +245,7 @@ function RsvpsPanel() {
         r.phone, r.email, r.rsvp?.address_confirmed ? "yes" : "no",
         addr.line1, addr.line2, addr.city, addr.state, addr.postal_code, addr.country,
         r.rsvp?.song_request, r.rsvp?.message, r.rsvp?.submitted_at,
-        buildRsvpUrl(r),
+        buildRsvpUrl(r), buildVerifyUrl(r),
       ].map((v) => esc(typeof v === "string" ? v : v ?? "")).join(",");
     });
     return [header.join(","), ...body].join("\n");
@@ -456,6 +472,17 @@ function RsvpsPanel() {
                       >
                         Edit
                       </button>
+                      {r.phone_verify_locked_until && new Date(r.phone_verify_locked_until).getTime() > Date.now() && (
+                        <div className="mt-1">
+                          <span className="text-[10px] uppercase tracking-[0.15em] text-destructive">Locked</span>
+                          <button
+                            onClick={() => unlock(r.id)}
+                            className="block text-[10px] uppercase tracking-[0.2em] text-primary link-underline"
+                          >
+                            Unlock
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );
@@ -557,10 +584,19 @@ function GuestEditor({ row, onClose, onSaved }: { row: AdminGuestRow | null; onC
         </div>
 
         {row && (
-          <p className="mt-2 text-xs text-muted-foreground">
-            Link code <span className="font-mono text-foreground">{row.slug}</span> —
-            share <span className="font-mono text-foreground break-all">/rsvp?g={row.slug}</span>
-          </p>
+          <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+            <p>
+              Link code <span className="font-mono text-foreground">{row.slug}</span> —
+              share <span className="font-mono text-foreground break-all">/rsvp?g={row.slug}</span>
+            </p>
+            <p>
+              Pre-invitation link (for TextMyWedding, before invites mail) —{" "}
+              <span className="font-mono text-foreground break-all">/rsvp?t={row.verify_token}</span>
+            </p>
+            {row.address_confirmed_at && (
+              <p>Address confirmed {new Date(row.address_confirmed_at).toLocaleDateString()}</p>
+            )}
+          </div>
         )}
 
         <div className="mt-6 space-y-4">
@@ -597,7 +633,18 @@ function GuestEditor({ row, onClose, onSaved }: { row: AdminGuestRow | null; onC
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" className="border border-input bg-background px-3 py-2 text-sm" />
+            <div>
+              <input
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="Phone (required)"
+                required
+                className="w-full border border-input bg-background px-3 py-2 text-sm"
+              />
+              <p className="mt-1 text-[10px] text-muted-foreground">
+                Required — the last 4 digits verify a household before their RSVP is shown. US or Mexico, 10 digits.
+              </p>
+            </div>
             <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="border border-input bg-background px-3 py-2 text-sm" />
             <input value={line1} onChange={(e) => setLine1(e.target.value)} placeholder="Address line 1" className="sm:col-span-2 border border-input bg-background px-3 py-2 text-sm" />
             <input value={line2} onChange={(e) => setLine2(e.target.value)} placeholder="Address line 2" className="sm:col-span-2 border border-input bg-background px-3 py-2 text-sm" />
@@ -654,7 +701,10 @@ function CsvImporter({ onClose, onDone }: { onClose: () => void; onDone: () => v
     setBusy(true);
     try {
       const r = await runImport({ data: { csv } });
-      setResult(`Imported ${r.inserted}, skipped ${r.skipped}, ${r.duplicates} duplicate${r.duplicates === 1 ? "" : "s"} ignored.`);
+      setResult(
+        `Imported ${r.inserted}, skipped ${r.skipped}, ${r.duplicates} duplicate${r.duplicates === 1 ? "" : "s"} ignored` +
+          (r.invalid_phone ? `, ${r.invalid_phone} skipped for a missing or invalid phone number.` : "."),
+      );
       await onDone();
     } catch (e) {
       setResult(e instanceof Error ? e.message : "Import failed");
@@ -673,6 +723,10 @@ function CsvImporter({ onClose, onDone }: { onClose: () => void; onDone: () => v
         <p className="mt-2 text-xs text-muted-foreground">
           Columns (header row optional): <span className="font-mono">primary_name, party_members, phone, email, address_line1, address_line2, city, state, postal_code, country, invite_notes</span>.
           Separate party members with <span className="font-mono">;</span> and append <span className="font-mono">(child)</span> for kids. Example: <span className="font-mono">Jane Doe;John Doe;Emma Doe (child)</span>.
+        </p>
+        <p className="mt-2 text-xs text-muted-foreground">
+          <span className="text-foreground">Phone is required</span> for every row — it's how a household verifies
+          itself before their RSVP is shown. Rows with a missing or invalid (not a 10-digit US or Mexico) number are skipped.
         </p>
         <textarea
           value={csv}

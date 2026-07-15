@@ -1,6 +1,14 @@
-// HMAC-SHA256 signed tokens for guest RSVP edit links.
+// HMAC-SHA256 signed tokens for guest RSVP links (edit links and the
+// pre-invitation household-verify links).
 // Format: base64url(guestId).base64url(expMs).base64url(sig)
-// sig = HMAC_SHA256(RSVP_EDIT_SECRET, `${guestId}|${expMs}`)
+// sig = HMAC_SHA256(RSVP_EDIT_SECRET, `${purpose}|${guestId}|${expMs}`)
+//
+// `purpose` is folded into the signed message but never transmitted in the
+// token itself — a token signed for one purpose simply fails signature
+// verification if checked against a different expected purpose, so an
+// "edit" token and a "verify" token can never be used interchangeably even
+// though they share a secret and wire format.
+export type TokenPurpose = "edit" | "verify";
 
 const DEFAULT_TTL_MS = 90 * 24 * 60 * 60 * 1000; // 90 days
 
@@ -49,10 +57,14 @@ async function getKey(): Promise<CryptoKey> {
   );
 }
 
-export async function signRsvpToken(guestId: string, ttlMs: number = DEFAULT_TTL_MS): Promise<string> {
+export async function signRsvpToken(
+  guestId: string,
+  purpose: TokenPurpose = "edit",
+  ttlMs: number = DEFAULT_TTL_MS,
+): Promise<string> {
   const exp = String(Date.now() + ttlMs);
   const key = await getKey();
-  const sig = await crypto.subtle.sign("HMAC", key, toBuf(textToBytes(`${guestId}|${exp}`)));
+  const sig = await crypto.subtle.sign("HMAC", key, toBuf(textToBytes(`${purpose}|${guestId}|${exp}`)));
   return `${b64urlEncode(textToBytes(guestId))}.${b64urlEncode(textToBytes(exp))}.${b64urlEncode(sig)}`;
 }
 
@@ -60,7 +72,10 @@ export type TokenVerifyResult =
   | { ok: true; guestId: string; expMs: number }
   | { ok: false; reason: "malformed" | "invalid" | "expired" };
 
-export async function verifyRsvpToken(token: string): Promise<TokenVerifyResult> {
+export async function verifyRsvpToken(
+  token: string,
+  purpose: TokenPurpose = "edit",
+): Promise<TokenVerifyResult> {
   const parts = token.split(".");
   if (parts.length !== 3) return { ok: false, reason: "malformed" };
   let guestId: string;
@@ -78,7 +93,7 @@ export async function verifyRsvpToken(token: string): Promise<TokenVerifyResult>
   if (!Number.isFinite(expMs)) return { ok: false, reason: "malformed" };
   const key = await getKey();
   const expected = new Uint8Array(
-    await crypto.subtle.sign("HMAC", key, toBuf(textToBytes(`${guestId}|${expStr}`))),
+    await crypto.subtle.sign("HMAC", key, toBuf(textToBytes(`${purpose}|${guestId}|${expStr}`))),
   );
   if (!timingSafeEqual(sig, expected)) return { ok: false, reason: "invalid" };
   if (Date.now() > expMs) return { ok: false, reason: "expired" };

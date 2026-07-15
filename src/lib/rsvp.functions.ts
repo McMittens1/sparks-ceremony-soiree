@@ -30,7 +30,7 @@ export interface PublicGuest {
   primary_name: string;
   party_members: PartyMember[];
   email: string | null;
-  phone: string | null;
+  phone: string;
   address: GuestAddress;
 }
 
@@ -50,7 +50,7 @@ export interface AdminGuestRow {
   slug: string;
   primary_name: string;
   party_members: PartyMember[];
-  phone: string | null;
+  phone: string;
   email: string | null;
   address_line1: string | null;
   address_line2: string | null;
@@ -62,6 +62,10 @@ export interface AdminGuestRow {
   created_at: string;
   rsvp: PublicRsvp | null;
   edit_token: string;
+  verify_token: string;
+  address_confirmed_at: string | null;
+  phone_verify_locked_until: string | null;
+  phone_verify_failed_attempts: number;
 }
 
 // ---------- Helpers ----------
@@ -83,6 +87,22 @@ function randomSlug(len = 6): string {
   let out = "";
   for (let i = 0; i < len; i++) out += alphabet[Math.floor(Math.random() * alphabet.length)];
   return out;
+}
+
+// Strips formatting and a recognized US (1) or Mexico (52 / 521) country
+// code down to a bare national number. Used for dedup, storage-agnostic
+// last-4-digit verification, and format validation alike — a phone number
+// is stored as the admin typed it, and always normalized on read.
+function normalizePhone(v: string): string {
+  let d = v.replace(/\D/g, "");
+  if (d.length === 13 && d.startsWith("521")) d = d.slice(3);
+  else if (d.length === 12 && d.startsWith("52")) d = d.slice(2);
+  else if (d.length === 11 && d.startsWith("1")) d = d.slice(1);
+  return d;
+}
+
+function isValidPhone(v: string): boolean {
+  return /^\d{10}$/.test(normalizePhone(v));
 }
 
 const partyMemberSchema = z.object({
@@ -107,7 +127,7 @@ const addressSchema = z.object({
 
 function mapGuestRow(row: {
   id: string; slug: string; primary_name: string; party_members: unknown;
-  email: string | null; phone: string | null;
+  email: string | null; phone: string;
   address_line1: string | null; address_line2: string | null;
   city: string | null; state: string | null; postal_code: string | null; country: string | null;
 }): PublicGuest {
@@ -130,6 +150,46 @@ function mapGuestRow(row: {
       country: row.country ?? undefined,
     },
   };
+}
+
+function mapRsvpRow(r: {
+  status: string; attendees: unknown; address_confirmed: boolean; address: unknown;
+  song_request: string | null; message: string | null; submitted_at: string; updated_at: string;
+} | null): PublicRsvp | null {
+  if (!r) return null;
+  return {
+    status: r.status as PublicRsvp["status"],
+    attendees: Array.isArray(r.attendees) ? (r.attendees as unknown as AttendeeChoice[]) : [],
+    address_confirmed: !!r.address_confirmed,
+    address: (r.address as unknown as GuestAddress | null) ?? null,
+    song_request: r.song_request,
+    message: r.message,
+    submitted_at: r.submitted_at,
+    updated_at: r.updated_at,
+  };
+}
+
+const GUEST_SELECT_COLUMNS =
+  "id, slug, primary_name, party_members, email, phone, address_line1, address_line2, city, state, postal_code, country";
+const RSVP_SELECT_COLUMNS =
+  "status, attendees, address_confirmed, address, song_request, message, submitted_at, updated_at";
+
+const PHONE_VERIFY_MAX_ATTEMPTS = 5;
+const PHONE_VERIFY_LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes
+// How long a successful phone verification authorizes writes (address
+// updates, RSVP submission) for the same household — generous enough to
+// cover a slow, multi-field RSVP session in one sitting.
+const VERIFIED_SESSION_WINDOW_MS = 2 * 60 * 60 * 1000; // 2 hours
+// How long a Method 2 (personalized text link) token stays valid — this
+// needs to work for months, sent well before the wedding.
+const VERIFY_LINK_TTL_MS = 270 * 24 * 60 * 60 * 1000; // ~9 months
+
+async function isRecentlyVerified(guestId: string): Promise<boolean> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
+    .from("guests").select("phone_verify_last_success_at").eq("id", guestId).maybeSingle();
+  if (!data?.phone_verify_last_success_at) return false;
+  return Date.now() - new Date(data.phone_verify_last_success_at).getTime() < VERIFIED_SESSION_WINDOW_MS;
 }
 
 // ---------- Public server functions ----------
@@ -176,42 +236,136 @@ export const lookupGuest = createServerFn({ method: "POST" })
     };
   });
 
-// Full guest + existing RSVP if any. Public — only exposes what the RSVP UI needs.
-export const getGuestBySlug = createServerFn({ method: "POST" })
-  .validator((d: { slug: string }) =>
-    z.object({ slug: z.string().trim().min(1).max(20) }).parse(d),
+// ---------- Household phone-last-4 verification ----------
+// Both public entry points (typed name/code lookup, and a personalized
+// TextMyWedding link) converge here: neither reveals a household's data —
+// party list, address, phone, RSVP — until the last 4 digits of the
+// household's on-file phone number are confirmed server-side. This is the
+// one function both paths share, and the one place lockout is enforced.
+
+// Resolves a household id from whichever locator was provided, without
+// revealing anything about the household itself yet.
+async function resolveVerifyTarget(input: { slug?: string; token?: string }): Promise<string | null> {
+  if (input.token) {
+    const { verifyRsvpToken } = await import("@/lib/rsvp-token.server");
+    const v = await verifyRsvpToken(input.token, "verify");
+    return v.ok ? v.guestId : null;
+  }
+  if (input.slug) {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin
+      .from("guests").select("id").eq("slug", input.slug.toUpperCase()).maybeSingle();
+    return data?.id ?? null;
+  }
+  return null;
+}
+
+// A lightweight, pre-verification label for a deep link (either a personalized
+// token or a plain ?g=slug link) — lets the verify screen greet the household
+// by name before they've proven anything. Reveals a name, nothing else: no
+// address, phone, party list, or RSVP status.
+export const getVerifyTargetLabel = createServerFn({ method: "POST" })
+  .validator((d: { slug?: string; token?: string }) =>
+    z
+      .object({ slug: z.string().trim().max(20).optional(), token: z.string().min(10).max(400).optional() })
+      .refine((v) => Boolean(v.slug) !== Boolean(v.token), "Provide either a code or a link, not both")
+      .parse(d),
   )
-  .handler(async ({ data }): Promise<{ guest: PublicGuest; rsvp: PublicRsvp | null } | { guest: null; rsvp: null }> => {
+  .handler(async ({ data }): Promise<{ ok: true; primary_name: string } | { ok: false }> => {
+    const guestId = await resolveVerifyTarget(data);
+    if (!guestId) return { ok: false };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: g } = await supabaseAdmin
+      .from("guests").select("primary_name").eq("id", guestId).maybeSingle();
+    if (!g) return { ok: false };
+    return { ok: true, primary_name: g.primary_name };
+  });
+
+const verifyAccessSchema = z
+  .object({
+    slug: z.string().trim().max(20).optional(),
+    token: z.string().min(10).max(400).optional(),
+    last4: z.string().trim().regex(/^\d{4}$/, "Enter the last 4 digits"),
+  })
+  .refine((d) => Boolean(d.slug) !== Boolean(d.token), "Provide either a code or a link, not both");
+
+export const verifyHouseholdAccess = createServerFn({ method: "POST" })
+  .validator((d: unknown) => verifyAccessSchema.parse(d))
+  .handler(async ({ data }): Promise<
+    | { ok: true; guest: PublicGuest; rsvp: PublicRsvp | null }
+    | { ok: false; reason: "not_found" | "invalid" | "locked" }
+  > => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const guestId = await resolveVerifyTarget(data);
+    if (!guestId) return { ok: false, reason: "not_found" };
+
+    const { data: g } = await supabaseAdmin
       .from("guests")
-      .select("id, slug, primary_name, party_members, email, phone, address_line1, address_line2, city, state, postal_code, country")
-      .eq("slug", data.slug.toUpperCase())
+      .select(`${GUEST_SELECT_COLUMNS}, phone_verify_failed_attempts, phone_verify_locked_until`)
+      .eq("id", guestId)
       .maybeSingle();
-    if (!g) return { guest: null, rsvp: null };
+    if (!g) return { ok: false, reason: "not_found" };
+
+    const now = Date.now();
+    if (g.phone_verify_locked_until && new Date(g.phone_verify_locked_until).getTime() > now) {
+      return { ok: false, reason: "locked" };
+    }
+
+    const expectedLast4 = normalizePhone(g.phone).slice(-4);
+    if (expectedLast4.length !== 4 || expectedLast4 !== data.last4) {
+      const attempts = (g.phone_verify_failed_attempts ?? 0) + 1;
+      const locked = attempts >= PHONE_VERIFY_MAX_ATTEMPTS;
+      await supabaseAdmin.from("guests").update({
+        phone_verify_failed_attempts: attempts,
+        phone_verify_locked_until: locked ? new Date(now + PHONE_VERIFY_LOCKOUT_MS).toISOString() : null,
+      }).eq("id", g.id);
+      return { ok: false, reason: locked ? "locked" : "invalid" };
+    }
+
+    await supabaseAdmin.from("guests").update({
+      phone_verify_failed_attempts: 0,
+      phone_verify_locked_until: null,
+      phone_verify_last_success_at: new Date(now).toISOString(),
+    }).eq("id", g.id);
 
     const guest = mapGuestRow(g);
-
     const { data: r } = await supabaseAdmin
-      .from("rsvps")
-      .select("status, attendees, address_confirmed, address, song_request, message, submitted_at, updated_at")
-      .eq("guest_id", g.id)
-      .maybeSingle();
+      .from("rsvps").select(RSVP_SELECT_COLUMNS).eq("guest_id", g.id).maybeSingle();
 
-    const rsvp: PublicRsvp | null = r
-      ? {
-          status: r.status as PublicRsvp["status"],
-          attendees: (Array.isArray(r.attendees) ? (r.attendees as unknown as AttendeeChoice[]) : []),
-          address_confirmed: !!r.address_confirmed,
-          address: (r.address as unknown as GuestAddress | null) ?? null,
-          song_request: r.song_request,
-          message: r.message,
-          submitted_at: r.submitted_at,
-          updated_at: r.updated_at,
-        }
-      : null;
+    return { ok: true, guest, rsvp: mapRsvpRow(r) };
+  });
 
-    return { guest, rsvp };
+// Address-only update, independent of RSVP status and the rsvp_open flag —
+// so a household can confirm or add their mailing address any time after
+// verifying, whether or not RSVP is open yet. Requires having verified
+// recently (see isRecentlyVerified); a bare slug alone is not enough,
+// otherwise this would quietly reopen the door phone verification closes.
+export const updateGuestAddress = createServerFn({ method: "POST" })
+  .validator((d: unknown) =>
+    z.object({ slug: z.string().trim().min(1).max(20), address: addressSchema }).parse(d),
+  )
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: g } = await supabaseAdmin
+      .from("guests").select("id").eq("slug", data.slug.toUpperCase()).maybeSingle();
+    if (!g) throw new Error("Household not found.");
+    if (!(await isRecentlyVerified(g.id))) {
+      throw new Error("Please verify your household again before updating your address.");
+    }
+
+    const now = new Date().toISOString();
+    const { error } = await supabaseAdmin.from("guests").update({
+      address_line1: data.address.line1?.trim() || null,
+      address_line2: data.address.line2?.trim() || null,
+      city: data.address.city?.trim() || null,
+      state: data.address.state?.trim() || null,
+      postal_code: data.address.postal_code?.trim() || null,
+      country: data.address.country?.trim() || null,
+      address_confirmed_at: now,
+      address_updated_at: now,
+    }).eq("id", g.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
 
 const submitSchema = z.object({
@@ -254,6 +408,8 @@ async function writeRsvp(guestId: string, data: EditRsvpInput, invitationSlug: s
     state?: string | null;
     postal_code?: string | null;
     country?: string | null;
+    address_confirmed_at?: string;
+    address_updated_at?: string;
   } = {};
   if (typeof data.email === "string") guestPatch.email = data.email.trim() || null;
   if (data.address) {
@@ -263,6 +419,11 @@ async function writeRsvp(guestId: string, data: EditRsvpInput, invitationSlug: s
     guestPatch.state = data.address.state?.trim() || null;
     guestPatch.postal_code = data.address.postal_code?.trim() || null;
     guestPatch.country = data.address.country?.trim() || null;
+    // Keep the admin "last confirmed" view accurate regardless of whether
+    // an address came in via updateGuestAddress or a full RSVP submission.
+    const stamp = new Date().toISOString();
+    guestPatch.address_updated_at = stamp;
+    if (data.address_confirmed) guestPatch.address_confirmed_at = stamp;
   }
   if (Object.keys(guestPatch).length > 0) {
     await supabaseAdmin.from("guests").update(guestPatch).eq("id", g.id);
@@ -289,7 +450,7 @@ async function writeRsvp(guestId: string, data: EditRsvpInput, invitationSlug: s
     const { enqueueAppEmail, getAdminNotificationEmails } = await import("@/lib/email/enqueue.server");
     const guestEmail = (typeof data.email === "string" ? data.email.trim() : "") || null;
     const idemBase = `rsvp-${g.id}-${now}`;
-    const token = await signRsvpToken(g.id);
+    const token = await signRsvpToken(g.id, "edit");
     const editUrl = `${siteOrigin}/rsvp/edit/${token}`;
 
     if (guestEmail) {
@@ -363,12 +524,19 @@ export const submitRsvp = createServerFn({ method: "POST" })
     const { data: g, error: gErr } = await supabaseAdmin
       .from("guests").select("id").eq("slug", data.slug.toUpperCase()).maybeSingle();
     if (gErr || !g) throw new Error("Guest not found");
+    if (!(await isRecentlyVerified(g.id))) {
+      throw new Error("Please verify your household again before submitting.");
+    }
     const { slug: _slug, ...rest } = data;
     await writeRsvp(g.id, rest, data.slug.toUpperCase(), SITE_ORIGIN);
     return { ok: true };
   });
 
 // ---------- Token-based edit (signed link, no login) ----------
+// Distinct from household verification above: this is for a guest editing
+// an RSVP they've already submitted, using the signed link from their
+// confirmation email. Deliberately not phone-gated or rsvp_open-gated —
+// see ONBOARDING.md — and untouched by the verification flow.
 
 export const getRsvpByToken = createServerFn({ method: "POST" })
   .validator((d: { token: string }) =>
@@ -379,37 +547,19 @@ export const getRsvpByToken = createServerFn({ method: "POST" })
     | { ok: false; reason: "malformed" | "invalid" | "expired" | "not_found" }
   > => {
     const { verifyRsvpToken } = await import("@/lib/rsvp-token.server");
-    const v = await verifyRsvpToken(data.token);
+    const v = await verifyRsvpToken(data.token, "edit");
     if (!v.ok) return { ok: false, reason: v.reason };
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: g } = await supabaseAdmin
-      .from("guests")
-      .select("id, slug, primary_name, party_members, email, phone, address_line1, address_line2, city, state, postal_code, country")
-      .eq("id", v.guestId)
-      .maybeSingle();
+      .from("guests").select(GUEST_SELECT_COLUMNS).eq("id", v.guestId).maybeSingle();
     if (!g) return { ok: false, reason: "not_found" };
 
     const guest = mapGuestRow(g);
     const { data: r } = await supabaseAdmin
-      .from("rsvps")
-      .select("status, attendees, address_confirmed, address, song_request, message, submitted_at, updated_at")
-      .eq("guest_id", g.id)
-      .maybeSingle();
+      .from("rsvps").select(RSVP_SELECT_COLUMNS).eq("guest_id", g.id).maybeSingle();
 
-    const rsvp: PublicRsvp | null = r
-      ? {
-          status: r.status as PublicRsvp["status"],
-          attendees: (Array.isArray(r.attendees) ? (r.attendees as unknown as AttendeeChoice[]) : []),
-          address_confirmed: !!r.address_confirmed,
-          address: (r.address as unknown as GuestAddress | null) ?? null,
-          song_request: r.song_request,
-          message: r.message,
-          submitted_at: r.submitted_at,
-          updated_at: r.updated_at,
-        }
-      : null;
-    return { ok: true, guest, rsvp };
+    return { ok: true, guest, rsvp: mapRsvpRow(r) };
   });
 
 const editByTokenSchema = editSchema.extend({ token: z.string().min(10).max(400) });
@@ -418,7 +568,7 @@ export const updateRsvpByToken = createServerFn({ method: "POST" })
   .validator((d: unknown) => editByTokenSchema.parse(d))
   .handler(async ({ data }): Promise<{ ok: true }> => {
     const { verifyRsvpToken } = await import("@/lib/rsvp-token.server");
-    const v = await verifyRsvpToken(data.token);
+    const v = await verifyRsvpToken(data.token, "edit");
     if (!v.ok) throw new Error(v.reason === "expired" ? "This edit link has expired." : "Invalid edit link.");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -448,20 +598,15 @@ export const listGuestsWithRsvps = createServerFn({ method: "POST" })
       .select("*");
     const rsvpByGuest = new Map<string, PublicRsvp>();
     for (const r of rsvps ?? []) {
-      rsvpByGuest.set(r.guest_id, {
-        status: r.status as PublicRsvp["status"],
-        attendees: (Array.isArray(r.attendees) ? (r.attendees as unknown as AttendeeChoice[]) : []),
-        address_confirmed: !!r.address_confirmed,
-        address: (r.address as unknown as GuestAddress | null) ?? null,
-        song_request: r.song_request,
-        message: r.message,
-        submitted_at: r.submitted_at,
-        updated_at: r.updated_at,
-      });
+      const mapped = mapRsvpRow(r);
+      if (mapped) rsvpByGuest.set(r.guest_id, mapped);
     }
     const { signRsvpToken } = await import("@/lib/rsvp-token.server");
     const rows = guests ?? [];
-    const tokens = await Promise.all(rows.map((g) => signRsvpToken(g.id)));
+    const [editTokens, verifyTokens] = await Promise.all([
+      Promise.all(rows.map((g) => signRsvpToken(g.id, "edit"))),
+      Promise.all(rows.map((g) => signRsvpToken(g.id, "verify", VERIFY_LINK_TTL_MS))),
+    ]);
     return rows.map((g, i): AdminGuestRow => ({
       id: g.id,
       slug: g.slug,
@@ -478,8 +623,27 @@ export const listGuestsWithRsvps = createServerFn({ method: "POST" })
       invite_notes: g.invite_notes,
       created_at: g.created_at,
       rsvp: rsvpByGuest.get(g.id) ?? null,
-      edit_token: tokens[i],
+      edit_token: editTokens[i],
+      verify_token: verifyTokens[i],
+      address_confirmed_at: g.address_confirmed_at,
+      phone_verify_locked_until: g.phone_verify_locked_until,
+      phone_verify_failed_attempts: g.phone_verify_failed_attempts,
     }));
+  });
+
+// Admin override for a household that's tripped the 5-attempt phone-verify
+// lockout — resets the counter and clears the lockout immediately.
+export const unlockGuestPhoneVerify = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const sb = await ensureAdmin(context.userId);
+    const { error } = await sb.from("guests").update({
+      phone_verify_failed_attempts: 0,
+      phone_verify_locked_until: null,
+    }).eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
 
 const guestUpsertSchema = z.object({
@@ -487,7 +651,8 @@ const guestUpsertSchema = z.object({
   slug: z.string().trim().max(20).optional().or(z.literal("")),
   primary_name: z.string().trim().min(1).max(200),
   party_members: z.array(partyMemberSchema).max(20),
-  phone: z.string().trim().max(40).optional().or(z.literal("")),
+  phone: z.string().trim().min(1, "Phone number is required").max(40)
+    .refine(isValidPhone, "Enter a valid 10-digit US or Mexico phone number"),
   email: z.string().trim().email().max(200).optional().or(z.literal("")),
   address_line1: z.string().trim().max(200).optional().or(z.literal("")),
   address_line2: z.string().trim().max(200).optional().or(z.literal("")),
@@ -507,7 +672,7 @@ export const upsertGuest = createServerFn({ method: "POST" })
     const payload = {
       primary_name: data.primary_name,
       party_members: data.party_members as unknown as import("@/integrations/supabase/types").Json,
-      phone: data.phone || null,
+      phone: data.phone,
       email: data.email || null,
       address_line1: data.address_line1 || null,
       address_line2: data.address_line2 || null,
@@ -548,22 +713,20 @@ export const deleteGuest = createServerFn({ method: "POST" })
   });
 
 // Import CSV as text: columns primary_name, party_members (semicolon-separated names, append " (child)" for kids), phone, email, address_line1, address_line2, city, state, postal_code, country, invite_notes
-// A missing column is fine. The first row is treated as a header when it contains "primary_name".
+// A missing column is fine, except phone — every household needs a valid
+// US or Mexico phone number, since it's the last-4-digits verification
+// factor. The first row is treated as a header when it contains "primary_name".
 function normalizeEmail(v: string): string {
   return v.trim().toLowerCase();
-}
-
-function normalizePhone(v: string): string {
-  return v.replace(/\D/g, "");
 }
 
 export const importGuestsCsv = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: { csv: string }) => z.object({ csv: z.string().min(1).max(200_000) }).parse(d))
-  .handler(async ({ data, context }): Promise<{ inserted: number; skipped: number; duplicates: number }> => {
+  .handler(async ({ data, context }): Promise<{ inserted: number; skipped: number; duplicates: number; invalid_phone: number }> => {
     const sb = await ensureAdmin(context.userId);
     const rows = parseCsv(data.csv);
-    if (!rows.length) return { inserted: 0, skipped: 0, duplicates: 0 };
+    if (!rows.length) return { inserted: 0, skipped: 0, duplicates: 0, invalid_phone: 0 };
 
     let header: string[];
     let body: string[][];
@@ -589,14 +752,16 @@ export const importGuestsCsv = createServerFn({ method: "POST" })
     let inserted = 0;
     let skipped = 0;
     let duplicates = 0;
+    let invalid_phone = 0;
     for (const cols of body) {
       const rec: Record<string, string> = {};
       header.forEach((h, i) => { rec[h] = (cols[i] ?? "").trim(); });
       if (!rec.primary_name) { skipped++; continue; }
+      if (!isValidPhone(rec.phone ?? "")) { invalid_phone++; continue; }
 
       const email = rec.email ? normalizeEmail(rec.email) : "";
-      const phone = rec.phone ? normalizePhone(rec.phone) : "";
-      if ((email && seenEmails.has(email)) || (phone && seenPhones.has(phone))) {
+      const phone = normalizePhone(rec.phone);
+      if ((email && seenEmails.has(email)) || seenPhones.has(phone)) {
         duplicates++;
         continue;
       }
@@ -617,7 +782,7 @@ export const importGuestsCsv = createServerFn({ method: "POST" })
           slug,
           primary_name: rec.primary_name,
           party_members: party_members as unknown as import("@/integrations/supabase/types").Json,
-          phone: rec.phone || null,
+          phone: rec.phone.trim(),
           email: rec.email || null,
           address_line1: rec.address_line1 || null,
           address_line2: rec.address_line2 || null,
@@ -632,12 +797,12 @@ export const importGuestsCsv = createServerFn({ method: "POST" })
       }
       if (success) {
         if (email) seenEmails.add(email);
-        if (phone) seenPhones.add(phone);
+        seenPhones.add(phone);
       } else if (inserted === 0) {
         skipped++;
       }
     }
-    return { inserted, skipped, duplicates };
+    return { inserted, skipped, duplicates, invalid_phone };
   });
 
 // Minimal CSV parser: handles quoted fields, commas, newlines, and doubled quotes.

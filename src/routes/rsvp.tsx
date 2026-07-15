@@ -7,7 +7,9 @@ import { SITE } from "@/lib/site";
 import { buildMeta } from "@/lib/seo";
 import {
   lookupGuest,
-  getGuestBySlug,
+  getVerifyTargetLabel,
+  verifyHouseholdAccess,
+  updateGuestAddress,
   submitRsvp,
   type PublicGuest,
   type PublicRsvp,
@@ -18,6 +20,7 @@ import {
 export const Route = createFileRoute("/rsvp")({
   validateSearch: (s: Record<string, unknown>) => ({
     g: typeof s.g === "string" ? s.g : undefined,
+    t: typeof s.t === "string" ? s.t : undefined,
   }),
   head: () =>
     buildMeta({
@@ -30,7 +33,8 @@ export const Route = createFileRoute("/rsvp")({
   component: RsvpPage,
 });
 
-type Stage = "lookup" | "form" | "done";
+type Stage = "lookup" | "verify" | "form" | "done";
+type VerifyTarget = { slug: string } | { token: string };
 
 // CSS-variable shorthands for inline styles where a Tailwind class doesn't fit
 // (e.g. dynamic borderBottom, background). Class-based color usage below still
@@ -68,14 +72,30 @@ const eyebrow: React.CSSProperties = {
   margin: "0 0 8px",
 };
 
+function formatAddress(a: GuestAddress): string[] {
+  const lines: string[] = [];
+  if (a.line1) lines.push([a.line1, a.line2].filter(Boolean).join(" "));
+  const cityLine = [a.city, [a.state, a.postal_code].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+  if (cityLine) lines.push(cityLine);
+  if (a.country) lines.push(a.country);
+  return lines;
+}
+
+function hasAddress(a: GuestAddress): boolean {
+  return Boolean(a.line1 || a.city || a.postal_code);
+}
+
 function RsvpPage() {
   const t = useT();
   const search = useSearch({ from: "/rsvp" });
   const runLookup = useServerFn(lookupGuest);
-  const runGet = useServerFn(getGuestBySlug);
+  const runGetLabel = useServerFn(getVerifyTargetLabel);
+  const runVerify = useServerFn(verifyHouseholdAccess);
+  const runUpdateAddress = useServerFn(updateGuestAddress);
   const runSubmit = useServerFn(submitRsvp);
-  // Admin-controlled via the Features tab. When off, the form renders in a
-  // read-only preview state with a banner and all inputs disabled.
+  // Admin-controlled via the Features tab. Gates RSVP submission only —
+  // household lookup/verification and address management work regardless,
+  // since guests may reach this page well before RSVP officially opens.
   const { enabled: rsvpOpen, loading: rsvpFlagLoading } = useFeatureFlag("rsvp_open");
 
   const isLate = Date.now() > new Date(SITE.rsvpDeadline).getTime();
@@ -86,35 +106,46 @@ function RsvpPage() {
   const [query, setQuery] = useState("");
   const [matches, setMatches] = useState<{ slug: string; primary_name: string; party_size: number }[] | null>(null);
 
+  // Verify stage
+  const [pendingTarget, setPendingTarget] = useState<VerifyTarget | null>(null);
+  const [verifyLabel, setVerifyLabel] = useState<string | null>(null);
+  const [last4, setLast4] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [verifyErr, setVerifyErr] = useState<string | null>(null);
+
   const [guest, setGuest] = useState<PublicGuest | null>(null);
   const [existingRsvp, setExistingRsvp] = useState<PublicRsvp | null>(null);
   const [attendees, setAttendees] = useState<AttendeeChoice[]>([]);
   const [address, setAddress] = useState<GuestAddress>({});
   const [addressConfirmed, setAddressConfirmed] = useState(false);
+  const [addressMode, setAddressMode] = useState<"view" | "edit">("view");
+  const [addressSaving, setAddressSaving] = useState(false);
+  const [addressSaved, setAddressSaved] = useState(false);
+  const [addressErr, setAddressErr] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [songRequest, setSongRequest] = useState("");
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    if (!rsvpOpen) return;
-    if (search.g && stage === "lookup") loadSlug(search.g);
+    if (stage !== "lookup") return;
+    if (search.t) beginVerify({ token: search.t });
+    else if (search.g) beginVerify({ slug: search.g });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search.g, rsvpOpen]);
+  }, [search.g, search.t]);
 
-  async function loadSlug(slug: string) {
-    setLoading(true);
-    setErr(null);
-    try {
-      const res = await runGet({ data: { slug } });
-      if (!res.guest) {
-        setErr(t.rsvp.lookupNotFound);
-        return;
+  async function beginVerify(target: VerifyTarget, knownLabel?: string) {
+    setPendingTarget(target);
+    setStage("verify");
+    setVerifyErr(null);
+    setLast4("");
+    setVerifyLabel(knownLabel ?? null);
+    if (!knownLabel) {
+      try {
+        const res = await runGetLabel({ data: target });
+        if (res.ok) setVerifyLabel(res.primary_name);
+      } catch {
+        // Non-fatal — the verify screen still works without a greeting.
       }
-      hydrateFromGuest(res.guest, res.rsvp);
-    } catch {
-      setErr(t.rsvp.errGeneric);
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -122,6 +153,9 @@ function RsvpPage() {
     setGuest(g);
     setExistingRsvp(r);
     setEmail(g.email ?? "");
+    setAddressMode("view");
+    setAddressSaved(false);
+    setAddressErr(null);
     if (r) {
       setAttendees(r.attendees.length ? r.attendees : g.party_members.map((m) => ({ ...m, attending: false })));
       setAddress(r.address ?? g.address);
@@ -138,6 +172,27 @@ function RsvpPage() {
     setStage("form");
   }
 
+  async function onVerifySubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!pendingTarget || !/^\d{4}$/.test(last4)) return;
+    setVerifying(true);
+    setVerifyErr(null);
+    try {
+      const res = await runVerify({ data: { ...pendingTarget, last4 } });
+      if (res.ok) {
+        hydrateFromGuest(res.guest, res.rsvp);
+      } else if (res.reason === "locked") {
+        setVerifyErr(t.rsvp.verifyLocked);
+      } else {
+        setVerifyErr(t.rsvp.verifyInvalid);
+      }
+    } catch {
+      setVerifyErr(t.rsvp.errGeneric);
+    } finally {
+      setVerifying(false);
+    }
+  }
+
   async function onLookupSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!query.trim()) return;
@@ -149,7 +204,7 @@ function RsvpPage() {
       if (res.matches.length === 0) {
         setErr(t.rsvp.lookupNotFound);
       } else if (res.matches.length === 1) {
-        await loadSlug(res.matches[0].slug);
+        await beginVerify({ slug: res.matches[0].slug }, res.matches[0].primary_name);
       } else {
         setMatches(res.matches);
       }
@@ -168,6 +223,22 @@ function RsvpPage() {
   }
   function removeAttendee(i: number) {
     setAttendees((prev) => prev.filter((_, idx) => idx !== i));
+  }
+
+  async function saveAddress() {
+    if (!guest) return;
+    setAddressSaving(true);
+    setAddressErr(null);
+    try {
+      await runUpdateAddress({ data: { slug: guest.slug, address } });
+      setAddressMode("view");
+      setAddressSaved(true);
+      setAddressConfirmed(true);
+    } catch (e) {
+      setAddressErr(e instanceof Error ? e.message : t.rsvp.errGeneric);
+    } finally {
+      setAddressSaving(false);
+    }
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -249,7 +320,7 @@ function RsvpPage() {
             className="font-serif italic text-center"
             style={{ fontWeight: 500, fontSize: 48, color: INK, margin: 0 }}
           >
-            {stage === "done" ? t.rsvp.recapTitle : t.rsvp.title}
+            {stage === "done" ? t.rsvp.recapTitle : stage === "verify" ? t.rsvp.verifyTitle : t.rsvp.title}
           </h1>
           <p
             className="uppercase font-sans text-center"
@@ -281,7 +352,7 @@ function RsvpPage() {
             </div>
           ) : (
           <>
-          {!rsvpOpen && (
+          {!rsvpOpen && (stage === "form" || stage === "done") && (
             <div
               role="status"
               className="text-center"
@@ -308,25 +379,14 @@ function RsvpPage() {
                 className="font-sans"
                 style={{ fontSize: 13, color: SOFT, lineHeight: 1.6, margin: "8px 0 0" }}
               >
-                This form is a preview. It will open closer to the date — you&rsquo;ll receive the link with your invitation.
+                You can still look over your invitation and confirm your address below — RSVP itself
+                will open closer to the date.
               </p>
             </div>
           )}
 
           {/* Lookup */}
           {stage === "lookup" && (
-            <fieldset
-              disabled={!rsvpOpen}
-              aria-disabled={!rsvpOpen}
-              style={{
-                border: "none",
-                padding: 0,
-                margin: 0,
-                minInlineSize: "auto",
-                opacity: rsvpOpen ? 1 : 0.55,
-                pointerEvents: rsvpOpen ? "auto" : "none",
-              }}
-            >
             <form onSubmit={onLookupSubmit} noValidate>
               <p
                 className="font-serif italic text-center"
@@ -377,7 +437,7 @@ function RsvpPage() {
                     <button
                       key={m.slug}
                       type="button"
-                      onClick={() => loadSlug(m.slug)}
+                      onClick={() => beginVerify({ slug: m.slug }, m.primary_name)}
                       className="w-full text-left border transition-colors"
                       style={{ padding: "14px 16px", borderColor: HAIRLINE }}
                     >
@@ -403,7 +463,85 @@ function RsvpPage() {
                 )}
               </div>
             </form>
-            </fieldset>
+          )}
+
+          {/* Verify — last 4 digits of the household's phone, shared by name
+              lookup and a personalized link alike. Neither path reveals
+              anything about the household until this succeeds. */}
+          {stage === "verify" && (
+            <form onSubmit={onVerifySubmit} noValidate>
+              {verifyLabel && (
+                <p
+                  className="font-serif italic text-center"
+                  style={{ fontSize: 20, color: INK, margin: "0 0 8px" }}
+                >
+                  {verifyLabel}
+                </p>
+              )}
+              <label
+                htmlFor="rsvp-verify-last4"
+                className="block text-center font-sans"
+                style={{ fontSize: 14, color: SOFT, margin: "0 0 30px" }}
+              >
+                {t.rsvp.verifyHint}
+              </label>
+              <input
+                id="rsvp-verify-last4"
+                autoFocus
+                value={last4}
+                onChange={(e) => setLast4(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                placeholder={t.rsvp.verifyPlaceholder}
+                aria-label={t.rsvp.verifyHint}
+                inputMode="numeric"
+                autoComplete="off"
+                maxLength={4}
+                className="text-center"
+                style={{ ...inputStyle, letterSpacing: "0.5em" }}
+              />
+              <button
+                type="submit"
+                disabled={verifying || last4.length !== 4}
+                className="mt-8 block w-full uppercase font-sans"
+                style={{
+                  background: INK,
+                  color: IVORY,
+                  padding: "16px 0",
+                  fontSize: 11,
+                  letterSpacing: "0.26em",
+                  border: `1px solid ${INK}`,
+                  opacity: verifying || last4.length !== 4 ? 0.5 : 1,
+                  cursor: verifying || last4.length !== 4 ? "not-allowed" : "pointer",
+                }}
+              >
+                {verifying ? t.rsvp.verifying : t.rsvp.verifyCta}
+              </button>
+
+              <div role="alert" aria-live="polite">
+                {verifyErr && (
+                  <div className="mt-6 font-sans" style={{ fontSize: 14, color: "#7a2f26" }}>
+                    <p>{verifyErr}</p>
+                    <p className="mt-2 italic font-serif" style={{ color: SOFT, fontSize: 13 }}>
+                      {SITE.rsvpFallbackContact}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setStage("lookup");
+                  setPendingTarget(null);
+                  setVerifyLabel(null);
+                  setLast4("");
+                  setVerifyErr(null);
+                }}
+                className="mt-8 block mx-auto uppercase font-sans"
+                style={{ fontSize: 10, letterSpacing: "0.2em", color: TAN_DEEP }}
+              >
+                {t.rsvp.verifyBack}
+              </button>
+            </form>
           )}
 
           {/* Form */}
@@ -419,286 +557,340 @@ function RsvpPage() {
                 </p>
               )}
 
-              {/* Party */}
-              <section>
-                <p style={{ ...eyebrow, color: LAV_DEEP, letterSpacing: "0.3em", fontSize: 11 }}>
-                  Your party
-                </p>
-                <p
-                  className="font-sans"
-                  style={{ fontSize: 14, color: SOFT, margin: "0 0 20px", lineHeight: 1.6 }}
-                >
-                  {t.rsvp.partySubtitle}
-                </p>
-                <div className="space-y-5">
-                  {attendees.map((a, i) => (
-                    <div
-                      key={i}
-                      className="border"
-                      style={{ padding: 18, borderColor: HAIRLINE }}
+              {/* Party — gated by rsvp_open; address below is not. */}
+              <fieldset
+                disabled={!rsvpOpen}
+                aria-disabled={!rsvpOpen}
+                style={{ border: "none", padding: 0, margin: 0, minInlineSize: "auto", opacity: rsvpOpen ? 1 : 0.55 }}
+              >
+                <section>
+                  <p style={{ ...eyebrow, color: LAV_DEEP, letterSpacing: "0.3em", fontSize: 11 }}>
+                    Your party
+                  </p>
+                  <p
+                    className="font-sans"
+                    style={{ fontSize: 14, color: SOFT, margin: "0 0 20px", lineHeight: 1.6 }}
+                  >
+                    {t.rsvp.partySubtitle}
+                  </p>
+                  <div className="space-y-5">
+                    {attendees.map((a, i) => (
+                      <div
+                        key={i}
+                        className="border"
+                        style={{ padding: 18, borderColor: HAIRLINE }}
+                      >
+                        <input
+                          value={a.name}
+                          onChange={(e) => updateAttendee(i, { name: e.target.value })}
+                          placeholder={t.rsvp.fullName}
+                          aria-label={`${t.rsvp.fullName} — guest ${i + 1}`}
+                          autoComplete="name"
+                          maxLength={120}
+                          style={inputStyle}
+                        />
+                        <div className="flex items-center justify-between flex-wrap gap-3 mt-4">
+                          <div className="flex gap-2">
+                            <PillToggle
+                              active={!a.is_child}
+                              onClick={() => updateAttendee(i, { is_child: false })}
+                              label={t.rsvp.adult}
+                            />
+                            <PillToggle
+                              active={a.is_child}
+                              onClick={() => updateAttendee(i, { is_child: true })}
+                              label={t.rsvp.child}
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <PillToggle
+                              active={a.attending === true}
+                              onClick={() => updateAttendee(i, { attending: true })}
+                              label={t.rsvp.attending}
+                            />
+                            <PillToggle
+                              active={a.attending === false}
+                              onClick={() => updateAttendee(i, { attending: false })}
+                              label={t.rsvp.notAttending}
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeAttendee(i)}
+                            className="uppercase font-sans"
+                            style={{
+                              fontSize: 10,
+                              letterSpacing: "0.2em",
+                              color: TAN_DEEP,
+                            }}
+                          >
+                            {t.rsvp.remove}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={addAttendee}
+                    className="mt-4 uppercase font-sans"
+                    style={{
+                      fontSize: 10,
+                      letterSpacing: "0.2em",
+                      color: LAV_DEEP,
+                      borderBottom: `1px solid ${LAV_DEEP}`,
+                      paddingBottom: 3,
+                    }}
+                  >
+                    {t.rsvp.addGuest}
+                  </button>
+                </section>
+              </fieldset>
+
+              {/* Address — independent of rsvp_open and of RSVP submission.
+                  Starts collapsed: view the address on file (or "none yet"),
+                  edit only on request, save immediately on its own. */}
+              <section aria-labelledby="rsvp-address-heading">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <p
+                    id="rsvp-address-heading"
+                    style={{ ...eyebrow, color: LAV_DEEP, letterSpacing: "0.3em", fontSize: 11, margin: 0 }}
+                  >
+                    Mailing address
+                  </p>
+                  {addressMode === "view" && (
+                    <button
+                      type="button"
+                      onClick={() => { setAddressMode("edit"); setAddressSaved(false); setAddressErr(null); }}
+                      className="uppercase font-sans"
+                      style={{ fontSize: 10, letterSpacing: "0.2em", color: LAV_DEEP, borderBottom: `1px solid ${LAV_DEEP}`, paddingBottom: 2 }}
                     >
+                      {hasAddress(address) ? t.rsvp.addressEditCta : t.rsvp.addressAddCta}
+                    </button>
+                  )}
+                </div>
+
+                {addressMode === "view" ? (
+                  <div className="mt-3">
+                    {hasAddress(address) ? (
+                      <div className="font-serif italic" style={{ fontSize: 17, color: INK, lineHeight: 1.6 }}>
+                        {formatAddress(address).map((line, i) => <div key={i}>{line}</div>)}
+                      </div>
+                    ) : (
+                      <p className="font-sans italic" style={{ fontSize: 13, color: SOFT }}>
+                        {t.rsvp.addressNotOnFile}
+                      </p>
+                    )}
+                    {addressSaved && (
+                      <p className="mt-2 font-sans" style={{ fontSize: 12, color: LAV_DEEP }}>
+                        {t.rsvp.addressSaved}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-6">
+                      <div className="col-span-2">
+                        <input
+                          value={address.line1 ?? ""}
+                          onChange={(e) => setAddress({ ...address, line1: e.target.value })}
+                          placeholder="Street address"
+                          aria-label="Street address"
+                          autoComplete="address-line1"
+                          maxLength={200}
+                          style={inputStyle}
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <input
+                          value={address.line2 ?? ""}
+                          onChange={(e) => setAddress({ ...address, line2: e.target.value })}
+                          placeholder="Apt / suite (optional)"
+                          aria-label="Apartment or suite (optional)"
+                          autoComplete="address-line2"
+                          maxLength={200}
+                          style={inputStyle}
+                        />
+                      </div>
                       <input
-                        value={a.name}
-                        onChange={(e) => updateAttendee(i, { name: e.target.value })}
-                        placeholder={t.rsvp.fullName}
-                        aria-label={`${t.rsvp.fullName} — guest ${i + 1}`}
-                        autoComplete="name"
+                        value={address.city ?? ""}
+                        onChange={(e) => setAddress({ ...address, city: e.target.value })}
+                        placeholder="City"
+                        aria-label="City"
+                        autoComplete="address-level2"
                         maxLength={120}
                         style={inputStyle}
                       />
-                      <div className="flex items-center justify-between flex-wrap gap-3 mt-4">
-                        <div className="flex gap-2">
-                          <PillToggle
-                            active={!a.is_child}
-                            onClick={() => updateAttendee(i, { is_child: false })}
-                            label={t.rsvp.adult}
-                          />
-                          <PillToggle
-                            active={a.is_child}
-                            onClick={() => updateAttendee(i, { is_child: true })}
-                            label={t.rsvp.child}
-                          />
-                        </div>
-                        <div className="flex gap-2">
-                          <PillToggle
-                            active={a.attending === true}
-                            onClick={() => updateAttendee(i, { attending: true })}
-                            label={t.rsvp.attending}
-                          />
-                          <PillToggle
-                            active={a.attending === false}
-                            onClick={() => updateAttendee(i, { attending: false })}
-                            label={t.rsvp.notAttending}
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeAttendee(i)}
-                          className="uppercase font-sans"
-                          style={{
-                            fontSize: 10,
-                            letterSpacing: "0.2em",
-                            color: TAN_DEEP,
-                          }}
-                        >
-                          {t.rsvp.remove}
-                        </button>
-                      </div>
+                      <input
+                        value={address.state ?? ""}
+                        onChange={(e) => setAddress({ ...address, state: e.target.value })}
+                        placeholder="State"
+                        aria-label="State"
+                        autoComplete="address-level1"
+                        maxLength={60}
+                        style={inputStyle}
+                      />
+                      <input
+                        value={address.postal_code ?? ""}
+                        onChange={(e) => setAddress({ ...address, postal_code: e.target.value })}
+                        placeholder="ZIP / postal"
+                        aria-label="ZIP or postal code"
+                        autoComplete="postal-code"
+                        maxLength={20}
+                        style={inputStyle}
+                      />
+                      <input
+                        value={address.country ?? ""}
+                        onChange={(e) => setAddress({ ...address, country: e.target.value })}
+                        placeholder="Country (if not US)"
+                        aria-label="Country"
+                        autoComplete="country-name"
+                        maxLength={60}
+                        style={inputStyle}
+                      />
                     </div>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={addAttendee}
-                  className="mt-4 uppercase font-sans"
-                  style={{
-                    fontSize: 10,
-                    letterSpacing: "0.2em",
-                    color: LAV_DEEP,
-                    borderBottom: `1px solid ${LAV_DEEP}`,
-                    paddingBottom: 3,
-                  }}
-                >
-                  {t.rsvp.addGuest}
-                </button>
-              </section>
-
-              {/* Address */}
-              <section aria-labelledby="rsvp-address-heading">
-                <p
-                  id="rsvp-address-heading"
-                  style={{ ...eyebrow, color: LAV_DEEP, letterSpacing: "0.3em", fontSize: 11 }}
-                >
-                  Mailing address
-                </p>
-                <p
-                  className="font-sans"
-                  style={{ fontSize: 14, color: SOFT, margin: "0 0 20px", lineHeight: 1.6 }}
-                >
-                  Confirm your address so thank-yous land in the right mailbox.
-                </p>
-                <div className="grid grid-cols-2 gap-x-6 gap-y-6">
-                  <div className="col-span-2">
-                    <input
-                      value={address.line1 ?? ""}
-                      onChange={(e) => setAddress({ ...address, line1: e.target.value })}
-                      placeholder="Street address"
-                      aria-label="Street address"
-                      autoComplete="address-line1"
-                      maxLength={200}
-                      style={inputStyle}
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <input
-                      value={address.line2 ?? ""}
-                      onChange={(e) => setAddress({ ...address, line2: e.target.value })}
-                      placeholder="Apt / suite (optional)"
-                      aria-label="Apartment or suite (optional)"
-                      autoComplete="address-line2"
-                      maxLength={200}
-                      style={inputStyle}
-                    />
-                  </div>
-                  <input
-                    value={address.city ?? ""}
-                    onChange={(e) => setAddress({ ...address, city: e.target.value })}
-                    placeholder="City"
-                    aria-label="City"
-                    autoComplete="address-level2"
-                    maxLength={120}
-                    style={inputStyle}
-                  />
-                  <input
-                    value={address.state ?? ""}
-                    onChange={(e) => setAddress({ ...address, state: e.target.value })}
-                    placeholder="State"
-                    aria-label="State"
-                    autoComplete="address-level1"
-                    maxLength={60}
-                    style={inputStyle}
-                  />
-                  <input
-                    value={address.postal_code ?? ""}
-                    onChange={(e) => setAddress({ ...address, postal_code: e.target.value })}
-                    placeholder="ZIP / postal"
-                    aria-label="ZIP or postal code"
-                    autoComplete="postal-code"
-                    maxLength={20}
-                    style={inputStyle}
-                  />
-                  <input
-                    value={address.country ?? ""}
-                    onChange={(e) => setAddress({ ...address, country: e.target.value })}
-                    placeholder="Country (if not US)"
-                    aria-label="Country"
-                    autoComplete="country-name"
-                    maxLength={60}
-                    style={inputStyle}
-                  />
-                </div>
-                <div className="mt-6">
-                  <label
-                    htmlFor="rsvp-email"
-                    className="block"
-                    style={{ ...eyebrow, color: LAV_DEEP, letterSpacing: "0.3em", fontSize: 11, margin: "0 0 6px" }}
-                  >
-                    Email — for your RSVP confirmation
-                  </label>
-                  <input
-                    id="rsvp-email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    autoComplete="email"
-                    maxLength={200}
-                    style={inputStyle}
-                  />
-                </div>
-                <label
-                  className="mt-6 flex items-center gap-2 font-sans cursor-pointer"
-                  style={{ fontSize: 14, color: BODY }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={addressConfirmed}
-                    onChange={(e) => setAddressConfirmed(e.target.checked)}
-                    style={{ accentColor: "var(--color-lavender-deep)", width: 16, height: 16 }}
-                  />
-                  This address is correct.
-                </label>
-              </section>
-
-              {/* Extras */}
-              <section className="space-y-6">
-                <div>
-                  <label
-                    htmlFor="rsvp-song"
-                    className="block"
-                    style={{ ...eyebrow, color: LAV_DEEP, letterSpacing: "0.3em", fontSize: 11 }}
-                  >
-                    Song request (optional)
-                  </label>
-                  <input
-                    id="rsvp-song"
-                    value={songRequest}
-                    onChange={(e) => setSongRequest(e.target.value)}
-                    placeholder="One song that&rsquo;ll get you on the floor"
-                    maxLength={200}
-                    style={inputStyle}
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="rsvp-message"
-                    className="block"
-                    style={{ ...eyebrow, color: LAV_DEEP, letterSpacing: "0.3em", fontSize: 11 }}
-                  >
-                    {t.rsvp.message}
-                  </label>
-                  <textarea
-                    id="rsvp-message"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    rows={4}
-                    maxLength={1000}
-                    style={{
-                      ...inputStyle,
-                      paddingBottom: 8,
-                      borderBottom: `1px solid ${TAN_DEEP}`,
-                      resize: "vertical",
-                    }}
-                  />
-                </div>
-              </section>
-
-              <div role="alert" aria-live="polite">
-                {err && (
-                  <p className="font-sans" style={{ fontSize: 14, color: "#7a2f26" }}>
-                    {err}
-                  </p>
+                    {addressErr && (
+                      <p className="mt-3 font-sans" style={{ fontSize: 13, color: "#7a2f26" }}>{addressErr}</p>
+                    )}
+                    <div className="flex items-center gap-4 mt-5">
+                      <button
+                        type="button"
+                        onClick={saveAddress}
+                        disabled={addressSaving}
+                        className="uppercase font-sans"
+                        style={{
+                          background: INK, color: IVORY, padding: "12px 28px", fontSize: 10,
+                          letterSpacing: "0.24em", border: `1px solid ${INK}`, opacity: addressSaving ? 0.5 : 1,
+                        }}
+                      >
+                        {addressSaving ? t.rsvp.addressSaving : t.rsvp.addressSaveCta}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAddressMode("view")}
+                        className="uppercase font-sans"
+                        style={{ fontSize: 10, letterSpacing: "0.2em", color: TAN_DEEP }}
+                      >
+                        {t.rsvp.addressCancel}
+                      </button>
+                    </div>
+                  </>
                 )}
-              </div>
+              </section>
 
-
-              <div className="flex items-center justify-between gap-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStage("lookup");
-                    setGuest(null);
-                    setMatches(null);
-                    setErr(null);
-                  }}
-                  className="uppercase font-sans"
-                  style={{ fontSize: 10, letterSpacing: "0.2em", color: TAN_DEEP }}
-                >
-                  ← {t.common.back}
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="uppercase font-sans"
-                  style={{
-                    background: INK,
-                    color: IVORY,
-                    padding: "16px 40px",
-                    fontSize: 11,
-                    letterSpacing: "0.3em",
-                    border: `1px solid ${INK}`,
-                    opacity: loading ? 0.5 : 1,
-                  }}
-                >
-                  {loading ? t.rsvp.submitting : t.rsvp.submitCta}
-                </button>
-              </div>
-              <p
-                className="text-center uppercase font-sans"
-                style={{ fontSize: 10, letterSpacing: "0.2em", color: SOFT }}
+              {/* Extras — gated by rsvp_open, same as the party section. */}
+              <fieldset
+                disabled={!rsvpOpen}
+                aria-disabled={!rsvpOpen}
+                style={{ border: "none", padding: 0, margin: 0, minInlineSize: "auto", opacity: rsvpOpen ? 1 : 0.55 }}
               >
-                {t.rsvp.resubmitNote}
-              </p>
+                <section className="space-y-6">
+                  <div>
+                    <label
+                      htmlFor="rsvp-email"
+                      className="block"
+                      style={{ ...eyebrow, color: LAV_DEEP, letterSpacing: "0.3em", fontSize: 11, margin: "0 0 6px" }}
+                    >
+                      Email — for your RSVP confirmation
+                    </label>
+                    <input
+                      id="rsvp-email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      autoComplete="email"
+                      maxLength={200}
+                      style={inputStyle}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="rsvp-song"
+                      className="block"
+                      style={{ ...eyebrow, color: LAV_DEEP, letterSpacing: "0.3em", fontSize: 11 }}
+                    >
+                      Song request (optional)
+                    </label>
+                    <input
+                      id="rsvp-song"
+                      value={songRequest}
+                      onChange={(e) => setSongRequest(e.target.value)}
+                      placeholder="One song that&rsquo;ll get you on the floor"
+                      maxLength={200}
+                      style={inputStyle}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="rsvp-message"
+                      className="block"
+                      style={{ ...eyebrow, color: LAV_DEEP, letterSpacing: "0.3em", fontSize: 11 }}
+                    >
+                      {t.rsvp.message}
+                    </label>
+                    <textarea
+                      id="rsvp-message"
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      rows={4}
+                      maxLength={1000}
+                      style={{
+                        ...inputStyle,
+                        paddingBottom: 8,
+                        borderBottom: `1px solid ${TAN_DEEP}`,
+                        resize: "vertical",
+                      }}
+                    />
+                  </div>
+                </section>
+
+                <div role="alert" aria-live="polite">
+                  {err && (
+                    <p className="font-sans" style={{ fontSize: 14, color: "#7a2f26" }}>
+                      {err}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between gap-4 mt-10">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStage("lookup");
+                      setGuest(null);
+                      setMatches(null);
+                      setErr(null);
+                    }}
+                    className="uppercase font-sans"
+                    style={{ fontSize: 10, letterSpacing: "0.2em", color: TAN_DEEP }}
+                  >
+                    ← {t.common.back}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading || !rsvpOpen}
+                    className="uppercase font-sans"
+                    style={{
+                      background: INK,
+                      color: IVORY,
+                      padding: "16px 40px",
+                      fontSize: 11,
+                      letterSpacing: "0.3em",
+                      border: `1px solid ${INK}`,
+                      opacity: loading || !rsvpOpen ? 0.5 : 1,
+                    }}
+                  >
+                    {loading ? t.rsvp.submitting : t.rsvp.submitCta}
+                  </button>
+                </div>
+                <p
+                  className="text-center uppercase font-sans mt-4"
+                  style={{ fontSize: 10, letterSpacing: "0.2em", color: SOFT }}
+                >
+                  {t.rsvp.resubmitNote}
+                </p>
+              </fieldset>
             </form>
           )}
 

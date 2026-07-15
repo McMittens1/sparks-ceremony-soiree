@@ -184,7 +184,7 @@ function EditRsvpPage() {
                   : "This edit link isn’t valid."}
               </p>
               <p className="mt-3">{SITE.rsvpFallbackContact}</p>
-              <Link to="/rsvp" search={{ g: undefined }} className="mt-6 inline-block uppercase" style={{ fontSize: 11, letterSpacing: "0.24em", color: LAV_DEEP, borderBottom: `1px solid ${LAV_DEEP}`, paddingBottom: 2 }}>
+              <Link to="/rsvp" search={{ g: undefined, t: undefined }} className="mt-6 inline-block uppercase" style={{ fontSize: 11, letterSpacing: "0.24em", color: LAV_DEEP, borderBottom: `1px solid ${LAV_DEEP}`, paddingBottom: 2 }}>
                 Go to RSVP lookup
               </Link>
             </div>

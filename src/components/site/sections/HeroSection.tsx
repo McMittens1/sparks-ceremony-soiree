@@ -190,7 +190,7 @@ export function HeroSection() {
           >
             <Link
               to="/rsvp"
-              search={{ g: undefined }}
+              search={{ g: undefined, t: undefined }}
               className="inline-block uppercase font-sans bg-ink text-ivory border border-ink"
               style={{
                 padding: "clamp(12px, 1.6svh, 16px) clamp(22px, 3vw, 32px)",
