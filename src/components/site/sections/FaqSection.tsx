@@ -85,7 +85,7 @@ export function FaqSection() {
         <div style={{ marginTop: 44 }}>
           <Link
             to="/rsvp"
-            search={{}}
+            search={{ g: undefined }}
             className="inline-block uppercase font-sans bg-ink text-ivory border border-ink"
             style={{ padding: "19px 44px", fontSize: 12, letterSpacing: "0.3em" }}
           >

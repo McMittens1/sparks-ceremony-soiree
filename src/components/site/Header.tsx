@@ -95,7 +95,7 @@ export function Header() {
           })}
           <Link
             to="/rsvp"
-            search={{}}
+            search={{ g: undefined }}
             className="px-[18px] py-[9px] border border-ink text-ink transition-colors hover:bg-ink hover:text-ivory"
           >
             {t.nav.rsvp}
@@ -114,7 +114,7 @@ export function Header() {
         <div className="flex md:hidden items-center gap-3">
           <Link
             to="/rsvp"
-            search={{}}
+            search={{ g: undefined }}
             className="uppercase font-sans px-3 py-2 border border-ink text-ink"
             style={{ fontSize: 10, letterSpacing: "0.24em" }}
           >
@@ -176,7 +176,7 @@ export function Header() {
           ))}
           <Link
             to="/rsvp"
-            search={{}}
+            search={{ g: undefined }}
             onClick={() => setMenuOpen(false)}
             className="text-center uppercase font-sans mt-4 py-4 bg-ink text-ivory"
             style={{ fontSize: 11, letterSpacing: "0.28em" }}
