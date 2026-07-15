@@ -1,4 +1,7 @@
-const BASE_WIDTH = 340;
+// Matches GroomsmanCard's BASE_WIDTH/BASE_HEIGHT exactly so the two
+// "collectible" sections read as an equal-sized pair.
+const BASE_WIDTH = 232;
+const BASE_HEIGHT = 388;
 
 const MASTHEAD = "SPARKS.";
 const VENUE_DATELINE = "Louisville, Nebraska";
@@ -44,7 +47,7 @@ export function MagazineCover({
       className={`relative overflow-hidden ${
         collectorsEdition ? "bg-lavender-deep" : "bg-linear-to-b from-ivory to-lavender-wash"
       }`}
-      style={{ width, aspectRatio: "5 / 7" }}
+      style={{ width, aspectRatio: `${BASE_WIDTH} / ${BASE_HEIGHT}` }}
     >
       {/* Cutout portrait — background removed, composited on the backdrop above. */}
       <div

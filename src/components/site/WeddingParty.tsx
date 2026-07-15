@@ -46,7 +46,11 @@ export function WeddingParty() {
 
       <div
         className="grid"
-        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 24 }}
+        style={{
+          gridTemplateColumns: "repeat(auto-fit, minmax(232px, 232px))",
+          justifyContent: "center",
+          gap: 24,
+        }}
       >
         {bridesmaids.map((p, i) => (
           <MagazineCover
