@@ -22,7 +22,7 @@ import {
   type AdminGuestRow,
   type PartyMember,
 } from "@/lib/rsvp.functions";
-import { getFeatureFlags, setFeatureFlag, type FeatureFlag } from "@/lib/feature-flags.functions";
+import { getFeatureFlags, setFeatureFlags, type FeatureFlag } from "@/lib/feature-flags.functions";
 import { Switch } from "@/components/ui/switch";
 import { SITE } from "@/lib/site";
 
@@ -988,56 +988,178 @@ function PhotoLightbox({
 
 function FeatureFlagsPanel() {
   const loadFlags = useServerFn(getFeatureFlags);
-  const saveFlag = useServerFn(setFeatureFlag);
-  const [flags, setFlags] = useState<FeatureFlag[] | null>(null);
-  const [busyKey, setBusyKey] = useState<string | null>(null);
+  const saveFlags = useServerFn(setFeatureFlags);
+  const [saved, setSaved] = useState<FeatureFlag[] | null>(null);
+  const [draft, setDraft] = useState<Record<string, boolean>>({});
+  const [confirming, setConfirming] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<{ kind: "success" | "error"; text: string } | null>(null);
 
   const refresh = useCallback(() => {
-    loadFlags({}).then(setFlags).catch(() => {});
+    loadFlags({}).then((flags) => {
+      setSaved(flags);
+      setDraft({});
+    }).catch(() => {});
   }, [loadFlags]);
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  async function toggle(key: string, enabled: boolean) {
-    setBusyKey(key);
-    setFlags((prev) => prev?.map((f) => (f.key === key ? { ...f, enabled } : f)) ?? prev);
+  function toggleDraft(key: string, currentEnabled: boolean) {
+    setDraft((prev) => {
+      const effective = key in prev ? prev[key] : currentEnabled;
+      const next = { ...prev };
+      const flipped = !effective;
+      if (flipped === currentEnabled) delete next[key];
+      else next[key] = flipped;
+      return next;
+    });
+    setMessage(null);
+  }
+
+  const pendingChanges = (saved ?? [])
+    .filter((f) => f.key in draft)
+    .map((f) => ({ key: f.key, label: f.label, from: f.enabled, to: draft[f.key] }));
+  const hasPending = pendingChanges.length > 0;
+
+  async function confirmSave() {
+    setSaving(true);
     try {
-      await saveFlag({ data: { key, enabled } });
-    } catch {
-      setFlags((prev) => prev?.map((f) => (f.key === key ? { ...f, enabled: !enabled } : f)) ?? prev);
+      await saveFlags({
+        data: { changes: pendingChanges.map((c) => ({ key: c.key, enabled: c.to })) },
+      });
+      setMessage({
+        kind: "success",
+        text: `Saved ${pendingChanges.length} change${pendingChanges.length > 1 ? "s" : ""}.`,
+      });
+      setConfirming(false);
+      refresh();
+    } catch (err) {
+      setMessage({
+        kind: "error",
+        text: err instanceof Error ? err.message : "Couldn't save changes. Please try again.",
+      });
     } finally {
-      setBusyKey(null);
+      setSaving(false);
     }
+  }
+
+  function discardDraft() {
+    setDraft({});
+    setMessage(null);
   }
 
   return (
     <div className="mt-8">
       <p className="text-xs text-muted-foreground max-w-2xl">
-        Control which guest-facing features are live on the public site. Changes take effect immediately — no deploy required.
+        Control which guest-facing features are live on the public site. Toggle what you want to
+        change, then review and confirm — nothing goes live until you save.
       </p>
       <div className="mt-4 border border-border/40 divide-y divide-border/40">
-        {flags === null ? (
+        {saved === null ? (
           <div className="p-4 text-xs text-muted-foreground">Loading…</div>
-        ) : flags.length === 0 ? (
+        ) : saved.length === 0 ? (
           <div className="p-4 text-xs text-muted-foreground">No feature flags yet.</div>
         ) : (
-          flags.map((f) => (
-            <div key={f.key} className="flex items-center justify-between gap-4 p-4">
-              <div className="min-w-0">
-                <div className="text-sm text-foreground">{f.label}</div>
-                {f.description && (
-                  <div className="text-xs text-muted-foreground mt-1">{f.description}</div>
-                )}
+          saved.map((f) => {
+            const isPending = f.key in draft;
+            const effective = isPending ? draft[f.key] : f.enabled;
+            return (
+              <div
+                key={f.key}
+                className={`flex items-center justify-between gap-4 p-4 ${isPending ? "bg-primary/5" : ""}`}
+              >
+                <div className="min-w-0">
+                  <div className="text-sm text-foreground flex items-center gap-2">
+                    {f.label}
+                    {isPending && (
+                      <span className="text-[10px] uppercase tracking-[0.2em] text-primary">Pending</span>
+                    )}
+                  </div>
+                  {f.description && (
+                    <div className="text-xs text-muted-foreground mt-1">{f.description}</div>
+                  )}
+                </div>
+                <Switch
+                  checked={effective}
+                  disabled={saving}
+                  onCheckedChange={() => toggleDraft(f.key, f.enabled)}
+                />
               </div>
-              <Switch
-                checked={f.enabled}
-                disabled={busyKey === f.key}
-                onCheckedChange={(checked) => toggle(f.key, checked)}
-              />
-            </div>
-          ))
+            );
+          })
         )}
       </div>
+
+      {message && !confirming && (
+        <p className={`mt-3 text-xs ${message.kind === "success" ? "text-primary" : "text-destructive"}`}>
+          {message.text}
+        </p>
+      )}
+
+      {hasPending && (
+        <div className="mt-4 flex items-center gap-3">
+          <button
+            onClick={() => setConfirming(true)}
+            className="border border-primary bg-primary text-primary-foreground px-5 py-2 text-xs uppercase tracking-[0.2em]"
+          >
+            Save changes
+          </button>
+          <button
+            onClick={discardDraft}
+            className="text-xs uppercase tracking-[0.2em] text-muted-foreground"
+          >
+            Discard
+          </button>
+        </div>
+      )}
+
+      {confirming && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto">
+          <div className="w-full max-w-lg bg-card border border-border p-6 sm:p-8 my-8">
+            <h3 className="font-serif text-2xl text-primary">Confirm changes</h3>
+            <p className="mt-2 text-xs text-muted-foreground">
+              These changes take effect on the public site immediately.
+            </p>
+            <ul className="mt-4 space-y-2">
+              {pendingChanges.map((c) => (
+                <li
+                  key={c.key}
+                  className="text-sm flex items-center justify-between border border-border/40 px-3 py-2"
+                >
+                  <span>{c.label}</span>
+                  <span className="text-xs uppercase tracking-[0.2em]">
+                    {c.from ? "On" : "Off"} →{" "}
+                    <span className={c.to ? "text-primary" : "text-destructive"}>
+                      {c.to ? "On" : "Off"}
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+            {message && (
+              <p className={`mt-4 text-xs ${message.kind === "success" ? "text-primary" : "text-destructive"}`}>
+                {message.text}
+              </p>
+            )}
+            <div className="mt-6 flex items-center gap-3">
+              <button
+                onClick={confirmSave}
+                disabled={saving}
+                className="border border-primary bg-primary text-primary-foreground px-5 py-2 text-xs uppercase tracking-[0.2em] disabled:opacity-50"
+              >
+                {saving ? "Saving…" : "Confirm"}
+              </button>
+              <button
+                onClick={() => setConfirming(false)}
+                disabled={saving}
+                className="border border-border text-foreground px-3 py-2 text-xs uppercase tracking-[0.2em]"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

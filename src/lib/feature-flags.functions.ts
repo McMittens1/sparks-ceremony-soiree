@@ -28,16 +28,23 @@ export const getFeatureFlags = createServerFn({ method: "GET" })
     return data ?? [];
   });
 
-export const setFeatureFlag = createServerFn({ method: "POST" })
+export const setFeatureFlags = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((d: { key: string; enabled: boolean }) =>
-    z.object({ key: z.string().min(1).max(100), enabled: z.boolean() }).parse(d))
+  .validator((d: { changes: { key: string; enabled: boolean }[] }) =>
+    z.object({
+      changes: z.array(z.object({
+        key: z.string().min(1).max(100),
+        enabled: z.boolean(),
+      })).min(1).max(50),
+    }).parse(d))
   .handler(async ({ data, context }): Promise<{ ok: boolean }> => {
     const sb = await ensureAdmin(context.userId);
-    const { error } = await sb
-      .from("feature_flags")
-      .update({ enabled: data.enabled })
-      .eq("key", data.key);
-    if (error) throw new Error(error.message);
+    for (const change of data.changes) {
+      const { error } = await sb
+        .from("feature_flags")
+        .update({ enabled: change.enabled })
+        .eq("key", change.key);
+      if (error) throw new Error(error.message);
+    }
     return { ok: true };
   });
