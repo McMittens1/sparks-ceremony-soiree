@@ -47,8 +47,18 @@ export type PartyMember = {
   featured?: boolean;
   /** Optional per-person note revealed when the avatar is clicked. */
   note?: string;
-  /** Optional portrait. Drop a file in src/assets/party/ and import it, or use a URL. */
+  /** Optional portrait. Drop a file in src/assets/party/ and use it here. Ratio 3:4, background removed. */
   photo?: string;
+  /**
+   * Groomsman trading-card fields (role === "Groomsman" only). All optional —
+   * falls back to placeholder copy so cards render before these are written.
+   */
+  /** Short tier label, e.g. "Legendary". Defaults to "Groomsman" if unset. */
+  cardRarity?: string;
+  /** 3–4 short stat lines shown on the card back, e.g. { label: "Specialty", value: "Emergency best-man speech, no notes" }. */
+  cardAttributes?: { label: string; value: string }[];
+  /** One signature move shown on the card back, styled like a TCG attack box. */
+  cardAbility?: { name: string; body: string };
 };
 
 export const PARTY: PartyMember[] = [

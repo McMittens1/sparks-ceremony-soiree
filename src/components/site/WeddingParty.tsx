@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { PARTY, type PartyMember } from "@/lib/wedding-data";
+import { GroomsmanCard } from "@/components/site/GroomsmanCard";
 
 export function WeddingParty() {
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -28,7 +29,36 @@ export function WeddingParty() {
       </div>
 
       <PartyRow label="Bridesmaids" people={bridesmaids} expanded={expanded} onToggle={toggle} />
-      <PartyRow label="Groomsmen" people={groomsmen} expanded={expanded} onToggle={toggle} />
+
+      {groomsmen.length > 0 && (
+        <>
+          <div className="flex items-center justify-between flex-wrap gap-2" style={{ margin: "56px 0 20px" }}>
+            <p className="uppercase font-sans text-tan-deep" style={{ fontSize: 11, letterSpacing: "0.3em" }}>
+              Groomsmen
+            </p>
+            <p className="uppercase font-sans italic text-tan" style={{ fontSize: 10, letterSpacing: "0.2em" }}>
+              Tap a card to flip it →
+            </p>
+          </div>
+          <div
+            className="grid"
+            style={{ gridTemplateColumns: "repeat(auto-fill, minmax(232px, 1fr))", gap: 24 }}
+          >
+            {groomsmen.map((p, i) => (
+              <GroomsmanCard
+                key={p.name}
+                name={p.name}
+                rarity={p.cardRarity}
+                edition={`${String(i + 1).padStart(2, "0")}/${String(groomsmen.length).padStart(2, "0")}`}
+                photo={p.photo}
+                attributes={p.cardAttributes}
+                ability={p.cardAbility}
+              />
+            ))}
+          </div>
+        </>
+      )}
+
       <PartyRow label="Down the aisle first" people={kids} expanded={expanded} onToggle={toggle} maxWidth={280} />
 
       {/* Ushers intentionally hidden for now — data preserved in wedding-data.ts. */}
