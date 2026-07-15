@@ -32,7 +32,7 @@ export function GroomsmanCard({
   ability?: { name: string; body: string };
   /** Size multiplier — every dimension, padding, and font size scales together. */
   scale?: number;
-  /** Adds a second inset gold rule so the rarest card reads as more than "just bigger." */
+  /** Inverts the card to an ink ground with gold-on-gold detailing — a different finish, not just a bigger card. */
   legendary?: boolean;
 }) {
   const [flipped, setFlipped] = useState(false);
@@ -50,6 +50,14 @@ export function GroomsmanCard({
   const innerPad = s(14);
   const goldBorder = legendary ? Math.max(2, Math.round(s(1.5))) : 1;
 
+  // The legendary treatment is a different finish (ink ground, gold-on-gold),
+  // not a bigger version of the standard ivory card — reusing the same
+  // rgba-approximation-of-gold this file already leans on for gradients
+  // Tailwind utilities can't express (see the sheen overlay below).
+  const goldGlow = legendary
+    ? { boxShadow: "inset 0 0 0 1px rgba(217,201,160,0.35), inset 0 0 26px rgba(217,201,160,0.14)" }
+    : undefined;
+
   return (
     <div className="gm-card-perspective" style={{ width, height }}>
       <button
@@ -66,19 +74,27 @@ export function GroomsmanCard({
         {/* Front */}
         <div
           aria-hidden={flipped}
-          className="gm-card-face absolute inset-0 border border-hairline bg-ivory flex flex-col"
+          className={`gm-card-face absolute inset-0 border border-hairline flex flex-col ${legendary ? "bg-ink" : "bg-ivory"}`}
           style={{ padding: outerPad }}
         >
           <div
             className="border-gold flex-1 flex flex-col"
-            style={{ padding: innerPad, borderWidth: goldBorder, borderStyle: "solid" }}
+            style={{
+              padding: innerPad,
+              borderWidth: goldBorder,
+              borderStyle: "solid",
+              ...goldGlow,
+            }}
           >
             <div className="flex items-baseline justify-between">
-              <span className="font-sans text-tan" style={{ fontSize: s(9), letterSpacing: "0.1em" }}>
+              <span
+                className={`font-sans ${legendary ? "text-gold" : "text-tan"}`}
+                style={{ fontSize: s(9), letterSpacing: "0.1em" }}
+              >
                 {edition}
               </span>
               <span
-                className="font-sans uppercase text-lavender-deep"
+                className={`font-sans uppercase ${legendary ? "text-gold" : "text-lavender-deep"}`}
                 style={{ fontSize: s(9.5), letterSpacing: "0.2em", fontWeight: 600 }}
               >
                 {rarity ?? "Groomsman"}
@@ -86,13 +102,16 @@ export function GroomsmanCard({
             </div>
 
             <div
-              className="gm-card-photo flex-1 flex items-center justify-center relative overflow-hidden bg-lavender-wash"
-              style={{ isolation: "isolate", marginTop: s(8) }}
+              className={`gm-card-photo flex-1 flex items-center justify-center relative overflow-hidden ${legendary ? "bg-ink" : "bg-lavender-wash"}`}
+              style={{ isolation: "isolate", marginTop: s(8), ...goldGlow }}
             >
               {photo ? (
                 <img src={photo} alt="" className="w-full h-full object-cover" />
               ) : (
-                <span className="font-serif italic text-lavender-deep" style={{ fontSize: s(52) }}>
+                <span
+                  className={`font-serif italic ${legendary ? "text-gold" : "text-lavender-deep"}`}
+                  style={{ fontSize: s(52) }}
+                >
                   {initial}
                 </span>
               )}
@@ -108,21 +127,21 @@ export function GroomsmanCard({
             </div>
 
             <p
-              className="font-serif italic text-ink text-center"
+              className={`font-serif italic text-center ${legendary ? "text-ivory" : "text-ink"}`}
               style={{ fontSize: s(19), margin: `${s(12)}px 0 ${s(2)}px` }}
             >
               {name}
             </p>
             {role && (
               <p
-                className="font-sans uppercase text-tan-deep text-center"
+                className={`font-sans uppercase text-center ${legendary ? "text-gold" : "text-tan-deep"}`}
                 style={{ fontSize: s(9.5), letterSpacing: "0.2em", margin: `0 0 ${s(4)}px` }}
               >
                 {role}
               </p>
             )}
             <p
-              className="font-sans uppercase text-tan text-center"
+              className={`font-sans uppercase text-center ${legendary ? "text-gold" : "text-tan"}`}
               style={{ fontSize: s(9), letterSpacing: "0.18em", margin: 0 }}
             >
               Tap to flip →
@@ -133,15 +152,20 @@ export function GroomsmanCard({
         {/* Back */}
         <div
           aria-hidden={!flipped}
-          className="gm-card-face gm-card-face--back absolute inset-0 border border-hairline bg-ivory flex flex-col"
+          className={`gm-card-face gm-card-face--back absolute inset-0 border border-hairline flex flex-col ${legendary ? "bg-ink" : "bg-ivory"}`}
           style={{ padding: outerPad }}
         >
           <div
             className="border-gold flex-1 flex flex-col"
-            style={{ padding: innerPad, borderWidth: goldBorder, borderStyle: "solid" }}
+            style={{
+              padding: innerPad,
+              borderWidth: goldBorder,
+              borderStyle: "solid",
+              ...goldGlow,
+            }}
           >
             <p
-              className="font-serif italic text-ink text-center"
+              className={`font-serif italic text-center ${legendary ? "text-ivory" : "text-ink"}`}
               style={{ fontSize: s(15), margin: `0 0 ${s(14)}px` }}
             >
               {name}
@@ -151,13 +175,13 @@ export function GroomsmanCard({
               {attrs.map((a) => (
                 <div key={a.label} style={{ marginBottom: s(9) }}>
                   <p
-                    className="font-sans uppercase text-tan-deep"
+                    className={`font-sans uppercase ${legendary ? "text-gold" : "text-tan-deep"}`}
                     style={{ fontSize: s(9), letterSpacing: "0.14em", margin: 0 }}
                   >
                     {a.label}
                   </p>
                   <p
-                    className="font-serif italic text-ink-body"
+                    className={`font-serif italic ${legendary ? "text-ivory" : "text-ink-body"}`}
                     style={{ fontSize: s(12.5), margin: `${s(2)}px 0 0`, lineHeight: 1.4 }}
                   >
                     {a.value}
@@ -166,21 +190,30 @@ export function GroomsmanCard({
               ))}
             </div>
 
-            <div className="border border-hairline" style={{ padding: s(10), marginTop: "auto" }}>
+            <div
+              className={`border ${legendary ? "border-gold/40" : "border-hairline"}`}
+              style={{ padding: s(10), marginTop: "auto" }}
+            >
               <div className="flex items-center justify-between" style={{ marginBottom: s(4) }}>
                 <span
-                  className="font-sans uppercase text-ink"
+                  className={`font-sans uppercase ${legendary ? "text-ivory" : "text-ink"}`}
                   style={{ fontSize: s(10), letterSpacing: "0.12em", fontWeight: 600 }}
                 >
                   {move.name}
                 </span>
                 <span className="flex gap-1" aria-hidden="true">
-                  <span className="bg-lavender" style={{ width: s(5), height: s(5), transform: "rotate(45deg)" }} />
-                  <span className="bg-lavender" style={{ width: s(5), height: s(5), transform: "rotate(45deg)" }} />
+                  <span
+                    className={legendary ? "bg-gold" : "bg-lavender"}
+                    style={{ width: s(5), height: s(5), transform: "rotate(45deg)" }}
+                  />
+                  <span
+                    className={legendary ? "bg-gold" : "bg-lavender"}
+                    style={{ width: s(5), height: s(5), transform: "rotate(45deg)" }}
+                  />
                 </span>
               </div>
               <p
-                className="font-serif italic text-ink-body"
+                className={`font-serif italic ${legendary ? "text-ivory" : "text-ink-body"}`}
                 style={{ fontSize: s(11.5), margin: 0, lineHeight: 1.4 }}
               >
                 {move.body}
@@ -188,7 +221,7 @@ export function GroomsmanCard({
             </div>
 
             <p
-              className="font-sans uppercase text-tan text-center"
+              className={`font-sans uppercase text-center ${legendary ? "text-gold" : "text-tan"}`}
               style={{ fontSize: s(9), letterSpacing: "0.18em", margin: `${s(10)}px 0 0` }}
             >
               Tap to flip back →

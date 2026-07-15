@@ -43,8 +43,6 @@ export const REGISTRY: RegistryItem[] = [
 export type PartyMember = {
   name: string;
   role: string;
-  /** True for Maid of Honor + Best Man — the "standing closest" featured pair. */
-  featured?: boolean;
   /** Optional per-person note revealed when the avatar is clicked. */
   note?: string;
   /** Optional portrait. Drop a file in src/assets/party/ and use it here. Ratio 3:4, background removed. */
@@ -59,10 +57,19 @@ export type PartyMember = {
   cardAttributes?: { label: string; value: string }[];
   /** One signature move shown on the card back, styled like a TCG attack box. */
   cardAbility?: { name: string; body: string };
+  /**
+   * Magazine-cover fields (role "Bridesmaid" or "Maid of Honor" only). Both
+   * optional — falls back to placeholder copy so covers render before these
+   * are written.
+   */
+  /** Main cover line, e.g. "The One Who Always Says Yes to a Road Trip". */
+  coverHeadline?: string;
+  /** Short line under the headline, e.g. a one-sentence personal note. */
+  coverSubline?: string;
 };
 
 export const PARTY: PartyMember[] = [
-  { name: "Olyvia Hillman", role: "Maid of Honor", featured: true },
+  { name: "Olyvia Hillman", role: "Maid of Honor" },
   { name: "Melinda Reinke", role: "Bridesmaid" },
   { name: "Lesly Moreno", role: "Bridesmaid" },
   { name: "Bryce Marker", role: "Bridesmaid" },

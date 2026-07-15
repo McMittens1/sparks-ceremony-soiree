@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { PARTY, type PartyMember } from "@/lib/wedding-data";
 import { GroomsmanCard } from "@/components/site/GroomsmanCard";
+import { MagazineCover } from "@/components/site/MagazineCover";
 
 export function WeddingParty() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const toggle = (id: string) => setExpanded((prev) => (prev === id ? null : id));
 
-  const featured = PARTY.filter((p) => p.featured);
+  const moh = PARTY.find((p) => p.role === "Maid of Honor");
   const bridesmaids = PARTY.filter((p) => p.role === "Bridesmaid");
   const bestMan = PARTY.find((p) => p.role === "Best Man");
   const groomsmen = PARTY.filter((p) => p.role === "Groomsman");
@@ -15,29 +16,68 @@ export function WeddingParty() {
 
   return (
     <div>
-      <div className="flex items-center justify-between flex-wrap gap-2" style={{ margin: "0 0 24px" }}>
-        <p className="uppercase font-sans text-tan-deep" style={{ fontSize: 11, letterSpacing: "0.3em" }}>
-          Standing closest
-        </p>
-        <p className="uppercase font-sans italic text-tan" style={{ fontSize: 10, letterSpacing: "0.2em" }}>
-          Tap anyone for their story →
+      <div
+        className="flex items-center justify-between flex-wrap gap-2"
+        style={{ margin: "0 0 20px" }}
+      >
+        <p
+          className="uppercase font-sans text-tan-deep"
+          style={{ fontSize: 11, letterSpacing: "0.3em" }}
+        >
+          Bridesmaids
         </p>
       </div>
-      <div className="flex gap-14 flex-wrap">
-        {featured.map((p) => (
-          <Avatar key={p.name} p={p} size={128} isOpen={expanded === p.name} onToggle={() => toggle(p.name)} />
+
+      {moh && (
+        <div className="flex justify-center" style={{ marginBottom: 40 }}>
+          <MagazineCover
+            name={moh.name}
+            role={moh.role}
+            edition="1/1"
+            issueNumber="No. 01"
+            photo={moh.photo}
+            headline={moh.coverHeadline}
+            subline={moh.coverSubline}
+            scale={1.15}
+            collectorsEdition
+          />
+        </div>
+      )}
+
+      <div
+        className="grid"
+        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 24 }}
+      >
+        {bridesmaids.map((p, i) => (
+          <MagazineCover
+            key={p.name}
+            name={p.name}
+            role={p.role}
+            edition={`${String(i + 1).padStart(2, "0")}/${String(bridesmaids.length).padStart(2, "0")}`}
+            issueNumber={`No. ${String(i + 2).padStart(2, "0")}`}
+            photo={p.photo}
+            headline={p.coverHeadline}
+            subline={p.coverSubline}
+          />
         ))}
       </div>
 
-      <PartyRow label="Bridesmaids" people={bridesmaids} expanded={expanded} onToggle={toggle} />
-
       {groomsmen.length > 0 && (
         <>
-          <div className="flex items-center justify-between flex-wrap gap-2" style={{ margin: "56px 0 20px" }}>
-            <p className="uppercase font-sans text-tan-deep" style={{ fontSize: 11, letterSpacing: "0.3em" }}>
+          <div
+            className="flex items-center justify-between flex-wrap gap-2"
+            style={{ margin: "56px 0 20px" }}
+          >
+            <p
+              className="uppercase font-sans text-tan-deep"
+              style={{ fontSize: 11, letterSpacing: "0.3em" }}
+            >
               Groomsmen
             </p>
-            <p className="uppercase font-sans italic text-tan" style={{ fontSize: 10, letterSpacing: "0.2em" }}>
+            <p
+              className="uppercase font-sans italic text-tan"
+              style={{ fontSize: 10, letterSpacing: "0.2em" }}
+            >
               Tap a card to flip it →
             </p>
           </div>
@@ -52,7 +92,7 @@ export function WeddingParty() {
                 photo={bestMan.photo}
                 attributes={bestMan.cardAttributes}
                 ability={bestMan.cardAbility}
-                scale={1.3}
+                scale={1.1}
                 legendary
               />
             </div>
@@ -77,15 +117,28 @@ export function WeddingParty() {
         </>
       )}
 
-      <PartyRow label="Down the aisle first" people={kids} expanded={expanded} onToggle={toggle} maxWidth={280} />
+      <PartyRow
+        label="Down the aisle first"
+        hint="Tap anyone for their story →"
+        people={kids}
+        expanded={expanded}
+        onToggle={toggle}
+        maxWidth={280}
+      />
 
       {/* Ushers intentionally hidden for now — data preserved in wedding-data.ts. */}
       {false && ushers.length > 0 && (
         <div className="mt-14 pt-11 border-t border-hairline">
-          <p className="uppercase font-sans mb-4 text-tan-deep" style={{ fontSize: 11, letterSpacing: "0.3em" }}>
+          <p
+            className="uppercase font-sans mb-4 text-tan-deep"
+            style={{ fontSize: 11, letterSpacing: "0.3em" }}
+          >
             Ushers
           </p>
-          <p className="font-sans text-ink-body" style={{ fontSize: 16, lineHeight: 1.9, maxWidth: 1100 }}>
+          <p
+            className="font-sans text-ink-body"
+            style={{ fontSize: 16, lineHeight: 1.9, maxWidth: 1100 }}
+          >
             {ushers.map((u, i) => (
               <span key={u.name}>
                 {u.name}
@@ -101,12 +154,14 @@ export function WeddingParty() {
 
 function PartyRow({
   label,
+  hint,
   people,
   expanded,
   onToggle,
   maxWidth,
 }: {
   label: string;
+  hint?: string;
   people: PartyMember[];
   expanded: string | null;
   onToggle: (id: string) => void;
@@ -115,9 +170,25 @@ function PartyRow({
   if (people.length === 0) return null;
   return (
     <>
-      <p className="uppercase font-sans text-tan-deep" style={{ fontSize: 11, letterSpacing: "0.3em", margin: "56px 0 24px" }}>
-        {label}
-      </p>
+      <div
+        className="flex items-center justify-between flex-wrap gap-2"
+        style={{ margin: "56px 0 24px" }}
+      >
+        <p
+          className="uppercase font-sans text-tan-deep"
+          style={{ fontSize: 11, letterSpacing: "0.3em" }}
+        >
+          {label}
+        </p>
+        {hint && (
+          <p
+            className="uppercase font-sans italic text-tan"
+            style={{ fontSize: 10, letterSpacing: "0.2em" }}
+          >
+            {hint}
+          </p>
+        )}
+      </div>
       <div
         className="grid"
         style={{
@@ -128,7 +199,13 @@ function PartyRow({
         }}
       >
         {people.map((p) => (
-          <Avatar key={p.name} p={p} size={80} isOpen={expanded === p.name} onToggle={() => onToggle(p.name)} />
+          <Avatar
+            key={p.name}
+            p={p}
+            size={80}
+            isOpen={expanded === p.name}
+            onToggle={() => onToggle(p.name)}
+          />
         ))}
       </div>
     </>
@@ -146,7 +223,6 @@ function Avatar({
   isOpen: boolean;
   onToggle: () => void;
 }) {
-  const isFeatured = p.featured === true;
   const initial = p.name.charAt(0);
   const fontSize = size >= 128 ? 44 : 22;
   const label = (isOpen ? "Hide note about " : "Show note about ") + p.name;
@@ -160,41 +236,21 @@ function Avatar({
         className="cursor-pointer inline-block"
       >
         <div
-          className={`rounded-full flex items-center justify-center mx-auto border ${isFeatured ? "border-lavender-deep" : "border-tan"}`}
-          style={{
-            width: size,
-            height: size,
-            borderWidth: isFeatured ? 1.5 : 1,
-          }}
+          className="rounded-full flex items-center justify-center mx-auto border border-tan"
+          style={{ width: size, height: size, borderWidth: 1 }}
         >
-          <span className={`font-serif italic ${isFeatured ? "text-lavender-deep" : "text-tan-deep"}`} style={{ fontSize }}>
+          <span className="font-serif italic text-tan-deep" style={{ fontSize }}>
             {initial}
           </span>
         </div>
-        <p
-          className="font-serif italic text-ink"
-          style={{
-            fontSize: isFeatured ? 22 : 14,
-            margin: isFeatured ? "18px 0 0" : "12px 0 0",
-          }}
-        >
+        <p className="font-serif italic text-ink" style={{ fontSize: 14, margin: "12px 0 0" }}>
           {p.name}
         </p>
-        {isFeatured && (
-          <p className="uppercase font-sans text-tan-deep" style={{ fontSize: 10, letterSpacing: "0.26em", margin: "4px 0 0" }}>
-            {p.role}
-          </p>
-        )}
       </button>
       {isOpen && (
         <p
           className="font-sans italic mx-auto text-tan"
-          style={{
-            fontSize: isFeatured ? 13 : 11,
-            lineHeight: 1.6,
-            marginTop: isFeatured ? 14 : 8,
-            maxWidth: isFeatured ? 200 : undefined,
-          }}
+          style={{ fontSize: 11, lineHeight: 1.6, marginTop: 8 }}
         >
           {p.note ?? `(Add a note about ${p.name} here.)`}
         </p>
