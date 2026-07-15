@@ -11,6 +11,40 @@ const DESCRIPTION =
 const URL_ = "https://morenowedding2026.com";
 const UID = "wedding-2026-10-10@morenowedding2026.com";
 
+// RFC 5545 §3.3.11 TEXT escaping: backslash, semicolon, comma, and newline.
+// Backslashes must be escaped first so the other escapes aren't themselves
+// re-escaped.
+function escapeText(value: string): string {
+  return value
+    .replace(/\\/g, "\\\\")
+    .replace(/;/g, "\\;")
+    .replace(/,/g, "\\,")
+    .replace(/\n/g, "\\n");
+}
+
+// RFC 5545 §3.1 line folding: content lines over 75 octets are split by
+// inserting a CRLF followed by a single leading space before continuing.
+// Folds only ever happen on whole-character boundaries so a multi-byte
+// UTF-8 sequence is never split across the fold.
+function foldLine(line: string): string {
+  const octetLength = (s: string) => new TextEncoder().encode(s).length;
+  if (octetLength(line) <= 75) return line;
+
+  const folded: string[] = [];
+  let current = "";
+  for (const char of line) {
+    const candidate = current + char;
+    if (current !== "" && octetLength(candidate) > 75) {
+      folded.push(current);
+      current = " " + char;
+    } else {
+      current = candidate;
+    }
+  }
+  if (current) folded.push(current);
+  return folded.join("\r\n");
+}
+
 function ics(): string {
   const stamp = new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
   return [
@@ -39,15 +73,17 @@ function ics(): string {
     `DTSTAMP:${stamp}`,
     `DTSTART;TZID=${TZID}:${DTSTART}`,
     `DTEND;TZID=${TZID}:${DTEND}`,
-    `SUMMARY:${SUMMARY}`,
-    `LOCATION:${LOCATION.replace(/,/g, "\\,")}`,
-    `DESCRIPTION:${DESCRIPTION.replace(/,/g, "\\,")}`,
+    `SUMMARY:${escapeText(SUMMARY)}`,
+    `LOCATION:${escapeText(LOCATION)}`,
+    `DESCRIPTION:${escapeText(DESCRIPTION)}`,
     `URL:${URL_}`,
     "STATUS:CONFIRMED",
     "END:VEVENT",
     "END:VCALENDAR",
     "",
-  ].join("\r\n");
+  ]
+    .map(foldLine)
+    .join("\r\n");
 }
 
 export const Route = createFileRoute("/api/public/wedding.ics")({

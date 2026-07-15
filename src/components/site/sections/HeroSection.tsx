@@ -130,7 +130,7 @@ export function HeroSection() {
             />
           </div>
           <p
-            className="uppercase font-sans text-tan"
+            className="uppercase font-sans text-tan-deep"
             style={{
               fontSize: "clamp(9px, 1.2vw, 12px)",
               letterSpacing: "0.42em",

@@ -5,14 +5,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/i18n/context";
 import { Reveal } from "@/components/site/Reveal";
 import { claimAdminIfFirst } from "@/lib/admin.functions";
+import { SITE } from "@/lib/site";
+import { buildMeta } from "@/lib/seo";
 
 
 export const Route = createFileRoute("/portal-ga-2026")({
   ssr: false,
-  head: () => ({ meta: [
-    { title: "Admin sign-in" },
-    { name: "robots", content: "noindex,nofollow" },
-  ]}),
+  head: () =>
+    buildMeta({
+      title: "Admin sign-in",
+      description: "Private sign-in page for wedding site administrators.",
+      url: `${SITE.siteUrl}/portal-ga-2026`,
+      robots: "noindex,nofollow",
+    }),
   component: AuthPage,
 });
 
@@ -40,8 +45,12 @@ function AuthPage() {
   }, [nav]);
 
   async function goAdmin() {
-    try { await claim(); } catch {}
-    nav({ to: "/admin" });
+    try {
+      await claim();
+      nav({ to: "/admin" });
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : t.rsvp.errGeneric);
+    }
   }
 
   async function onSubmit(e: React.FormEvent) {

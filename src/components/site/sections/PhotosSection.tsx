@@ -422,12 +422,12 @@ function PhotoInput({
       autoComplete={autoComplete}
       value={value}
       onChange={onChange}
-      className="font-serif text-ink border-b border-tan"
+      className="font-serif text-ink border-b border-tan-deep"
       style={{
         width: "100%",
         height: 30,
         border: "none",
-        borderBottom: "1px solid var(--color-tan)",
+        borderBottom: "1px solid var(--color-tan-deep)",
         background: "transparent",
         fontSize: 17,
         marginTop: 8,

@@ -973,7 +973,7 @@ function PhotoLightbox({
       </div>
       <div className="flex-1 flex items-center gap-3 w-full max-w-5xl" onClick={(e) => e.stopPropagation()}>
         <button onClick={onPrev} disabled={index === 0} className="text-2xl text-muted-foreground disabled:opacity-30 px-2">←</button>
-        <img src={photo.url} alt={photo.caption ?? ""} className="flex-1 max-h-[80vh] object-contain" />
+        <img src={photo.url} alt={photo.caption || "Uploaded wedding photo"} className="flex-1 max-h-[80vh] object-contain" />
         <button onClick={onNext} disabled={index === total - 1} className="text-2xl text-muted-foreground disabled:opacity-30 px-2">→</button>
       </div>
       <div className="w-full max-w-5xl pt-3 text-sm text-center">

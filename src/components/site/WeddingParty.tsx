@@ -20,12 +20,12 @@ export function WeddingParty() {
         className="flex items-center justify-between flex-wrap gap-2"
         style={{ margin: "0 0 20px" }}
       >
-        <p
+        <h3
           className="uppercase font-sans text-tan-deep"
           style={{ fontSize: 11, letterSpacing: "0.3em" }}
         >
           Bridesmaids
-        </p>
+        </h3>
       </div>
 
       {moh && (
@@ -72,14 +72,14 @@ export function WeddingParty() {
             className="flex items-center justify-between flex-wrap gap-2"
             style={{ margin: "56px 0 20px" }}
           >
-            <p
+            <h3
               className="uppercase font-sans text-tan-deep"
               style={{ fontSize: 11, letterSpacing: "0.3em" }}
             >
               Groomsmen
-            </p>
+            </h3>
             <p
-              className="uppercase font-sans italic text-tan"
+              className="uppercase font-sans italic text-tan-deep"
               style={{ fontSize: 10, letterSpacing: "0.2em" }}
             >
               Tap a card to flip it →
@@ -186,7 +186,7 @@ function PartyRow({
         </p>
         {hint && (
           <p
-            className="uppercase font-sans italic text-tan"
+            className="uppercase font-sans italic text-tan-deep"
             style={{ fontSize: 10, letterSpacing: "0.2em" }}
           >
             {hint}
@@ -240,7 +240,7 @@ function Avatar({
         className="cursor-pointer inline-block"
       >
         <div
-          className="rounded-full flex items-center justify-center mx-auto border border-tan"
+          className="rounded-full flex items-center justify-center mx-auto border border-tan-deep"
           style={{ width: size, height: size, borderWidth: 1 }}
         >
           <span className="font-serif italic text-tan-deep" style={{ fontSize }}>
@@ -253,7 +253,7 @@ function Avatar({
       </button>
       {isOpen && (
         <p
-          className="font-sans italic mx-auto text-tan"
+          className="font-sans italic mx-auto text-tan-deep"
           style={{ fontSize: 11, lineHeight: 1.6, marginTop: 8 }}
         >
           {p.note ?? `(Add a note about ${p.name} here.)`}

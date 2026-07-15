@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useT } from "@/i18n/context";
 import { SITE } from "@/lib/site";
+import { buildMeta } from "@/lib/seo";
 import {
   getRsvpByToken,
   updateRsvpByToken,
@@ -14,12 +15,13 @@ import {
 
 export const Route = createFileRoute("/rsvp/edit/$token")({
   ssr: false,
-  head: () => ({
-    meta: [
-      { title: "Edit your RSVP · Geovanni & Addison" },
-      { name: "robots", content: "noindex,nofollow" },
-    ],
-  }),
+  head: ({ params }) =>
+    buildMeta({
+      title: "Edit your RSVP · Geovanni & Addison",
+      description: "Update your RSVP details using your personal edit link.",
+      url: `${SITE.siteUrl}/rsvp/edit/${params.token}`,
+      robots: "noindex,nofollow",
+    }),
   component: EditRsvpPage,
 });
 
@@ -29,6 +31,7 @@ const HAIRLINE = "var(--color-hairline)";
 const LAV = "var(--color-lavender)";
 const LAV_DEEP = "var(--color-lavender-deep)";
 const TAN = "var(--color-tan)";
+const TAN_DEEP = "var(--color-tan-deep)";
 const SOFT = "var(--color-ink-soft)";
 
 const inputStyle: React.CSSProperties = {
@@ -37,9 +40,8 @@ const inputStyle: React.CSSProperties = {
   fontSize: 19,
   color: INK,
   border: "none",
-  borderBottom: `1px solid ${TAN}`,
+  borderBottom: `1px solid ${TAN_DEEP}`,
   background: "transparent",
-  outline: "none",
   width: "100%",
   padding: "0 0 10px",
   boxSizing: "border-box",
@@ -228,7 +230,7 @@ function EditRsvpPage() {
                           <Pill active={a.attending === true} onClick={() => updateAttendee(i, { attending: true })} label={t.rsvp.attending} />
                           <Pill active={a.attending === false} onClick={() => updateAttendee(i, { attending: false })} label={t.rsvp.notAttending} />
                         </div>
-                        <button type="button" onClick={() => removeAttendee(i)} className="uppercase font-sans" style={{ fontSize: 10, letterSpacing: "0.2em", color: TAN }}>
+                        <button type="button" onClick={() => removeAttendee(i)} className="uppercase font-sans" style={{ fontSize: 10, letterSpacing: "0.2em", color: TAN_DEEP }}>
                           {t.rsvp.remove}
                         </button>
                       </div>
@@ -242,10 +244,78 @@ function EditRsvpPage() {
 
               <section className="space-y-3">
                 <p className="uppercase font-sans" style={{ fontSize: 11, letterSpacing: "0.3em", color: LAV_DEEP }}>{t.rsvp.contactTitle}</p>
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t.rsvp.email} style={inputStyle} maxLength={200} />
-                <input value={songRequest} onChange={(e) => setSongRequest(e.target.value)} placeholder="Song request (optional)" style={inputStyle} maxLength={200} />
-                <textarea value={message} onChange={(e) => setMessage(e.target.value)} placeholder={t.rsvp.message} maxLength={1000}
-                  style={{ ...inputStyle, borderBottom: `1px solid ${TAN}`, minHeight: 80, resize: "vertical" }} />
+                <div>
+                  <label
+                    htmlFor="edit-rsvp-email"
+                    className="block uppercase font-sans"
+                    style={{
+                      fontSize: 11,
+                      letterSpacing: "0.3em",
+                      color: LAV_DEEP,
+                      margin: "0 0 6px",
+                    }}
+                  >
+                    {t.rsvp.email}
+                  </label>
+                  <input
+                    id="edit-rsvp-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder={t.rsvp.email}
+                    style={inputStyle}
+                    maxLength={200}
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="edit-rsvp-song"
+                    className="block uppercase font-sans"
+                    style={{
+                      fontSize: 11,
+                      letterSpacing: "0.3em",
+                      color: LAV_DEEP,
+                      margin: "0 0 6px",
+                    }}
+                  >
+                    Song request (optional)
+                  </label>
+                  <input
+                    id="edit-rsvp-song"
+                    value={songRequest}
+                    onChange={(e) => setSongRequest(e.target.value)}
+                    placeholder="Song request (optional)"
+                    style={inputStyle}
+                    maxLength={200}
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="edit-rsvp-message"
+                    className="block uppercase font-sans"
+                    style={{
+                      fontSize: 11,
+                      letterSpacing: "0.3em",
+                      color: LAV_DEEP,
+                      margin: "0 0 6px",
+                    }}
+                  >
+                    {t.rsvp.message}
+                  </label>
+                  <textarea
+                    id="edit-rsvp-message"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder={t.rsvp.message}
+                    maxLength={1000}
+                    style={{
+                      ...inputStyle,
+                      borderBottom: `1px solid ${TAN_DEEP}`,
+                      minHeight: 80,
+                      resize: "vertical",
+                    }}
+                  />
+                </div>
                 <label className="flex items-center gap-2 font-sans" style={{ fontSize: 13, color: SOFT }}>
                   <input type="checkbox" checked={addressConfirmed} onChange={(e) => setAddressConfirmed(e.target.checked)} />
                   Address on file is correct

@@ -1,6 +1,8 @@
 import { createFileRoute, useLocation } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 import heroPortrait from "@/assets/engagement/hero-portrait.png.asset.json";
+import { SITE } from "@/lib/site";
+import { buildMeta } from "@/lib/seo";
 import { HeroSection } from "@/components/site/sections/HeroSection";
 import { CountdownSection } from "@/components/site/sections/CountdownSection";
 import { StorySection } from "@/components/site/sections/StorySection";
@@ -12,18 +14,28 @@ import { RegistrySection } from "@/components/site/sections/RegistrySection";
 import { FaqSection } from "@/components/site/sections/FaqSection";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { property: "og:image", content: `https://sparks-ceremony-soiree.lovable.app${heroPortrait.url}` },
-      { property: "og:image:alt", content: "Pencil illustration of Geovanni Moreno and Addison Hillman." },
-      { property: "og:url", content: "https://sparks-ceremony-soiree.lovable.app/" },
-      { name: "twitter:image", content: `https://sparks-ceremony-soiree.lovable.app${heroPortrait.url}` },
-    ],
-    links: [
-      { rel: "canonical", href: "https://sparks-ceremony-soiree.lovable.app/" },
-      { rel: "preload", as: "image", href: heroPortrait.url, fetchpriority: "high" },
-    ],
-  }),
+  head: () => {
+    const base = buildMeta({
+      title: "Geovanni & Addison · October 10, 2026",
+      description:
+        "The wedding website for Geovanni Moreno & Addison Hillman. Schedule, travel, registry, and RSVP for October 10, 2026 at Sparks' Barn, Louisville, NE.",
+      image: `${SITE.siteUrl}${heroPortrait.url}`,
+      url: `${SITE.siteUrl}/`,
+    });
+    return {
+      meta: [
+        ...base.meta,
+        {
+          property: "og:image:alt",
+          content: "Pencil illustration of Geovanni Moreno and Addison Hillman.",
+        },
+      ],
+      links: [
+        ...base.links,
+        { rel: "preload", as: "image", href: heroPortrait.url, fetchpriority: "high" },
+      ],
+    };
+  },
   component: Home,
 });
 

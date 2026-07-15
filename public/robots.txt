@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /admin
+Disallow: /portal-ga-2026
+Disallow: /rsvp/edit/
+Sitemap: https://sparks-ceremony-soiree.lovable.app/sitemap.xml

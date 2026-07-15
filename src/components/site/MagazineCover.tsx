@@ -55,7 +55,11 @@ export function MagazineCover({
         style={{ height: "80%" }}
       >
         {photo ? (
-          <img src={photo} alt="" className="w-full h-full object-contain object-bottom" />
+          <img
+            src={photo}
+            alt={`${name}, ${role}`}
+            className="w-full h-full object-contain object-bottom"
+          />
         ) : (
           <span
             aria-hidden="true"
@@ -119,7 +123,7 @@ export function MagazineCover({
           {MASTHEAD}
         </p>
         <p
-          className={`uppercase font-sans ${collectorsEdition ? "text-gold" : "text-tan"}`}
+          className={`uppercase font-sans ${collectorsEdition ? "text-gold" : "text-tan-deep"}`}
           style={{
             fontSize: s(8),
             letterSpacing: "0.22em",

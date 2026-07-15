@@ -24,9 +24,12 @@ export function FaqSection() {
             ] as const
           ).map((col) => (
             <div key={col.title}>
-              <Eyebrow color="lavender-deep" style={{ marginBottom: 8 }}>
+              <h3
+                className="uppercase font-sans text-lavender-deep"
+                style={{ margin: 0, fontSize: 11, letterSpacing: "0.3em", marginBottom: 8 }}
+              >
                 {col.title}
-              </Eyebrow>
+              </h3>
               {col.items.map((item, i) => (
                 <details
                   key={i}
@@ -67,7 +70,7 @@ export function FaqSection() {
         <Eyebrow color="lavender-deep" size="lg" style={{ marginBottom: 26 }}>
           See you soon
         </Eyebrow>
-        <h2
+        <h3
           className="font-serif italic mx-auto text-ink"
           style={{
             fontWeight: 500,
@@ -78,7 +81,7 @@ export function FaqSection() {
           }}
         >
           Won&rsquo;t be the same without you.
-        </h2>
+        </h3>
         <div style={{ marginTop: 44 }}>
           <Link
             to="/rsvp"

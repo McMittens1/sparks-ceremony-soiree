@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useT } from "@/i18n/context";
 import { useFeatureFlag } from "@/hooks/use-feature-flags";
 import { SITE } from "@/lib/site";
+import { buildMeta } from "@/lib/seo";
 import {
   lookupGuest,
   getGuestBySlug,
@@ -18,14 +19,14 @@ export const Route = createFileRoute("/rsvp")({
   validateSearch: (s: Record<string, unknown>) => ({
     g: typeof s.g === "string" ? s.g : undefined,
   }),
-  head: () => ({
-    meta: [
-      { title: "RSVP · Geovanni & Addison" },
-      { name: "description", content: "Respond to our wedding invitation. Please reply by September 15, 2026." },
-      { property: "og:title", content: "RSVP · Geovanni & Addison" },
-      { property: "og:description", content: "Respond to our wedding invitation." },
-    ],
-  }),
+  head: () =>
+    buildMeta({
+      title: "RSVP · Geovanni & Addison",
+      description: "Respond to our wedding invitation. Please reply by September 15, 2026.",
+      image:
+        "https://storage.googleapis.com/gpt-engineer-file-uploads/QgOLQ93F1TPGT6HHK39DmJ7E6bY2/social-images/social-1783945112817-IMG_1610.webp",
+      url: `${SITE.siteUrl}/rsvp`,
+    }),
   component: RsvpPage,
 });
 
@@ -40,6 +41,7 @@ const HAIRLINE = "var(--color-hairline)";
 const LAV = "var(--color-lavender)";
 const LAV_DEEP = "var(--color-lavender-deep)";
 const TAN = "var(--color-tan)";
+const TAN_DEEP = "var(--color-tan-deep)";
 const BODY = "var(--color-ink-body)";
 const SOFT = "var(--color-ink-soft)";
 
@@ -50,9 +52,8 @@ const inputStyle: React.CSSProperties = {
   fontSize: 19,
   color: INK,
   border: "none",
-  borderBottom: `1px solid ${TAN}`,
+  borderBottom: `1px solid ${TAN_DEEP}`,
   background: "transparent",
-  outline: "none",
   width: "100%",
   padding: "0 0 10px",
   boxSizing: "border-box",
@@ -259,7 +260,7 @@ function RsvpPage() {
           {isLate && (
             <p
               className="text-center font-serif italic"
-              style={{ fontSize: 14, color: LAV, marginTop: 10 }}
+              style={{ fontSize: 14, color: LAV_DEEP, marginTop: 10 }}
             >
               Past the deadline — we&rsquo;ll do our best to accommodate you.
             </p>
@@ -371,7 +372,7 @@ function RsvpPage() {
 
               {matches && matches.length > 1 && (
                 <div className="mt-8 space-y-2" role="group" aria-label="Matching guests">
-                  <p style={eyebrow}>Is this you?</p>
+                  <p style={{ ...eyebrow, color: TAN_DEEP }}>Is this you?</p>
                   {matches.map((m) => (
                     <button
                       key={m.slug}
@@ -411,7 +412,7 @@ function RsvpPage() {
               {existingRsvp && (
                 <p
                   className="uppercase font-sans"
-                  style={{ fontSize: 10, letterSpacing: "0.2em", color: LAV }}
+                  style={{ fontSize: 10, letterSpacing: "0.2em", color: LAV_DEEP }}
                 >
                   Editing your response — last saved{" "}
                   {new Date(existingRsvp.updated_at).toLocaleDateString()}.
@@ -477,7 +478,7 @@ function RsvpPage() {
                           style={{
                             fontSize: 10,
                             letterSpacing: "0.2em",
-                            color: TAN,
+                            color: TAN_DEEP,
                           }}
                         >
                           {t.rsvp.remove}
@@ -645,7 +646,7 @@ function RsvpPage() {
                     style={{
                       ...inputStyle,
                       paddingBottom: 8,
-                      borderBottom: `1px solid ${TAN}`,
+                      borderBottom: `1px solid ${TAN_DEEP}`,
                       resize: "vertical",
                     }}
                   />
@@ -671,7 +672,7 @@ function RsvpPage() {
                     setErr(null);
                   }}
                   className="uppercase font-sans"
-                  style={{ fontSize: 10, letterSpacing: "0.2em", color: TAN }}
+                  style={{ fontSize: 10, letterSpacing: "0.2em", color: TAN_DEEP }}
                 >
                   ← {t.common.back}
                 </button>
@@ -724,7 +725,7 @@ function RsvpPage() {
                 <Link
                   to="/"
                   className="uppercase font-sans"
-                  style={{ fontSize: 10, letterSpacing: "0.25em", color: TAN }}
+                  style={{ fontSize: 10, letterSpacing: "0.25em", color: TAN_DEEP }}
                 >
                   Back to the site →
                 </Link>

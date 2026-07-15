@@ -1,6 +1,8 @@
 export const SITE = {
   couple: "Geovanni & Addison",
   coupleShort: "G & A",
+  // Absolute production URL, used to build canonical links and og:url/twitter:image values.
+  siteUrl: "https://sparks-ceremony-soiree.lovable.app",
   partnerA: "Geovanni Moreno",
   partnerB: "Addison Hillman",
   venue: "Sparks' Barn",

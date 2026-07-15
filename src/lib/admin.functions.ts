@@ -1,12 +1,21 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
 import { z } from "zod";
+
+// Shared with the client-side route guard in `_authenticated/route.tsx` so
+// there's a single source of truth for "does this user hold the admin role"
+// — not a security boundary change, just avoiding a duplicated query.
+export async function hasAdminRole(sb: SupabaseClient<Database>, userId: string): Promise<boolean> {
+  const { data, error } = await sb
+    .from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
+  return !error && !!data;
+}
 
 async function ensureAdmin(userId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin
-    .from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
-  if (error || !data) throw new Error("Forbidden");
+  if (!(await hasAdminRole(supabaseAdmin, userId))) throw new Error("Forbidden");
   return supabaseAdmin;
 }
 

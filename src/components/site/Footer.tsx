@@ -10,14 +10,17 @@ export function Footer() {
           <span className="diamond" />
           <span className="font-serif italic text-[26px] text-ink">A</span>
         </div>
-        <p className="mt-2.5 uppercase text-tan" style={{ fontSize: 10, letterSpacing: "0.24em" }}>
+        <p
+          className="mt-2.5 uppercase text-tan-deep"
+          style={{ fontSize: 10, letterSpacing: "0.24em" }}
+        >
           October · 2026
         </p>
       </div>
-      <p className="uppercase text-tan" style={{ fontSize: 10, letterSpacing: "0.24em" }}>
+      <p className="uppercase text-tan-deep" style={{ fontSize: 10, letterSpacing: "0.24em" }}>
         10 · 10 · 26
       </p>
-      <p className="uppercase text-tan" style={{ fontSize: 10, letterSpacing: "0.24em" }}>
+      <p className="uppercase text-tan-deep" style={{ fontSize: 10, letterSpacing: "0.24em" }}>
         {t.footer.made}
       </p>
     </footer>

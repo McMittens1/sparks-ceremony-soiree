@@ -88,7 +88,7 @@ export function GroomsmanCard({
           >
             <div className="flex items-baseline justify-between">
               <span
-                className={`font-sans ${legendary ? "text-gold" : "text-tan"}`}
+                className={`font-sans ${legendary ? "text-gold" : "text-tan-deep"}`}
                 style={{ fontSize: s(9), letterSpacing: "0.1em" }}
               >
                 {edition}
@@ -106,7 +106,11 @@ export function GroomsmanCard({
               style={{ isolation: "isolate", marginTop: s(8), ...goldGlow }}
             >
               {photo ? (
-                <img src={photo} alt="" className="w-full h-full object-cover" />
+                <img
+                  src={photo}
+                  alt={role ? `${name}, ${role}` : name}
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 <span
                   className={`font-serif italic ${legendary ? "text-gold" : "text-lavender-deep"}`}
@@ -141,7 +145,7 @@ export function GroomsmanCard({
               </p>
             )}
             <p
-              className={`font-sans uppercase text-center ${legendary ? "text-gold" : "text-tan"}`}
+              className={`font-sans uppercase text-center ${legendary ? "text-gold" : "text-tan-deep"}`}
               style={{ fontSize: s(9), letterSpacing: "0.18em", margin: 0 }}
             >
               Tap to flip →
@@ -221,7 +225,7 @@ export function GroomsmanCard({
             </div>
 
             <p
-              className={`font-sans uppercase text-center ${legendary ? "text-gold" : "text-tan"}`}
+              className={`font-sans uppercase text-center ${legendary ? "text-gold" : "text-tan-deep"}`}
               style={{ fontSize: s(9), letterSpacing: "0.18em", margin: `${s(10)}px 0 0` }}
             >
               Tap to flip back →
