@@ -22,6 +22,7 @@ import {
   unlockGuestPhoneVerify,
   type AdminGuestRow,
   type PartyMember,
+  type ImportRowResult,
 } from "@/lib/rsvp.functions";
 import { getFeatureFlags, setFeatureFlags, type FeatureFlag } from "@/lib/feature-flags.functions";
 import { Switch } from "@/components/ui/switch";
@@ -214,52 +215,83 @@ function RsvpsPanel() {
 
   // The pre-invitation link for TextMyWedding — lands directly on the
   // household's phone-verification step, skipping name search. Long-lived
-  // (see VERIFY_LINK_TTL_MS), safe to send well before RSVP opens.
+  // (see VERIFY_LINK_TTL_MS), safe to send well before RSVP opens. Built
+  // from window.location.origin — fine for this on-screen copy-link
+  // button (an admin is always looking at it from wherever they're
+  // logged in), but NOT safe to reuse for the TextMyWedding export below,
+  // which must always resolve to the real production domain regardless
+  // of where it's generated from — see buildProdVerifyUrl.
   const buildVerifyUrl = useCallback((row: AdminGuestRow) => {
     const path = `/rsvp?t=${row.verify_token}`;
     if (typeof window === "undefined") return path;
     return `${window.location.origin}${path}`;
   }, []);
 
-  function toCsv(list: AdminGuestRow[]) {
-    const header = [
-      "primary_name", "slug", "status", "attending_names", "child_count",
-      "phone", "email", "address_confirmed",
-      "address_line1", "address_line2", "city", "state", "postal_code", "country",
-      "song_request", "message", "submitted_at", "rsvp_url", "verify_url",
-    ];
-    const esc = (s: string | null | undefined) => {
-      const v = s ?? "";
-      return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
-    };
-    const body = list.map((r) => {
-      const attending = r.rsvp?.attendees.filter((a) => a.attending) ?? [];
-      const addr = r.rsvp?.address ?? {
-        line1: r.address_line1, line2: r.address_line2, city: r.city,
-        state: r.state, postal_code: r.postal_code, country: r.country,
-      };
-      return [
-        r.primary_name, r.slug, r.rsvp?.status ?? "no_response",
-        attending.filter((a) => !a.is_child).map((a) => a.name).join("; "),
-        String(attending.filter((a) => a.is_child).length),
-        r.phone, r.email, r.rsvp?.address_confirmed ? "yes" : "no",
-        addr.line1, addr.line2, addr.city, addr.state, addr.postal_code, addr.country,
-        r.rsvp?.song_request, r.rsvp?.message, r.rsvp?.submitted_at,
-        buildRsvpUrl(r), buildVerifyUrl(r),
-      ].map((v) => esc(typeof v === "string" ? v : v ?? "")).join(",");
-    });
-    return [header.join(","), ...body].join("\n");
-  }
+  const membersField = (members: PartyMember[]) =>
+    members.map((m) => (m.is_child ? `${m.name} (child)` : m.name)).join("; ");
 
-  function downloadCsv(list: AdminGuestRow[], suffix = "") {
-    const csv = toCsv(list);
+  const attendeesField = (rsvp: AdminGuestRow["rsvp"]) =>
+    (rsvp?.attendees ?? [])
+      .map((a) => {
+        const tags = [a.is_child ? "child" : null, a.attending ? null : "declined"].filter(Boolean);
+        return tags.length ? `${a.name} (${tags.join(", ")})` : a.name;
+      })
+      .join("; ");
+
+  function downloadCsv(csv: string, name: string) {
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `rsvps${suffix}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `${name}-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  // Complete Master CSV — the full, round-trippable backup. The first 12
+  // columns exactly match Master Import's columns (same names, same
+  // shapes), so this file can be re-imported as-is; everything after
+  // is read-only RSVP/audit data, never re-imported.
+  function toMasterCsv(list: AdminGuestRow[]) {
+    const header = [
+      "household_name", "slug", "phone", "members", "email",
+      "address_line1", "address_line2", "city", "state", "postal_code", "country", "invite_notes",
+      "rsvp_status", "rsvp_attendees", "address_confirmed", "song_request", "rsvp_message", "rsvp_submitted_at",
+      "edit_url", "verify_url",
+      "phone_verify_last_success_at", "address_confirmed_at", "address_updated_at", "created_at", "updated_at",
+    ];
+    const body = list.map((r) => [
+      r.primary_name, r.slug, r.phone, membersField(r.party_members), r.email,
+      r.address_line1, r.address_line2, r.city, r.state, r.postal_code, r.country, r.invite_notes,
+      r.rsvp?.status ?? "no_response", attendeesField(r.rsvp), r.rsvp?.address_confirmed ? "yes" : "no",
+      r.rsvp?.song_request, r.rsvp?.message, r.rsvp?.submitted_at,
+      buildRsvpUrl(r), buildVerifyUrl(r),
+      r.phone_verify_last_success_at, r.address_confirmed_at, r.address_updated_at, r.created_at, r.updated_at,
+    ].map((v) => escCsv(typeof v === "string" ? v : v ?? "")).join(","));
+    return [header.join(","), ...body].join("\n");
+  }
+
+  // TextMyWedding export — their fixed format, kept entirely separate from
+  // the master export above. Built from SITE.siteUrl, not
+  // window.location.origin/buildVerifyUrl, so the link is always
+  // production regardless of where this export runs from.
+  function toTextMyWeddingCsv(list: AdminGuestRow[]) {
+    const header = ["First Name", "Last Name", "Phone", "Email", "Address", "Apt/Unit", "City", "State", "Zip"];
+    const body = list.map((r) => {
+      const isUS = !r.country?.trim() || /^us(a)?$/i.test(r.country.trim());
+      return [
+        r.primary_name,
+        `${SITE.siteUrl}/rsvp?t=${r.verify_token}`,
+        r.phone,
+        r.email ?? "",
+        isUS ? r.address_line1 ?? "" : "",
+        isUS ? r.address_line2 ?? "" : "",
+        isUS ? r.city ?? "" : "",
+        isUS ? r.state ?? "" : "",
+        isUS ? r.postal_code ?? "" : "",
+      ].map((v) => escCsv(v)).join(",");
+    });
+    return [header.join(","), ...body].join("\n");
   }
 
   async function copySelectedLinks() {
@@ -351,27 +383,42 @@ function RsvpsPanel() {
           onClick={() => setImportOpen(true)}
           className="text-xs uppercase tracking-[0.2em] border border-border text-foreground px-3 py-2"
         >
-          Import CSV
+          Import Master CSV
         </button>
         <button
-          onClick={() => downloadCsv(filtered, "-filtered")}
+          onClick={() => downloadCsv(toMasterCsv(filtered), "master-filtered")}
           className="text-xs uppercase tracking-[0.2em] border border-border text-foreground px-3 py-2"
-          title="Export the currently filtered rows"
+          title="Complete backup of the currently filtered rows — importable"
         >
-          Export filtered
+          Export Master CSV (filtered)
         </button>
         <button
-          onClick={() => rows && downloadCsv(rows)}
+          onClick={() => rows && downloadCsv(toMasterCsv(rows), "master-all")}
           className="text-xs uppercase tracking-[0.2em] border border-border text-foreground px-3 py-2"
+          title="Complete backup of every household — importable"
         >
-          {t.admin.exportCsv} (all)
+          Export Master CSV (all)
+        </button>
+        <button
+          onClick={() => downloadCsv(toTextMyWeddingCsv(filtered), "textmywedding")}
+          className="text-xs uppercase tracking-[0.2em] border border-border text-foreground px-3 py-2"
+          title="TextMyWedding's exact column format — not a backup"
+        >
+          Export TextMyWedding CSV
+        </button>
+        <button
+          onClick={() => openHumanReadableReport(filtered)}
+          className="text-xs uppercase tracking-[0.2em] border border-border text-foreground px-3 py-2"
+          title="Polished, printable review document"
+        >
+          Human-Readable Report
         </button>
       </div>
 
       {selected.size > 0 && (
         <div className="mt-4 flex flex-wrap items-center gap-3 border border-primary/40 bg-primary/5 px-4 py-2 text-xs">
           <span className="uppercase tracking-[0.2em] text-primary">{selected.size} selected</span>
-          <button onClick={() => downloadCsv(selectedRows, "-selected")} className="border border-primary text-primary px-3 py-1 uppercase tracking-[0.2em]">Export selected</button>
+          <button onClick={() => downloadCsv(toMasterCsv(selectedRows), "master-selected")} className="border border-primary text-primary px-3 py-1 uppercase tracking-[0.2em]">Export selected</button>
           <button onClick={copySelectedLinks} className="border border-border text-foreground px-3 py-1 uppercase tracking-[0.2em]">Copy RSVP links</button>
           <button onClick={() => setSelected(new Set())} className="ml-auto text-muted-foreground uppercase tracking-[0.2em]">Clear</button>
         </div>
@@ -603,6 +650,83 @@ function looksLikeUsZip(v: string): boolean {
   return /^\d{5}(-\d{4})?$/.test(v.trim());
 }
 
+function escCsv(s: string | null | undefined): string {
+  const v = s ?? "";
+  return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
+}
+
+// ================== Human-readable report ==================
+// Client-side only — a print-optimized HTML view opened in a new tab,
+// built from data already loaded in the admin dashboard. No server
+// round-trip, no PDF library (this app's server functions run in a
+// Worker runtime that can't use Node-only PDF tooling anyway); the
+// browser's own "Print to PDF" is the PDF path.
+
+function reportHtml(list: AdminGuestRow[]): string {
+  const esc = (s: string) =>
+    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const addressLines = (r: AdminGuestRow) => {
+    const lines: string[] = [];
+    if (r.address_line1) lines.push([r.address_line1, r.address_line2].filter(Boolean).join(" "));
+    const cityLine = [r.city, [r.state, r.postal_code].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+    if (cityLine) lines.push(cityLine);
+    if (r.country) lines.push(r.country);
+    return lines.length ? lines.map(esc).join("<br>") : "<em>No address on file</em>";
+  };
+  const cards = list
+    .map((r) => {
+      const attending = r.rsvp?.attendees.filter((a) => a.attending).map((a) => a.name + (a.is_child ? " (child)" : "")) ?? [];
+      const declined = r.rsvp?.attendees.filter((a) => !a.attending).map((a) => a.name) ?? [];
+      const members = r.party_members.map((m) => m.name + (m.is_child ? " (child)" : "")).join(", ") || "—";
+      return `
+        <section class="card">
+          <h2>${esc(r.primary_name)} <span class="slug">${esc(r.slug)}</span></h2>
+          <div class="grid">
+            <div><span class="label">Invited party</span><p>${esc(members)}</p></div>
+            <div><span class="label">Phone</span><p>${esc(formatPhoneDisplay(r.phone))}</p></div>
+            <div><span class="label">Email</span><p>${r.email ? esc(r.email) : "<em>None on file</em>"}</p></div>
+            <div><span class="label">Mailing address</span><p>${addressLines(r)}</p></div>
+            <div><span class="label">RSVP status</span><p>${esc(r.rsvp?.status?.replace("_", " ") ?? "no response yet")}</p></div>
+            <div><span class="label">Attending</span><p>${attending.length ? esc(attending.join(", ")) : "—"}</p></div>
+            ${declined.length ? `<div><span class="label">Not attending</span><p>${esc(declined.join(", "))}</p></div>` : ""}
+            <div><span class="label">Address confirmed</span><p>${r.rsvp?.address_confirmed ? "Yes" : "No"}</p></div>
+            ${r.rsvp?.song_request ? `<div><span class="label">Song request</span><p>${esc(r.rsvp.song_request)}</p></div>` : ""}
+            ${r.rsvp?.message ? `<div><span class="label">Message</span><p>${esc(r.rsvp.message)}</p></div>` : ""}
+            ${r.invite_notes ? `<div><span class="label">Internal notes</span><p>${esc(r.invite_notes)}</p></div>` : ""}
+          </div>
+        </section>`;
+    })
+    .join("\n");
+
+  return `<!doctype html><html><head><meta charset="utf-8"><title>Guest List Report — ${new Date().toLocaleDateString()}</title>
+  <style>
+    body { font-family: Georgia, 'Iowan Old Style', serif; background: #F8F4EC; color: #4A4238; margin: 0; padding: 40px; }
+    h1 { font-style: italic; color: #2A2520; font-weight: 400; margin: 0 0 4px; }
+    .meta { font-family: -apple-system, sans-serif; font-size: 12px; color: #6E6255; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 32px; }
+    .card { background: #fff; border: 1px solid #E1D6C3; padding: 20px 24px; margin-bottom: 18px; break-inside: avoid; page-break-inside: avoid; }
+    .card h2 { font-style: italic; font-size: 20px; color: #2A2520; font-weight: 400; margin: 0 0 14px; }
+    .card h2 .slug { font-family: 'SF Mono', monospace; font-size: 12px; color: #A39680; font-style: normal; margin-left: 10px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; }
+    .grid > div { grid-column: span 1; }
+    .label { font-family: -apple-system, sans-serif; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #6B5F49; display: block; margin-bottom: 2px; }
+    .grid p { margin: 0; font-size: 14px; line-height: 1.5; }
+    @media print { body { background: #fff; padding: 0; } .card { box-shadow: none; } }
+  </style></head><body>
+  <h1>Guest List Report</h1>
+  <p class="meta">Generated ${new Date().toLocaleString()} · ${list.length} household${list.length === 1 ? "" : "s"}</p>
+  ${cards}
+  </body></html>`;
+}
+
+function openHumanReadableReport(list: AdminGuestRow[]): void {
+  const html = reportHtml(list);
+  const win = window.open("", "_blank");
+  if (!win) return;
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+}
+
 // ================== Guest editor ==================
 
 function GuestEditor({ row, onClose, onSaved }: { row: AdminGuestRow | null; onClose: () => void; onSaved: () => void | Promise<void> }) {
@@ -780,58 +904,145 @@ function GuestEditor({ row, onClose, onSaved }: { row: AdminGuestRow | null; onC
   );
 }
 
-// ================== CSV importer ==================
+// ================== Master CSV importer — preview, then confirm ==================
+
+interface ImportSummary {
+  dryRun: boolean;
+  totals: { inserted: number; updated: number; errors: number };
+  rows: ImportRowResult[];
+}
+
+function actionBadge(action: ImportRowResult["action"]) {
+  const cls =
+    action === "insert" ? "border-primary text-primary" :
+    action === "update" ? "border-accent text-accent" :
+    "border-destructive text-destructive";
+  return <span className={`text-[10px] uppercase tracking-[0.15em] px-2 py-0.5 border ${cls}`}>{action}</span>;
+}
 
 function CsvImporter({ onClose, onDone }: { onClose: () => void; onDone: () => void | Promise<void> }) {
   const runImport = useServerFn(importGuestsCsv);
   const [csv, setCsv] = useState("");
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<string | null>(null);
+  const [preview, setPreview] = useState<ImportSummary | null>(null);
+  const [committed, setCommitted] = useState<ImportSummary | null>(null);
+  const [err, setErr] = useState<string | null>(null);
 
-  async function run() {
+  function editCsv(v: string) {
+    setCsv(v);
+    // A stale preview against edited text could be committed by mistake —
+    // drop back to phase 1 the moment the pasted text changes.
+    setPreview(null);
+    setCommitted(null);
+  }
+
+  async function doPreview() {
     setBusy(true);
+    setErr(null);
     try {
-      const r = await runImport({ data: { csv } });
-      setResult(
-        `Imported ${r.inserted}, skipped ${r.skipped}, ${r.duplicates} duplicate${r.duplicates === 1 ? "" : "s"} ignored` +
-          (r.invalid_phone ? `, ${r.invalid_phone} skipped for a missing or invalid phone number.` : "."),
-      );
-      await onDone();
+      setPreview(await runImport({ data: { csv, dryRun: true } }));
     } catch (e) {
-      setResult(e instanceof Error ? e.message : "Import failed");
+      setErr(e instanceof Error ? e.message : "Preview failed");
     } finally {
       setBusy(false);
     }
   }
 
+  async function doConfirm() {
+    setBusy(true);
+    setErr(null);
+    try {
+      const result = await runImport({ data: { csv, dryRun: false } });
+      setCommitted(result);
+      await onDone();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Import failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const shown = committed ?? preview;
+
   return (
     <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto">
       <div className="w-full max-w-3xl bg-card border border-border p-6 sm:p-8 my-8">
         <div className="flex items-center justify-between">
-          <h3 className="font-serif text-2xl text-primary">Import guests (CSV)</h3>
+          <h3 className="font-serif text-2xl text-primary">Import Master CSV</h3>
           <button onClick={onClose} className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Close</button>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
-          Columns (header row optional): <span className="font-mono">primary_name, party_members, phone, email, address_line1, address_line2, city, state, postal_code, country, invite_notes</span>.
-          Separate party members with <span className="font-mono">;</span> and append <span className="font-mono">(child)</span> for kids. Example: <span className="font-mono">Jane Doe;John Doe;Emma Doe (child)</span>.
+          Columns (header row optional): <span className="font-mono">household_name, phone, members, email, address_line1, address_line2, city, state, postal_code, country, invite_notes, slug</span>.
+          Separate party members with <span className="font-mono">;</span> and append <span className="font-mono">(child)</span> for kids. A <span className="font-mono">slug</span> column requires an explicit header row and matches an existing household for an update — omit it to always insert new.
         </p>
         <p className="mt-2 text-xs text-muted-foreground">
-          <span className="text-foreground">Phone is required</span> for every row — it's how a household verifies
-          itself before their RSVP is shown. Rows with a missing or invalid (not a 10-digit US or Mexico) number are skipped.
+          <span className="text-foreground">Phone is required for new households</span> — it's how they verify themselves before their RSVP is shown.
+          On an update (matched by slug, phone, or email), a <span className="text-foreground">blank cell leaves that field unchanged</span> — it's never treated as "clear this."
         </p>
         <textarea
           value={csv}
-          onChange={(e) => setCsv(e.target.value)}
+          onChange={(e) => editCsv(e.target.value)}
           rows={12}
-          placeholder="primary_name,party_members,phone,email,address_line1,city,state,postal_code&#10;Jane & John Doe,Jane Doe;John Doe;Emma Doe (child),402-555-1234,jane@example.com,123 Main St,Louisville,NE,68037"
+          placeholder="household_name,phone,members,email,address_line1,city,state,postal_code&#10;Jane & John Doe,402-555-1234,Jane Doe;John Doe;Emma Doe (child),jane@example.com,123 Main St,Louisville,NE,68037"
           className="mt-4 w-full border border-input bg-background px-3 py-2 text-xs font-mono"
         />
-        {result && <p className="mt-3 text-sm">{result}</p>}
-        <div className="mt-4 flex gap-3">
-          <button onClick={run} disabled={busy || !csv.trim()} className="border border-primary bg-primary text-primary-foreground px-5 py-2 text-xs uppercase tracking-[0.2em] disabled:opacity-50">
-            {busy ? "Importing…" : "Import"}
-          </button>
-        </div>
+
+        {err && <p className="mt-3 text-sm text-destructive">{err}</p>}
+
+        {!shown ? (
+          <div className="mt-4 flex gap-3">
+            <button onClick={doPreview} disabled={busy || !csv.trim()} className="border border-primary bg-primary text-primary-foreground px-5 py-2 text-xs uppercase tracking-[0.2em] disabled:opacity-50">
+              {busy ? "Checking…" : "Preview"}
+            </button>
+          </div>
+        ) : (
+          <div className="mt-4">
+            <div className="flex flex-wrap gap-3 text-xs">
+              <span className="uppercase tracking-[0.2em] text-primary">
+                {committed ? "Imported" : "Preview"}: {shown.totals.inserted} new, {shown.totals.updated} updated, {shown.totals.errors} error{shown.totals.errors === 1 ? "" : "s"}
+              </span>
+            </div>
+            <div className="mt-3 max-h-[400px] overflow-y-auto border border-border/40">
+              <table className="w-full text-xs">
+                <thead className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground sticky top-0 bg-card">
+                  <tr className="border-b border-border/40">
+                    <th className="text-left py-2 px-3">Row</th>
+                    <th className="text-left py-2 px-3">Household</th>
+                    <th className="text-left py-2 px-3">Action</th>
+                    <th className="text-left py-2 px-3">Detail</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {shown.rows.map((r) => (
+                    <tr key={r.row} className="border-b border-border/20 align-top">
+                      <td className="py-2 px-3 text-muted-foreground">{r.row}</td>
+                      <td className="py-2 px-3">{r.household_name ?? "—"}</td>
+                      <td className="py-2 px-3">
+                        {actionBadge(r.action)}
+                        {r.matchedBy && <span className="ml-2 text-muted-foreground">by {r.matchedBy}</span>}
+                      </td>
+                      <td className="py-2 px-3">
+                        {r.error && <span className="text-destructive">{r.error}</span>}
+                        {r.warnings.map((w, i) => <div key={i} className="text-muted-foreground">{w}</div>)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-4 flex gap-3">
+              {!committed && (
+                <button onClick={doConfirm} disabled={busy} className="border border-primary bg-primary text-primary-foreground px-5 py-2 text-xs uppercase tracking-[0.2em] disabled:opacity-50">
+                  {busy ? "Importing…" : "Confirm Import"}
+                </button>
+              )}
+              <button onClick={() => editCsv(csv)} className="border border-border text-foreground px-5 py-2 text-xs uppercase tracking-[0.2em]">
+                {committed ? "Import another" : "Back to edit"}
+              </button>
+            </div>
+          </div>
+        )}
+
         <p className="mt-4 text-[10px] text-muted-foreground">
           Fallback contact shown to guests who can't find their name: <span className="italic">{SITE.rsvpFallbackContact}</span> (edit in <span className="font-mono">src/lib/site.ts</span>).
         </p>

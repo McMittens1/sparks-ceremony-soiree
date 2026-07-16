@@ -60,12 +60,15 @@ export interface AdminGuestRow {
   country: string | null;
   invite_notes: string | null;
   created_at: string;
+  updated_at: string;
   rsvp: PublicRsvp | null;
   edit_token: string;
   verify_token: string;
   address_confirmed_at: string | null;
+  address_updated_at: string | null;
   phone_verify_locked_until: string | null;
   phone_verify_failed_attempts: number;
+  phone_verify_last_success_at: string | null;
 }
 
 // ---------- Helpers ----------
@@ -622,12 +625,15 @@ export const listGuestsWithRsvps = createServerFn({ method: "POST" })
       country: g.country,
       invite_notes: g.invite_notes,
       created_at: g.created_at,
+      updated_at: g.updated_at,
       rsvp: rsvpByGuest.get(g.id) ?? null,
       edit_token: editTokens[i],
       verify_token: verifyTokens[i],
       address_confirmed_at: g.address_confirmed_at,
+      address_updated_at: g.address_updated_at,
       phone_verify_locked_until: g.phone_verify_locked_until,
       phone_verify_failed_attempts: g.phone_verify_failed_attempts,
+      phone_verify_last_success_at: g.phone_verify_last_success_at,
     }));
   });
 
@@ -673,7 +679,7 @@ export const upsertGuest = createServerFn({ method: "POST" })
       primary_name: data.primary_name,
       party_members: data.party_members as unknown as import("@/integrations/supabase/types").Json,
       phone: normalizePhone(data.phone),
-      email: data.email || null,
+      email: data.email ? normalizeEmail(data.email) : null,
       address_line1: data.address_line1 || null,
       address_line2: data.address_line2 || null,
       city: data.city || null,
@@ -712,97 +718,301 @@ export const deleteGuest = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-// Import CSV as text: columns primary_name, party_members (semicolon-separated names, append " (child)" for kids), phone, email, address_line1, address_line2, city, state, postal_code, country, invite_notes
-// A missing column is fine, except phone — every household needs a valid
-// US or Mexico phone number, since it's the last-4-digits verification
-// factor. The first row is treated as a header when it contains "primary_name".
+// Master CSV import — columns household_name (or legacy primary_name),
+// slug (optional, the update-match key), phone, members (or legacy
+// party_members — semicolon-separated names, "(child)" suffix), email,
+// address_line1, address_line2, city, state, postal_code, country,
+// invite_notes. A missing header row is fine (falls back to a fixed
+// column order); a missing/invalid phone on a new household is not,
+// since it's both required and the fallback match key.
+//
+// Runs as a pure plan-then-apply pair so a dry-run preview and the actual
+// commit can never disagree: planImportRows() decides insert/update/error
+// for every row without writing anything, and importGuestsCsv() either
+// returns that plan as-is (dryRun) or applies it row by row.
 function normalizeEmail(v: string): string {
   return v.trim().toLowerCase();
 }
 
+function isLikelyUsZip(v: string): boolean {
+  return /^\d{5}(-\d{4})?$/.test(v.trim());
+}
+
+interface ExistingGuestRef {
+  id: string;
+  slug: string;
+  phone: string;
+  email: string | null;
+}
+
+export interface ImportRowResult {
+  row: number;
+  action: "insert" | "update" | "error";
+  household_name?: string;
+  matchedBy?: "slug" | "phone" | "email";
+  warnings: string[];
+  error?: string;
+}
+
+interface GuestWritePayload {
+  primary_name?: string;
+  phone?: string;
+  party_members?: import("@/integrations/supabase/types").Json;
+  email?: string | null;
+  address_line1?: string | null;
+  address_line2?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postal_code?: string | null;
+  country?: string | null;
+  invite_notes?: string | null;
+}
+
+interface PlannedRow extends ImportRowResult {
+  guestId?: string;
+  slug?: string;
+  payload?: GuestWritePayload;
+}
+
+function parseMembers(raw: string, fallbackName: string): PartyMember[] {
+  const trimmed = raw.trim();
+  if (!trimmed) return [{ name: fallbackName, is_child: false }];
+  return trimmed
+    .split(";")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((n) => {
+      const isChild = /\(child\)/i.test(n);
+      return { name: n.replace(/\s*\(child\)\s*/i, "").trim(), is_child: isChild };
+    });
+}
+
+// No writes — resolves match/insert-vs-update for every row and builds the
+// exact payload that would be written, so dry-run and commit share one
+// source of truth. `existing` should already reflect the live guests table.
+function planImportRows(header: string[], body: string[][], existing: ExistingGuestRef[]): PlannedRow[] {
+  const bySlug = new Map(existing.map((g) => [g.slug.toUpperCase(), g]));
+  const byPhone = new Map<string, ExistingGuestRef[]>();
+  const byEmail = new Map<string, ExistingGuestRef[]>();
+  function addTo(map: Map<string, ExistingGuestRef[]>, key: string, g: ExistingGuestRef) {
+    const list = map.get(key);
+    if (list) list.push(g);
+    else map.set(key, [g]);
+  }
+  for (const g of existing) {
+    const p = normalizePhone(g.phone);
+    if (p) addTo(byPhone, p, g);
+    if (g.email) addTo(byEmail, normalizeEmail(g.email), g);
+  }
+
+  const claimedGuestIds = new Set<string>();
+  const claimedSlugs = new Set<string>();
+  const claimedNewPhones = new Set<string>();
+  const claimedNewEmails = new Set<string>();
+
+  const results: PlannedRow[] = [];
+
+  body.forEach((cols, idx) => {
+    const rowNumber = idx + 1;
+    const rec: Record<string, string> = {};
+    header.forEach((h, i) => { rec[h] = (cols[i] ?? "").trim(); });
+
+    const household_name = rec.household_name || rec.primary_name;
+    if (!household_name) {
+      results.push({ row: rowNumber, action: "error", warnings: [], error: "Missing household_name." });
+      return;
+    }
+
+    const warnings: string[] = [];
+    const slugRaw = (rec.slug ?? "").trim().toUpperCase();
+    const emailNorm = rec.email ? normalizeEmail(rec.email) : "";
+    const phoneNorm = rec.phone ? normalizePhone(rec.phone) : "";
+
+    let matched: ExistingGuestRef | undefined;
+    let matchedBy: "slug" | "phone" | "email" | undefined;
+    let insertSlug: string | undefined;
+
+    if (slugRaw) {
+      if (claimedSlugs.has(slugRaw)) {
+        results.push({ row: rowNumber, action: "error", household_name, warnings, error: "Slug already used earlier in this import." });
+        return;
+      }
+      const bySlugHit = bySlug.get(slugRaw);
+      if (bySlugHit) {
+        if (claimedGuestIds.has(bySlugHit.id)) {
+          results.push({ row: rowNumber, action: "error", household_name, warnings, error: "This household was already matched by an earlier row in this import." });
+          return;
+        }
+        matched = bySlugHit;
+        matchedBy = "slug";
+      } else {
+        insertSlug = slugRaw;
+      }
+    } else {
+      for (const [map, by] of [[byPhone.get(phoneNorm), "phone"], [byEmail.get(emailNorm), "email"]] as const) {
+        if (matched || !map) continue;
+        const candidates = map.filter((g) => !claimedGuestIds.has(g.id));
+        if (candidates.length > 1) {
+          results.push({
+            row: rowNumber, action: "error", household_name, warnings,
+            error: `Multiple existing guests share this ${by} — add a slug column to disambiguate.`,
+          });
+          return;
+        }
+        if (candidates.length === 1) { matched = candidates[0]; matchedBy = by; }
+      }
+      if (!matched) {
+        if (phoneNorm && claimedNewPhones.has(phoneNorm)) {
+          results.push({ row: rowNumber, action: "error", household_name, warnings, error: "This phone number was already used earlier in this import." });
+          return;
+        }
+        if (emailNorm && claimedNewEmails.has(emailNorm)) {
+          results.push({ row: rowNumber, action: "error", household_name, warnings, error: "This email was already used earlier in this import." });
+          return;
+        }
+      }
+    }
+
+    const isUpdate = !!matched;
+
+    // Phone: blank is fine on an update (leave unchanged); a non-blank value
+    // must always be valid; a new household always needs one (it's NOT NULL
+    // and the primary fallback match key).
+    if (rec.phone?.trim()) {
+      if (!isValidPhone(rec.phone)) {
+        results.push({ row: rowNumber, action: "error", household_name, warnings, error: "Invalid phone number." });
+        return;
+      }
+    } else if (!isUpdate) {
+      results.push({ row: rowNumber, action: "error", household_name, warnings, error: "Missing phone number (required for a new household)." });
+      return;
+    }
+
+    if (rec.email?.trim() && !z.string().email().safeParse(rec.email.trim()).success) {
+      results.push({ row: rowNumber, action: "error", household_name, warnings, error: "Invalid email address." });
+      return;
+    }
+
+    const zipCountry = rec.country?.trim() || (isUpdate ? "" : "USA");
+    if (rec.postal_code?.trim() && /^us(a)?$/i.test(zipCountry) && !isLikelyUsZip(rec.postal_code)) {
+      warnings.push("ZIP doesn't look like a 5 or 5+4 digit US code.");
+    }
+
+    // Build the write payload — blank optional cells are simply omitted on
+    // an update (leave existing value), but given a concrete value on
+    // insert (defaults applied where relevant).
+    const payload: GuestWritePayload = { primary_name: household_name };
+    if (rec.phone?.trim()) payload.phone = normalizePhone(rec.phone);
+
+    const membersRaw = rec.members ?? rec.party_members ?? "";
+    if (membersRaw.trim()) {
+      payload.party_members = parseMembers(membersRaw, household_name) as unknown as import("@/integrations/supabase/types").Json;
+    } else if (!isUpdate) {
+      payload.party_members = [{ name: household_name, is_child: false }] as unknown as import("@/integrations/supabase/types").Json;
+    }
+
+    if (rec.email?.trim()) payload.email = normalizeEmail(rec.email);
+    else if (!isUpdate) payload.email = null;
+
+    for (const f of ["address_line1", "address_line2", "city", "state", "postal_code"] as const) {
+      if (rec[f]?.trim()) payload[f] = rec[f].trim();
+      else if (!isUpdate) payload[f] = null;
+    }
+    if (rec.country?.trim()) payload.country = rec.country.trim();
+    else if (!isUpdate) payload.country = "USA";
+
+    if (rec.invite_notes?.trim()) payload.invite_notes = rec.invite_notes.trim();
+    else if (!isUpdate) payload.invite_notes = null;
+
+    if (matched) claimedGuestIds.add(matched.id);
+    if (slugRaw) claimedSlugs.add(slugRaw);
+    if (!isUpdate) {
+      if (phoneNorm) claimedNewPhones.add(phoneNorm);
+      if (emailNorm) claimedNewEmails.add(emailNorm);
+    }
+
+    results.push({
+      row: rowNumber,
+      action: isUpdate ? "update" : "insert",
+      household_name,
+      matchedBy,
+      warnings,
+      guestId: matched?.id,
+      slug: insertSlug,
+      payload,
+    });
+  });
+
+  return results;
+}
+
 export const importGuestsCsv = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((d: { csv: string }) => z.object({ csv: z.string().min(1).max(200_000) }).parse(d))
-  .handler(async ({ data, context }): Promise<{ inserted: number; skipped: number; duplicates: number; invalid_phone: number }> => {
+  .validator((d: unknown) =>
+    z.object({ csv: z.string().min(1).max(200_000), dryRun: z.boolean().optional() }).parse(d),
+  )
+  .handler(async ({ data, context }): Promise<{
+    dryRun: boolean;
+    totals: { inserted: number; updated: number; errors: number };
+    rows: ImportRowResult[];
+  }> => {
     const sb = await ensureAdmin(context.userId);
+    const dryRun = data.dryRun ?? false;
     const rows = parseCsv(data.csv);
-    if (!rows.length) return { inserted: 0, skipped: 0, duplicates: 0, invalid_phone: 0 };
+    if (!rows.length) return { dryRun, totals: { inserted: 0, updated: 0, errors: 0 }, rows: [] };
 
     let header: string[];
     let body: string[][];
-    if (rows[0].some((c) => c.toLowerCase().includes("primary_name"))) {
+    if (rows[0].some((c) => /household_name|primary_name/.test(c.toLowerCase()))) {
       header = rows[0].map((c) => c.trim().toLowerCase());
       body = rows.slice(1);
     } else {
-      header = ["primary_name", "party_members", "phone", "email", "address_line1", "address_line2", "city", "state", "postal_code", "country", "invite_notes"];
+      header = ["household_name", "phone", "members", "email", "address_line1", "address_line2", "city", "state", "postal_code", "country", "invite_notes"];
       body = rows;
     }
 
-    // Dedupe against existing guests (by email or phone only — never by name,
-    // since two real invitees can share a name) and against rows already
-    // inserted earlier in this same import.
-    const { data: existing } = await sb.from("guests").select("email, phone");
-    const seenEmails = new Set<string>();
-    const seenPhones = new Set<string>();
-    for (const g of existing ?? []) {
-      if (g.email) seenEmails.add(normalizeEmail(g.email));
-      if (g.phone) seenPhones.add(normalizePhone(g.phone));
-    }
+    const { data: existing } = await sb.from("guests").select("id, slug, phone, email");
+    const planned = planImportRows(header, body, existing ?? []);
 
-    let inserted = 0;
-    let skipped = 0;
-    let duplicates = 0;
-    let invalid_phone = 0;
-    for (const cols of body) {
-      const rec: Record<string, string> = {};
-      header.forEach((h, i) => { rec[h] = (cols[i] ?? "").trim(); });
-      if (!rec.primary_name) { skipped++; continue; }
-      if (!isValidPhone(rec.phone ?? "")) { invalid_phone++; continue; }
-
-      const email = rec.email ? normalizeEmail(rec.email) : "";
-      const phone = normalizePhone(rec.phone);
-      if ((email && seenEmails.has(email)) || seenPhones.has(phone)) {
-        duplicates++;
-        continue;
-      }
-
-      const partyRaw = rec.party_members ?? "";
-      const party_members: PartyMember[] = partyRaw
-        ? partyRaw.split(";").map((s) => s.trim()).filter(Boolean).map((n) => {
-            const isChild = /\(child\)/i.test(n);
-            return { name: n.replace(/\s*\(child\)\s*/i, "").trim(), is_child: isChild };
-          })
-        : [{ name: rec.primary_name, is_child: false }];
-
-      // Retry a few times for slug collisions.
-      let success = false;
-      for (let i = 0; i < 5 && !success; i++) {
-        const slug = randomSlug();
-        const { error } = await sb.from("guests").insert({
-          slug,
-          primary_name: rec.primary_name,
-          party_members: party_members as unknown as import("@/integrations/supabase/types").Json,
-          phone: normalizePhone(rec.phone),
-          email: rec.email || null,
-          address_line1: rec.address_line1 || null,
-          address_line2: rec.address_line2 || null,
-          city: rec.city || null,
-          state: rec.state || null,
-          postal_code: rec.postal_code || null,
-          country: rec.country || null,
-          invite_notes: rec.invite_notes || null,
-        });
-        if (!error) { inserted++; success = true; }
-        else if (!error.message.toLowerCase().includes("duplicate")) { skipped++; break; }
-      }
-      if (success) {
-        if (email) seenEmails.add(email);
-        seenPhones.add(phone);
-      } else if (inserted === 0) {
-        skipped++;
+    if (!dryRun) {
+      for (const p of planned) {
+        if (p.action === "insert" && p.payload) {
+          // primary_name/phone are always set on an insert-planned row (see
+          // planImportRows) even though GuestWritePayload marks them
+          // optional to also cover update rows — asserted here, not
+          // re-validated, since that invariant already holds by construction.
+          const payload = p.payload as GuestWritePayload & { primary_name: string; phone: string };
+          for (let i = 0; i < 5; i++) {
+            const slug = p.slug || randomSlug();
+            const { error } = await sb.from("guests").insert({ ...payload, slug });
+            if (!error) { p.slug = slug; break; }
+            if (p.slug || !error.message.toLowerCase().includes("duplicate")) {
+              p.action = "error";
+              p.error = error.message;
+              break;
+            }
+          }
+        } else if (p.action === "update" && p.guestId && p.payload) {
+          const { error } = await sb.from("guests").update(p.payload).eq("id", p.guestId);
+          if (error) { p.action = "error"; p.error = error.message; }
+        }
       }
     }
-    return { inserted, skipped, duplicates, invalid_phone };
+
+    const totals = { inserted: 0, updated: 0, errors: 0 };
+    for (const p of planned) {
+      if (p.action === "insert") totals.inserted++;
+      else if (p.action === "update") totals.updated++;
+      else totals.errors++;
+    }
+
+    return {
+      dryRun,
+      totals,
+      rows: planned.map(({ row, action, household_name, matchedBy, warnings, error }) => ({
+        row, action, household_name, matchedBy, warnings, error,
+      })),
+    };
   });
 
 // Minimal CSV parser: handles quoted fields, commas, newlines, and doubled quotes.
