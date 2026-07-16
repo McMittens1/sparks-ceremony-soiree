@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useT } from "@/i18n/context";
 import { useFeatureFlag } from "@/hooks/use-feature-flags";
@@ -85,6 +85,15 @@ function hasAddress(a: GuestAddress): boolean {
   return Boolean(a.line1 || a.city || a.postal_code);
 }
 
+function looksLikeUsZip(v: string): boolean {
+  return /^\d{5}(-\d{4})?$/.test(v.trim());
+}
+
+const LOOKUP_MIN_CHARS = 2;
+const LOOKUP_DEBOUNCE_MS = 300;
+
+type Match = { slug: string; primary_name: string; party_size: number };
+
 function RsvpPage() {
   const t = useT();
   const search = useSearch({ from: "/rsvp" });
@@ -104,7 +113,11 @@ function RsvpPage() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [query, setQuery] = useState("");
-  const [matches, setMatches] = useState<{ slug: string; primary_name: string; party_size: number }[] | null>(null);
+  const [matches, setMatches] = useState<Match[] | null>(null);
+  const [matchesLoading, setMatchesLoading] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const searchRequestId = useRef(0);
 
   // Verify stage
   const [pendingTarget, setPendingTarget] = useState<VerifyTarget | null>(null);
@@ -193,25 +206,66 @@ function RsvpPage() {
     }
   }
 
-  async function onLookupSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!query.trim()) return;
-    setLoading(true);
+  // Live search-as-you-type: debounced, cancels stale in-flight requests by
+  // request id so a slow early response can't clobber a later one. Doesn't
+  // auto-navigate on a single match — unlike the old submit-triggered
+  // lookup, jumping the guest to a new screen mid-keystroke would be
+  // jarring for a live search box. Enter/click still confirms fast.
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < LOOKUP_MIN_CHARS) {
+      setMatches(null);
+      setMatchesLoading(false);
+      setActiveIndex(-1);
+      return;
+    }
+    setMatchesLoading(true);
     setErr(null);
-    setMatches(null);
-    try {
-      const res = await runLookup({ data: { query: query.trim() } });
-      if (res.matches.length === 0) {
-        setErr(t.rsvp.lookupNotFound);
-      } else if (res.matches.length === 1) {
-        await beginVerify({ slug: res.matches[0].slug }, res.matches[0].primary_name);
-      } else {
+    const id = ++searchRequestId.current;
+    const handle = setTimeout(async () => {
+      try {
+        const res = await runLookup({ data: { query: q } });
+        if (searchRequestId.current !== id) return; // a newer keystroke superseded this request
         setMatches(res.matches);
+        setActiveIndex(res.matches.length > 0 ? 0 : -1);
+      } catch {
+        if (searchRequestId.current !== id) return;
+        setMatches([]);
+        setActiveIndex(-1);
+      } finally {
+        if (searchRequestId.current === id) setMatchesLoading(false);
       }
-    } catch {
-      setErr(t.rsvp.errGeneric);
-    } finally {
-      setLoading(false);
+    }, LOOKUP_DEBOUNCE_MS);
+    return () => clearTimeout(handle);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query]);
+
+  function selectMatch(m: Match) {
+    setDropdownOpen(false);
+    void beginVerify({ slug: m.slug }, m.primary_name);
+  }
+
+  function onLookupSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (activeIndex >= 0 && matches?.[activeIndex]) selectMatch(matches[activeIndex]);
+  }
+
+  function onLookupKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    // Escape always closes the dropdown, whether or not there are matches
+    // to navigate — arrow-key navigation is the only thing that needs any.
+    if (e.key === "Escape") {
+      setDropdownOpen(false);
+      return;
+    }
+    if (!matches || matches.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setDropdownOpen(true);
+      setActiveIndex((i) => (i + 1) % matches.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setDropdownOpen(true);
+      setActiveIndex((i) => (i - 1 + matches.length) % matches.length);
     }
   }
 
@@ -385,7 +439,9 @@ function RsvpPage() {
             </div>
           )}
 
-          {/* Lookup */}
+          {/* Lookup — live search-as-you-type combobox. Matches update on
+              every debounced keystroke; nothing beyond name + party size is
+              ever shown pre-verification (see lookupGuest). */}
           {stage === "lookup" && (
             <form onSubmit={onLookupSubmit} noValidate>
               <p
@@ -401,56 +457,77 @@ function RsvpPage() {
               >
                 {t.rsvp.lookupHint}
               </label>
-              <input
-                id="rsvp-lookup"
-                autoFocus
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={t.rsvp.lookupPlaceholder}
-                aria-label={t.rsvp.lookupPlaceholder}
-                autoComplete="name"
-                maxLength={120}
-                style={inputStyle}
-              />
-              <button
-                type="submit"
-                disabled={loading || !query.trim()}
-                className="mt-8 block w-full uppercase font-sans"
-                style={{
-                  background: INK,
-                  color: IVORY,
-                  padding: "16px 0",
-                  fontSize: 11,
-                  letterSpacing: "0.26em",
-                  border: `1px solid ${INK}`,
-                  opacity: loading || !query.trim() ? 0.5 : 1,
-                  cursor: loading || !query.trim() ? "not-allowed" : "pointer",
-                }}
-              >
-                {loading ? t.common.loading : t.rsvp.lookupCta}
-              </button>
+              <div className="relative">
+                <input
+                  id="rsvp-lookup"
+                  autoFocus
+                  value={query}
+                  onChange={(e) => { setQuery(e.target.value); setDropdownOpen(true); }}
+                  onFocus={() => setDropdownOpen(true)}
+                  onBlur={() => setTimeout(() => setDropdownOpen(false), 150)}
+                  onKeyDown={onLookupKeyDown}
+                  placeholder={t.rsvp.lookupPlaceholder}
+                  aria-label={t.rsvp.lookupPlaceholder}
+                  autoComplete="off"
+                  maxLength={120}
+                  role="combobox"
+                  aria-expanded={dropdownOpen && query.trim().length >= LOOKUP_MIN_CHARS}
+                  aria-controls="rsvp-matches-listbox"
+                  aria-activedescendant={
+                    activeIndex >= 0 && matches?.[activeIndex] ? `rsvp-match-${matches[activeIndex].slug}` : undefined
+                  }
+                  style={inputStyle}
+                />
 
-              {matches && matches.length > 1 && (
-                <div className="mt-8 space-y-2" role="group" aria-label="Matching guests">
-                  <p style={{ ...eyebrow, color: TAN_DEEP }}>Is this you?</p>
-                  {matches.map((m) => (
-                    <button
-                      key={m.slug}
-                      type="button"
-                      onClick={() => beginVerify({ slug: m.slug }, m.primary_name)}
-                      className="w-full text-left border transition-colors"
-                      style={{ padding: "14px 16px", borderColor: HAIRLINE }}
-                    >
-                      <div className="font-serif italic" style={{ color: INK, fontSize: 18 }}>
-                        {m.primary_name}
+                {dropdownOpen && query.trim().length >= LOOKUP_MIN_CHARS && (
+                  <div
+                    id="rsvp-matches-listbox"
+                    role="listbox"
+                    aria-label="Matching invitations"
+                    className="absolute left-0 right-0 z-10"
+                    style={{ top: "calc(100% + 6px)", background: IVORY, border: `1px solid ${HAIRLINE}`, boxShadow: "0 20px 40px -20px rgba(42,37,32,0.3)" }}
+                  >
+                    {matchesLoading && !matches ? (
+                      <p className="font-sans" style={{ fontSize: 13, color: SOFT, padding: "14px 16px" }}>
+                        {t.common.loading}
+                      </p>
+                    ) : matches && matches.length > 0 ? (
+                      matches.map((m, i) => (
+                        <button
+                          key={m.slug}
+                          id={`rsvp-match-${m.slug}`}
+                          role="option"
+                          aria-selected={i === activeIndex}
+                          type="button"
+                          // onMouseDown (not onClick) fires before the input's onBlur closes the dropdown.
+                          onMouseDown={(e) => { e.preventDefault(); selectMatch(m); }}
+                          onMouseEnter={() => setActiveIndex(i)}
+                          className="w-full text-left transition-colors"
+                          style={{
+                            padding: "14px 16px",
+                            background: i === activeIndex ? "rgba(135,121,163,0.08)" : "transparent",
+                            borderBottom: i < matches.length - 1 ? `1px solid ${HAIRLINE}` : "none",
+                          }}
+                        >
+                          <div className="font-serif italic" style={{ color: INK, fontSize: 18 }}>
+                            {m.primary_name}
+                          </div>
+                          <div className="font-sans" style={{ fontSize: 12, color: SOFT, marginTop: 4 }}>
+                            Party of {m.party_size || 1}
+                          </div>
+                        </button>
+                      ))
+                    ) : matches && matches.length === 0 ? (
+                      <div style={{ padding: "16px" }}>
+                        <p className="font-sans" style={{ fontSize: 13, color: SOFT }}>{t.rsvp.lookupNotFound}</p>
+                        <p className="mt-2 italic font-serif" style={{ color: SOFT, fontSize: 12 }}>
+                          {SITE.rsvpFallbackContact}
+                        </p>
                       </div>
-                      <div className="font-sans" style={{ fontSize: 12, color: SOFT, marginTop: 4 }}>
-                        Party of {m.party_size || 1}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
+                    ) : null}
+                  </div>
+                )}
+              </div>
 
               <div role="alert" aria-live="polite">
                 {err && (
@@ -730,15 +807,24 @@ function RsvpPage() {
                         maxLength={60}
                         style={inputStyle}
                       />
-                      <input
-                        value={address.postal_code ?? ""}
-                        onChange={(e) => setAddress({ ...address, postal_code: e.target.value })}
-                        placeholder="ZIP / postal"
-                        aria-label="ZIP or postal code"
-                        autoComplete="postal-code"
-                        maxLength={20}
-                        style={inputStyle}
-                      />
+                      <div>
+                        <input
+                          value={address.postal_code ?? ""}
+                          onChange={(e) => setAddress({ ...address, postal_code: e.target.value })}
+                          placeholder="ZIP / postal"
+                          aria-label="ZIP or postal code"
+                          autoComplete="postal-code"
+                          maxLength={20}
+                          style={inputStyle}
+                        />
+                        {(address.postal_code ?? "").trim() &&
+                          (!(address.country ?? "").trim() || /^us(a)?$/i.test((address.country ?? "").trim())) &&
+                          !looksLikeUsZip(address.postal_code ?? "") && (
+                            <p className="font-sans" style={{ fontSize: 11, color: "#7a2f26", marginTop: 6 }}>
+                              Doesn&rsquo;t look like a US ZIP (12345 or 12345-6789).
+                            </p>
+                          )}
+                      </div>
                       <input
                         value={address.country ?? ""}
                         onChange={(e) => setAddress({ ...address, country: e.target.value })}

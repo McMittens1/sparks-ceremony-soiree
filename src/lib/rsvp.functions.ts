@@ -672,7 +672,7 @@ export const upsertGuest = createServerFn({ method: "POST" })
     const payload = {
       primary_name: data.primary_name,
       party_members: data.party_members as unknown as import("@/integrations/supabase/types").Json,
-      phone: data.phone,
+      phone: normalizePhone(data.phone),
       email: data.email || null,
       address_line1: data.address_line1 || null,
       address_line2: data.address_line2 || null,
@@ -782,7 +782,7 @@ export const importGuestsCsv = createServerFn({ method: "POST" })
           slug,
           primary_name: rec.primary_name,
           party_members: party_members as unknown as import("@/integrations/supabase/types").Json,
-          phone: rec.phone.trim(),
+          phone: normalizePhone(rec.phone),
           email: rec.email || null,
           address_line1: rec.address_line1 || null,
           address_line2: rec.address_line2 || null,

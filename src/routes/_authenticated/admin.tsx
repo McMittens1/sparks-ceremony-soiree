@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/i18n/context";
@@ -422,7 +422,7 @@ function RsvpsPanel() {
                     <td className="py-3 pr-4">
                       <div className="font-serif text-primary">{r.primary_name}</div>
                       <div className="text-[11px] text-muted-foreground">
-                        {r.phone ? `${r.phone}` : ""}
+                        {r.phone ? formatPhoneDisplay(r.phone) : ""}
                         {r.phone && r.email ? " · " : ""}
                         {r.email ? r.email : ""}
                       </div>
@@ -523,6 +523,85 @@ function SortHeader({
   );
 }
 
+
+// ================== Phone formatting ==================
+// Storage stays a normalized bare-digit string (see normalizePhone in
+// rsvp.functions.ts) — this is purely the admin-facing display/typing
+// layer, formatting live as (XXX) XXX-XXXX for US numbers and +CC (XXX)
+// XXX-XXXX once more than 10 digits are entered (e.g. a pasted Mexico
+// number with country code).
+
+function formatPhoneDisplay(raw: string): string {
+  let d = raw.replace(/\D/g, "").slice(0, 15);
+  let cc = "";
+  if (d.length > 10) {
+    if (d.startsWith("1") && d.length === 11) { cc = "+1 "; d = d.slice(1); }
+    else { cc = `+${d.slice(0, d.length - 10)} `; d = d.slice(-10); }
+  }
+  if (d.length === 0) return "";
+  if (d.length <= 3) return cc + d;
+  if (d.length <= 6) return `${cc}(${d.slice(0, 3)}) ${d.slice(3)}`;
+  return `${cc}(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6, 10)}`;
+}
+
+// Controlled input whose value prop/onChange deal in raw digits, while the
+// rendered text is always the formatted display — the caret is repositioned
+// after each keystroke (by counting digits before it) so reformatting
+// doesn't jump the cursor to the end while editing mid-string. Handles
+// pasted values the same way as typed ones, since paste just becomes part
+// of the same change event.
+function PhoneInput({
+  value, onChange, className, placeholder, required,
+}: {
+  value: string; onChange: (digits: string) => void; className?: string; placeholder?: string; required?: boolean;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const el = e.target;
+    const caret = el.selectionStart ?? el.value.length;
+    const digitsBeforeCaret = el.value.slice(0, caret).replace(/\D/g, "").length;
+    const digits = el.value.replace(/\D/g, "").slice(0, 15);
+    onChange(digits);
+    requestAnimationFrame(() => {
+      if (!ref.current) return;
+      const formatted = formatPhoneDisplay(digits);
+      let seen = 0;
+      let pos = formatted.length;
+      if (digitsBeforeCaret === 0) {
+        pos = 0;
+      } else {
+        for (let i = 0; i < formatted.length; i++) {
+          if (/\d/.test(formatted[i])) {
+            seen++;
+            if (seen === digitsBeforeCaret) { pos = i + 1; break; }
+          }
+        }
+      }
+      ref.current.setSelectionRange(pos, pos);
+    });
+  }
+
+  return (
+    <input
+      ref={ref}
+      type="tel"
+      inputMode="tel"
+      value={formatPhoneDisplay(value)}
+      onChange={handleChange}
+      placeholder={placeholder}
+      required={required}
+      autoComplete="tel"
+      className={className}
+    />
+  );
+}
+
+// ================== Address validation ==================
+
+function looksLikeUsZip(v: string): boolean {
+  return /^\d{5}(-\d{4})?$/.test(v.trim());
+}
 
 // ================== Guest editor ==================
 
@@ -634,9 +713,9 @@ function GuestEditor({ row, onClose, onSaved }: { row: AdminGuestRow | null; onC
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <input
+              <PhoneInput
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={setPhone}
                 placeholder="Phone (required)"
                 required
                 className="w-full border border-input bg-background px-3 py-2 text-sm"
@@ -645,13 +724,25 @@ function GuestEditor({ row, onClose, onSaved }: { row: AdminGuestRow | null; onC
                 Required — the last 4 digits verify a household before their RSVP is shown. US or Mexico, 10 digits.
               </p>
             </div>
-            <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="border border-input bg-background px-3 py-2 text-sm" />
-            <input value={line1} onChange={(e) => setLine1(e.target.value)} placeholder="Address line 1" className="sm:col-span-2 border border-input bg-background px-3 py-2 text-sm" />
-            <input value={line2} onChange={(e) => setLine2(e.target.value)} placeholder="Address line 2" className="sm:col-span-2 border border-input bg-background px-3 py-2 text-sm" />
-            <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className="border border-input bg-background px-3 py-2 text-sm" />
-            <input value={state} onChange={(e) => setState(e.target.value)} placeholder="State" className="border border-input bg-background px-3 py-2 text-sm" />
-            <input value={postal} onChange={(e) => setPostal(e.target.value)} placeholder="ZIP" className="border border-input bg-background px-3 py-2 text-sm" />
-            <input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Country" className="border border-input bg-background px-3 py-2 text-sm" />
+            <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" type="email" autoComplete="email" maxLength={200} className="border border-input bg-background px-3 py-2 text-sm" />
+            <input value={line1} onChange={(e) => setLine1(e.target.value)} placeholder="Address line 1" autoComplete="address-line1" maxLength={200} className="sm:col-span-2 border border-input bg-background px-3 py-2 text-sm" />
+            <input value={line2} onChange={(e) => setLine2(e.target.value)} placeholder="Address line 2" autoComplete="address-line2" maxLength={200} className="sm:col-span-2 border border-input bg-background px-3 py-2 text-sm" />
+            <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" autoComplete="address-level2" maxLength={120} className="border border-input bg-background px-3 py-2 text-sm" />
+            <input value={state} onChange={(e) => setState(e.target.value)} placeholder="State" autoComplete="address-level1" maxLength={60} className="border border-input bg-background px-3 py-2 text-sm" />
+            <div>
+              <input
+                value={postal}
+                onChange={(e) => setPostal(e.target.value)}
+                placeholder="ZIP"
+                autoComplete="postal-code"
+                maxLength={20}
+                className="w-full border border-input bg-background px-3 py-2 text-sm"
+              />
+              {postal.trim() && (!country.trim() || /^us(a)?$/i.test(country.trim())) && !looksLikeUsZip(postal) && (
+                <p className="mt-1 text-[10px] text-destructive">Doesn't look like a US ZIP (12345 or 12345-6789).</p>
+              )}
+            </div>
+            <input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Country" autoComplete="country-name" maxLength={60} className="border border-input bg-background px-3 py-2 text-sm" />
           </div>
 
           <div>
