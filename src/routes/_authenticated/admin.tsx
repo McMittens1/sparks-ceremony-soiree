@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/i18n/context";
 import {
@@ -30,10 +31,7 @@ import { SITE } from "@/lib/site";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
-    meta: [
-      { title: "Admin · Geo & Addison" },
-      { name: "robots", content: "noindex,nofollow" },
-    ],
+    meta: [{ title: "Admin · Geo & Addison" }, { name: "robots", content: "noindex,nofollow" }],
   }),
   component: Admin,
 });
@@ -73,12 +71,22 @@ function Admin() {
               tab === k ? "border-b-2 border-primary text-primary" : "text-muted-foreground"
             }`}
           >
-            {k === "rsvps" ? t.admin.rsvpsTab : k === "photos" ? t.admin.photosTab : t.admin.featuresTab}
+            {k === "rsvps"
+              ? t.admin.rsvpsTab
+              : k === "photos"
+                ? t.admin.photosTab
+                : t.admin.featuresTab}
           </button>
         ))}
       </div>
 
-      {tab === "rsvps" ? <RsvpsPanel /> : tab === "photos" ? <PhotosPanel /> : <FeatureFlagsPanel />}
+      {tab === "rsvps" ? (
+        <RsvpsPanel />
+      ) : tab === "photos" ? (
+        <PhotosPanel />
+      ) : (
+        <FeatureFlagsPanel />
+      )}
     </div>
   );
 }
@@ -88,7 +96,11 @@ function Admin() {
 function ActivityStrip() {
   const loadActivity = useServerFn(getRecentActivity);
   const [a, setA] = useState<Awaited<ReturnType<typeof loadActivity>> | null>(null);
-  useEffect(() => { loadActivity({}).then(setA).catch(() => {}); }, [loadActivity]);
+  useEffect(() => {
+    loadActivity({})
+      .then(setA)
+      .catch(() => {});
+  }, [loadActivity]);
   if (!a) return null;
   const items = [
     ["RSVPs · last 24h", a.rsvps_last_24h],
@@ -101,7 +113,9 @@ function ActivityStrip() {
       {items.map(([label, n]) => (
         <div key={label} className="border border-border/40 p-3 text-center bg-card/40">
           <div className="text-xl font-serif text-primary">{n}</div>
-          <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mt-1">{label}</div>
+          <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mt-1">
+            {label}
+          </div>
         </div>
       ))}
     </div>
@@ -118,7 +132,9 @@ function RsvpsPanel() {
   const loadRows = useServerFn(listGuestsWithRsvps);
   const runUnlock = useServerFn(unlockGuestPhoneVerify);
   const [rows, setRows] = useState<AdminGuestRow[] | null>(null);
-  const [filter, setFilter] = useState<"all" | "attending" | "not_attending" | "no_response">("all");
+  const [filter, setFilter] = useState<"all" | "attending" | "not_attending" | "no_response">(
+    "all",
+  );
   const [search, setSearch] = useState("");
   const [partySize, setPartySize] = useState<"any" | "1" | "2" | "3plus">("any");
   const [cityFilter, setCityFilter] = useState("");
@@ -129,6 +145,7 @@ function RsvpsPanel() {
   const [editing, setEditing] = useState<AdminGuestRow | "new" | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [unlockingId, setUnlockingId] = useState<string | null>(null);
 
   async function refresh() {
     const next = await loadRows({});
@@ -136,11 +153,19 @@ function RsvpsPanel() {
   }
 
   async function unlock(id: string) {
-    await runUnlock({ data: { id } });
-    await refresh();
+    setUnlockingId(id);
+    try {
+      await runUnlock({ data: { id } });
+      await refresh();
+      toast.success("Household unlocked.");
+    } finally {
+      setUnlockingId(null);
+    }
   }
 
-  useEffect(() => { refresh().catch(() => {}); }, []);
+  useEffect(() => {
+    refresh().catch(() => {});
+  }, []);
 
   const filtered = useMemo(() => {
     if (!rows) return [];
@@ -158,7 +183,8 @@ function RsvpsPanel() {
       if (filter === "all") return true;
       if (filter === "no_response") return !r.rsvp;
       if (!r.rsvp) return false;
-      if (filter === "attending") return r.rsvp.status === "attending" || r.rsvp.status === "partial";
+      if (filter === "attending")
+        return r.rsvp.status === "attending" || r.rsvp.status === "partial";
       if (filter === "not_attending") return r.rsvp.status === "not_attending";
       return true;
     });
@@ -168,11 +194,19 @@ function RsvpsPanel() {
     list.sort((a, b) => {
       let av: string | number = "";
       let bv: string | number = "";
-      if (sortKey === "name") { av = a.primary_name.toLowerCase(); bv = b.primary_name.toLowerCase(); }
-      else if (sortKey === "status") { av = statusRank(a); bv = statusRank(b); }
-      else if (sortKey === "party") { av = a.party_members.length || 1; bv = b.party_members.length || 1; }
-      else if (sortKey === "city") { av = (a.city ?? "").toLowerCase(); bv = (b.city ?? "").toLowerCase(); }
-      else if (sortKey === "submitted") {
+      if (sortKey === "name") {
+        av = a.primary_name.toLowerCase();
+        bv = b.primary_name.toLowerCase();
+      } else if (sortKey === "status") {
+        av = statusRank(a);
+        bv = statusRank(b);
+      } else if (sortKey === "party") {
+        av = a.party_members.length || 1;
+        bv = b.party_members.length || 1;
+      } else if (sortKey === "city") {
+        av = (a.city ?? "").toLowerCase();
+        bv = (b.city ?? "").toLowerCase();
+      } else if (sortKey === "submitted") {
         av = a.rsvp?.submitted_at ? new Date(a.rsvp.submitted_at).getTime() : 0;
         bv = b.rsvp?.submitted_at ? new Date(b.rsvp.submitted_at).getTime() : 0;
       }
@@ -194,14 +228,25 @@ function RsvpsPanel() {
 
   const totals = useMemo(() => {
     if (!rows) return { attending: 0, declined: 0, pending: 0, adults: 0, children: 0 };
-    let attending = 0, declined = 0, pending = 0, adults = 0, children = 0;
+    let attending = 0,
+      declined = 0,
+      pending = 0,
+      adults = 0,
+      children = 0;
     for (const r of rows) {
-      if (!r.rsvp) { pending++; continue; }
-      if (r.rsvp.status === "not_attending") { declined++; continue; }
+      if (!r.rsvp) {
+        pending++;
+        continue;
+      }
+      if (r.rsvp.status === "not_attending") {
+        declined++;
+        continue;
+      }
       attending++;
       for (const a of r.rsvp.attendees) {
         if (!a.attending) continue;
-        if (a.is_child) children++; else adults++;
+        if (a.is_child) children++;
+        else adults++;
       }
     }
     return { attending, declined, pending, adults, children };
@@ -254,20 +299,63 @@ function RsvpsPanel() {
   // is read-only RSVP/audit data, never re-imported.
   function toMasterCsv(list: AdminGuestRow[]) {
     const header = [
-      "household_name", "slug", "phone", "members", "email",
-      "address_line1", "address_line2", "city", "state", "postal_code", "country", "invite_notes",
-      "rsvp_status", "rsvp_attendees", "address_confirmed", "song_request", "rsvp_message", "rsvp_submitted_at",
-      "edit_url", "verify_url",
-      "phone_verify_last_success_at", "address_confirmed_at", "address_updated_at", "created_at", "updated_at",
+      "household_name",
+      "slug",
+      "phone",
+      "members",
+      "email",
+      "address_line1",
+      "address_line2",
+      "city",
+      "state",
+      "postal_code",
+      "country",
+      "invite_notes",
+      "rsvp_status",
+      "rsvp_attendees",
+      "address_confirmed",
+      "song_request",
+      "rsvp_message",
+      "rsvp_submitted_at",
+      "edit_url",
+      "verify_url",
+      "phone_verify_last_success_at",
+      "address_confirmed_at",
+      "address_updated_at",
+      "created_at",
+      "updated_at",
     ];
-    const body = list.map((r) => [
-      r.primary_name, r.slug, r.phone, membersField(r.party_members), r.email,
-      r.address_line1, r.address_line2, r.city, r.state, r.postal_code, r.country, r.invite_notes,
-      r.rsvp?.status ?? "no_response", attendeesField(r.rsvp), r.rsvp?.address_confirmed ? "yes" : "no",
-      r.rsvp?.song_request, r.rsvp?.message, r.rsvp?.submitted_at,
-      buildRsvpUrl(r), buildVerifyUrl(r),
-      r.phone_verify_last_success_at, r.address_confirmed_at, r.address_updated_at, r.created_at, r.updated_at,
-    ].map((v) => escCsv(typeof v === "string" ? v : v ?? "")).join(","));
+    const body = list.map((r) =>
+      [
+        r.primary_name,
+        r.slug,
+        r.phone,
+        membersField(r.party_members),
+        r.email,
+        r.address_line1,
+        r.address_line2,
+        r.city,
+        r.state,
+        r.postal_code,
+        r.country,
+        r.invite_notes,
+        r.rsvp?.status ?? "no_response",
+        attendeesField(r.rsvp),
+        r.rsvp?.address_confirmed ? "yes" : "no",
+        r.rsvp?.song_request,
+        r.rsvp?.message,
+        r.rsvp?.submitted_at,
+        buildRsvpUrl(r),
+        buildVerifyUrl(r),
+        r.phone_verify_last_success_at,
+        r.address_confirmed_at,
+        r.address_updated_at,
+        r.created_at,
+        r.updated_at,
+      ]
+        .map((v) => escCsv(typeof v === "string" ? v : (v ?? "")))
+        .join(","),
+    );
     return [header.join(","), ...body].join("\n");
   }
 
@@ -276,7 +364,17 @@ function RsvpsPanel() {
   // window.location.origin/buildVerifyUrl, so the link is always
   // production regardless of where this export runs from.
   function toTextMyWeddingCsv(list: AdminGuestRow[]) {
-    const header = ["First Name", "Last Name", "Phone", "Email", "Address", "Apt/Unit", "City", "State", "Zip"];
+    const header = [
+      "First Name",
+      "Last Name",
+      "Phone",
+      "Email",
+      "Address",
+      "Apt/Unit",
+      "City",
+      "State",
+      "Zip",
+    ];
     const body = list.map((r) => {
       const isUS = !r.country?.trim() || /^us(a)?$/i.test(r.country.trim());
       return [
@@ -284,25 +382,52 @@ function RsvpsPanel() {
         `${SITE.siteUrl}/rsvp?t=${r.verify_token}`,
         r.phone,
         r.email ?? "",
-        isUS ? r.address_line1 ?? "" : "",
-        isUS ? r.address_line2 ?? "" : "",
-        isUS ? r.city ?? "" : "",
-        isUS ? r.state ?? "" : "",
-        isUS ? r.postal_code ?? "" : "",
-      ].map((v) => escCsv(v)).join(",");
+        isUS ? (r.address_line1 ?? "") : "",
+        isUS ? (r.address_line2 ?? "") : "",
+        isUS ? (r.city ?? "") : "",
+        isUS ? (r.state ?? "") : "",
+        isUS ? (r.postal_code ?? "") : "",
+      ]
+        .map((v) => escCsv(v))
+        .join(",");
     });
     return [header.join(","), ...body].join("\n");
   }
 
   async function copySelectedLinks() {
-    const links = filtered.filter((r) => selected.has(r.id)).map((r) => `${r.primary_name}\t${buildRsvpUrl(r)}`).join("\n");
+    const links = filtered
+      .filter((r) => selected.has(r.id))
+      .map((r) => `${r.primary_name}\t${buildRsvpUrl(r)}`)
+      .join("\n");
     if (!links) return;
-    try { await navigator.clipboard.writeText(links); } catch { /* ignore */ }
+    try {
+      await navigator.clipboard.writeText(links);
+      toast.success(`Copied ${selected.size} RSVP link${selected.size === 1 ? "" : "s"}.`);
+    } catch {
+      toast.error("Couldn't copy to clipboard.");
+    }
+  }
+
+  async function copyOneLink(row: AdminGuestRow) {
+    try {
+      await navigator.clipboard.writeText(buildRsvpUrl(row));
+      toast.success(`Copied ${row.primary_name}'s RSVP link.`);
+    } catch {
+      toast.error("Couldn't copy to clipboard.");
+    }
+  }
+
+  function exportCsv(csv: string, name: string, count: number, label: string) {
+    downloadCsv(csv, name);
+    toast.success(`Exported ${count} household${count === 1 ? "" : "s"} to ${label}.`);
   }
 
   function toggleSort(k: SortKey) {
     if (k === sortKey) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    else { setSortKey(k); setSortDir(k === "submitted" ? "desc" : "asc"); }
+    else {
+      setSortKey(k);
+      setSortDir(k === "submitted" ? "desc" : "asc");
+    }
   }
 
   const allVisibleSelected = filtered.length > 0 && filtered.every((r) => selected.has(r.id));
@@ -312,6 +437,30 @@ function RsvpsPanel() {
   }
 
   const selectedRows = filtered.filter((r) => selected.has(r.id));
+
+  // Every export/import toolbar action other than "(all)" operates on this
+  // filtered view, not the full guest list — deliberately, so an admin can
+  // e.g. filter to "no_response" before a TextMyWedding batch. The risk is a
+  // filter left on from earlier work silently narrowing the next export with
+  // no sign anything was excluded, so both the count-on-button-label below
+  // and this banner exist to make that impossible to miss.
+  const activeFilterCount = [
+    search.trim() !== "",
+    filter !== "all",
+    partySize !== "any",
+    cityFilter.trim() !== "",
+    addrOnly,
+    songOnly,
+  ].filter(Boolean).length;
+
+  function clearFilters() {
+    setSearch("");
+    setFilter("all");
+    setPartySize("any");
+    setCityFilter("");
+    setAddrOnly(false);
+    setSongOnly(false);
+  }
 
   return (
     <div className="mt-8">
@@ -326,7 +475,9 @@ function RsvpsPanel() {
         ].map(([label, n]) => (
           <div key={label as string} className="border border-border/40 p-4 text-center">
             <div className="text-2xl font-serif text-primary">{n}</div>
-            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mt-1">{label}</div>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mt-1">
+              {label}
+            </div>
           </div>
         ))}
       </div>
@@ -366,11 +517,19 @@ function RsvpsPanel() {
           className="border border-input bg-background px-3 py-2 text-sm w-32"
         />
         <label className="text-xs text-muted-foreground flex items-center gap-1">
-          <input type="checkbox" checked={addrOnly} onChange={(e) => setAddrOnly(e.target.checked)} />
+          <input
+            type="checkbox"
+            checked={addrOnly}
+            onChange={(e) => setAddrOnly(e.target.checked)}
+          />
           Address unconfirmed
         </label>
         <label className="text-xs text-muted-foreground flex items-center gap-1">
-          <input type="checkbox" checked={songOnly} onChange={(e) => setSongOnly(e.target.checked)} />
+          <input
+            type="checkbox"
+            checked={songOnly}
+            onChange={(e) => setSongOnly(e.target.checked)}
+          />
           Has song request
         </label>
         <button
@@ -386,25 +545,36 @@ function RsvpsPanel() {
           Import Master CSV
         </button>
         <button
-          onClick={() => downloadCsv(toMasterCsv(filtered), "master-filtered")}
+          onClick={() =>
+            exportCsv(toMasterCsv(filtered), "master-filtered", filtered.length, "Master CSV")
+          }
           className="text-xs uppercase tracking-[0.2em] border border-border text-foreground px-3 py-2"
           title="Complete backup of the currently filtered rows — importable"
         >
-          Export Master CSV (filtered)
+          Export Master CSV ({filtered.length})
         </button>
         <button
-          onClick={() => rows && downloadCsv(toMasterCsv(rows), "master-all")}
+          onClick={() =>
+            rows && exportCsv(toMasterCsv(rows), "master-all", rows.length, "Master CSV")
+          }
           className="text-xs uppercase tracking-[0.2em] border border-border text-foreground px-3 py-2"
           title="Complete backup of every household — importable"
         >
-          Export Master CSV (all)
+          Export Master CSV (all {rows?.length ?? 0})
         </button>
         <button
-          onClick={() => downloadCsv(toTextMyWeddingCsv(filtered), "textmywedding")}
+          onClick={() =>
+            exportCsv(
+              toTextMyWeddingCsv(filtered),
+              "textmywedding",
+              filtered.length,
+              "TextMyWedding CSV",
+            )
+          }
           className="text-xs uppercase tracking-[0.2em] border border-border text-foreground px-3 py-2"
-          title="TextMyWedding's exact column format — not a backup"
+          title="TextMyWedding's exact column format — not a backup. Exports the currently filtered rows."
         >
-          Export TextMyWedding CSV
+          Export TextMyWedding CSV ({filtered.length})
         </button>
         <button
           onClick={() => openHumanReadableReport(filtered)}
@@ -415,12 +585,53 @@ function RsvpsPanel() {
         </button>
       </div>
 
+      {activeFilterCount > 0 && rows && (
+        <div className="mt-3 flex flex-wrap items-center gap-3 border border-accent/50 bg-accent/10 px-4 py-2 text-xs">
+          <span className="text-foreground">
+            Showing <span className="font-medium text-primary">{filtered.length}</span> of{" "}
+            {rows.length} households — {activeFilterCount} filter
+            {activeFilterCount === 1 ? "" : "s"} active.
+          </span>
+          <span className="text-muted-foreground">
+            The exports above act on this filtered view.
+          </span>
+          <button
+            onClick={clearFilters}
+            className="ml-auto uppercase tracking-[0.2em] text-primary link-underline"
+          >
+            Clear filters
+          </button>
+        </div>
+      )}
+
       {selected.size > 0 && (
         <div className="mt-4 flex flex-wrap items-center gap-3 border border-primary/40 bg-primary/5 px-4 py-2 text-xs">
           <span className="uppercase tracking-[0.2em] text-primary">{selected.size} selected</span>
-          <button onClick={() => downloadCsv(toMasterCsv(selectedRows), "master-selected")} className="border border-primary text-primary px-3 py-1 uppercase tracking-[0.2em]">Export selected</button>
-          <button onClick={copySelectedLinks} className="border border-border text-foreground px-3 py-1 uppercase tracking-[0.2em]">Copy RSVP links</button>
-          <button onClick={() => setSelected(new Set())} className="ml-auto text-muted-foreground uppercase tracking-[0.2em]">Clear</button>
+          <button
+            onClick={() =>
+              exportCsv(
+                toMasterCsv(selectedRows),
+                "master-selected",
+                selectedRows.length,
+                "Master CSV",
+              )
+            }
+            className="border border-primary text-primary px-3 py-1 uppercase tracking-[0.2em]"
+          >
+            Export selected
+          </button>
+          <button
+            onClick={copySelectedLinks}
+            className="border border-border text-foreground px-3 py-1 uppercase tracking-[0.2em]"
+          >
+            Copy RSVP links
+          </button>
+          <button
+            onClick={() => setSelected(new Set())}
+            className="ml-auto text-muted-foreground uppercase tracking-[0.2em]"
+          >
+            Clear
+          </button>
         </div>
       )}
 
@@ -434,14 +645,49 @@ function RsvpsPanel() {
             <thead className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
               <tr className="border-b border-border/40">
                 <th className="w-8 py-2 pr-2">
-                  <input type="checkbox" checked={allVisibleSelected} onChange={toggleAllVisible} aria-label="Select all visible" />
+                  <input
+                    type="checkbox"
+                    checked={allVisibleSelected}
+                    onChange={toggleAllVisible}
+                    aria-label="Select all visible"
+                  />
                 </th>
-                <SortHeader label={t.admin.partyCol} k="name" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
-                <SortHeader label="Status" k="status" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
-                <SortHeader label="Party" k="party" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
+                <SortHeader
+                  label={t.admin.partyCol}
+                  k="name"
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onClick={toggleSort}
+                />
+                <SortHeader
+                  label="Status"
+                  k="status"
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onClick={toggleSort}
+                />
+                <SortHeader
+                  label="Party"
+                  k="party"
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onClick={toggleSort}
+                />
                 <SortHeader label="Attending" k={null} />
-                <SortHeader label="City" k="city" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
-                <SortHeader label="Submitted" k="submitted" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
+                <SortHeader
+                  label="City"
+                  k="city"
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onClick={toggleSort}
+                />
+                <SortHeader
+                  label="Submitted"
+                  k="submitted"
+                  sortKey={sortKey}
+                  sortDir={sortDir}
+                  onClick={toggleSort}
+                />
                 <SortHeader label="Link" k={null} />
                 <SortHeader label="" k={null} />
               </tr>
@@ -451,7 +697,10 @@ function RsvpsPanel() {
                 const attending = r.rsvp?.attendees.filter((a) => a.attending) ?? [];
                 const isSel = selected.has(r.id);
                 return (
-                  <tr key={r.id} className={`border-b border-border/20 align-top ${isSel ? "bg-primary/5" : ""}`}>
+                  <tr
+                    key={r.id}
+                    className={`border-b border-border/20 align-top ${isSel ? "bg-primary/5" : ""}`}
+                  >
                     <td className="py-3 pr-2">
                       <input
                         type="checkbox"
@@ -459,7 +708,8 @@ function RsvpsPanel() {
                         onChange={(e) => {
                           setSelected((prev) => {
                             const next = new Set(prev);
-                            if (e.target.checked) next.add(r.id); else next.delete(r.id);
+                            if (e.target.checked) next.add(r.id);
+                            else next.delete(r.id);
                             return next;
                           });
                         }}
@@ -476,36 +726,51 @@ function RsvpsPanel() {
                     </td>
                     <td className="py-3 pr-4">
                       {r.rsvp ? (
-                        <span className={`text-[10px] uppercase tracking-[0.2em] px-2 py-1 border ${
-                          r.rsvp.status === "attending" ? "border-primary text-primary" :
-                          r.rsvp.status === "partial" ? "border-accent text-accent" :
-                          "border-muted-foreground text-muted-foreground"
-                        }`}>
+                        <span
+                          className={`text-[10px] uppercase tracking-[0.2em] px-2 py-1 border ${
+                            r.rsvp.status === "attending"
+                              ? "border-primary text-primary"
+                              : r.rsvp.status === "partial"
+                                ? "border-accent text-accent"
+                                : "border-muted-foreground text-muted-foreground"
+                          }`}
+                        >
                           {r.rsvp.status.replace("_", " ")}
                         </span>
                       ) : (
-                        <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">no response</span>
+                        <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                          no response
+                        </span>
                       )}
                     </td>
                     <td className="py-3 pr-4 text-xs">
                       {r.party_members.length || 1}
-                      {r.rsvp ? <span className="text-muted-foreground"> · {attending.length}✓</span> : null}
+                      {r.rsvp ? (
+                        <span className="text-muted-foreground"> · {attending.length}✓</span>
+                      ) : null}
                     </td>
                     <td className="py-3 pr-4 text-xs">
-                      {attending.length === 0 ? "—" : attending.map((a) => (
-                        <div key={a.name}>{a.name}{a.is_child ? " (child)" : ""}</div>
-                      ))}
+                      {attending.length === 0
+                        ? "—"
+                        : attending.map((a) => (
+                            <div key={a.name}>
+                              {a.name}
+                              {a.is_child ? " (child)" : ""}
+                            </div>
+                          ))}
                     </td>
                     <td className="py-3 pr-4 text-xs">{r.city ?? "—"}</td>
                     <td className="py-3 pr-4 text-xs">
-                      {r.rsvp?.submitted_at ? new Date(r.rsvp.submitted_at).toLocaleDateString() : "—"}
-                      {r.rsvp?.address_confirmed ? <div className="text-[10px] text-muted-foreground">✓ addr</div> : null}
+                      {r.rsvp?.submitted_at
+                        ? new Date(r.rsvp.submitted_at).toLocaleDateString()
+                        : "—"}
+                      {r.rsvp?.address_confirmed ? (
+                        <div className="text-[10px] text-muted-foreground">✓ addr</div>
+                      ) : null}
                     </td>
                     <td className="py-3 pr-4 text-xs font-mono">
                       <button
-                        onClick={() => {
-                          navigator.clipboard?.writeText(buildRsvpUrl(r)).catch(() => {});
-                        }}
+                        onClick={() => copyOneLink(r)}
                         className="text-primary link-underline"
                         title="Copy RSVP link"
                       >
@@ -519,17 +784,21 @@ function RsvpsPanel() {
                       >
                         Edit
                       </button>
-                      {r.phone_verify_locked_until && new Date(r.phone_verify_locked_until).getTime() > Date.now() && (
-                        <div className="mt-1">
-                          <span className="text-[10px] uppercase tracking-[0.15em] text-destructive">Locked</span>
-                          <button
-                            onClick={() => unlock(r.id)}
-                            className="block text-[10px] uppercase tracking-[0.2em] text-primary link-underline"
-                          >
-                            Unlock
-                          </button>
-                        </div>
-                      )}
+                      {r.phone_verify_locked_until &&
+                        new Date(r.phone_verify_locked_until).getTime() > Date.now() && (
+                          <div className="mt-1">
+                            <span className="text-[10px] uppercase tracking-[0.15em] text-destructive">
+                              Locked
+                            </span>
+                            <button
+                              onClick={() => unlock(r.id)}
+                              disabled={unlockingId === r.id}
+                              className="block text-[10px] uppercase tracking-[0.2em] text-primary link-underline disabled:opacity-50"
+                            >
+                              {unlockingId === r.id ? "Unlocking…" : "Unlock"}
+                            </button>
+                          </div>
+                        )}
                     </td>
                   </tr>
                 );
@@ -539,14 +808,24 @@ function RsvpsPanel() {
         </div>
       )}
 
-      {editing && <GuestEditor row={editing === "new" ? null : editing} onClose={() => setEditing(null)} onSaved={refresh} />}
+      {editing && (
+        <GuestEditor
+          row={editing === "new" ? null : editing}
+          onClose={() => setEditing(null)}
+          onSaved={refresh}
+        />
+      )}
       {importOpen && <CsvImporter onClose={() => setImportOpen(false)} onDone={refresh} />}
     </div>
   );
 }
 
 function SortHeader({
-  label, k, sortKey, sortDir, onClick,
+  label,
+  k,
+  sortKey,
+  sortDir,
+  onClick,
 }: {
   label: string;
   k: SortKey | null;
@@ -570,7 +849,6 @@ function SortHeader({
   );
 }
 
-
 // ================== Phone formatting ==================
 // Storage stays a normalized bare-digit string (see normalizePhone in
 // rsvp.functions.ts) — this is purely the admin-facing display/typing
@@ -582,8 +860,13 @@ function formatPhoneDisplay(raw: string): string {
   let d = raw.replace(/\D/g, "").slice(0, 15);
   let cc = "";
   if (d.length > 10) {
-    if (d.startsWith("1") && d.length === 11) { cc = "+1 "; d = d.slice(1); }
-    else { cc = `+${d.slice(0, d.length - 10)} `; d = d.slice(-10); }
+    if (d.startsWith("1") && d.length === 11) {
+      cc = "+1 ";
+      d = d.slice(1);
+    } else {
+      cc = `+${d.slice(0, d.length - 10)} `;
+      d = d.slice(-10);
+    }
   }
   if (d.length === 0) return "";
   if (d.length <= 3) return cc + d;
@@ -598,9 +881,17 @@ function formatPhoneDisplay(raw: string): string {
 // pasted values the same way as typed ones, since paste just becomes part
 // of the same change event.
 function PhoneInput({
-  value, onChange, className, placeholder, required,
+  value,
+  onChange,
+  className,
+  placeholder,
+  required,
 }: {
-  value: string; onChange: (digits: string) => void; className?: string; placeholder?: string; required?: boolean;
+  value: string;
+  onChange: (digits: string) => void;
+  className?: string;
+  placeholder?: string;
+  required?: boolean;
 }) {
   const ref = useRef<HTMLInputElement>(null);
 
@@ -621,7 +912,10 @@ function PhoneInput({
         for (let i = 0; i < formatted.length; i++) {
           if (/\d/.test(formatted[i])) {
             seen++;
-            if (seen === digitsBeforeCaret) { pos = i + 1; break; }
+            if (seen === digitsBeforeCaret) {
+              pos = i + 1;
+              break;
+            }
           }
         }
       }
@@ -655,6 +949,101 @@ function escCsv(s: string | null | undefined): string {
   return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
 }
 
+// ================== Shared modal primitives ==================
+// Every full-screen admin dialog (GuestEditor, CsvImporter, the feature-flag
+// confirm overlay) is a hand-rolled fixed-inset div rather than a portal
+// component, so Escape/backdrop-click have to be wired in explicitly here
+// rather than coming for free from a dialog primitive. `active` lets a modal
+// suppress both while a request is in flight, so a stray Escape or backdrop
+// click can't drop the user out from under an unfinished save/import.
+
+function useEscapeToClose(onClose: () => void, active: boolean) {
+  useEffect(() => {
+    if (!active) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose, active]);
+}
+
+function ModalBackdrop({
+  onClose,
+  active,
+  className,
+  children,
+}: {
+  onClose: () => void;
+  active: boolean;
+  className?: string;
+  children: ReactNode;
+}) {
+  useEscapeToClose(onClose, active);
+  return (
+    <div
+      className={
+        className ??
+        "fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto"
+      }
+      onMouseDown={(e) => {
+        if (active && e.target === e.currentTarget) onClose();
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+// Site-styled stand-in for the destructive-action browser confirm() — kept
+// visually consistent with the rest of the admin (square corners, uppercase
+// tracking labels) rather than pulling in the default shadcn AlertDialog look.
+function ConfirmDialog({
+  title,
+  description,
+  confirmLabel = "Delete",
+  busy,
+  onConfirm,
+  onCancel,
+}: {
+  title: string;
+  description: string;
+  confirmLabel?: string;
+  busy?: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <ModalBackdrop
+      onClose={onCancel}
+      active={!busy}
+      className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm flex items-center justify-center p-4"
+    >
+      <div className="w-full max-w-sm bg-card border border-destructive/40 p-6">
+        <h3 className="font-serif text-xl text-primary">{title}</h3>
+        <p className="mt-2 text-sm text-muted-foreground">{description}</p>
+        <div className="mt-6 flex gap-3">
+          <button
+            onClick={onConfirm}
+            disabled={busy}
+            autoFocus
+            className="border border-destructive bg-destructive text-destructive-foreground px-4 py-2 text-xs uppercase tracking-[0.2em] disabled:opacity-50"
+          >
+            {busy ? "Working…" : confirmLabel}
+          </button>
+          <button
+            onClick={onCancel}
+            disabled={busy}
+            className="border border-border text-foreground px-4 py-2 text-xs uppercase tracking-[0.2em] disabled:opacity-50"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </ModalBackdrop>
+  );
+}
+
 // ================== Human-readable report ==================
 // Client-side only — a print-optimized HTML view opened in a new tab,
 // built from data already loaded in the admin dashboard. No server
@@ -668,16 +1057,22 @@ function reportHtml(list: AdminGuestRow[]): string {
   const addressLines = (r: AdminGuestRow) => {
     const lines: string[] = [];
     if (r.address_line1) lines.push([r.address_line1, r.address_line2].filter(Boolean).join(" "));
-    const cityLine = [r.city, [r.state, r.postal_code].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+    const cityLine = [r.city, [r.state, r.postal_code].filter(Boolean).join(" ")]
+      .filter(Boolean)
+      .join(", ");
     if (cityLine) lines.push(cityLine);
     if (r.country) lines.push(r.country);
     return lines.length ? lines.map(esc).join("<br>") : "<em>No address on file</em>";
   };
   const cards = list
     .map((r) => {
-      const attending = r.rsvp?.attendees.filter((a) => a.attending).map((a) => a.name + (a.is_child ? " (child)" : "")) ?? [];
+      const attending =
+        r.rsvp?.attendees
+          .filter((a) => a.attending)
+          .map((a) => a.name + (a.is_child ? " (child)" : "")) ?? [];
       const declined = r.rsvp?.attendees.filter((a) => !a.attending).map((a) => a.name) ?? [];
-      const members = r.party_members.map((m) => m.name + (m.is_child ? " (child)" : "")).join(", ") || "—";
+      const members =
+        r.party_members.map((m) => m.name + (m.is_child ? " (child)" : "")).join(", ") || "—";
       return `
         <section class="card">
           <h2>${esc(r.primary_name)} <span class="slug">${esc(r.slug)}</span></h2>
@@ -729,12 +1124,22 @@ function openHumanReadableReport(list: AdminGuestRow[]): void {
 
 // ================== Guest editor ==================
 
-function GuestEditor({ row, onClose, onSaved }: { row: AdminGuestRow | null; onClose: () => void; onSaved: () => void | Promise<void> }) {
+function GuestEditor({
+  row,
+  onClose,
+  onSaved,
+}: {
+  row: AdminGuestRow | null;
+  onClose: () => void;
+  onSaved: () => void | Promise<void>;
+}) {
   const runUpsert = useServerFn(upsertGuest);
   const runDelete = useServerFn(deleteGuest);
   const [primaryName, setPrimaryName] = useState(row?.primary_name ?? "");
   const [members, setMembers] = useState<PartyMember[]>(
-    row?.party_members.length ? row.party_members : [{ name: row?.primary_name ?? "", is_child: false }],
+    row?.party_members.length
+      ? row.party_members
+      : [{ name: row?.primary_name ?? "", is_child: false }],
   );
   const [phone, setPhone] = useState(row?.phone ?? "");
   const [email, setEmail] = useState(row?.email ?? "");
@@ -746,6 +1151,8 @@ function GuestEditor({ row, onClose, onSaved }: { row: AdminGuestRow | null; onC
   const [country, setCountry] = useState(row?.country ?? "");
   const [notes, setNotes] = useState(row?.invite_notes ?? "");
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   async function save() {
@@ -757,11 +1164,19 @@ function GuestEditor({ row, onClose, onSaved }: { row: AdminGuestRow | null; onC
           id: row?.id,
           primary_name: primaryName,
           party_members: members.filter((m) => m.name.trim()),
-          phone, email, address_line1: line1, address_line2: line2,
-          city, state, postal_code: postal, country, invite_notes: notes,
+          phone,
+          email,
+          address_line1: line1,
+          address_line2: line2,
+          city,
+          state,
+          postal_code: postal,
+          country,
+          invite_notes: notes,
         },
       });
       await onSaved();
+      toast.success(row ? "Invitation saved." : `Invitation created for ${primaryName}.`);
       onClose();
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Save failed");
@@ -770,31 +1185,52 @@ function GuestEditor({ row, onClose, onSaved }: { row: AdminGuestRow | null; onC
     }
   }
 
-  async function remove() {
+  async function doDelete() {
     if (!row) return;
-    if (!confirm(`Delete ${row.primary_name}? This also deletes their RSVP.`)) return;
-    await runDelete({ data: { id: row.id } });
-    await onSaved();
-    onClose();
+    setDeleting(true);
+    try {
+      await runDelete({ data: { id: row.id } });
+      await onSaved();
+      toast.success(`Deleted ${row.primary_name}.`);
+      onClose();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Delete failed");
+      setConfirmingDelete(false);
+    } finally {
+      setDeleting(false);
+    }
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-start sm:items-center justify-center p-4 overflow-y-auto">
+    <ModalBackdrop
+      onClose={onClose}
+      active={!saving && !deleting}
+      className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-start sm:items-center justify-center p-4 overflow-y-auto"
+    >
       <div className="w-full max-w-2xl bg-card border border-border p-6 sm:p-8 my-8">
         <div className="flex items-center justify-between">
-          <h3 className="font-serif text-2xl text-primary">{row ? "Edit invitation" : "Add invitation"}</h3>
-          <button onClick={onClose} className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Close</button>
+          <h3 className="font-serif text-2xl text-primary">
+            {row ? "Edit invitation" : "Add invitation"}
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-xs uppercase tracking-[0.2em] text-muted-foreground"
+          >
+            Close
+          </button>
         </div>
 
         {row && (
           <div className="mt-2 space-y-1 text-xs text-muted-foreground">
             <p>
-              Link code <span className="font-mono text-foreground">{row.slug}</span> —
-              share <span className="font-mono text-foreground break-all">/rsvp?g={row.slug}</span>
+              Link code <span className="font-mono text-foreground">{row.slug}</span> — share{" "}
+              <span className="font-mono text-foreground break-all">/rsvp?g={row.slug}</span>
             </p>
             <p>
               Pre-invitation link (for TextMyWedding, before invites mail) —{" "}
-              <span className="font-mono text-foreground break-all">/rsvp?t={row.verify_token}</span>
+              <span className="font-mono text-foreground break-all">
+                /rsvp?t={row.verify_token}
+              </span>
             </p>
             {row.address_confirmed_at && (
               <p>Address confirmed {new Date(row.address_confirmed_at).toLocaleDateString()}</p>
@@ -804,32 +1240,63 @@ function GuestEditor({ row, onClose, onSaved }: { row: AdminGuestRow | null; onC
 
         <div className="mt-6 space-y-4">
           <div>
-            <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Invitation name</label>
-            <input value={primaryName} onChange={(e) => setPrimaryName(e.target.value)} placeholder="e.g. The Smith Family or John & Jane Doe" className="mt-1 w-full border border-input bg-background px-3 py-2 text-sm" />
-            <p className="mt-1 text-[11px] text-muted-foreground">How this invite is addressed on the envelope. Used to look them up.</p>
+            <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              Invitation name
+            </label>
+            <input
+              value={primaryName}
+              onChange={(e) => setPrimaryName(e.target.value)}
+              placeholder="e.g. The Smith Family or John & Jane Doe"
+              className="mt-1 w-full border border-input bg-background px-3 py-2 text-sm"
+            />
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              How this invite is addressed on the envelope. Used to look them up.
+            </p>
           </div>
 
           <div>
-            <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Guests on this invite</label>
+            <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              Guests on this invite
+            </label>
             <div className="mt-1 space-y-2">
               {members.map((m, i) => (
                 <div key={i} className="flex gap-2 items-center">
                   <input
                     value={m.name}
-                    onChange={(e) => setMembers((p) => p.map((x, j) => j === i ? { ...x, name: e.target.value } : x))}
+                    onChange={(e) =>
+                      setMembers((p) =>
+                        p.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)),
+                      )
+                    }
                     placeholder="Full name"
                     className="flex-1 border border-input bg-background px-3 py-2 text-sm"
                   />
                   <label className="text-xs text-muted-foreground flex items-center gap-1">
-                    <input type="checkbox" checked={m.is_child}
-                      onChange={(e) => setMembers((p) => p.map((x, j) => j === i ? { ...x, is_child: e.target.checked } : x))}
+                    <input
+                      type="checkbox"
+                      checked={m.is_child}
+                      onChange={(e) =>
+                        setMembers((p) =>
+                          p.map((x, j) => (j === i ? { ...x, is_child: e.target.checked } : x)),
+                        )
+                      }
                     />
                     child
                   </label>
-                  <button type="button" onClick={() => setMembers((p) => p.filter((_, j) => j !== i))} className="text-xs text-muted-foreground">×</button>
+                  <button
+                    type="button"
+                    onClick={() => setMembers((p) => p.filter((_, j) => j !== i))}
+                    className="text-xs text-muted-foreground"
+                  >
+                    ×
+                  </button>
                 </div>
               ))}
-              <button type="button" onClick={() => setMembers((p) => [...p, { name: "", is_child: false }])} className="text-xs uppercase tracking-[0.2em] text-primary">
+              <button
+                type="button"
+                onClick={() => setMembers((p) => [...p, { name: "", is_child: false }])}
+                className="text-xs uppercase tracking-[0.2em] text-primary"
+              >
                 + Add member
               </button>
             </div>
@@ -845,14 +1312,51 @@ function GuestEditor({ row, onClose, onSaved }: { row: AdminGuestRow | null; onC
                 className="w-full border border-input bg-background px-3 py-2 text-sm"
               />
               <p className="mt-1 text-[10px] text-muted-foreground">
-                Required — the last 4 digits verify a household before their RSVP is shown. US or Mexico, 10 digits.
+                Required — the last 4 digits verify a household before their RSVP is shown. US or
+                Mexico, 10 digits.
               </p>
             </div>
-            <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" type="email" autoComplete="email" maxLength={200} className="border border-input bg-background px-3 py-2 text-sm" />
-            <input value={line1} onChange={(e) => setLine1(e.target.value)} placeholder="Address line 1" autoComplete="address-line1" maxLength={200} className="sm:col-span-2 border border-input bg-background px-3 py-2 text-sm" />
-            <input value={line2} onChange={(e) => setLine2(e.target.value)} placeholder="Address line 2" autoComplete="address-line2" maxLength={200} className="sm:col-span-2 border border-input bg-background px-3 py-2 text-sm" />
-            <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" autoComplete="address-level2" maxLength={120} className="border border-input bg-background px-3 py-2 text-sm" />
-            <input value={state} onChange={(e) => setState(e.target.value)} placeholder="State" autoComplete="address-level1" maxLength={60} className="border border-input bg-background px-3 py-2 text-sm" />
+            <input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              type="email"
+              autoComplete="email"
+              maxLength={200}
+              className="border border-input bg-background px-3 py-2 text-sm"
+            />
+            <input
+              value={line1}
+              onChange={(e) => setLine1(e.target.value)}
+              placeholder="Address line 1"
+              autoComplete="address-line1"
+              maxLength={200}
+              className="sm:col-span-2 border border-input bg-background px-3 py-2 text-sm"
+            />
+            <input
+              value={line2}
+              onChange={(e) => setLine2(e.target.value)}
+              placeholder="Address line 2"
+              autoComplete="address-line2"
+              maxLength={200}
+              className="sm:col-span-2 border border-input bg-background px-3 py-2 text-sm"
+            />
+            <input
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder="City"
+              autoComplete="address-level2"
+              maxLength={120}
+              className="border border-input bg-background px-3 py-2 text-sm"
+            />
+            <input
+              value={state}
+              onChange={(e) => setState(e.target.value)}
+              placeholder="State"
+              autoComplete="address-level1"
+              maxLength={60}
+              className="border border-input bg-background px-3 py-2 text-sm"
+            />
             <div>
               <input
                 value={postal}
@@ -862,26 +1366,48 @@ function GuestEditor({ row, onClose, onSaved }: { row: AdminGuestRow | null; onC
                 maxLength={20}
                 className="w-full border border-input bg-background px-3 py-2 text-sm"
               />
-              {postal.trim() && (!country.trim() || /^us(a)?$/i.test(country.trim())) && !looksLikeUsZip(postal) && (
-                <p className="mt-1 text-[10px] text-destructive">Doesn't look like a US ZIP (12345 or 12345-6789).</p>
-              )}
+              {postal.trim() &&
+                (!country.trim() || /^us(a)?$/i.test(country.trim())) &&
+                !looksLikeUsZip(postal) && (
+                  <p className="mt-1 text-[10px] text-destructive">
+                    Doesn't look like a US ZIP (12345 or 12345-6789).
+                  </p>
+                )}
             </div>
-            <input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Country" autoComplete="country-name" maxLength={60} className="border border-input bg-background px-3 py-2 text-sm" />
+            <input
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+              placeholder="Country"
+              autoComplete="country-name"
+              maxLength={60}
+              className="border border-input bg-background px-3 py-2 text-sm"
+            />
           </div>
 
           <div>
-            <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Internal notes (guests never see these)</label>
-            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className="mt-1 w-full border border-input bg-background px-3 py-2 text-sm" />
+            <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              Internal notes (guests never see these)
+            </label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              className="mt-1 w-full border border-input bg-background px-3 py-2 text-sm"
+            />
           </div>
 
           {row?.rsvp && (
             <div className="border-t border-border/40 pt-4">
-              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Their RSVP</div>
+              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                Their RSVP
+              </div>
               <div className="text-sm mt-1">
                 Status: <span className="font-medium">{row.rsvp.status}</span> · Submitted{" "}
                 {new Date(row.rsvp.submitted_at).toLocaleString()}
               </div>
-              {row.rsvp.song_request && <div className="text-sm mt-1">Song: {row.rsvp.song_request}</div>}
+              {row.rsvp.song_request && (
+                <div className="text-sm mt-1">Song: {row.rsvp.song_request}</div>
+              )}
               {row.rsvp.message && <div className="text-sm mt-1 italic">"{row.rsvp.message}"</div>}
             </div>
           )}
@@ -889,18 +1415,35 @@ function GuestEditor({ row, onClose, onSaved }: { row: AdminGuestRow | null; onC
           {err && <p className="text-sm text-destructive">{err}</p>}
 
           <div className="flex gap-3 pt-2">
-            <button onClick={save} disabled={saving} className="border border-primary bg-primary text-primary-foreground px-5 py-2 text-xs uppercase tracking-[0.2em] disabled:opacity-50">
+            <button
+              onClick={save}
+              disabled={saving}
+              className="border border-primary bg-primary text-primary-foreground px-5 py-2 text-xs uppercase tracking-[0.2em] disabled:opacity-50"
+            >
               {saving ? "Saving…" : "Save"}
             </button>
             {row && (
-              <button onClick={remove} className="border border-destructive text-destructive px-5 py-2 text-xs uppercase tracking-[0.2em] ml-auto">
+              <button
+                onClick={() => setConfirmingDelete(true)}
+                disabled={saving}
+                className="border border-destructive text-destructive px-5 py-2 text-xs uppercase tracking-[0.2em] ml-auto disabled:opacity-50"
+              >
                 Delete
               </button>
             )}
           </div>
         </div>
       </div>
-    </div>
+      {confirmingDelete && row && (
+        <ConfirmDialog
+          title="Delete this invitation?"
+          description={`Delete ${row.primary_name}? This also deletes their RSVP. This cannot be undone.`}
+          busy={deleting}
+          onConfirm={doDelete}
+          onCancel={() => setConfirmingDelete(false)}
+        />
+      )}
+    </ModalBackdrop>
   );
 }
 
@@ -914,43 +1457,107 @@ interface ImportSummary {
 
 function actionBadge(action: ImportRowResult["action"]) {
   const cls =
-    action === "insert" ? "border-primary text-primary" :
-    action === "update" ? "border-accent text-accent" :
-    "border-destructive text-destructive";
-  return <span className={`text-[10px] uppercase tracking-[0.15em] px-2 py-0.5 border ${cls}`}>{action}</span>;
+    action === "insert"
+      ? "border-primary text-primary"
+      : action === "update"
+        ? "border-accent text-accent"
+        : "border-destructive text-destructive";
+  return (
+    <span className={`text-[10px] uppercase tracking-[0.15em] px-2 py-0.5 border ${cls}`}>
+      {action}
+    </span>
+  );
 }
 
-function CsvImporter({ onClose, onDone }: { onClose: () => void; onDone: () => void | Promise<void> }) {
+// Spreadsheet formats other than .csv/.txt are read as binary workbooks and
+// converted to the same CSV text the plain-text path produces, so
+// importGuestsCsv/planImportRows never need to know the source format. A
+// column genuinely stored as a *number* in the source file (rather than
+// text) can still lose a leading zero on save — e.g. a ZIP typed as 02134 —
+// but that's identical to what Excel's own "Save as CSV" would do; nothing
+// downstream of the file itself can recover a digit that was never stored.
+const SPREADSHEET_EXTENSIONS = ["csv", "txt", "xlsx", "xls", "ods"] as const;
+const SPREADSHEET_ACCEPT =
+  ".csv,.txt,.xlsx,.xls,.ods,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.oasis.opendocument.spreadsheet";
+
+type ImportPhase = "input" | "preview" | "importing" | "done";
+
+function CsvImporter({
+  onClose,
+  onDone,
+}: {
+  onClose: () => void;
+  onDone: () => void | Promise<void>;
+}) {
   const runImport = useServerFn(importGuestsCsv);
   const [csv, setCsv] = useState("");
   const [fileName, setFileName] = useState<string | null>(null);
+  const [sheetCount, setSheetCount] = useState(1);
   const [dragActive, setDragActive] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [preview, setPreview] = useState<ImportSummary | null>(null);
-  const [committed, setCommitted] = useState<ImportSummary | null>(null);
+  const [phase, setPhase] = useState<ImportPhase>("input");
+  const [checking, setChecking] = useState(false);
+  const [parsing, setParsing] = useState(false);
+  const [result, setResult] = useState<ImportSummary | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const busy = checking || parsing || phase === "importing";
 
   function editCsv(v: string) {
     setCsv(v);
     // A stale preview against edited text could be committed by mistake —
-    // drop back to phase 1 the moment the pasted text changes.
-    setPreview(null);
-    setCommitted(null);
+    // drop back to phase 1 the moment the source text changes.
+    setPhase("input");
+    setResult(null);
+  }
+
+  function resetAll() {
+    setCsv("");
+    setFileName(null);
+    setSheetCount(1);
+    setPhase("input");
+    setResult(null);
+    setErr(null);
   }
 
   async function loadFile(file: File) {
-    if (!/\.csv$/i.test(file.name) && file.type && !/csv|text\/plain/i.test(file.type)) {
-      setErr("Please choose a .csv file.");
+    const ext = file.name.toLowerCase().match(/\.([a-z0-9]+)$/)?.[1];
+    if (!ext || !(SPREADSHEET_EXTENSIONS as readonly string[]).includes(ext)) {
+      setErr("Please choose a .csv, .xlsx, .xls, or .ods file.");
       return;
     }
     setErr(null);
+    setParsing(true);
     try {
-      const text = await file.text();
-      setFileName(file.name);
-      editCsv(text);
-    } catch {
-      setErr("Couldn't read that file. Please try again.");
+      if (ext === "csv" || ext === "txt") {
+        const text = await file.text();
+        setFileName(file.name);
+        setSheetCount(1);
+        editCsv(text);
+      } else {
+        // Loaded on demand, not at module scope — xlsx is a ~140KB (gzipped)
+        // parsing library that's only ever needed inside this client-side
+        // file handler, never during server rendering. A static top-level
+        // import would otherwise get pulled into the SSR/Worker bundle for
+        // every admin page load, whether or not anyone imports a spreadsheet.
+        const XLSX = await import("xlsx");
+        const buf = await file.arrayBuffer();
+        const wb = XLSX.read(buf, { type: "array" });
+        const sheetName = wb.SheetNames[0];
+        if (!sheetName) throw new Error("That file doesn't have any sheets.");
+        const text = XLSX.utils.sheet_to_csv(wb.Sheets[sheetName], { blankrows: false });
+        setFileName(file.name);
+        setSheetCount(wb.SheetNames.length);
+        editCsv(text);
+      }
+    } catch (e) {
+      setErr(
+        e instanceof Error
+          ? `Couldn't read that file: ${e.message}`
+          : "Couldn't read that file. Please try again.",
+      );
+    } finally {
+      setParsing(false);
     }
   }
 
@@ -968,92 +1575,156 @@ function CsvImporter({ onClose, onDone }: { onClose: () => void; onDone: () => v
   }
 
   async function doPreview() {
-    setBusy(true);
+    setChecking(true);
     setErr(null);
     try {
-      setPreview(await runImport({ data: { csv, dryRun: true } }));
+      const r = await runImport({ data: { csv, dryRun: true } });
+      setResult(r);
+      setPhase("preview");
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Preview failed");
     } finally {
-      setBusy(false);
+      setChecking(false);
     }
   }
 
   async function doConfirm() {
-    setBusy(true);
+    setPhase("importing");
     setErr(null);
     try {
-      const result = await runImport({ data: { csv, dryRun: false } });
-      setCommitted(result);
-      await onDone();
+      const r = await runImport({ data: { csv, dryRun: false } });
+      await onDone(); // refresh the admin table before declaring success
+      setResult(r);
+      setPhase("done");
+      toast.success(
+        `Import complete: ${r.totals.inserted} new, ${r.totals.updated} updated` +
+          (r.totals.errors ? `, ${r.totals.errors} error${r.totals.errors === 1 ? "" : "s"}` : "") +
+          ".",
+      );
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Import failed");
-    } finally {
-      setBusy(false);
+      setPhase("preview"); // back to the preview table, not stranded mid-progress
     }
   }
 
-  const shown = committed ?? preview;
+  function finishAndClose() {
+    resetAll();
+    onClose();
+  }
 
   return (
-    <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto">
+    <ModalBackdrop
+      onClose={finishAndClose}
+      active={phase !== "importing"}
+      className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto"
+    >
       <div className="w-full max-w-3xl bg-card border border-border p-6 sm:p-8 my-8">
         <div className="flex items-center justify-between">
           <h3 className="font-serif text-2xl text-primary">Import Master CSV</h3>
-          <button onClick={onClose} className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Close</button>
-        </div>
-        <p className="mt-2 text-xs text-muted-foreground">
-          Columns (header row optional): <span className="font-mono">household_name, phone, members, email, address_line1, address_line2, city, state, postal_code, country, invite_notes, slug</span>.
-          Separate party members with <span className="font-mono">;</span> and append <span className="font-mono">(child)</span> for kids. A <span className="font-mono">slug</span> column requires an explicit header row and matches an existing household for an update — omit it to always insert new.
-        </p>
-        <p className="mt-2 text-xs text-muted-foreground">
-          <span className="text-foreground">Phone is required for new households</span> — it's how they verify themselves before their RSVP is shown.
-          On an update (matched by slug, phone, or email), a <span className="text-foreground">blank cell leaves that field unchanged</span> — it's never treated as "clear this."
-        </p>
-        <div className="mt-4 flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="border border-border text-foreground px-4 py-2 text-xs uppercase tracking-[0.2em]"
-          >
-            Choose CSV File
-          </button>
-          {fileName && <span className="text-xs text-muted-foreground font-mono">{fileName}</span>}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".csv,text/csv"
-            onChange={onFileInputChange}
-            className="hidden"
-            aria-label="Choose a CSV file to import"
-          />
-        </div>
-        <textarea
-          value={csv}
-          onChange={(e) => { setFileName(null); editCsv(e.target.value); }}
-          onDrop={onDrop}
-          onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
-          onDragLeave={(e) => { e.preventDefault(); setDragActive(false); }}
-          rows={12}
-          placeholder="Drop a CSV file here, choose one above, or paste its contents directly…&#10;household_name,phone,members,email,address_line1,city,state,postal_code&#10;Jane & John Doe,402-555-1234,Jane Doe;John Doe;Emma Doe (child),jane@example.com,123 Main St,Louisville,NE,68037"
-          className={`mt-2 w-full border px-3 py-2 text-xs font-mono transition-colors ${
-            dragActive ? "border-primary bg-primary/5" : "border-input bg-background"
-          }`}
-        />
-
-        {err && <p className="mt-3 text-sm text-destructive">{err}</p>}
-
-        {!shown ? (
-          <div className="mt-4 flex gap-3">
-            <button onClick={doPreview} disabled={busy || !csv.trim()} className="border border-primary bg-primary text-primary-foreground px-5 py-2 text-xs uppercase tracking-[0.2em] disabled:opacity-50">
-              {busy ? "Checking…" : "Preview"}
+          {phase !== "importing" && (
+            <button
+              onClick={finishAndClose}
+              className="text-xs uppercase tracking-[0.2em] text-muted-foreground"
+            >
+              Close
             </button>
-          </div>
-        ) : (
+          )}
+        </div>
+
+        {phase === "input" && (
+          <>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Columns (header row optional):{" "}
+              <span className="font-mono">
+                household_name, phone, members, email, address_line1, address_line2, city, state,
+                postal_code, country, invite_notes, slug
+              </span>
+              . Separate party members with <span className="font-mono">;</span> and append{" "}
+              <span className="font-mono">(child)</span> for kids. A{" "}
+              <span className="font-mono">slug</span> column requires an explicit header row and
+              matches an existing household for an update — omit it to always insert new.
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              <span className="text-foreground">Phone is required for new households</span> — it's
+              how they verify themselves before their RSVP is shown. On an update (matched by slug,
+              phone, or email), a{" "}
+              <span className="text-foreground">blank cell leaves that field unchanged</span> — it's
+              never treated as "clear this."
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Accepts <span className="font-mono">.csv</span>,{" "}
+              <span className="font-mono">.xlsx</span>, <span className="font-mono">.xls</span>, or{" "}
+              <span className="font-mono">.ods</span> — only the first sheet of a workbook is read.
+              If a phone or ZIP column loses a leading digit, format that column as{" "}
+              <span className="text-foreground">Text</span> in Excel before saving.
+            </p>
+            <div className="mt-4 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={parsing}
+                className="border border-border text-foreground px-4 py-2 text-xs uppercase tracking-[0.2em] disabled:opacity-50"
+              >
+                {parsing ? "Reading file…" : "Choose File"}
+              </button>
+              {fileName && (
+                <span className="text-xs text-muted-foreground font-mono">
+                  {fileName}
+                  {sheetCount > 1 ? ` (sheet 1 of ${sheetCount})` : ""}
+                </span>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={SPREADSHEET_ACCEPT}
+                onChange={onFileInputChange}
+                className="hidden"
+                aria-label="Choose a spreadsheet file to import"
+              />
+            </div>
+            <textarea
+              value={csv}
+              onChange={(e) => {
+                setFileName(null);
+                setSheetCount(1);
+                editCsv(e.target.value);
+              }}
+              onDrop={onDrop}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragActive(true);
+              }}
+              onDragLeave={(e) => {
+                e.preventDefault();
+                setDragActive(false);
+              }}
+              rows={12}
+              placeholder="Drop a CSV/Excel/ODS file here, choose one above, or paste CSV text directly…&#10;household_name,phone,members,email,address_line1,city,state,postal_code&#10;Jane & John Doe,402-555-1234,Jane Doe;John Doe;Emma Doe (child),jane@example.com,123 Main St,Louisville,NE,68037"
+              className={`mt-2 w-full border px-3 py-2 text-xs font-mono transition-colors ${
+                dragActive ? "border-primary bg-primary/5" : "border-input bg-background"
+              }`}
+            />
+
+            {err && <p className="mt-3 text-sm text-destructive">{err}</p>}
+
+            <div className="mt-4 flex gap-3">
+              <button
+                onClick={doPreview}
+                disabled={busy || !csv.trim()}
+                className="border border-primary bg-primary text-primary-foreground px-5 py-2 text-xs uppercase tracking-[0.2em] disabled:opacity-50"
+              >
+                {checking ? "Checking…" : "Preview"}
+              </button>
+            </div>
+          </>
+        )}
+
+        {(phase === "preview" || phase === "importing") && result && (
           <div className="mt-4">
             <div className="flex flex-wrap gap-3 text-xs">
               <span className="uppercase tracking-[0.2em] text-primary">
-                {committed ? "Imported" : "Preview"}: {shown.totals.inserted} new, {shown.totals.updated} updated, {shown.totals.errors} error{shown.totals.errors === 1 ? "" : "s"}
+                Preview: {result.totals.inserted} new, {result.totals.updated} updated,{" "}
+                {result.totals.errors} error{result.totals.errors === 1 ? "" : "s"}
               </span>
             </div>
             <div className="mt-3 max-h-[400px] overflow-y-auto border border-border/40">
@@ -1067,41 +1738,150 @@ function CsvImporter({ onClose, onDone }: { onClose: () => void; onDone: () => v
                   </tr>
                 </thead>
                 <tbody>
-                  {shown.rows.map((r) => (
+                  {result.rows.map((r) => (
                     <tr key={r.row} className="border-b border-border/20 align-top">
                       <td className="py-2 px-3 text-muted-foreground">{r.row}</td>
                       <td className="py-2 px-3">{r.household_name ?? "—"}</td>
                       <td className="py-2 px-3">
                         {actionBadge(r.action)}
-                        {r.matchedBy && <span className="ml-2 text-muted-foreground">by {r.matchedBy}</span>}
+                        {r.matchedBy && (
+                          <span className="ml-2 text-muted-foreground">by {r.matchedBy}</span>
+                        )}
                       </td>
                       <td className="py-2 px-3">
                         {r.error && <span className="text-destructive">{r.error}</span>}
-                        {r.warnings.map((w, i) => <div key={i} className="text-muted-foreground">{w}</div>)}
+                        {r.warnings.map((w, i) => (
+                          <div key={i} className="text-muted-foreground">
+                            {w}
+                          </div>
+                        ))}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            <div className="mt-4 flex gap-3">
-              {!committed && (
-                <button onClick={doConfirm} disabled={busy} className="border border-primary bg-primary text-primary-foreground px-5 py-2 text-xs uppercase tracking-[0.2em] disabled:opacity-50">
-                  {busy ? "Importing…" : "Confirm Import"}
+
+            {phase === "importing" ? (
+              <div className="mt-4 flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-primary">
+                <span
+                  className="inline-block h-3.5 w-3.5 rounded-full border-2 border-primary border-t-transparent animate-spin"
+                  aria-hidden="true"
+                />
+                Importing {result.rows.length} row{result.rows.length === 1 ? "" : "s"}…
+              </div>
+            ) : (
+              <div className="mt-4 flex gap-3">
+                <button
+                  onClick={doConfirm}
+                  disabled={busy}
+                  className="border border-primary bg-primary text-primary-foreground px-5 py-2 text-xs uppercase tracking-[0.2em] disabled:opacity-50"
+                >
+                  Confirm Import
                 </button>
-              )}
-              <button onClick={() => editCsv(csv)} className="border border-border text-foreground px-5 py-2 text-xs uppercase tracking-[0.2em]">
-                {committed ? "Import another" : "Back to edit"}
+                <button
+                  onClick={() => editCsv(csv)}
+                  disabled={busy}
+                  className="border border-border text-foreground px-5 py-2 text-xs uppercase tracking-[0.2em] disabled:opacity-50"
+                >
+                  Back to edit
+                </button>
+              </div>
+            )}
+
+            {err && <p className="mt-3 text-sm text-destructive">{err}</p>}
+          </div>
+        )}
+
+        {phase === "done" && result && (
+          <div className="mt-6">
+            <div className="flex items-center gap-3">
+              <span
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-primary text-primary"
+                aria-hidden="true"
+              >
+                ✓
+              </span>
+              <h4 className="font-serif text-xl text-primary">Import complete</h4>
+            </div>
+            <dl className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                ["New households", result.totals.inserted],
+                ["Updated", result.totals.updated],
+                ["Warnings", result.rows.reduce((n, r) => n + r.warnings.length, 0)],
+                ["Errors", result.totals.errors],
+              ].map(([label, n]) => (
+                <div key={label as string} className="border border-border/40 p-3 text-center">
+                  <div
+                    className={`text-xl font-serif ${label === "Errors" && (n as number) > 0 ? "text-destructive" : "text-primary"}`}
+                  >
+                    {n}
+                  </div>
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mt-1">
+                    {label}
+                  </div>
+                </div>
+              ))}
+            </dl>
+
+            {(result.totals.errors > 0 || result.rows.some((r) => r.warnings.length)) && (
+              <div className="mt-4 max-h-[300px] overflow-y-auto border border-border/40">
+                <table className="w-full text-xs">
+                  <thead className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground sticky top-0 bg-card">
+                    <tr className="border-b border-border/40">
+                      <th className="text-left py-2 px-3">Row</th>
+                      <th className="text-left py-2 px-3">Household</th>
+                      <th className="text-left py-2 px-3">Action</th>
+                      <th className="text-left py-2 px-3">Detail</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {result.rows
+                      .filter((r) => r.error || r.warnings.length)
+                      .map((r) => (
+                        <tr key={r.row} className="border-b border-border/20 align-top">
+                          <td className="py-2 px-3 text-muted-foreground">{r.row}</td>
+                          <td className="py-2 px-3">{r.household_name ?? "—"}</td>
+                          <td className="py-2 px-3">{actionBadge(r.action)}</td>
+                          <td className="py-2 px-3">
+                            {r.error && <span className="text-destructive">{r.error}</span>}
+                            {r.warnings.map((w, i) => (
+                              <div key={i} className="text-muted-foreground">
+                                {w}
+                              </div>
+                            ))}
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={finishAndClose}
+                className="border border-primary bg-primary text-primary-foreground px-5 py-2 text-xs uppercase tracking-[0.2em]"
+              >
+                Done
+              </button>
+              <button
+                onClick={resetAll}
+                className="border border-border text-foreground px-5 py-2 text-xs uppercase tracking-[0.2em]"
+              >
+                Import another file
               </button>
             </div>
           </div>
         )}
 
         <p className="mt-4 text-[10px] text-muted-foreground">
-          Fallback contact shown to guests who can't find their name: <span className="italic">{SITE.rsvpFallbackContact}</span> (edit in <span className="font-mono">src/lib/site.ts</span>).
+          Fallback contact shown to guests who can't find their name:{" "}
+          <span className="italic">{SITE.rsvpFallbackContact}</span> (edit in{" "}
+          <span className="font-mono">src/lib/site.ts</span>).
         </p>
       </div>
-    </div>
+    </ModalBackdrop>
   );
 }
 
@@ -1121,15 +1901,23 @@ function PhotosPanel() {
 
   const [photoTab, setPhotoTab] = useState<PhotoTab>("pending");
   const [photos, setPhotos] = useState<AdminPhoto[]>([]);
-  const [counts, setCounts] = useState<{ pending: number; approved: number; rejected: number } | null>(null);
+  const [counts, setCounts] = useState<{
+    pending: number;
+    approved: number;
+    rejected: number;
+  } | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [lightbox, setLightbox] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [editingCaption, setEditingCaption] = useState<string | null>(null);
   const [captionDraft, setCaptionDraft] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
 
   const refreshCounts = useCallback(() => {
-    loadCounts({}).then(setCounts).catch(() => {});
+    loadCounts({})
+      .then(setCounts)
+      .catch(() => {});
   }, [loadCounts]);
 
   const refreshPhotos = useCallback(async () => {
@@ -1144,43 +1932,72 @@ function PhotosPanel() {
     });
   }, [loadPhotos, photoTab]);
 
-  useEffect(() => { refreshPhotos().catch(() => {}); }, [refreshPhotos]);
-  useEffect(() => { refreshCounts(); }, [refreshCounts]);
+  useEffect(() => {
+    refreshPhotos().catch(() => {});
+  }, [refreshPhotos]);
+  useEffect(() => {
+    refreshCounts();
+  }, [refreshCounts]);
 
-  const setOne = useCallback(async (id: string, s: "approved" | "rejected") => {
-    setBusy(true);
-    try {
-      await setStatus({ data: { id, status: s } });
-      await Promise.all([refreshPhotos(), Promise.resolve(refreshCounts())]);
-    } finally { setBusy(false); }
-  }, [setStatus, refreshPhotos, refreshCounts]);
+  const setOne = useCallback(
+    async (id: string, s: "approved" | "rejected") => {
+      setBusy(true);
+      try {
+        await setStatus({ data: { id, status: s } });
+        await Promise.all([refreshPhotos(), Promise.resolve(refreshCounts())]);
+      } finally {
+        setBusy(false);
+      }
+    },
+    [setStatus, refreshPhotos, refreshCounts],
+  );
 
-  const deleteOne = useCallback(async (id: string) => {
-    if (!confirm("Delete this photo permanently? This removes the file too.")) return;
-    setBusy(true);
-    try {
-      await runDelete({ data: { id } });
-      await Promise.all([refreshPhotos(), Promise.resolve(refreshCounts())]);
-    } finally { setBusy(false); }
-  }, [runDelete, refreshPhotos, refreshCounts]);
+  const deleteOne = useCallback((id: string) => setConfirmDeleteId(id), []);
+
+  const doDeleteOne = useCallback(
+    async (id: string) => {
+      setBusy(true);
+      try {
+        await runDelete({ data: { id } });
+        await Promise.all([refreshPhotos(), Promise.resolve(refreshCounts())]);
+        toast.success("Photo deleted.");
+        setConfirmDeleteId(null);
+      } finally {
+        setBusy(false);
+      }
+    },
+    [runDelete, refreshPhotos, refreshCounts],
+  );
 
   async function bulkStatus(status: "approved" | "rejected" | "pending") {
     if (!selected.size) return;
+    const n = selected.size;
     setBusy(true);
     try {
       await runBulkStatus({ data: { ids: Array.from(selected), status } });
       await Promise.all([refreshPhotos(), Promise.resolve(refreshCounts())]);
-    } finally { setBusy(false); }
+      toast.success(`${n} photo${n === 1 ? "" : "s"} moved to ${status}.`);
+    } finally {
+      setBusy(false);
+    }
   }
 
-  async function bulkDelete() {
+  function bulkDelete() {
     if (!selected.size) return;
-    if (!confirm(`Delete ${selected.size} photos permanently? This removes the files too.`)) return;
+    setConfirmBulkDelete(true);
+  }
+
+  async function doBulkDelete() {
+    const n = selected.size;
     setBusy(true);
     try {
       await runBulkDelete({ data: { ids: Array.from(selected) } });
       await Promise.all([refreshPhotos(), Promise.resolve(refreshCounts())]);
-    } finally { setBusy(false); }
+      toast.success(`${n} photo${n === 1 ? "" : "s"} deleted.`);
+      setConfirmBulkDelete(false);
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function saveCaption(id: string) {
@@ -1189,7 +2006,10 @@ function PhotosPanel() {
       await runUpdateCaption({ data: { id, caption: captionDraft } });
       setEditingCaption(null);
       await refreshPhotos();
-    } finally { setBusy(false); }
+      toast.success("Caption saved.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   const allSelected = photos.length > 0 && photos.every((p) => selected.has(p.id));
@@ -1209,17 +2029,23 @@ function PhotosPanel() {
       if (!p) return;
       if (e.key === "Escape") setLightbox(null);
       else if (e.key === "ArrowLeft") setLightbox((i) => (i === null ? null : Math.max(0, i - 1)));
-      else if (e.key === "ArrowRight") setLightbox((i) => (i === null ? null : Math.min(photos.length - 1, i + 1)));
-      else if (e.key.toLowerCase() === "a" && photoTab !== "approved") { void setOne(p.id, "approved"); }
-      else if (e.key.toLowerCase() === "r" && photoTab !== "rejected") { void setOne(p.id, "rejected"); }
-      else if (e.key.toLowerCase() === "d") { void deleteOne(p.id); }
+      else if (e.key === "ArrowRight")
+        setLightbox((i) => (i === null ? null : Math.min(photos.length - 1, i + 1)));
+      else if (e.key.toLowerCase() === "a" && photoTab !== "approved") {
+        void setOne(p.id, "approved");
+      } else if (e.key.toLowerCase() === "r" && photoTab !== "rejected") {
+        void setOne(p.id, "rejected");
+      } else if (e.key.toLowerCase() === "d") {
+        void deleteOne(p.id);
+      }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [lightbox, photos, photoTab, setOne, deleteOne]);
 
   const tabLabel = (s: PhotoTab) => {
-    const base = s === "pending" ? t.admin.pending : s === "approved" ? t.admin.approved : t.admin.rejected;
+    const base =
+      s === "pending" ? t.admin.pending : s === "approved" ? t.admin.approved : t.admin.rejected;
     const n = counts?.[s];
     return n === undefined ? base : `${base} (${n})`;
   };
@@ -1229,7 +2055,8 @@ function PhotosPanel() {
       <div className="flex flex-wrap items-center gap-2">
         {(["pending", "approved", "rejected"] as const).map((s) => (
           <button
-            key={s} onClick={() => setPhotoTab(s)}
+            key={s}
+            onClick={() => setPhotoTab(s)}
             className={`rounded-full px-4 py-2 text-xs uppercase tracking-[0.2em] ${photoTab === s ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"}`}
           >
             {tabLabel(s)}
@@ -1247,16 +2074,45 @@ function PhotosPanel() {
         <div className="mt-4 sticky top-2 z-20 flex flex-wrap items-center gap-3 border border-primary/40 bg-primary/5 backdrop-blur px-4 py-2 text-xs">
           <span className="uppercase tracking-[0.2em] text-primary">{selected.size} selected</span>
           {photoTab !== "approved" && (
-            <button disabled={busy} onClick={() => bulkStatus("approved")} className="border border-primary text-primary px-3 py-1 uppercase tracking-[0.2em] disabled:opacity-50">Approve {selected.size}</button>
+            <button
+              disabled={busy}
+              onClick={() => bulkStatus("approved")}
+              className="border border-primary text-primary px-3 py-1 uppercase tracking-[0.2em] disabled:opacity-50"
+            >
+              Approve {selected.size}
+            </button>
           )}
           {photoTab !== "rejected" && (
-            <button disabled={busy} onClick={() => bulkStatus("rejected")} className="border border-border text-foreground px-3 py-1 uppercase tracking-[0.2em] disabled:opacity-50">Reject {selected.size}</button>
+            <button
+              disabled={busy}
+              onClick={() => bulkStatus("rejected")}
+              className="border border-border text-foreground px-3 py-1 uppercase tracking-[0.2em] disabled:opacity-50"
+            >
+              Reject {selected.size}
+            </button>
           )}
           {photoTab !== "pending" && (
-            <button disabled={busy} onClick={() => bulkStatus("pending")} className="border border-border text-foreground px-3 py-1 uppercase tracking-[0.2em] disabled:opacity-50">Move to pending</button>
+            <button
+              disabled={busy}
+              onClick={() => bulkStatus("pending")}
+              className="border border-border text-foreground px-3 py-1 uppercase tracking-[0.2em] disabled:opacity-50"
+            >
+              Move to pending
+            </button>
           )}
-          <button disabled={busy} onClick={bulkDelete} className="border border-destructive text-destructive px-3 py-1 uppercase tracking-[0.2em] disabled:opacity-50">Delete {selected.size}</button>
-          <button onClick={() => setSelected(new Set())} className="ml-auto text-muted-foreground uppercase tracking-[0.2em]">Clear</button>
+          <button
+            disabled={busy}
+            onClick={bulkDelete}
+            className="border border-destructive text-destructive px-3 py-1 uppercase tracking-[0.2em] disabled:opacity-50"
+          >
+            Delete {selected.size}
+          </button>
+          <button
+            onClick={() => setSelected(new Set())}
+            className="ml-auto text-muted-foreground uppercase tracking-[0.2em]"
+          >
+            Clear
+          </button>
         </div>
       )}
 
@@ -1267,7 +2123,10 @@ function PhotosPanel() {
           {photos.map((p, idx) => {
             const isSel = selected.has(p.id);
             return (
-              <div key={p.id} className={`relative rounded-sm border ${isSel ? "border-primary" : "border-border/60"} bg-card overflow-hidden group`}>
+              <div
+                key={p.id}
+                className={`relative rounded-sm border ${isSel ? "border-primary" : "border-border/60"} bg-card overflow-hidden group`}
+              >
                 <label className="absolute top-2 left-2 z-10 bg-background/80 backdrop-blur rounded-sm px-1.5 py-0.5">
                   <input
                     type="checkbox"
@@ -1275,7 +2134,8 @@ function PhotosPanel() {
                     onChange={(e) => {
                       setSelected((prev) => {
                         const next = new Set(prev);
-                        if (e.target.checked) next.add(p.id); else next.delete(p.id);
+                        if (e.target.checked) next.add(p.id);
+                        else next.delete(p.id);
                         return next;
                       });
                     }}
@@ -1302,7 +2162,9 @@ function PhotosPanel() {
                       {new Date(p.created_at).toLocaleDateString()}
                     </div>
                   </div>
-                  {p.uploader_email && <div className="text-xs text-muted-foreground truncate">{p.uploader_email}</div>}
+                  {p.uploader_email && (
+                    <div className="text-xs text-muted-foreground truncate">{p.uploader_email}</div>
+                  )}
 
                   {editingCaption === p.id ? (
                     <div className="space-y-1">
@@ -1314,29 +2176,64 @@ function PhotosPanel() {
                         className="w-full border border-input bg-background px-2 py-1 text-xs"
                       />
                       <div className="flex gap-2">
-                        <button disabled={busy} onClick={() => saveCaption(p.id)} className="text-[10px] uppercase tracking-[0.2em] text-primary">Save</button>
-                        <button onClick={() => setEditingCaption(null)} className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Cancel</button>
+                        <button
+                          disabled={busy}
+                          onClick={() => saveCaption(p.id)}
+                          className="text-[10px] uppercase tracking-[0.2em] text-primary"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => setEditingCaption(null)}
+                          className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
+                        >
+                          Cancel
+                        </button>
                       </div>
                     </div>
                   ) : (
                     <button
                       type="button"
-                      onClick={() => { setEditingCaption(p.id); setCaptionDraft(p.caption ?? ""); }}
+                      onClick={() => {
+                        setEditingCaption(p.id);
+                        setCaptionDraft(p.caption ?? "");
+                      }}
                       className="block text-left w-full text-xs text-foreground/80 min-h-[1.25rem] hover:text-primary"
                       title="Click to edit caption"
                     >
-                      {p.caption || <span className="italic text-muted-foreground">Add caption…</span>}
+                      {p.caption || (
+                        <span className="italic text-muted-foreground">Add caption…</span>
+                      )}
                     </button>
                   )}
 
                   <div className="flex gap-2 pt-1">
                     {photoTab !== "approved" && (
-                      <button disabled={busy} onClick={() => setOne(p.id, "approved")} className="flex-1 rounded-full bg-primary text-primary-foreground text-xs uppercase tracking-[0.15em] py-1.5 disabled:opacity-50">{t.admin.approve}</button>
+                      <button
+                        disabled={busy}
+                        onClick={() => setOne(p.id, "approved")}
+                        className="flex-1 rounded-full bg-primary text-primary-foreground text-xs uppercase tracking-[0.15em] py-1.5 disabled:opacity-50"
+                      >
+                        {t.admin.approve}
+                      </button>
                     )}
                     {photoTab !== "rejected" && (
-                      <button disabled={busy} onClick={() => setOne(p.id, "rejected")} className="flex-1 rounded-full border border-input text-xs uppercase tracking-[0.15em] py-1.5 disabled:opacity-50">{t.admin.reject}</button>
+                      <button
+                        disabled={busy}
+                        onClick={() => setOne(p.id, "rejected")}
+                        className="flex-1 rounded-full border border-input text-xs uppercase tracking-[0.15em] py-1.5 disabled:opacity-50"
+                      >
+                        {t.admin.reject}
+                      </button>
                     )}
-                    <button disabled={busy} onClick={() => deleteOne(p.id)} className="rounded-full border border-destructive text-destructive text-xs uppercase tracking-[0.15em] py-1.5 px-3 disabled:opacity-50" title="Delete permanently">×</button>
+                    <button
+                      disabled={busy}
+                      onClick={() => deleteOne(p.id)}
+                      className="rounded-full border border-destructive text-destructive text-xs uppercase tracking-[0.15em] py-1.5 px-3 disabled:opacity-50"
+                      title="Delete permanently"
+                    >
+                      ×
+                    </button>
                   </div>
                 </div>
               </div>
@@ -1352,21 +2249,48 @@ function PhotosPanel() {
           total={photos.length}
           onClose={() => setLightbox(null)}
           onPrev={() => setLightbox((i) => (i === null ? null : Math.max(0, i - 1)))}
-          onNext={() => setLightbox((i) => (i === null ? null : Math.min(photos.length - 1, i + 1)))}
+          onNext={() =>
+            setLightbox((i) => (i === null ? null : Math.min(photos.length - 1, i + 1)))
+          }
         />
       )}
 
       <p className="mt-6 text-[10px] text-muted-foreground">
         Keyboard shortcuts (in lightbox): <span className="font-mono">← →</span> navigate ·
-        <span className="font-mono"> A</span> approve · <span className="font-mono">R</span> reject ·
-        <span className="font-mono"> D</span> delete · <span className="font-mono">Esc</span> close
+        <span className="font-mono"> A</span> approve · <span className="font-mono">R</span> reject
+        ·<span className="font-mono"> D</span> delete · <span className="font-mono">Esc</span> close
       </p>
+
+      {confirmDeleteId && (
+        <ConfirmDialog
+          title="Delete this photo?"
+          description="This removes the file permanently. This cannot be undone."
+          busy={busy}
+          onConfirm={() => doDeleteOne(confirmDeleteId)}
+          onCancel={() => setConfirmDeleteId(null)}
+        />
+      )}
+      {confirmBulkDelete && (
+        <ConfirmDialog
+          title={`Delete ${selected.size} photos?`}
+          description="This removes the files permanently. This cannot be undone."
+          confirmLabel={`Delete ${selected.size}`}
+          busy={busy}
+          onConfirm={doBulkDelete}
+          onCancel={() => setConfirmBulkDelete(false)}
+        />
+      )}
     </div>
   );
 }
 
 function PhotoLightbox({
-  photo, index, total, onClose, onPrev, onNext,
+  photo,
+  index,
+  total,
+  onClose,
+  onPrev,
+  onNext,
 }: {
   photo: AdminPhoto;
   index: number;
@@ -1376,15 +2300,46 @@ function PhotoLightbox({
   onNext: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col items-center justify-center p-4" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col items-center justify-center p-4"
+      onClick={onClose}
+    >
       <div className="w-full max-w-5xl flex items-center justify-between text-xs uppercase tracking-[0.2em] text-muted-foreground pb-2">
-        <div>{index + 1} / {total}</div>
-        <button onClick={(e) => { e.stopPropagation(); onClose(); }}>Close</button>
+        <div>
+          {index + 1} / {total}
+        </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
+        >
+          Close
+        </button>
       </div>
-      <div className="flex-1 flex items-center gap-3 w-full max-w-5xl" onClick={(e) => e.stopPropagation()}>
-        <button onClick={onPrev} disabled={index === 0} className="text-2xl text-muted-foreground disabled:opacity-30 px-2">←</button>
-        <img src={photo.url} alt={photo.caption || "Uploaded wedding photo"} className="flex-1 max-h-[80vh] object-contain" />
-        <button onClick={onNext} disabled={index === total - 1} className="text-2xl text-muted-foreground disabled:opacity-30 px-2">→</button>
+      <div
+        className="flex-1 flex items-center gap-3 w-full max-w-5xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onPrev}
+          disabled={index === 0}
+          className="text-2xl text-muted-foreground disabled:opacity-30 px-2"
+        >
+          ←
+        </button>
+        <img
+          src={photo.url}
+          alt={photo.caption || "Uploaded wedding photo"}
+          className="flex-1 max-h-[80vh] object-contain"
+        />
+        <button
+          onClick={onNext}
+          disabled={index === total - 1}
+          className="text-2xl text-muted-foreground disabled:opacity-30 px-2"
+        >
+          →
+        </button>
       </div>
       <div className="w-full max-w-5xl pt-3 text-sm text-center">
         <div className="font-serif text-primary">{photo.uploader_name}</div>
@@ -1406,13 +2361,17 @@ function FeatureFlagsPanel() {
   const [message, setMessage] = useState<{ kind: "success" | "error"; text: string } | null>(null);
 
   const refresh = useCallback(() => {
-    loadFlags({}).then((flags) => {
-      setSaved(flags);
-      setDraft({});
-    }).catch(() => {});
+    loadFlags({})
+      .then((flags) => {
+        setSaved(flags);
+        setDraft({});
+      })
+      .catch(() => {});
   }, [loadFlags]);
 
-  useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
 
   function toggleDraft(key: string, currentEnabled: boolean) {
     setDraft((prev) => {
@@ -1482,7 +2441,9 @@ function FeatureFlagsPanel() {
                   <div className="text-sm text-foreground flex items-center gap-2">
                     {f.label}
                     {isPending && (
-                      <span className="text-[10px] uppercase tracking-[0.2em] text-primary">Pending</span>
+                      <span className="text-[10px] uppercase tracking-[0.2em] text-primary">
+                        Pending
+                      </span>
                     )}
                   </div>
                   {f.description && (
@@ -1501,7 +2462,9 @@ function FeatureFlagsPanel() {
       </div>
 
       {message && !confirming && (
-        <p className={`mt-3 text-xs ${message.kind === "success" ? "text-primary" : "text-destructive"}`}>
+        <p
+          className={`mt-3 text-xs ${message.kind === "success" ? "text-primary" : "text-destructive"}`}
+        >
           {message.text}
         </p>
       )}
@@ -1524,7 +2487,7 @@ function FeatureFlagsPanel() {
       )}
 
       {confirming && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto">
+        <ModalBackdrop onClose={() => setConfirming(false)} active={!saving}>
           <div className="w-full max-w-lg bg-card border border-border p-6 sm:p-8 my-8">
             <h3 className="font-serif text-2xl text-primary">Confirm changes</h3>
             <p className="mt-2 text-xs text-muted-foreground">
@@ -1547,7 +2510,9 @@ function FeatureFlagsPanel() {
               ))}
             </ul>
             {message && (
-              <p className={`mt-4 text-xs ${message.kind === "success" ? "text-primary" : "text-destructive"}`}>
+              <p
+                className={`mt-4 text-xs ${message.kind === "success" ? "text-primary" : "text-destructive"}`}
+              >
                 {message.text}
               </p>
             )}
@@ -1568,9 +2533,8 @@ function FeatureFlagsPanel() {
               </button>
             </div>
           </div>
-        </div>
+        </ModalBackdrop>
       )}
     </div>
   );
 }
-
