@@ -923,10 +923,13 @@ function actionBadge(action: ImportRowResult["action"]) {
 function CsvImporter({ onClose, onDone }: { onClose: () => void; onDone: () => void | Promise<void> }) {
   const runImport = useServerFn(importGuestsCsv);
   const [csv, setCsv] = useState("");
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [dragActive, setDragActive] = useState(false);
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<ImportSummary | null>(null);
   const [committed, setCommitted] = useState<ImportSummary | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   function editCsv(v: string) {
     setCsv(v);
@@ -934,6 +937,34 @@ function CsvImporter({ onClose, onDone }: { onClose: () => void; onDone: () => v
     // drop back to phase 1 the moment the pasted text changes.
     setPreview(null);
     setCommitted(null);
+  }
+
+  async function loadFile(file: File) {
+    if (!/\.csv$/i.test(file.name) && file.type && !/csv|text\/plain/i.test(file.type)) {
+      setErr("Please choose a .csv file.");
+      return;
+    }
+    setErr(null);
+    try {
+      const text = await file.text();
+      setFileName(file.name);
+      editCsv(text);
+    } catch {
+      setErr("Couldn't read that file. Please try again.");
+    }
+  }
+
+  function onFileInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) void loadFile(file);
+    e.target.value = ""; // allow re-selecting the same file later
+  }
+
+  function onDrop(e: React.DragEvent<HTMLTextAreaElement>) {
+    e.preventDefault();
+    setDragActive(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) void loadFile(file);
   }
 
   async function doPreview() {
@@ -979,12 +1010,35 @@ function CsvImporter({ onClose, onDone }: { onClose: () => void; onDone: () => v
           <span className="text-foreground">Phone is required for new households</span> — it's how they verify themselves before their RSVP is shown.
           On an update (matched by slug, phone, or email), a <span className="text-foreground">blank cell leaves that field unchanged</span> — it's never treated as "clear this."
         </p>
+        <div className="mt-4 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="border border-border text-foreground px-4 py-2 text-xs uppercase tracking-[0.2em]"
+          >
+            Choose CSV File
+          </button>
+          {fileName && <span className="text-xs text-muted-foreground font-mono">{fileName}</span>}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,text/csv"
+            onChange={onFileInputChange}
+            className="hidden"
+            aria-label="Choose a CSV file to import"
+          />
+        </div>
         <textarea
           value={csv}
-          onChange={(e) => editCsv(e.target.value)}
+          onChange={(e) => { setFileName(null); editCsv(e.target.value); }}
+          onDrop={onDrop}
+          onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+          onDragLeave={(e) => { e.preventDefault(); setDragActive(false); }}
           rows={12}
-          placeholder="household_name,phone,members,email,address_line1,city,state,postal_code&#10;Jane & John Doe,402-555-1234,Jane Doe;John Doe;Emma Doe (child),jane@example.com,123 Main St,Louisville,NE,68037"
-          className="mt-4 w-full border border-input bg-background px-3 py-2 text-xs font-mono"
+          placeholder="Drop a CSV file here, choose one above, or paste its contents directly…&#10;household_name,phone,members,email,address_line1,city,state,postal_code&#10;Jane & John Doe,402-555-1234,Jane Doe;John Doe;Emma Doe (child),jane@example.com,123 Main St,Louisville,NE,68037"
+          className={`mt-2 w-full border px-3 py-2 text-xs font-mono transition-colors ${
+            dragActive ? "border-primary bg-primary/5" : "border-input bg-background"
+          }`}
         />
 
         {err && <p className="mt-3 text-sm text-destructive">{err}</p>}
