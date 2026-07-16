@@ -1,30 +1,32 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { SITE } from "@/lib/site";
+import { PHOTO_SIGNED_URL_TTL_SECONDS, PHOTO_CAPTION_MAX_LENGTH } from "@/lib/photo-config";
 
 const uploadSchema = z.object({
   uploaderName: z.string().trim().min(1).max(80),
   uploaderEmail: z.string().trim().email().max(200).optional().nullable(),
-  caption: z.string().trim().max(400).optional().nullable(),
+  caption: z.string().trim().max(PHOTO_CAPTION_MAX_LENGTH).optional().nullable(),
   honeypot: z.string().max(200).optional().nullable(),
-  files: z.array(z.object({
-    filename: z.string().min(1).max(200),
-    contentType: z.string().regex(/^image\/(jpeg|png|webp|jpg)$/i),
-    dataUrl: z.string().startsWith("data:image/").max(15_000_000), // ~10 MB base64
-  })).min(1).max(5),
+  files: z
+    .array(
+      z.object({
+        filename: z.string().min(1).max(200),
+        contentType: z.string().regex(/^image\/(jpeg|png|webp|jpg)$/i),
+        dataUrl: z.string().startsWith("data:image/").max(15_000_000), // ~10 MB base64
+      }),
+    )
+    .min(1)
+    .max(5),
 });
-
-async function isGuestPhotoUploadsOpen(): Promise<boolean> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin
-    .from("feature_flags").select("enabled").eq("key", "guest_photo_uploads").maybeSingle();
-  return data?.enabled ?? false;
-}
 
 export const uploadGuestPhotos = createServerFn({ method: "POST" })
   .validator((data: unknown) => uploadSchema.parse(data))
   .handler(async ({ data }): Promise<{ ok: boolean; uploaded: number }> => {
     if (data.honeypot && data.honeypot.trim().length > 0) return { ok: true, uploaded: 0 };
-    if (!(await isGuestPhotoUploadsOpen())) throw new Error("Photo uploads aren't open right now.");
+    const { isFeatureEnabled } = await import("@/lib/feature-flags.functions");
+    if (!(await isFeatureEnabled("guest_photo_uploads")))
+      throw new Error("Photo uploads aren't open right now.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     let uploaded = 0;
@@ -37,7 +39,10 @@ export const uploadGuestPhotos = createServerFn({ method: "POST" })
       const { error: upErr } = await supabaseAdmin.storage
         .from("guest-photos")
         .upload(path, bytes, { contentType: f.contentType, upsert: false });
-      if (upErr) { console.error("upload err", upErr); continue; }
+      if (upErr) {
+        console.error("upload err", upErr);
+        continue;
+      }
       await supabaseAdmin.from("guest_photos").insert({
         storage_path: path,
         uploader_name: data.uploaderName,
@@ -57,7 +62,8 @@ export const uploadGuestPhotos = createServerFn({ method: "POST" })
     // Fire-and-forget notifications. Never let email failures break the upload.
     if (uploaded > 0) {
       try {
-        const { enqueueAppEmail, getAdminNotificationEmails } = await import("@/lib/email/enqueue.server");
+        const { enqueueAppEmail, getAdminNotificationEmails } =
+          await import("@/lib/email/enqueue.server");
         const idemBase = `photo-${new Date().toISOString()}-${data.uploaderName}`;
 
         if (data.uploaderEmail) {
@@ -89,7 +95,7 @@ export const uploadGuestPhotos = createServerFn({ method: "POST" })
                   headline: `${uploaded} new photo${uploaded > 1 ? "s" : ""} from ${data.uploaderName}`,
                   summary: `Pending moderation in the admin dashboard.`,
                   details,
-                  adminUrl: "https://morenowedding2026.com/admin",
+                  adminUrl: `${SITE.siteUrl}/admin`,
                 },
               }),
             ),
@@ -103,10 +109,15 @@ export const uploadGuestPhotos = createServerFn({ method: "POST" })
     return { ok: true, uploaded };
   });
 
-export interface GalleryPhoto { id: string; url: string; caption: string | null; uploader_name: string }
+export interface GalleryPhoto {
+  id: string;
+  url: string;
+  caption: string | null;
+  uploader_name: string;
+}
 
-export const listApprovedPhotos = createServerFn({ method: "GET" })
-  .handler(async (): Promise<GalleryPhoto[]> => {
+export const listApprovedPhotos = createServerFn({ method: "GET" }).handler(
+  async (): Promise<GalleryPhoto[]> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data } = await supabaseAdmin
       .from("guest_photos")
@@ -114,13 +125,21 @@ export const listApprovedPhotos = createServerFn({ method: "GET" })
       .eq("status", "approved")
       .order("reviewed_at", { ascending: false })
       .limit(200);
-    const result: GalleryPhoto[] = [];
-    for (const row of data ?? []) {
-      const { data: signed } = await supabaseAdmin.storage
-        .from("guest-photos").createSignedUrl(row.storage_path, 60 * 60 * 6);
-      if (signed?.signedUrl) {
-        result.push({ id: row.id, url: signed.signedUrl, caption: row.caption, uploader_name: row.uploader_name });
-      }
-    }
-    return result;
-  });
+    const signedRows = await Promise.all(
+      (data ?? []).map(async (row) => {
+        const { data: signed } = await supabaseAdmin.storage
+          .from("guest-photos")
+          .createSignedUrl(row.storage_path, PHOTO_SIGNED_URL_TTL_SECONDS);
+        return signed?.signedUrl
+          ? {
+              id: row.id,
+              url: signed.signedUrl,
+              caption: row.caption,
+              uploader_name: row.uploader_name,
+            }
+          : null;
+      }),
+    );
+    return signedRows.filter((r): r is GalleryPhoto => r !== null);
+  },
+);

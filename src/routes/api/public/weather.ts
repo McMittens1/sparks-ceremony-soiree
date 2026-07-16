@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { SITE } from "@/lib/site";
 
 // Static climatology for Louisville, NE early October, plus civil sunset ~6:53pm CDT on Oct 10.
 // Always used outside the NWS forecast window (see NWS_WINDOW_DAYS below), and used as the
@@ -18,7 +19,7 @@ const VENUE_LON = -96.161;
 // that would just return periods that don't cover Oct 10 yet, so we skip the
 // request entirely and stay on climatology until we're inside the window.
 const NWS_WINDOW_DAYS = 9;
-const NWS_USER_AGENT = "morenowedding2026.com wedding-day weather widget";
+const NWS_USER_AGENT = `${new URL(SITE.siteUrl).hostname} wedding-day weather widget`;
 
 async function fetchNwsForecast(): Promise<WeatherPayload | null> {
   try {

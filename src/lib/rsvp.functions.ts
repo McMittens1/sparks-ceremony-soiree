@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { SITE } from "@/lib/site";
 
 // ---------- Types shared with the UI ----------
 
@@ -75,13 +76,8 @@ export interface AdminGuestRow {
 
 async function ensureAdmin(userId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .eq("role", "admin")
-    .maybeSingle();
-  if (error || !data) throw new Error("Forbidden");
+  const { hasAdminRole } = await import("@/lib/admin.functions");
+  if (!(await hasAdminRole(supabaseAdmin, userId))) throw new Error("Forbidden");
   return supabaseAdmin;
 }
 
@@ -129,10 +125,18 @@ const addressSchema = z.object({
 });
 
 function mapGuestRow(row: {
-  id: string; slug: string; primary_name: string; party_members: unknown;
-  email: string | null; phone: string;
-  address_line1: string | null; address_line2: string | null;
-  city: string | null; state: string | null; postal_code: string | null; country: string | null;
+  id: string;
+  slug: string;
+  primary_name: string;
+  party_members: unknown;
+  email: string | null;
+  phone: string;
+  address_line1: string | null;
+  address_line2: string | null;
+  city: string | null;
+  state: string | null;
+  postal_code: string | null;
+  country: string | null;
 }): PublicGuest {
   const party = Array.isArray(row.party_members)
     ? (row.party_members as PartyMember[]).filter((p) => p && typeof p.name === "string")
@@ -155,10 +159,18 @@ function mapGuestRow(row: {
   };
 }
 
-function mapRsvpRow(r: {
-  status: string; attendees: unknown; address_confirmed: boolean; address: unknown;
-  song_request: string | null; message: string | null; submitted_at: string; updated_at: string;
-} | null): PublicRsvp | null {
+function mapRsvpRow(
+  r: {
+    status: string;
+    attendees: unknown;
+    address_confirmed: boolean;
+    address: unknown;
+    song_request: string | null;
+    message: string | null;
+    submitted_at: string;
+    updated_at: string;
+  } | null,
+): PublicRsvp | null {
   if (!r) return null;
   return {
     status: r.status as PublicRsvp["status"],
@@ -190,9 +202,14 @@ const VERIFY_LINK_TTL_MS = 270 * 24 * 60 * 60 * 1000; // ~9 months
 async function isRecentlyVerified(guestId: string): Promise<boolean> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data } = await supabaseAdmin
-    .from("guests").select("phone_verify_last_success_at").eq("id", guestId).maybeSingle();
+    .from("guests")
+    .select("phone_verify_last_success_at")
+    .eq("id", guestId)
+    .maybeSingle();
   if (!data?.phone_verify_last_success_at) return false;
-  return Date.now() - new Date(data.phone_verify_last_success_at).getTime() < VERIFIED_SESSION_WINDOW_MS;
+  return (
+    Date.now() - new Date(data.phone_verify_last_success_at).getTime() < VERIFIED_SESSION_WINDOW_MS
+  );
 }
 
 // ---------- Public server functions ----------
@@ -202,42 +219,50 @@ export const lookupGuest = createServerFn({ method: "POST" })
   .validator((d: { query: string }) =>
     z.object({ query: z.string().trim().min(1).max(120) }).parse(d),
   )
-  .handler(async ({ data }): Promise<{ matches: { slug: string; primary_name: string; party_size: number }[] }> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const q = data.query.trim();
+  .handler(
+    async ({
+      data,
+    }): Promise<{ matches: { slug: string; primary_name: string; party_size: number }[] }> => {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const q = data.query.trim();
 
-    // Try exact slug match first (invites are case-insensitive short codes).
-    const upper = q.toUpperCase();
-    if (/^[A-Z0-9]{4,10}$/.test(upper)) {
-      const { data: bySlug } = await supabaseAdmin
-        .from("guests").select("slug, primary_name, party_members")
-        .eq("slug", upper).limit(1);
-      if (bySlug && bySlug.length) {
-        return {
-          matches: bySlug.map((r) => ({
-            slug: r.slug,
-            primary_name: r.primary_name,
-            party_size: Array.isArray(r.party_members) ? (r.party_members as unknown[]).length : 0,
-          })),
-        };
+      // Try exact slug match first (invites are case-insensitive short codes).
+      const upper = q.toUpperCase();
+      if (/^[A-Z0-9]{4,10}$/.test(upper)) {
+        const { data: bySlug } = await supabaseAdmin
+          .from("guests")
+          .select("slug, primary_name, party_members")
+          .eq("slug", upper)
+          .limit(1);
+        if (bySlug && bySlug.length) {
+          return {
+            matches: bySlug.map((r) => ({
+              slug: r.slug,
+              primary_name: r.primary_name,
+              party_size: Array.isArray(r.party_members)
+                ? (r.party_members as unknown[]).length
+                : 0,
+            })),
+          };
+        }
       }
-    }
 
-    // Fuzzy name search using pg_trgm (case-insensitive, tolerates typos).
-    const { data: rows } = await supabaseAdmin
-      .from("guests")
-      .select("slug, primary_name, party_members")
-      .ilike("primary_name", `%${q}%`)
-      .limit(8);
+      // Fuzzy name search using pg_trgm (case-insensitive, tolerates typos).
+      const { data: rows } = await supabaseAdmin
+        .from("guests")
+        .select("slug, primary_name, party_members")
+        .ilike("primary_name", `%${q}%`)
+        .limit(8);
 
-    return {
-      matches: (rows ?? []).map((r) => ({
-        slug: r.slug,
-        primary_name: r.primary_name,
-        party_size: Array.isArray(r.party_members) ? (r.party_members as unknown[]).length : 0,
-      })),
-    };
-  });
+      return {
+        matches: (rows ?? []).map((r) => ({
+          slug: r.slug,
+          primary_name: r.primary_name,
+          party_size: Array.isArray(r.party_members) ? (r.party_members as unknown[]).length : 0,
+        })),
+      };
+    },
+  );
 
 // ---------- Household phone-last-4 verification ----------
 // Both public entry points (typed name/code lookup, and a personalized
@@ -248,7 +273,10 @@ export const lookupGuest = createServerFn({ method: "POST" })
 
 // Resolves a household id from whichever locator was provided, without
 // revealing anything about the household itself yet.
-async function resolveVerifyTarget(input: { slug?: string; token?: string }): Promise<string | null> {
+async function resolveVerifyTarget(input: {
+  slug?: string;
+  token?: string;
+}): Promise<string | null> {
   if (input.token) {
     const { verifyRsvpToken } = await import("@/lib/rsvp-token.server");
     const v = await verifyRsvpToken(input.token, "verify");
@@ -257,7 +285,10 @@ async function resolveVerifyTarget(input: { slug?: string; token?: string }): Pr
   if (input.slug) {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data } = await supabaseAdmin
-      .from("guests").select("id").eq("slug", input.slug.toUpperCase()).maybeSingle();
+      .from("guests")
+      .select("id")
+      .eq("slug", input.slug.toUpperCase())
+      .maybeSingle();
     return data?.id ?? null;
   }
   return null;
@@ -270,8 +301,14 @@ async function resolveVerifyTarget(input: { slug?: string; token?: string }): Pr
 export const getVerifyTargetLabel = createServerFn({ method: "POST" })
   .validator((d: { slug?: string; token?: string }) =>
     z
-      .object({ slug: z.string().trim().max(20).optional(), token: z.string().min(10).max(400).optional() })
-      .refine((v) => Boolean(v.slug) !== Boolean(v.token), "Provide either a code or a link, not both")
+      .object({
+        slug: z.string().trim().max(20).optional(),
+        token: z.string().min(10).max(400).optional(),
+      })
+      .refine(
+        (v) => Boolean(v.slug) !== Boolean(v.token),
+        "Provide either a code or a link, not both",
+      )
       .parse(d),
   )
   .handler(async ({ data }): Promise<{ ok: true; primary_name: string } | { ok: false }> => {
@@ -279,7 +316,10 @@ export const getVerifyTargetLabel = createServerFn({ method: "POST" })
     if (!guestId) return { ok: false };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: g } = await supabaseAdmin
-      .from("guests").select("primary_name").eq("id", guestId).maybeSingle();
+      .from("guests")
+      .select("primary_name")
+      .eq("id", guestId)
+      .maybeSingle();
     if (!g) return { ok: false };
     return { ok: true, primary_name: g.primary_name };
   });
@@ -288,55 +328,73 @@ const verifyAccessSchema = z
   .object({
     slug: z.string().trim().max(20).optional(),
     token: z.string().min(10).max(400).optional(),
-    last4: z.string().trim().regex(/^\d{4}$/, "Enter the last 4 digits"),
+    last4: z
+      .string()
+      .trim()
+      .regex(/^\d{4}$/, "Enter the last 4 digits"),
   })
   .refine((d) => Boolean(d.slug) !== Boolean(d.token), "Provide either a code or a link, not both");
 
 export const verifyHouseholdAccess = createServerFn({ method: "POST" })
   .validator((d: unknown) => verifyAccessSchema.parse(d))
-  .handler(async ({ data }): Promise<
-    | { ok: true; guest: PublicGuest; rsvp: PublicRsvp | null }
-    | { ok: false; reason: "not_found" | "invalid" | "locked" }
-  > => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const guestId = await resolveVerifyTarget(data);
-    if (!guestId) return { ok: false, reason: "not_found" };
+  .handler(
+    async ({
+      data,
+    }): Promise<
+      | { ok: true; guest: PublicGuest; rsvp: PublicRsvp | null }
+      | { ok: false; reason: "not_found" | "invalid" | "locked" }
+    > => {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const guestId = await resolveVerifyTarget(data);
+      if (!guestId) return { ok: false, reason: "not_found" };
 
-    const { data: g } = await supabaseAdmin
-      .from("guests")
-      .select(`${GUEST_SELECT_COLUMNS}, phone_verify_failed_attempts, phone_verify_locked_until`)
-      .eq("id", guestId)
-      .maybeSingle();
-    if (!g) return { ok: false, reason: "not_found" };
+      const { data: g } = await supabaseAdmin
+        .from("guests")
+        .select(`${GUEST_SELECT_COLUMNS}, phone_verify_failed_attempts, phone_verify_locked_until`)
+        .eq("id", guestId)
+        .maybeSingle();
+      if (!g) return { ok: false, reason: "not_found" };
 
-    const now = Date.now();
-    if (g.phone_verify_locked_until && new Date(g.phone_verify_locked_until).getTime() > now) {
-      return { ok: false, reason: "locked" };
-    }
+      const now = Date.now();
+      if (g.phone_verify_locked_until && new Date(g.phone_verify_locked_until).getTime() > now) {
+        return { ok: false, reason: "locked" };
+      }
 
-    const expectedLast4 = normalizePhone(g.phone).slice(-4);
-    if (expectedLast4.length !== 4 || expectedLast4 !== data.last4) {
-      const attempts = (g.phone_verify_failed_attempts ?? 0) + 1;
-      const locked = attempts >= PHONE_VERIFY_MAX_ATTEMPTS;
-      await supabaseAdmin.from("guests").update({
-        phone_verify_failed_attempts: attempts,
-        phone_verify_locked_until: locked ? new Date(now + PHONE_VERIFY_LOCKOUT_MS).toISOString() : null,
-      }).eq("id", g.id);
-      return { ok: false, reason: locked ? "locked" : "invalid" };
-    }
+      const expectedLast4 = normalizePhone(g.phone).slice(-4);
+      if (expectedLast4.length !== 4 || expectedLast4 !== data.last4) {
+        const attempts = (g.phone_verify_failed_attempts ?? 0) + 1;
+        const locked = attempts >= PHONE_VERIFY_MAX_ATTEMPTS;
+        await supabaseAdmin
+          .from("guests")
+          .update({
+            phone_verify_failed_attempts: attempts,
+            phone_verify_locked_until: locked
+              ? new Date(now + PHONE_VERIFY_LOCKOUT_MS).toISOString()
+              : null,
+          })
+          .eq("id", g.id);
+        return { ok: false, reason: locked ? "locked" : "invalid" };
+      }
 
-    await supabaseAdmin.from("guests").update({
-      phone_verify_failed_attempts: 0,
-      phone_verify_locked_until: null,
-      phone_verify_last_success_at: new Date(now).toISOString(),
-    }).eq("id", g.id);
+      await supabaseAdmin
+        .from("guests")
+        .update({
+          phone_verify_failed_attempts: 0,
+          phone_verify_locked_until: null,
+          phone_verify_last_success_at: new Date(now).toISOString(),
+        })
+        .eq("id", g.id);
 
-    const guest = mapGuestRow(g);
-    const { data: r } = await supabaseAdmin
-      .from("rsvps").select(RSVP_SELECT_COLUMNS).eq("guest_id", g.id).maybeSingle();
+      const guest = mapGuestRow(g);
+      const { data: r } = await supabaseAdmin
+        .from("rsvps")
+        .select(RSVP_SELECT_COLUMNS)
+        .eq("guest_id", g.id)
+        .maybeSingle();
 
-    return { ok: true, guest, rsvp: mapRsvpRow(r) };
-  });
+      return { ok: true, guest, rsvp: mapRsvpRow(r) };
+    },
+  );
 
 // Address-only update, independent of RSVP status and the rsvp_open flag —
 // so a household can confirm or add their mailing address any time after
@@ -350,24 +408,33 @@ export const updateGuestAddress = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<{ ok: true }> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: g } = await supabaseAdmin
-      .from("guests").select("id").eq("slug", data.slug.toUpperCase()).maybeSingle();
-    if (!g) throw new Error("Household not found.");
+      .from("guests")
+      .select("id")
+      .eq("slug", data.slug.toUpperCase())
+      .maybeSingle();
+    if (!g) throw new Error("household_not_found");
     if (!(await isRecentlyVerified(g.id))) {
-      throw new Error("Please verify your household again before updating your address.");
+      throw new Error("not_verified");
     }
 
     const now = new Date().toISOString();
-    const { error } = await supabaseAdmin.from("guests").update({
-      address_line1: data.address.line1?.trim() || null,
-      address_line2: data.address.line2?.trim() || null,
-      city: data.address.city?.trim() || null,
-      state: data.address.state?.trim() || null,
-      postal_code: data.address.postal_code?.trim() || null,
-      country: data.address.country?.trim() || null,
-      address_confirmed_at: now,
-      address_updated_at: now,
-    }).eq("id", g.id);
-    if (error) throw new Error(error.message);
+    const { error } = await supabaseAdmin
+      .from("guests")
+      .update({
+        address_line1: data.address.line1?.trim() || null,
+        address_line2: data.address.line2?.trim() || null,
+        city: data.address.city?.trim() || null,
+        state: data.address.state?.trim() || null,
+        postal_code: data.address.postal_code?.trim() || null,
+        country: data.address.country?.trim() || null,
+        address_confirmed_at: now,
+        address_updated_at: now,
+      })
+      .eq("id", g.id);
+    if (error) {
+      console.error("updateGuestAddress failed", error);
+      throw new Error("save_failed");
+    }
     return { ok: true };
   });
 
@@ -385,23 +452,32 @@ const editSchema = submitSchema.omit({ slug: true });
 type EditRsvpInput = z.infer<typeof editSchema>;
 
 // Shared write path used by public submit and token-based edit.
-async function writeRsvp(guestId: string, data: EditRsvpInput, invitationSlug: string, siteOrigin: string): Promise<void> {
+async function writeRsvp(
+  guestId: string,
+  data: EditRsvpInput,
+  invitationSlug: string,
+  siteOrigin: string,
+): Promise<void> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { signRsvpToken } = await import("@/lib/rsvp-token.server");
 
   const { data: g, error: gErr } = await supabaseAdmin
-    .from("guests").select("id, primary_name, party_members").eq("id", guestId).maybeSingle();
-  if (gErr || !g) throw new Error("Guest not found");
+    .from("guests")
+    .select("id, primary_name, party_members")
+    .eq("id", guestId)
+    .maybeSingle();
+  if (gErr || !g) throw new Error("household_not_found");
 
   const maxAllowed = Math.max(
     1,
     (Array.isArray(g.party_members) ? (g.party_members as unknown[]).length : 1) + 1,
   );
-  if (data.attendees.length > maxAllowed) throw new Error("Too many guests for this invite");
+  if (data.attendees.length > maxAllowed) throw new Error("too_many_guests");
 
   const anyYes = data.attendees.some((a) => a.attending);
   const anyNo = data.attendees.some((a) => !a.attending);
-  const status: PublicRsvp["status"] = anyYes && anyNo ? "partial" : anyYes ? "attending" : "not_attending";
+  const status: PublicRsvp["status"] =
+    anyYes && anyNo ? "partial" : anyYes ? "attending" : "not_attending";
 
   const guestPatch: {
     email?: string | null;
@@ -447,10 +523,14 @@ async function writeRsvp(guestId: string, data: EditRsvpInput, invitationSlug: s
     },
     { onConflict: "guest_id" },
   );
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("writeRsvp upsert failed", error);
+    throw new Error("save_failed");
+  }
 
   try {
-    const { enqueueAppEmail, getAdminNotificationEmails } = await import("@/lib/email/enqueue.server");
+    const { enqueueAppEmail, getAdminNotificationEmails } =
+      await import("@/lib/email/enqueue.server");
     const guestEmail = (typeof data.email === "string" ? data.email.trim() : "") || null;
     const idemBase = `rsvp-${g.id}-${now}`;
     const token = await signRsvpToken(g.id, "edit");
@@ -467,9 +547,10 @@ async function writeRsvp(guestId: string, data: EditRsvpInput, invitationSlug: s
           attendees: data.attendees,
           slug: invitationSlug,
           editUrl,
-          eventDate: "October 10, 2026",
-          venue: "Sparks' Barn",
-          address: "13817 108th St, Louisville, NE 68037",
+          eventDate: SITE.eventDatePretty.en,
+          venue: SITE.venue,
+          address: SITE.address,
+          rsvpDeadline: SITE.rsvpDeadlinePretty.en,
         },
       });
     }
@@ -482,9 +563,13 @@ async function writeRsvp(guestId: string, data: EditRsvpInput, invitationSlug: s
       const details = [
         { label: "Status", value: statusLabel },
         { label: "Party size", value: `${data.attendees.length} (${yesCount} attending)` },
-        { label: "Attendees", value: data.attendees.map((a) => `${a.name}${a.attending ? "" : " (no)"}`).join(", ") },
+        {
+          label: "Attendees",
+          value: data.attendees.map((a) => `${a.name}${a.attending ? "" : " (no)"}`).join(", "),
+        },
       ];
-      if (data.song_request?.trim()) details.push({ label: "Song request", value: data.song_request.trim() });
+      if (data.song_request?.trim())
+        details.push({ label: "Song request", value: data.song_request.trim() });
       if (data.message?.trim()) details.push({ label: "Message", value: data.message.trim() });
       if (guestEmail) details.push({ label: "Email", value: guestEmail });
 
@@ -510,28 +595,23 @@ async function writeRsvp(guestId: string, data: EditRsvpInput, invitationSlug: s
   }
 }
 
-const SITE_ORIGIN = "https://morenowedding2026.com";
-
-async function isRsvpOpen(): Promise<boolean> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin
-    .from("feature_flags").select("enabled").eq("key", "rsvp_open").maybeSingle();
-  return data?.enabled ?? false;
-}
-
 export const submitRsvp = createServerFn({ method: "POST" })
   .validator((d: unknown) => submitSchema.parse(d))
   .handler(async ({ data }): Promise<{ ok: true }> => {
-    if (!(await isRsvpOpen())) throw new Error("RSVP submissions aren't open yet.");
+    const { isFeatureEnabled } = await import("@/lib/feature-flags.functions");
+    if (!(await isFeatureEnabled("rsvp_open"))) throw new Error("rsvp_closed");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: g, error: gErr } = await supabaseAdmin
-      .from("guests").select("id").eq("slug", data.slug.toUpperCase()).maybeSingle();
-    if (gErr || !g) throw new Error("Guest not found");
+      .from("guests")
+      .select("id")
+      .eq("slug", data.slug.toUpperCase())
+      .maybeSingle();
+    if (gErr || !g) throw new Error("household_not_found");
     if (!(await isRecentlyVerified(g.id))) {
-      throw new Error("Please verify your household again before submitting.");
+      throw new Error("not_verified");
     }
     const { slug: _slug, ...rest } = data;
-    await writeRsvp(g.id, rest, data.slug.toUpperCase(), SITE_ORIGIN);
+    await writeRsvp(g.id, rest, data.slug.toUpperCase(), SITE.siteUrl);
     return { ok: true };
   });
 
@@ -542,28 +622,36 @@ export const submitRsvp = createServerFn({ method: "POST" })
 // see ONBOARDING.md — and untouched by the verification flow.
 
 export const getRsvpByToken = createServerFn({ method: "POST" })
-  .validator((d: { token: string }) =>
-    z.object({ token: z.string().min(10).max(400) }).parse(d),
-  )
-  .handler(async ({ data }): Promise<
-    | { ok: true; guest: PublicGuest; rsvp: PublicRsvp | null }
-    | { ok: false; reason: "malformed" | "invalid" | "expired" | "not_found" }
-  > => {
-    const { verifyRsvpToken } = await import("@/lib/rsvp-token.server");
-    const v = await verifyRsvpToken(data.token, "edit");
-    if (!v.ok) return { ok: false, reason: v.reason };
+  .validator((d: { token: string }) => z.object({ token: z.string().min(10).max(400) }).parse(d))
+  .handler(
+    async ({
+      data,
+    }): Promise<
+      | { ok: true; guest: PublicGuest; rsvp: PublicRsvp | null }
+      | { ok: false; reason: "malformed" | "invalid" | "expired" | "not_found" }
+    > => {
+      const { verifyRsvpToken } = await import("@/lib/rsvp-token.server");
+      const v = await verifyRsvpToken(data.token, "edit");
+      if (!v.ok) return { ok: false, reason: v.reason };
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: g } = await supabaseAdmin
-      .from("guests").select(GUEST_SELECT_COLUMNS).eq("id", v.guestId).maybeSingle();
-    if (!g) return { ok: false, reason: "not_found" };
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: g } = await supabaseAdmin
+        .from("guests")
+        .select(GUEST_SELECT_COLUMNS)
+        .eq("id", v.guestId)
+        .maybeSingle();
+      if (!g) return { ok: false, reason: "not_found" };
 
-    const guest = mapGuestRow(g);
-    const { data: r } = await supabaseAdmin
-      .from("rsvps").select(RSVP_SELECT_COLUMNS).eq("guest_id", g.id).maybeSingle();
+      const guest = mapGuestRow(g);
+      const { data: r } = await supabaseAdmin
+        .from("rsvps")
+        .select(RSVP_SELECT_COLUMNS)
+        .eq("guest_id", g.id)
+        .maybeSingle();
 
-    return { ok: true, guest, rsvp: mapRsvpRow(r) };
-  });
+      return { ok: true, guest, rsvp: mapRsvpRow(r) };
+    },
+  );
 
 const editByTokenSchema = editSchema.extend({ token: z.string().min(10).max(400) });
 
@@ -572,19 +660,20 @@ export const updateRsvpByToken = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<{ ok: true }> => {
     const { verifyRsvpToken } = await import("@/lib/rsvp-token.server");
     const v = await verifyRsvpToken(data.token, "edit");
-    if (!v.ok) throw new Error(v.reason === "expired" ? "This edit link has expired." : "Invalid edit link.");
+    if (!v.ok) throw new Error(v.reason === "expired" ? "link_expired" : "link_invalid");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: g } = await supabaseAdmin
-      .from("guests").select("slug").eq("id", v.guestId).maybeSingle();
-    if (!g) throw new Error("Guest not found");
+      .from("guests")
+      .select("slug")
+      .eq("id", v.guestId)
+      .maybeSingle();
+    if (!g) throw new Error("household_not_found");
 
     const { token: _t, ...rest } = data;
-    await writeRsvp(v.guestId, rest, g.slug, SITE_ORIGIN);
+    await writeRsvp(v.guestId, rest, g.slug, SITE.siteUrl);
     return { ok: true };
   });
-
-
 
 // ---------- Admin server functions ----------
 
@@ -596,9 +685,7 @@ export const listGuestsWithRsvps = createServerFn({ method: "POST" })
       .from("guests")
       .select("*")
       .order("primary_name", { ascending: true });
-    const { data: rsvps } = await sb
-      .from("rsvps")
-      .select("*");
+    const { data: rsvps } = await sb.from("rsvps").select("*");
     const rsvpByGuest = new Map<string, PublicRsvp>();
     for (const r of rsvps ?? []) {
       const mapped = mapRsvpRow(r);
@@ -614,7 +701,9 @@ export const listGuestsWithRsvps = createServerFn({ method: "POST" })
       id: g.id,
       slug: g.slug,
       primary_name: g.primary_name,
-      party_members: Array.isArray(g.party_members) ? (g.party_members as unknown as PartyMember[]) : [],
+      party_members: Array.isArray(g.party_members)
+        ? (g.party_members as unknown as PartyMember[])
+        : [],
       phone: g.phone,
       email: g.email,
       address_line1: g.address_line1,
@@ -644,11 +733,17 @@ export const unlockGuestPhoneVerify = createServerFn({ method: "POST" })
   .validator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     const sb = await ensureAdmin(context.userId);
-    const { error } = await sb.from("guests").update({
-      phone_verify_failed_attempts: 0,
-      phone_verify_locked_until: null,
-    }).eq("id", data.id);
-    if (error) throw new Error(error.message);
+    const { error } = await sb
+      .from("guests")
+      .update({
+        phone_verify_failed_attempts: 0,
+        phone_verify_locked_until: null,
+      })
+      .eq("id", data.id);
+    if (error) {
+      console.error("unlockGuestPhoneVerify failed", error);
+      throw new Error("Couldn't unlock this household. Please try again.");
+    }
     return { ok: true };
   });
 
@@ -657,7 +752,11 @@ const guestUpsertSchema = z.object({
   slug: z.string().trim().max(20).optional().or(z.literal("")),
   primary_name: z.string().trim().min(1).max(200),
   party_members: z.array(partyMemberSchema).max(20),
-  phone: z.string().trim().min(1, "Phone number is required").max(40)
+  phone: z
+    .string()
+    .trim()
+    .min(1, "Phone number is required")
+    .max(40)
     .refine(isValidPhone, "Enter a valid 10-digit US or Mexico phone number"),
   email: z.string().trim().email().max(200).optional().or(z.literal("")),
   address_line1: z.string().trim().max(200).optional().or(z.literal("")),
@@ -692,8 +791,15 @@ export const upsertGuest = createServerFn({ method: "POST" })
     if (data.id) {
       const update = data.slug ? { ...payload, slug: data.slug.toUpperCase() } : payload;
       const { data: updated, error } = await sb
-        .from("guests").update(update).eq("id", data.id).select("id, slug").maybeSingle();
-      if (error || !updated) throw new Error(error?.message ?? "Update failed");
+        .from("guests")
+        .update(update)
+        .eq("id", data.id)
+        .select("id, slug")
+        .maybeSingle();
+      if (error || !updated) {
+        console.error("upsertGuest update failed", error);
+        throw new Error("Couldn't save this invitation. Please try again.");
+      }
       return { id: updated.id, slug: updated.slug };
     }
 
@@ -701,9 +807,15 @@ export const upsertGuest = createServerFn({ method: "POST" })
     for (let i = 0; i < 5; i++) {
       const slug = (data.slug || randomSlug()).toUpperCase();
       const { data: ins, error } = await sb
-        .from("guests").insert({ ...payload, slug }).select("id, slug").maybeSingle();
+        .from("guests")
+        .insert({ ...payload, slug })
+        .select("id, slug")
+        .maybeSingle();
       if (!error && ins) return { id: ins.id, slug: ins.slug };
-      if (error && !error.message.toLowerCase().includes("duplicate")) throw new Error(error.message);
+      if (error && !error.message.toLowerCase().includes("duplicate")) {
+        console.error("upsertGuest insert failed", error);
+        throw new Error("Couldn't create this invitation. Please try again.");
+      }
     }
     throw new Error("Could not generate a unique invite code, please try again.");
   });
@@ -714,7 +826,10 @@ export const deleteGuest = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     const sb = await ensureAdmin(context.userId);
     const { error } = await sb.from("guests").delete().eq("id", data.id);
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("deleteGuest failed", error);
+      throw new Error("Couldn't delete this invitation. Please try again.");
+    }
     return { ok: true };
   });
 
@@ -790,7 +905,11 @@ function parseMembers(raw: string, fallbackName: string): PartyMember[] {
 // No writes — resolves match/insert-vs-update for every row and builds the
 // exact payload that would be written, so dry-run and commit share one
 // source of truth. `existing` should already reflect the live guests table.
-function planImportRows(header: string[], body: string[][], existing: ExistingGuestRef[]): PlannedRow[] {
+function planImportRows(
+  header: string[],
+  body: string[][],
+  existing: ExistingGuestRef[],
+): PlannedRow[] {
   const bySlug = new Map(existing.map((g) => [g.slug.toUpperCase(), g]));
   const byPhone = new Map<string, ExistingGuestRef[]>();
   const byEmail = new Map<string, ExistingGuestRef[]>();
@@ -815,11 +934,18 @@ function planImportRows(header: string[], body: string[][], existing: ExistingGu
   body.forEach((cols, idx) => {
     const rowNumber = idx + 1;
     const rec: Record<string, string> = {};
-    header.forEach((h, i) => { rec[h] = (cols[i] ?? "").trim(); });
+    header.forEach((h, i) => {
+      rec[h] = (cols[i] ?? "").trim();
+    });
 
     const household_name = rec.household_name || rec.primary_name;
     if (!household_name) {
-      results.push({ row: rowNumber, action: "error", warnings: [], error: "Missing household_name." });
+      results.push({
+        row: rowNumber,
+        action: "error",
+        warnings: [],
+        error: "Missing household_name.",
+      });
       return;
     }
 
@@ -834,13 +960,25 @@ function planImportRows(header: string[], body: string[][], existing: ExistingGu
 
     if (slugRaw) {
       if (claimedSlugs.has(slugRaw)) {
-        results.push({ row: rowNumber, action: "error", household_name, warnings, error: "Slug already used earlier in this import." });
+        results.push({
+          row: rowNumber,
+          action: "error",
+          household_name,
+          warnings,
+          error: "Slug already used earlier in this import.",
+        });
         return;
       }
       const bySlugHit = bySlug.get(slugRaw);
       if (bySlugHit) {
         if (claimedGuestIds.has(bySlugHit.id)) {
-          results.push({ row: rowNumber, action: "error", household_name, warnings, error: "This household was already matched by an earlier row in this import." });
+          results.push({
+            row: rowNumber,
+            action: "error",
+            household_name,
+            warnings,
+            error: "This household was already matched by an earlier row in this import.",
+          });
           return;
         }
         matched = bySlugHit;
@@ -849,25 +987,46 @@ function planImportRows(header: string[], body: string[][], existing: ExistingGu
         insertSlug = slugRaw;
       }
     } else {
-      for (const [map, by] of [[byPhone.get(phoneNorm), "phone"], [byEmail.get(emailNorm), "email"]] as const) {
+      for (const [map, by] of [
+        [byPhone.get(phoneNorm), "phone"],
+        [byEmail.get(emailNorm), "email"],
+      ] as const) {
         if (matched || !map) continue;
         const candidates = map.filter((g) => !claimedGuestIds.has(g.id));
         if (candidates.length > 1) {
           results.push({
-            row: rowNumber, action: "error", household_name, warnings,
+            row: rowNumber,
+            action: "error",
+            household_name,
+            warnings,
             error: `Multiple existing guests share this ${by} — add a slug column to disambiguate.`,
           });
           return;
         }
-        if (candidates.length === 1) { matched = candidates[0]; matchedBy = by; }
+        if (candidates.length === 1) {
+          matched = candidates[0];
+          matchedBy = by;
+        }
       }
       if (!matched) {
         if (phoneNorm && claimedNewPhones.has(phoneNorm)) {
-          results.push({ row: rowNumber, action: "error", household_name, warnings, error: "This phone number was already used earlier in this import." });
+          results.push({
+            row: rowNumber,
+            action: "error",
+            household_name,
+            warnings,
+            error: "This phone number was already used earlier in this import.",
+          });
           return;
         }
         if (emailNorm && claimedNewEmails.has(emailNorm)) {
-          results.push({ row: rowNumber, action: "error", household_name, warnings, error: "This email was already used earlier in this import." });
+          results.push({
+            row: rowNumber,
+            action: "error",
+            household_name,
+            warnings,
+            error: "This email was already used earlier in this import.",
+          });
           return;
         }
       }
@@ -880,21 +1039,43 @@ function planImportRows(header: string[], body: string[][], existing: ExistingGu
     // and the primary fallback match key).
     if (rec.phone?.trim()) {
       if (!isValidPhone(rec.phone)) {
-        results.push({ row: rowNumber, action: "error", household_name, warnings, error: "Invalid phone number." });
+        results.push({
+          row: rowNumber,
+          action: "error",
+          household_name,
+          warnings,
+          error: "Invalid phone number.",
+        });
         return;
       }
     } else if (!isUpdate) {
-      results.push({ row: rowNumber, action: "error", household_name, warnings, error: "Missing phone number (required for a new household)." });
+      results.push({
+        row: rowNumber,
+        action: "error",
+        household_name,
+        warnings,
+        error: "Missing phone number (required for a new household).",
+      });
       return;
     }
 
     if (rec.email?.trim() && !z.string().email().safeParse(rec.email.trim()).success) {
-      results.push({ row: rowNumber, action: "error", household_name, warnings, error: "Invalid email address." });
+      results.push({
+        row: rowNumber,
+        action: "error",
+        household_name,
+        warnings,
+        error: "Invalid email address.",
+      });
       return;
     }
 
     const zipCountry = rec.country?.trim() || (isUpdate ? "" : "USA");
-    if (rec.postal_code?.trim() && /^us(a)?$/i.test(zipCountry) && !isLikelyUsZip(rec.postal_code)) {
+    if (
+      rec.postal_code?.trim() &&
+      /^us(a)?$/i.test(zipCountry) &&
+      !isLikelyUsZip(rec.postal_code)
+    ) {
       warnings.push("ZIP doesn't look like a 5 or 5+4 digit US code.");
     }
 
@@ -906,9 +1087,14 @@ function planImportRows(header: string[], body: string[][], existing: ExistingGu
 
     const membersRaw = rec.members ?? rec.party_members ?? "";
     if (membersRaw.trim()) {
-      payload.party_members = parseMembers(membersRaw, household_name) as unknown as import("@/integrations/supabase/types").Json;
+      payload.party_members = parseMembers(
+        membersRaw,
+        household_name,
+      ) as unknown as import("@/integrations/supabase/types").Json;
     } else if (!isUpdate) {
-      payload.party_members = [{ name: household_name, is_child: false }] as unknown as import("@/integrations/supabase/types").Json;
+      payload.party_members = [
+        { name: household_name, is_child: false },
+      ] as unknown as import("@/integrations/supabase/types").Json;
     }
 
     if (rec.email?.trim()) payload.email = normalizeEmail(rec.email);
@@ -951,69 +1137,100 @@ export const importGuestsCsv = createServerFn({ method: "POST" })
   .validator((d: unknown) =>
     z.object({ csv: z.string().min(1).max(200_000), dryRun: z.boolean().optional() }).parse(d),
   )
-  .handler(async ({ data, context }): Promise<{
-    dryRun: boolean;
-    totals: { inserted: number; updated: number; errors: number };
-    rows: ImportRowResult[];
-  }> => {
-    const sb = await ensureAdmin(context.userId);
-    const dryRun = data.dryRun ?? false;
-    const rows = parseCsv(data.csv);
-    if (!rows.length) return { dryRun, totals: { inserted: 0, updated: 0, errors: 0 }, rows: [] };
+  .handler(
+    async ({
+      data,
+      context,
+    }): Promise<{
+      dryRun: boolean;
+      totals: { inserted: number; updated: number; errors: number };
+      rows: ImportRowResult[];
+    }> => {
+      const sb = await ensureAdmin(context.userId);
+      const dryRun = data.dryRun ?? false;
+      const rows = parseCsv(data.csv);
+      if (!rows.length) return { dryRun, totals: { inserted: 0, updated: 0, errors: 0 }, rows: [] };
 
-    let header: string[];
-    let body: string[][];
-    if (rows[0].some((c) => /household_name|primary_name/.test(c.toLowerCase()))) {
-      header = rows[0].map((c) => c.trim().toLowerCase());
-      body = rows.slice(1);
-    } else {
-      header = ["household_name", "phone", "members", "email", "address_line1", "address_line2", "city", "state", "postal_code", "country", "invite_notes"];
-      body = rows;
-    }
+      let header: string[];
+      let body: string[][];
+      if (rows[0].some((c) => /household_name|primary_name/.test(c.toLowerCase()))) {
+        header = rows[0].map((c) => c.trim().toLowerCase());
+        body = rows.slice(1);
+      } else {
+        header = [
+          "household_name",
+          "phone",
+          "members",
+          "email",
+          "address_line1",
+          "address_line2",
+          "city",
+          "state",
+          "postal_code",
+          "country",
+          "invite_notes",
+        ];
+        body = rows;
+      }
 
-    const { data: existing } = await sb.from("guests").select("id, slug, phone, email");
-    const planned = planImportRows(header, body, existing ?? []);
+      const { data: existing } = await sb.from("guests").select("id, slug, phone, email");
+      const planned = planImportRows(header, body, existing ?? []);
 
-    if (!dryRun) {
-      for (const p of planned) {
-        if (p.action === "insert" && p.payload) {
-          // primary_name/phone are always set on an insert-planned row (see
-          // planImportRows) even though GuestWritePayload marks them
-          // optional to also cover update rows — asserted here, not
-          // re-validated, since that invariant already holds by construction.
-          const payload = p.payload as GuestWritePayload & { primary_name: string; phone: string };
-          for (let i = 0; i < 5; i++) {
-            const slug = p.slug || randomSlug();
-            const { error } = await sb.from("guests").insert({ ...payload, slug });
-            if (!error) { p.slug = slug; break; }
-            if (p.slug || !error.message.toLowerCase().includes("duplicate")) {
+      if (!dryRun) {
+        for (const p of planned) {
+          if (p.action === "insert" && p.payload) {
+            // primary_name/phone are always set on an insert-planned row (see
+            // planImportRows) even though GuestWritePayload marks them
+            // optional to also cover update rows — asserted here, not
+            // re-validated, since that invariant already holds by construction.
+            const payload = p.payload as GuestWritePayload & {
+              primary_name: string;
+              phone: string;
+            };
+            for (let i = 0; i < 5; i++) {
+              const slug = p.slug || randomSlug();
+              const { error } = await sb.from("guests").insert({ ...payload, slug });
+              if (!error) {
+                p.slug = slug;
+                break;
+              }
+              if (p.slug || !error.message.toLowerCase().includes("duplicate")) {
+                p.action = "error";
+                p.error = error.message;
+                break;
+              }
+            }
+          } else if (p.action === "update" && p.guestId && p.payload) {
+            const { error } = await sb.from("guests").update(p.payload).eq("id", p.guestId);
+            if (error) {
               p.action = "error";
               p.error = error.message;
-              break;
             }
           }
-        } else if (p.action === "update" && p.guestId && p.payload) {
-          const { error } = await sb.from("guests").update(p.payload).eq("id", p.guestId);
-          if (error) { p.action = "error"; p.error = error.message; }
         }
       }
-    }
 
-    const totals = { inserted: 0, updated: 0, errors: 0 };
-    for (const p of planned) {
-      if (p.action === "insert") totals.inserted++;
-      else if (p.action === "update") totals.updated++;
-      else totals.errors++;
-    }
+      const totals = { inserted: 0, updated: 0, errors: 0 };
+      for (const p of planned) {
+        if (p.action === "insert") totals.inserted++;
+        else if (p.action === "update") totals.updated++;
+        else totals.errors++;
+      }
 
-    return {
-      dryRun,
-      totals,
-      rows: planned.map(({ row, action, household_name, matchedBy, warnings, error }) => ({
-        row, action, household_name, matchedBy, warnings, error,
-      })),
-    };
-  });
+      return {
+        dryRun,
+        totals,
+        rows: planned.map(({ row, action, household_name, matchedBy, warnings, error }) => ({
+          row,
+          action,
+          household_name,
+          matchedBy,
+          warnings,
+          error,
+        })),
+      };
+    },
+  );
 
 // Minimal CSV parser: handles quoted fields, commas, newlines, and doubled quotes.
 function parseCsv(input: string): string[][] {
@@ -1025,20 +1242,28 @@ function parseCsv(input: string): string[][] {
     const ch = input[i];
     if (inQuotes) {
       if (ch === '"') {
-        if (input[i + 1] === '"') { field += '"'; i++; }
-        else inQuotes = false;
+        if (input[i + 1] === '"') {
+          field += '"';
+          i++;
+        } else inQuotes = false;
       } else field += ch;
     } else {
       if (ch === '"') inQuotes = true;
-      else if (ch === ",") { cur.push(field); field = ""; }
-      else if (ch === "\n" || ch === "\r") {
+      else if (ch === ",") {
+        cur.push(field);
+        field = "";
+      } else if (ch === "\n" || ch === "\r") {
         if (ch === "\r" && input[i + 1] === "\n") i++;
-        cur.push(field); field = "";
+        cur.push(field);
+        field = "";
         if (cur.some((c) => c.length)) rows.push(cur);
         cur = [];
       } else field += ch;
     }
   }
-  if (field.length || cur.length) { cur.push(field); if (cur.some((c) => c.length)) rows.push(cur); }
+  if (field.length || cur.length) {
+    cur.push(field);
+    if (cur.some((c) => c.length)) rows.push(cur);
+  }
   return rows;
 }

@@ -1,15 +1,14 @@
 import { DATE_CARDS, DAY_SCHEDULE } from "@/lib/wedding-data";
 import { DisplayHeading, Eyebrow } from "@/components/site/typography";
 import barnAerial from "@/assets/venue/sparks-barn-aerial.jpg.asset.json";
+import { SITE } from "@/lib/site";
+
+const SITE_HOST = new URL(SITE.siteUrl).hostname;
 
 export function DaySection() {
   return (
-    <section
-      id="day"
-      className="border-t border-hairline rs-section-bleed bg-lavender-deep"
-    >
+    <section id="day" className="border-t border-hairline rs-section-bleed bg-lavender-deep">
       <div className="mx-auto" style={{ maxWidth: 1400 }}>
-
         <Eyebrow color="gold" size="lg" style={{ marginBottom: 18 }}>
           III · The Day
         </Eyebrow>
@@ -60,7 +59,6 @@ export function DaySection() {
         </div>
 
         <div className="grid rs-stack" style={{ marginTop: 70 }}>
-
           <div>
             <Eyebrow color="gold" size="md" style={{ marginBottom: 20 }}>
               Day-of schedule
@@ -74,13 +72,17 @@ export function DaySection() {
                   gap: 20,
                   padding: "16px 0",
                   borderTop: "1px solid rgba(248,244,236,0.15)",
-                  borderBottom: i === arr.length - 1 ? "1px solid rgba(248,244,236,0.15)" : undefined,
+                  borderBottom:
+                    i === arr.length - 1 ? "1px solid rgba(248,244,236,0.15)" : undefined,
                 }}
               >
                 <span className="font-serif italic text-gold" style={{ fontSize: 22 }}>
                   {s.time}
                 </span>
-                <span className="font-sans" style={{ fontSize: 16, color: "rgba(248,244,236,0.92)" }}>
+                <span
+                  className="font-sans"
+                  style={{ fontSize: 16, color: "rgba(248,244,236,0.92)" }}
+                >
                   {s.label}
                 </span>
               </div>
@@ -104,7 +106,7 @@ export function DaySection() {
                   "Geovanni & Addison — Wedding",
                 )}&dates=20261010T220000Z/20261011T043000Z&location=${encodeURIComponent(
                   "Sparks' Barn, 13817 108th St, Louisville, NE 68037",
-                )}&details=${encodeURIComponent("The wedding of Geo & Addi. See morenowedding2026.com.")}`}
+                )}&details=${encodeURIComponent(`The wedding of Geo & Addi. See ${SITE_HOST}.`)}`}
                 target="_blank"
                 rel="noopener"
                 className="uppercase font-sans inline-block"
@@ -148,7 +150,12 @@ export function DaySection() {
               </Eyebrow>
               <p
                 className="font-sans"
-                style={{ fontSize: 16, lineHeight: 1.75, color: "rgba(248,244,236,0.88)", margin: 0 }}
+                style={{
+                  fontSize: 16,
+                  lineHeight: 1.75,
+                  color: "rgba(248,244,236,0.88)",
+                  margin: 0,
+                }}
               >
                 Cocktail attire in warm neutrals, lavender, or plum. Skip the stilettos, the barn
                 floor is uneven and the lawn is grass.
@@ -160,11 +167,15 @@ export function DaySection() {
               </Eyebrow>
               <p
                 className="font-sans"
-                style={{ fontSize: 16, lineHeight: 1.75, color: "rgba(248,244,236,0.88)", margin: 0 }}
+                style={{
+                  fontSize: 16,
+                  lineHeight: 1.75,
+                  color: "rgba(248,244,236,0.88)",
+                  margin: 0,
+                }}
               >
-                Sparks&rsquo; Barn is an open-air barn on farmland outside Louisville, Nebraska.
-                The ceremony happens outdoors on the lawn, then dinner and dancing move inside
-                the barn.
+                Sparks&rsquo; Barn is an open-air barn on farmland outside Louisville, Nebraska. The
+                ceremony happens outdoors on the lawn, then dinner and dancing move inside the barn.
               </p>
             </div>
           </div>

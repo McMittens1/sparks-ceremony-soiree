@@ -2,10 +2,12 @@ import { useState } from "react";
 import { PARTY, type PartyMember } from "@/lib/wedding-data";
 import { GroomsmanCard } from "@/components/site/GroomsmanCard";
 import { MagazineCover } from "@/components/site/MagazineCover";
+import { useFeatureFlag } from "@/hooks/use-feature-flags";
 
 export function WeddingParty() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const toggle = (id: string) => setExpanded((prev) => (prev === id ? null : id));
+  const { enabled: showUshers } = useFeatureFlag("show_ushers");
 
   const moh = PARTY.find((p) => p.role === "Maid of Honor");
   const bridesmaids = PARTY.filter((p) => p.role === "Bridesmaid");
@@ -132,8 +134,9 @@ export function WeddingParty() {
         maxWidth={280}
       />
 
-      {/* Ushers intentionally hidden for now — data preserved in wedding-data.ts. */}
-      {false && ushers.length > 0 && (
+      {/* Gated by the show_ushers feature flag (admin Features tab) — data
+          is always preserved in wedding-data.ts regardless of the flag. */}
+      {showUshers && ushers.length > 0 && (
         <div className="mt-14 pt-11 border-t border-hairline">
           <p
             className="uppercase font-sans mb-4 text-tan-deep"

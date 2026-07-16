@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { useT } from "@/i18n/context";
+import { useLang, fmt } from "@/i18n/context";
+import type { Dict } from "@/i18n/dictionaries";
 import { useFeatureFlag } from "@/hooks/use-feature-flags";
 import { SITE } from "@/lib/site";
 import { buildMeta } from "@/lib/seo";
@@ -25,7 +26,7 @@ export const Route = createFileRoute("/rsvp")({
   head: () =>
     buildMeta({
       title: "RSVP · Geovanni & Addison",
-      description: "Respond to our wedding invitation. Please reply by September 15, 2026.",
+      description: `Respond to our wedding invitation. Please reply by ${SITE.rsvpDeadlinePretty.en}.`,
       image:
         "https://storage.googleapis.com/gpt-engineer-file-uploads/QgOLQ93F1TPGT6HHK39DmJ7E6bY2/social-images/social-1783945112817-IMG_1610.webp",
       url: `${SITE.siteUrl}/rsvp`,
@@ -94,10 +95,31 @@ function looksLikeUsZip(v: string): boolean {
 const LOOKUP_MIN_CHARS = 2;
 const LOOKUP_DEBOUNCE_MS = 300;
 
+// updateGuestAddress/submitRsvp throw a short error code (see
+// rsvp.functions.ts) rather than English prose, so the message shown here
+// matches the guest's chosen language instead of always being English.
+// Any code without a mapping — or a raw DB error message that slipped
+// through unmapped — falls back to the generic localized message rather
+// than displaying server text directly.
+const RSVP_ERROR_MESSAGES: Partial<Record<string, keyof Dict["rsvp"]>> = {
+  household_not_found: "errHouseholdNotFound",
+  not_verified: "errNotVerified",
+  rsvp_closed: "errRsvpClosed",
+  too_many_guests: "errTooManyGuests",
+  link_expired: "errLinkExpired",
+  link_invalid: "errLinkInvalid",
+  save_failed: "errSaveFailed",
+};
+
+function rsvpErrorMessage(e: unknown, t: Dict): string {
+  const key = e instanceof Error ? RSVP_ERROR_MESSAGES[e.message] : undefined;
+  return key ? t.rsvp[key] : t.rsvp.errGeneric;
+}
+
 type Match = { slug: string; primary_name: string; party_size: number };
 
 function RsvpPage() {
-  const t = useT();
+  const { t, lang } = useLang();
   const search = useSearch({ from: "/rsvp" });
   const runLookup = useServerFn(lookupGuest);
   const runGetLabel = useServerFn(getVerifyTargetLabel);
@@ -296,7 +318,7 @@ function RsvpPage() {
       setAddressSaved(true);
       setAddressConfirmed(true);
     } catch (e) {
-      setAddressErr(e instanceof Error ? e.message : t.rsvp.errGeneric);
+      setAddressErr(rsvpErrorMessage(e, t));
     } finally {
       setAddressSaving(false);
     }
@@ -326,8 +348,7 @@ function RsvpPage() {
       });
       setStage("done");
     } catch (e) {
-      const msg = e instanceof Error ? e.message : t.rsvp.errGeneric;
-      setErr(msg);
+      setErr(rsvpErrorMessage(e, t));
     } finally {
       setLoading(false);
     }
@@ -397,7 +418,7 @@ function RsvpPage() {
             className="uppercase font-sans text-center"
             style={{ fontSize: 10, letterSpacing: "0.3em", color: SOFT, margin: "14px 0 0" }}
           >
-            {t.rsvp.deadlineLine}
+            {fmt(t.rsvp.deadlineLine, { date: SITE.rsvpDeadlinePretty[lang] })}
           </p>
           {!isLate && (
             <p
@@ -408,7 +429,7 @@ function RsvpPage() {
                 ? t.rsvp.daysLeftToday
                 : daysUntilDeadline === 1
                   ? t.rsvp.daysLeftOne
-                  : t.rsvp.daysLeftMany.replace("{n}", String(daysUntilDeadline))}
+                  : fmt(t.rsvp.daysLeftMany, { n: daysUntilDeadline })}
             </p>
           )}
           {isLate && (

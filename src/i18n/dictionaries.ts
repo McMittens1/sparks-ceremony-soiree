@@ -138,6 +138,13 @@ export interface Dict {
     errName: string;
     errNoName: string;
     errGeneric: string;
+    errHouseholdNotFound: string;
+    errNotVerified: string;
+    errRsvpClosed: string;
+    errTooManyGuests: string;
+    errLinkExpired: string;
+    errLinkInvalid: string;
+    errSaveFailed: string;
   };
   admin: {
     title: string;
@@ -345,7 +352,7 @@ const en: Dict = {
   },
   rsvp: {
     title: "RSVP",
-    deadlineLine: "Please respond by September 15, 2026.",
+    deadlineLine: "Please respond by {date}.",
     daysLeftToday: "Today is the last day to RSVP!",
     daysLeftOne: "1 day left to RSVP",
     daysLeftMany: "{n} days left to RSVP",
@@ -402,6 +409,13 @@ const en: Dict = {
     errName: "Please enter each guest's name.",
     errNoName: "Please add at least one guest.",
     errGeneric: "Something went wrong. Please try again in a moment.",
+    errHouseholdNotFound: "We couldn't find that household. Please double-check your link.",
+    errNotVerified: "Please verify your household again before continuing.",
+    errRsvpClosed: "RSVP submissions aren't open yet.",
+    errTooManyGuests: "That's more guests than your invitation allows.",
+    errLinkExpired: "This edit link has expired. Please contact us for a new one.",
+    errLinkInvalid: "This edit link isn't valid. Please double-check it.",
+    errSaveFailed: "We couldn't save that. Please try again in a moment.",
   },
   admin: {
     title: "Admin",
@@ -613,7 +627,7 @@ const es: Dict = {
   },
   rsvp: {
     title: "Confirmar asistencia",
-    deadlineLine: "Por favor responde antes del 15 de septiembre de 2026.",
+    deadlineLine: "Por favor responde antes del {date}.",
     daysLeftToday: "¡Hoy es el último día para responder!",
     daysLeftOne: "Queda 1 día para responder",
     daysLeftMany: "Quedan {n} días para responder",
@@ -669,6 +683,13 @@ const es: Dict = {
     errName: "Ingresa el nombre de cada invitado.",
     errNoName: "Agrega al menos un invitado.",
     errGeneric: "Algo salió mal. Intenta de nuevo en un momento.",
+    errHouseholdNotFound: "No encontramos ese grupo familiar. Verifica tu enlace.",
+    errNotVerified: "Por favor verifica tu grupo familiar de nuevo antes de continuar.",
+    errRsvpClosed: "El período para confirmar asistencia aún no ha abierto.",
+    errTooManyGuests: "Son más invitados de los que permite tu invitación.",
+    errLinkExpired: "Este enlace de edición venció. Contáctanos para uno nuevo.",
+    errLinkInvalid: "Este enlace de edición no es válido. Verifícalo de nuevo.",
+    errSaveFailed: "No pudimos guardar eso. Intenta de nuevo en un momento.",
   },
   admin: {
     title: "Administración",

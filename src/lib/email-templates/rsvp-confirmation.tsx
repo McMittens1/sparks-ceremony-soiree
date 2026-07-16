@@ -29,6 +29,7 @@ interface RsvpConfirmationProps {
   eventDate?: string;
   venue?: string;
   address?: string;
+  rsvpDeadline?: string;
 }
 
 const RsvpConfirmationEmail = ({
@@ -39,6 +40,7 @@ const RsvpConfirmationEmail = ({
   eventDate = "October 10, 2026",
   venue = "Sparks' Barn",
   address = "13817 108th St, Louisville, NE 68037",
+  rsvpDeadline = "September 15, 2026",
 }: RsvpConfirmationProps) => {
   const attendingList = attendees.filter((a) => a.attending);
   const declinedList = attendees.filter((a) => !a.attending);
@@ -47,8 +49,8 @@ const RsvpConfirmationEmail = ({
     status === "attending"
       ? "You're coming — we can't wait."
       : status === "partial"
-      ? "Thanks for letting us know."
-      : "We'll miss you.";
+        ? "Thanks for letting us know."
+        : "We'll miss you.";
 
   return (
     <Html lang="en" dir="ltr">
@@ -95,7 +97,7 @@ const RsvpConfirmationEmail = ({
 
           <Hr style={hr} />
           <Text style={text}>
-            Need to change anything? You can update your RSVP anytime before September 15, 2026:
+            Need to change anything? You can update your RSVP anytime before {rsvpDeadline}:
           </Text>
           <Text style={text}>
             <Link href={editUrl} style={link}>
@@ -129,12 +131,16 @@ export const template = {
     eventDate: "October 10, 2026",
     venue: "Sparks' Barn",
     address: "13817 108th St, Louisville, NE 68037",
+    rsvpDeadline: "September 15, 2026",
   },
 } satisfies TemplateEntry;
 
 export default RsvpConfirmationEmail;
 
-const main = { backgroundColor: EMAIL_COLORS.ivory, fontFamily: "Georgia, 'Times New Roman', serif" };
+const main = {
+  backgroundColor: EMAIL_COLORS.ivory,
+  fontFamily: "Georgia, 'Times New Roman', serif",
+};
 const container = { padding: "40px 32px", maxWidth: 560 };
 const eyebrow = {
   fontFamily: "Arial, sans-serif",

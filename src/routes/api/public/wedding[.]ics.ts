@@ -1,15 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { SITE } from "@/lib/site";
 
 // Fixed event details — Sparks' Barn, October 10, 2026, 5:00–11:30 PM CT.
 const DTSTART = "20261010T170000";
 const DTEND = "20261010T233000";
 const TZID = "America/Chicago";
-const SUMMARY = "Geovanni & Addison — Wedding";
-const LOCATION = "Sparks' Barn, 13817 108th St, Louisville, NE 68037";
-const DESCRIPTION =
-  "The wedding of Geovanni Moreno and Addison Hillman. Ceremony at 5:00 PM. See morenowedding2026.com for the full schedule.";
-const URL_ = "https://morenowedding2026.com";
-const UID = "wedding-2026-10-10@morenowedding2026.com";
+const SUMMARY = `${SITE.couple} — Wedding`;
+const LOCATION = `${SITE.venue}, ${SITE.address}`;
+const SITE_HOST = new URL(SITE.siteUrl).hostname;
+const DESCRIPTION = `The wedding of ${SITE.partnerA} and ${SITE.partnerB}. Ceremony at 5:00 PM. See ${SITE_HOST} for the full schedule.`;
+const URL_ = SITE.siteUrl;
+const UID = `wedding-2026-10-10@${SITE_HOST}`;
 
 // RFC 5545 §3.3.11 TEXT escaping: backslash, semicolon, comma, and newline.
 // Backslashes must be escaped first so the other escapes aren't themselves

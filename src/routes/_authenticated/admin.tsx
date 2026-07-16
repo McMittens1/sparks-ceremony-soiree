@@ -28,6 +28,7 @@ import {
 import { getFeatureFlags, setFeatureFlags, type FeatureFlag } from "@/lib/feature-flags.functions";
 import { Switch } from "@/components/ui/switch";
 import { SITE } from "@/lib/site";
+import { PHOTO_CAPTION_MAX_LENGTH } from "@/lib/photo-config";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -146,9 +147,15 @@ function RsvpsPanel() {
   const [importOpen, setImportOpen] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [unlockingId, setUnlockingId] = useState<string | null>(null);
+  const refreshToken = useRef(0);
 
   async function refresh() {
+    // If a newer refresh has started by the time this one resolves, drop
+    // this result rather than let a slow, stale response clobber fresher
+    // data (e.g. two quick unlocks firing back-to-back).
+    const token = ++refreshToken.current;
     const next = await loadRows({});
+    if (token !== refreshToken.current) return;
     setRows(next);
   }
 
@@ -1913,15 +1920,25 @@ function PhotosPanel() {
   const [captionDraft, setCaptionDraft] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const countsToken = useRef(0);
+  const photosToken = useRef(0);
 
   const refreshCounts = useCallback(() => {
+    const token = ++countsToken.current;
     loadCounts({})
-      .then(setCounts)
+      .then((next) => {
+        if (token !== countsToken.current) return;
+        setCounts(next);
+      })
       .catch(() => {});
   }, [loadCounts]);
 
   const refreshPhotos = useCallback(async () => {
+    // Rapid tab switches or back-to-back actions can resolve out of order —
+    // drop this result if a newer refresh has since started.
+    const token = ++photosToken.current;
     const next = await loadPhotos({ data: { status: photoTab } });
+    if (token !== photosToken.current) return;
     setPhotos(next);
     // prune selection to visible ids
     setSelected((prev) => {
@@ -2172,7 +2189,7 @@ function PhotosPanel() {
                         value={captionDraft}
                         onChange={(e) => setCaptionDraft(e.target.value)}
                         rows={2}
-                        maxLength={300}
+                        maxLength={PHOTO_CAPTION_MAX_LENGTH}
                         className="w-full border border-input bg-background px-2 py-1 text-xs"
                       />
                       <div className="flex gap-2">
@@ -2359,10 +2376,13 @@ function FeatureFlagsPanel() {
   const [confirming, setConfirming] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ kind: "success" | "error"; text: string } | null>(null);
+  const refreshToken = useRef(0);
 
   const refresh = useCallback(() => {
+    const token = ++refreshToken.current;
     loadFlags({})
       .then((flags) => {
+        if (token !== refreshToken.current) return;
         setSaved(flags);
         setDraft({});
       })

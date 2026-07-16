@@ -3,6 +3,7 @@ import { DiamondDivider } from "@/components/site/DiamondDivider";
 import { SectionHeader } from "@/components/site/SectionHeader";
 import { BodyProse, Eyebrow } from "@/components/site/typography";
 import { FAQ_LOGISTICS, FAQ_GUESTS } from "@/lib/wedding-data";
+import { SITE } from "@/lib/site";
 
 export function FaqSection() {
   return (
@@ -16,7 +17,6 @@ export function FaqSection() {
         <DiamondDivider className="mt-9" />
 
         <div className="grid rs-stack-2" style={{ marginTop: 60 }}>
-
           {(
             [
               { title: "Logistics", items: FAQ_LOGISTICS },
@@ -38,7 +38,10 @@ export function FaqSection() {
                   style={{ padding: "20px 0" }}
                   open={item.open}
                 >
-                  <summary className="flex justify-between gap-5 cursor-pointer font-serif italic text-ink" style={{ fontSize: 21 }}>
+                  <summary
+                    className="flex justify-between gap-5 cursor-pointer font-serif italic text-ink"
+                    style={{ fontSize: 21 }}
+                  >
                     {item.q}
                     <span
                       aria-hidden
@@ -56,8 +59,11 @@ export function FaqSection() {
             </div>
           ))}
         </div>
-        <p className="text-center font-serif italic text-ink-soft" style={{ marginTop: 56, fontSize: 16 }}>
-          Still have a question? Text Addi or Geo directly, we&rsquo;ll get you sorted.
+        <p
+          className="text-center font-serif italic text-ink-soft"
+          style={{ marginTop: 56, fontSize: 16 }}
+        >
+          Still have a question? {SITE.rsvpFallbackContact}
         </p>
       </div>
 
@@ -66,7 +72,6 @@ export function FaqSection() {
         className="text-center rs-section-bleed bg-lavender-wash"
         style={{ paddingBlock: "clamp(80px, 14svh, 130px)" }}
       >
-
         <Eyebrow color="lavender-deep" size="lg" style={{ marginBottom: 26 }}>
           See you soon
         </Eyebrow>
@@ -93,7 +98,7 @@ export function FaqSection() {
           </Link>
         </div>
         <Eyebrow color="ink-soft" style={{ marginTop: 26 }}>
-          Please respond by September 15, 2026
+          Please respond by {SITE.rsvpDeadlinePretty.en}
         </Eyebrow>
       </div>
     </section>

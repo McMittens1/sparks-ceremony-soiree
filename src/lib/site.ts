@@ -10,13 +10,19 @@ export const SITE = {
   address: "13817 108th St, Louisville, NE 68037",
   eventDate: "2026-10-10T17:00:00-05:00",
   eventDatePretty: { en: "October 10, 2026", es: "10 de octubre de 2026" },
-  mapEmbed:
-    "https://www.google.com/maps?q=13817+108th+St,+Louisville,+NE+68037&output=embed",
-  mapLink: "https://www.google.com/maps/search/?api=1&query=13817+108th+St%2C+Louisville%2C+NE+68037",
+  mapEmbed: "https://www.google.com/maps?q=13817+108th+St,+Louisville,+NE+68037&output=embed",
+  mapLink:
+    "https://www.google.com/maps/search/?api=1&query=13817+108th+St%2C+Louisville%2C+NE+68037",
   // RSVP is handled on-site at /rsvp.
   rsvpUrl: "/rsvp",
   // Deadline for the RSVP soft cutoff (still accepts after, but shows a late notice).
   rsvpDeadline: "2026-09-15T23:59:59-05:00",
+  // Hand-maintained pretty-print pair for rsvpDeadline, mirroring the
+  // eventDatePretty pattern above — every place that displays the deadline
+  // as prose (site copy, confirmation email, SEO description) should read
+  // from here instead of re-typing the date, so there's one place to
+  // update if the deadline ever changes.
+  rsvpDeadlinePretty: { en: "September 15, 2026", es: "15 de septiembre de 2026" },
   // Shown when a guest can't find their name in the lookup. Update to your preferred contact.
   rsvpFallbackContact: "Text Addi or Geo directly — we'll get you sorted.",
 } as const;
