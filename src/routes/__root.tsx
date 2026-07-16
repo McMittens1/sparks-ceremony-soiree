@@ -18,18 +18,26 @@ import { LanguageProvider } from "@/i18n/context";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { Spine } from "@/components/site/Spine";
+import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="font-serif italic text-6xl" style={{ color: "#2A2520" }}>404</h1>
+        <h1 className="font-serif italic text-6xl" style={{ color: "#2A2520" }}>
+          404
+        </h1>
         <p className="mt-4 text-sm text-muted-foreground">This page isn't part of our story.</p>
         <div className="mt-6">
           <Link
             to="/"
             className="inline-flex items-center justify-center border px-5 py-2 text-sm uppercase"
-            style={{ borderColor: "#2A2520", color: "#2A2520", letterSpacing: "0.2em", fontSize: 11 }}
+            style={{
+              borderColor: "#2A2520",
+              color: "#2A2520",
+              letterSpacing: "0.2em",
+              fontSize: 11,
+            }}
           >
             Go home
           </Link>
@@ -52,16 +60,30 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         <p className="mt-2 text-sm text-muted-foreground">Please refresh the page.</p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
-            onClick={() => { router.invalidate(); reset(); }}
+            onClick={() => {
+              router.invalidate();
+              reset();
+            }}
             className="border px-5 py-2 text-sm uppercase bg-ink text-ivory"
-            style={{ borderColor: "#2A2520", background: "#2A2520", color: "#F8F4EC", letterSpacing: "0.2em", fontSize: 11 }}
+            style={{
+              borderColor: "#2A2520",
+              background: "#2A2520",
+              color: "#F8F4EC",
+              letterSpacing: "0.2em",
+              fontSize: 11,
+            }}
           >
             Try again
           </button>
           <a
             href="/"
             className="border px-5 py-2 text-sm uppercase"
-            style={{ borderColor: "#2A2520", color: "#2A2520", letterSpacing: "0.2em", fontSize: 11 }}
+            style={{
+              borderColor: "#2A2520",
+              color: "#2A2520",
+              letterSpacing: "0.2em",
+              fontSize: 11,
+            }}
           >
             Go home
           </a>
@@ -112,8 +134,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <head><HeadContent /></head>
-      <body>{children}<Scripts /></body>
+      <head>
+        <HeadContent />
+      </head>
+      <body>
+        {children}
+        <Scripts />
+      </body>
     </html>
   );
 }
@@ -132,16 +159,18 @@ function RootComponent() {
             <Spine />
           </div>
         )}
-        <div
-          className={`min-h-screen flex flex-col ${isHome ? "xl:ml-[52px]" : ""}`}
-        >
-          <a href="#main-content" className="skip-link">Skip to main content</a>
+        <div className={`min-h-screen flex flex-col ${isHome ? "xl:ml-[52px]" : ""}`}>
+          <a href="#main-content" className="skip-link">
+            Skip to main content
+          </a>
           {!isRsvp && <Header />}
-          <main id="main-content" tabIndex={-1} className="flex-1"><Outlet /></main>
+          <main id="main-content" tabIndex={-1} className="flex-1">
+            <Outlet />
+          </main>
           {!isRsvp && <Footer />}
         </div>
+        <Toaster position="bottom-right" richColors closeButton />
       </LanguageProvider>
     </QueryClientProvider>
   );
 }
-
