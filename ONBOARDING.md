@@ -37,7 +37,7 @@ A single source of truth for continuing this project with any AI assistant (Clau
 - A centralized **feature-flag system** (`feature_flags` DB table + `src/lib/feature-flags.functions.ts` + `src/hooks/use-feature-flags.ts`) gates guest-facing features that need to be turned on/off without a deploy. Currently gates `rsvp_open` and `guest_photo_uploads`. The admin Features panel uses an explicit **draft → confirm → save** workflow, not instant-toggle — see §5.
 - RSVP lookup is by name or short invitation slug. No guest accounts or passwords. The search endpoint (`lookupGuest`) never returns the real invite code — it hands back a short-lived signed "select" token instead (`src/lib/rsvp-token.server.ts`), so a name search alone can't be used to harvest invite codes. A successful last-4 phone check mints a separate "session" token (2h TTL) that's the only thing that authorizes `submitRsvp`/`updateGuestAddress` — it's issued to the verifying browser, not remembered on the household row, so someone else who obtains the invite code can't ride along on another household's already-verified window.
 - RSVP edit links are HMAC-signed tokens (`RSVP_EDIT_SECRET`) with a 90-day expiry; no login required. **By design, editing an existing RSVP via its signed token works even when `rsvp_open` is off** — the flag gates new submissions, not self-service edits to an RSVP a guest already made. See `HANDOFF.md` for the reasoning.
-- Admin access is behind an intentionally obscure URL: `/portal-ga-2026`. There is a single admin account; the first user to sign in via that page is auto-promoted to admin. The `/_authenticated` route guard checks the `admin` role itself (via a shared `hasAdminRole()` helper), not just that a user is signed in.
+- Admin access is behind two intentionally obscure URLs: `/portal-ga-2026` (sign-in) and `/portal-ga-2026/dashboard` (the actual dashboard, gated by the `_authenticated` layout route's `beforeLoad` guard). There is a single admin account; the first user to sign in via that page is auto-promoted to admin. The guard checks the `admin` role itself (via a shared `hasAdminRole()` helper), not just that a user is signed in. **The dashboard used to live at the guessable `/admin`** — TanStack Router treats the `_authenticated` prefix as invisible layout scaffolding, so that was always the real URL, and visiting it while signed out redirected straight to `/portal-ga-2026`, leaking the "hidden" sign-in page to anyone who tried `/admin`. Fixed 2026-07-17 by nesting the dashboard under the obscure path so `/admin` now matches nothing (404). `robots.txt` also used to publicly list `Disallow: /portal-ga-2026` — a public file announcing the secret path defeats the point; removed. The correct mechanism is the page's own `noindex,nofollow` meta tag, which was already present.
 - All admin server functions (`src/lib/admin.functions.ts`, `src/lib/feature-flags.functions.ts`, `src/lib/email.functions.ts`, and the guest/household management functions in `src/lib/rsvp.functions.ts` — `listGuestsWithRsvps`, `unlockGuestPhoneVerify`, `upsertGuest`, `deleteGuest`, `bulkDeleteGuests`, `importGuestsCsv`) run as the calling admin's own RLS-scoped client (`context.supabase`, attached by `requireSupabaseAuth`), not the service-role client — the app-level `ensureAdmin()` check is backed by a matching `has_role(auth.uid(), 'admin')` RLS policy on `guests`/`rsvps`/`guest_photos`/`feature_flags`/`email_send_log`/`suppressed_emails`/`email_send_state` and the `guest-photos` storage bucket. Exceptions, deliberate: `claimAdminIfFirst` (needs to see across all admin rows and insert one for a not-yet-admin user — beyond what the "see your own row" RLS policy on `user_roles` allows) and every anonymous guest-facing flow (lookup/verify/submit — no Supabase user session exists for a guest at all) still use the service-role client.
 - The Wedding Party section (`src/components/site/WeddingParty.tsx`) uses a **collectible-card theme**: Groomsmen + Best Man are Pokémon/sports-card-style trading cards (`GroomsmanCard.tsx`) with a flip interaction; Bridesmaids + Maid of Honor are full-bleed editorial magazine covers (`MagazineCover.tsx`, masthead "SPARKS.") with no flip interaction. Both the Best Man's "Legendary" card and the Maid of Honor's "Collector's Edition" cover use a **categorical color inversion** (not just a size bump) to signal rarity — see §4 and `HANDOFF.md` for why.
 - All app-internal server logic uses `createServerFn` from `@tanstack/react-start`. Public HTTP endpoints (weather, `.ics`) live under `src/routes/api/public/`.
@@ -52,7 +52,7 @@ A single source of truth for continuing this project with any AI assistant (Clau
 - `guest_photo_uploads` → **false** — photo upload is built and fully functional, but not open yet.
 - `show_ushers` → **false** — the Ushers section of the Wedding Party page is built but hidden.
 
-All three are toggled from the Features tab in `/_authenticated/admin` — no code change needed to flip them. **Check the live value before assuming a feature is "on" or "off"; this file only reflects a snapshot.**
+All three are toggled from the Features tab in `/portal-ga-2026/dashboard` — no code change needed to flip them. **Check the live value before assuming a feature is "on" or "off"; this file only reflects a snapshot.**
 
 **Guest data:** the `guests` table has **52 real household rows** (the test/seed row from earlier in the project is gone — the real invite list has been imported). `rsvps` has 1 submitted response so far. `guest_photos` is empty.
 
@@ -79,8 +79,8 @@ All three are toggled from the Features tab in `/_authenticated/admin` — no co
 - Confirmation emails include an "Edit your RSVP" button with a fresh token.
 - Admin CSV export includes an `rsvp_url` column with the signed edit link.
 
-### Admin dashboard (`/_authenticated/admin`)
-- **RSVPs tab:** view, filter, sort, edit guests, import CSV, export CSV, copy RSVP links, bulk-delete selected invitations (deleting a household also removes its RSVP row via `ON DELETE CASCADE`).
+### Admin dashboard (`/portal-ga-2026/dashboard`)
+- **RSVPs tab:** view, filter, sort, edit guests, import CSV, export CSV, copy RSVP links, bulk-delete selected invitations (deleting a household also removes its RSVP row via `ON DELETE CASCADE`). The guest editor shows the household's actual RSVP response (which can include a guest they added beyond the invited roster) separately from the editable invite list, with a one-click **"Add to invite list"** to promote an added name on purpose (never automatic), and a **"Resend confirmation email"** button that replays the same send pipeline as the original (`resendRsvpConfirmation` in `rsvp.functions.ts`).
 - **Photos tab:** approve/reject/delete guest-uploaded photos, bulk actions, captions, keyboard-shortcut lightbox.
 - **Features tab:** toggle `rsvp_open` / `guest_photo_uploads` / `show_ushers` via an explicit draft → confirm → save flow (toggling doesn't take effect until you click Save and confirm the listed changes).
 - **Emails tab:** read-only visibility into `email_send_log`/`suppressed_emails`/`email_send_state` (`src/lib/email.functions.ts`) — last 200 send attempts with status pills, a summary strip, a rate-limit-cooldown banner, and a suppressed-addresses list. Added because these tables previously had zero admin-facing read path (service-role-only RLS); a new migration (`20260717120000_admin_email_visibility.sql`) added admin SELECT policies. **While building this, found that every app-triggered email had been silently failing since 2026-07-15** (`src/lib/email/enqueue.server.ts`, used by RSVP confirmation/admin notification/photo-received). This took **three** rounds to actually fix, not one — each fix uncovered the next real failure by checking the live send log again rather than assuming success: (1) missing `idempotency_key`, (2) missing `unsubscribe_token` (the email API requires both on every transactional send — `enqueue.server.ts` had neither; `transactional/send.ts` already had both, its unsubscribe-token logic is now shared via `src/lib/email/unsubscribe-token.server.ts`), (3) the queue processor's retry logic reused the same idempotency key on every retry, which the API rejects — pgmq redelivers the identical payload, so this made every failure (of any cause) guaranteed to exhaust all 5 retries into the DLQ; fixed by deriving a per-attempt key in `queue/process.ts`. **Verify this is actually working from the Emails tab after publishing** — don't assume it's fixed just because the code changed; that assumption is exactly what let this run broken for two days originally.
@@ -130,7 +130,7 @@ This is the living sprint plan. Pick up the next uncompleted sprint rather than 
 ### Out of scope unless explicitly requested
 
 - Multi-admin accounts (the app intentionally supports only one admin).
-- Changing the admin URL (`/portal-ga-2026`).
+- Changing the admin URLs (`/portal-ga-2026`, `/portal-ga-2026/dashboard`) without a real security reason (see §1 for why the dashboard's path already changed once).
 - Replacing the single-page composition with separate page routes.
 - Adding a public sign-up flow.
 
@@ -155,11 +155,11 @@ This is the living sprint plan. Pick up the next uncompleted sprint rather than 
 **Status:** The RSVP flow is fully built, feature-flag-gated, and verified working end-to-end (lookup, submit, confirmation email, token-based edit, admin dashboard). It is currently **off** in production (`rsvp_open = false`) because the real guest list has not been imported.
 
 **Remaining scope:**
-- Import the real guest list via the admin CSV import in `/_authenticated/admin` (dedup is by email/phone, verified correct).
+- Import the real guest list via the admin CSV import in `/portal-ga-2026/dashboard` (dedup is by email/phone, verified correct).
 - Turn `rsvp_open` on via the admin Features tab once the list is loaded and ready.
 - Do one real end-to-end pass with a live guest lookup once the flag is on.
 
-**Key files:** `src/routes/rsvp.tsx`, `src/routes/rsvp/edit.$token.tsx`, `src/lib/rsvp.functions.ts`, `src/lib/rsvp-token.server.ts`, `src/lib/email-templates/rsvp-confirmation.tsx`, `src/routes/_authenticated/admin.tsx`
+**Key files:** `src/routes/rsvp.tsx`, `src/routes/rsvp/edit.$token.tsx`, `src/lib/rsvp.functions.ts`, `src/lib/rsvp-token.server.ts`, `src/lib/email-templates/rsvp-confirmation.tsx`, `src/routes/_authenticated/portal-ga-2026/dashboard.tsx`
 
 **Blockers:** Real guest list must be imported. `RSVP_EDIT_SECRET` env var must be set in production (unverified from this sandbox — confirm in Lovable Cloud env settings).
 
@@ -171,7 +171,7 @@ This is the living sprint plan. Pick up the next uncompleted sprint rather than 
 
 **Remaining scope:** Just flip the flag on via the admin Features tab whenever the couple wants uploads open (no code work left).
 
-**Key files:** `src/components/site/sections/PhotosSection.tsx`, `src/lib/photos.functions.ts`, `src/lib/admin.functions.ts`, `src/routes/_authenticated/admin.tsx`
+**Key files:** `src/components/site/sections/PhotosSection.tsx`, `src/lib/photos.functions.ts`, `src/lib/admin.functions.ts`, `src/routes/_authenticated/portal-ga-2026/dashboard.tsx`
 
 ---
 
@@ -207,7 +207,7 @@ This is the living sprint plan. Pick up the next uncompleted sprint rather than 
 - **The TOCTOU race in first-admin-claim** (two near-simultaneous first sign-ins could theoretically both pass the "no admin yet" check) — known, accepted as very low risk for a single-couple site with one intentional claim, not fixed. Would need a DB-level unique constraint/transaction if ever addressed.
 - Full Prettier reformat of the codebase's pre-existing formatting debt (~2,400 lint findings, almost all `prettier/prettier`) is a legitimate but separate, large, cosmetic-only task — not blocking launch, not attempted this session beyond the files actively touched.
 
-**Key files:** `src/routes/__root.tsx`, `src/routes/index.tsx`, `src/routes/rsvp.tsx`, `src/routes/rsvp/edit.$token.tsx`, `src/routes/portal-ga-2026.tsx`, `src/routes/_authenticated/admin.tsx`, `src/routes/_authenticated/route.tsx`, `src/lib/admin.functions.ts`, `src/lib/seo.ts`, `src/routes/api/public/wedding[.]ics.ts`
+**Key files:** `src/routes/__root.tsx`, `src/routes/index.tsx`, `src/routes/rsvp.tsx`, `src/routes/rsvp/edit.$token.tsx`, `src/routes/portal-ga-2026.tsx`, `src/routes/_authenticated/portal-ga-2026/dashboard.tsx`, `src/routes/_authenticated/route.tsx`, `src/lib/admin.functions.ts`, `src/lib/seo.ts`, `src/routes/api/public/wedding[.]ics.ts`
 
 ---
 
@@ -221,7 +221,7 @@ This is the living sprint plan. Pick up the next uncompleted sprint rather than 
 - Optionally add a thank-you note or recap section to `src/routes/index.tsx`.
 - Optionally disable RSVP edits after a final cutoff while preserving read-only access.
 
-**Key files:** `src/components/site/sections/PhotosSection.tsx`, `src/routes/_authenticated/admin.tsx`, `src/routes/index.tsx`
+**Key files:** `src/components/site/sections/PhotosSection.tsx`, `src/routes/_authenticated/portal-ga-2026/dashboard.tsx`, `src/routes/index.tsx`
 
 **Blockers:** Wedding must have happened (October 10, 2026) and photos must be available.
 
@@ -269,8 +269,8 @@ This is the living sprint plan. Pick up the next uncompleted sprint rather than 
 - `src/routes/__root.tsx` — root layout; must keep `<Outlet />`.
 - `src/routes/index.tsx` — homepage; the main public page.
 - `src/routes/portal-ga-2026.tsx` — admin sign-in page (obscure URL).
-- `src/routes/_authenticated/route.tsx` — auth gate for `/admin`; checks the `admin` role, not just sign-in status.
-- `src/routes/_authenticated/admin.tsx` — admin dashboard.
+- `src/routes/_authenticated/route.tsx` — auth gate for `/portal-ga-2026/dashboard`; checks the `admin` role, not just sign-in status.
+- `src/routes/_authenticated/portal-ga-2026/dashboard.tsx` — admin dashboard.
 - `src/routes/rsvp.tsx` — public RSVP lookup/submit.
 - `src/routes/rsvp/edit.$token.tsx` — signed-token RSVP edit.
 - `src/routes/api/public/` — public HTTP endpoints (weather, `.ics`).
@@ -325,8 +325,8 @@ This is the living sprint plan. Pick up the next uncompleted sprint rather than 
 | `src/lib/email/enqueue.server.ts` | Email queue logic. |
 | `src/lib/email-templates/rsvp-confirmation.tsx`, `admin-notification.tsx` | On-brand transactional emails, styled via `email-templates/tokens.ts`. |
 | `src/routes/portal-ga-2026.tsx` | Admin sign-in page. |
-| `src/routes/_authenticated/route.tsx` | Auth + admin-role route guard for `/admin`. |
-| `src/routes/_authenticated/admin.tsx` | Admin dashboard (RSVPs + Photos + Features + Emails tabs). |
+| `src/routes/_authenticated/route.tsx` | Auth + admin-role route guard for `/portal-ga-2026/dashboard`. |
+| `src/routes/_authenticated/portal-ga-2026/dashboard.tsx` | Admin dashboard (RSVPs + Photos + Features + Emails tabs). |
 | `src/routes/rsvp.tsx` | Public RSVP page — reads `rsvp_open` via the feature-flag hook. |
 | `src/routes/rsvp/edit.$token.tsx` | Signed-token RSVP edit page — intentionally not flag-gated. |
 | `src/routes/api/public/wedding[.]ics.ts` | iCalendar download endpoint, RFC 5545 line-folding + escaping. |
@@ -342,7 +342,7 @@ This is the living sprint plan. Pick up the next uncompleted sprint rather than 
 
 - **Do not expose "Supabase" terminology to the end user.** Say "Lovable Cloud", "backend", "database", "auth", or "storage".
 - **Do not create additional admin accounts or a public sign-up flow.** The app intentionally has one admin.
-- **Do not change the admin URL** (`/portal-ga-2026`) unless the user explicitly asks.
+- **Do not change the admin URLs** (`/portal-ga-2026`, `/portal-ga-2026/dashboard`) unless the user explicitly asks or there's a real security reason (this is how the dashboard's own path was fixed 2026-07-17 — verify the reasoning still applies rather than treating that change as precedent to keep moving it).
 - **Do not hardcode colors** (`text-white`, `bg-black`, `bg-[#...]`). Use the tokens in `src/styles.css`, and prefer the `-deep` variant of tan/lavender for anything functional (see §4).
 - **Do not use `src/pages/`.** TanStack Start uses `src/routes/`.
 - **Do not import `*.server.ts` files into client components.** Only `*.functions.ts` are client-safe.
@@ -417,7 +417,7 @@ PROJECT ESSENTIALS:
 - Wedding data (schedule, registry, party, hotels, FAQ, story) lives in src/lib/wedding-data.ts. The wedding-party trading cards / magazine covers are mostly still placeholder copy — real headlines/attributes/abilities are outstanding, see Sprint 1.
 - Copy lives in src/i18n/dictionaries.ts (en + es; Spanish needs proofreading).
 - Admin sign-in is at /portal-ga-2026. There is intentionally only ONE admin account. The route guard checks the admin role itself, not just sign-in.
-- Admin dashboard is at /_authenticated/admin (RSVPs / Photos / Features / Emails tabs).
+- Admin dashboard is at /portal-ga-2026/dashboard (RSVPs / Photos / Features / Emails tabs).
 - RSVP is at /rsvp; edit links use signed HMAC tokens at /rsvp/edit/$token (which intentionally bypasses the rsvp_open flag).
 - rsvp_open and guest_photo_uploads are DB-backed feature flags (feature_flags table, src/lib/feature-flags.functions.ts, src/hooks/use-feature-flags.ts) with a draft/confirm/save admin UI — not hardcoded booleans. Every flag-gated server function re-checks its flag server-side too.
 - SEO metadata goes through buildMeta() in src/lib/seo.ts, sourcing the absolute URL from SITE.siteUrl (src/lib/site.ts) — never hardcode a domain.
@@ -442,7 +442,7 @@ GIT WORKFLOW:
 NEVER DO:
 - Do not expose "Supabase" terminology to end users.
 - Do not add multi-admin support or public sign-up.
-- Do not change the admin URL unless explicitly asked.
+- Do not change the admin URLs unless explicitly asked.
 - Do not rewrite published git history.
 - Do not leave placeholder content on src/routes/index.tsx.
 - Do not gate a feature client-side only — re-check flags server-side too.
