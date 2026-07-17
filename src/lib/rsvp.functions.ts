@@ -501,13 +501,15 @@ const submitSchema = z.object({
 const editSchema = submitSchema.omit({ sessionToken: true });
 type EditRsvpInput = z.infer<typeof editSchema>;
 
-// Shared write path used by public submit and token-based edit.
+// Shared write path used by public submit and token-based edit. Returns what
+// was actually written so callers can show a real confirmation summary
+// instead of guessing/recomputing the same status logic client-side.
 async function writeRsvp(
   guestId: string,
   data: EditRsvpInput,
   invitationSlug: string,
   siteOrigin: string,
-): Promise<void> {
+): Promise<{ status: PublicRsvp["status"]; submitted_at: string }> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { signRsvpToken } = await import("@/lib/rsvp-token.server");
 
@@ -643,27 +645,31 @@ async function writeRsvp(
   } catch (e) {
     console.error("RSVP email notification failed", e);
   }
+
+  return { status, submitted_at: now };
 }
 
 export const submitRsvp = createServerFn({ method: "POST" })
   .validator((d: unknown) => submitSchema.parse(d))
-  .handler(async ({ data }): Promise<{ ok: true }> => {
-    const { isFeatureEnabled } = await import("@/lib/feature-flags.functions");
-    if (!(await isFeatureEnabled("rsvp_open"))) throw new Error("rsvp_closed");
-    const { verifyRsvpToken } = await import("@/lib/rsvp-token.server");
-    const v = await verifyRsvpToken(data.sessionToken, "session");
-    if (!v.ok) throw new Error("not_verified");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: g, error: gErr } = await supabaseAdmin
-      .from("guests")
-      .select("id, slug")
-      .eq("id", v.guestId)
-      .maybeSingle();
-    if (gErr || !g) throw new Error("household_not_found");
-    const { sessionToken: _t, ...rest } = data;
-    await writeRsvp(g.id, rest, g.slug, SITE.siteUrl);
-    return { ok: true };
-  });
+  .handler(
+    async ({ data }): Promise<{ ok: true; status: PublicRsvp["status"]; submitted_at: string }> => {
+      const { isFeatureEnabled } = await import("@/lib/feature-flags.functions");
+      if (!(await isFeatureEnabled("rsvp_open"))) throw new Error("rsvp_closed");
+      const { verifyRsvpToken } = await import("@/lib/rsvp-token.server");
+      const v = await verifyRsvpToken(data.sessionToken, "session");
+      if (!v.ok) throw new Error("not_verified");
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: g, error: gErr } = await supabaseAdmin
+        .from("guests")
+        .select("id, slug")
+        .eq("id", v.guestId)
+        .maybeSingle();
+      if (gErr || !g) throw new Error("household_not_found");
+      const { sessionToken: _t, ...rest } = data;
+      const result = await writeRsvp(g.id, rest, g.slug, SITE.siteUrl);
+      return { ok: true, ...result };
+    },
+  );
 
 // ---------- Token-based edit (signed link, no login) ----------
 // Distinct from household verification above: this is for a guest editing
@@ -707,23 +713,25 @@ const editByTokenSchema = editSchema.extend({ token: z.string().min(10).max(400)
 
 export const updateRsvpByToken = createServerFn({ method: "POST" })
   .validator((d: unknown) => editByTokenSchema.parse(d))
-  .handler(async ({ data }): Promise<{ ok: true }> => {
-    const { verifyRsvpToken } = await import("@/lib/rsvp-token.server");
-    const v = await verifyRsvpToken(data.token, "edit");
-    if (!v.ok) throw new Error(v.reason === "expired" ? "link_expired" : "link_invalid");
+  .handler(
+    async ({ data }): Promise<{ ok: true; status: PublicRsvp["status"]; submitted_at: string }> => {
+      const { verifyRsvpToken } = await import("@/lib/rsvp-token.server");
+      const v = await verifyRsvpToken(data.token, "edit");
+      if (!v.ok) throw new Error(v.reason === "expired" ? "link_expired" : "link_invalid");
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: g } = await supabaseAdmin
-      .from("guests")
-      .select("slug")
-      .eq("id", v.guestId)
-      .maybeSingle();
-    if (!g) throw new Error("household_not_found");
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: g } = await supabaseAdmin
+        .from("guests")
+        .select("slug")
+        .eq("id", v.guestId)
+        .maybeSingle();
+      if (!g) throw new Error("household_not_found");
 
-    const { token: _t, ...rest } = data;
-    await writeRsvp(v.guestId, rest, g.slug, SITE.siteUrl);
-    return { ok: true };
-  });
+      const { token: _t, ...rest } = data;
+      const result = await writeRsvp(v.guestId, rest, g.slug, SITE.siteUrl);
+      return { ok: true, ...result };
+    },
+  );
 
 // ---------- Admin server functions ----------
 

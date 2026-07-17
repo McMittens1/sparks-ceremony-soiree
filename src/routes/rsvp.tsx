@@ -18,6 +18,13 @@ import {
   type GuestAddress,
 } from "@/lib/rsvp.functions";
 
+type SubmitRecap = {
+  status: PublicRsvp["status"];
+  attendees: AttendeeChoice[];
+  addressConfirmed: boolean;
+  submittedAt: string;
+};
+
 export const Route = createFileRoute("/rsvp")({
   validateSearch: (s: Record<string, unknown>) => ({
     g: typeof s.g === "string" ? s.g : undefined,
@@ -167,6 +174,7 @@ function RsvpPage() {
   const [email, setEmail] = useState("");
   const [songRequest, setSongRequest] = useState("");
   const [message, setMessage] = useState("");
+  const [recap, setRecap] = useState<SubmitRecap | null>(null);
 
   useEffect(() => {
     if (stage !== "lookup") return;
@@ -338,7 +346,7 @@ function RsvpPage() {
     setLoading(true);
     setErr(null);
     try {
-      await runSubmit({
+      const res = await runSubmit({
         data: {
           sessionToken,
           attendees: cleaned,
@@ -348,6 +356,12 @@ function RsvpPage() {
           song_request: songRequest,
           message,
         },
+      });
+      setRecap({
+        status: res.status,
+        attendees: cleaned,
+        addressConfirmed,
+        submittedAt: res.submitted_at,
       });
       setStage("done");
     } catch (e) {
@@ -1151,12 +1165,76 @@ function RsvpPage() {
                 </form>
               )}
 
-              {/* Done */}
-              {stage === "done" && (
-                <div className="text-center">
-                  <p className="font-sans" style={{ fontSize: 15, color: BODY, lineHeight: 1.7 }}>
+              {/* Done — a real recap of what was just submitted, not just a
+              generic thank-you. Built from the server's response (status,
+              submitted_at) plus the exact attendee list just sent, so it
+              can't drift from what's actually in the database. */}
+              {stage === "done" && recap && (
+                <div>
+                  <p
+                    className="font-sans text-center"
+                    style={{ fontSize: 15, color: BODY, lineHeight: 1.7, margin: "0 0 32px" }}
+                  >
                     {t.rsvp.recapBody}
                   </p>
+
+                  <div className="border" style={{ borderColor: HAIRLINE, padding: "24px 28px" }}>
+                    <p
+                      style={{
+                        ...eyebrow,
+                        color: LAV_DEEP,
+                        letterSpacing: "0.3em",
+                        fontSize: 11,
+                        margin: "0 0 4px",
+                      }}
+                    >
+                      {recap.status === "attending"
+                        ? t.rsvp.attending
+                        : recap.status === "not_attending"
+                          ? t.rsvp.notAttending
+                          : `${t.rsvp.attending} / ${t.rsvp.notAttending}`}
+                    </p>
+                    <p
+                      className="font-sans"
+                      style={{ fontSize: 12, color: SOFT, margin: "0 0 18px" }}
+                    >
+                      Submitted {new Date(recap.submittedAt).toLocaleString()}
+                    </p>
+
+                    <div className="space-y-2">
+                      {recap.attendees.map((a, i) => (
+                        <div
+                          key={i}
+                          className="flex items-center justify-between font-sans"
+                          style={{ fontSize: 14, color: INK }}
+                        >
+                          <span>
+                            {a.name}
+                            {a.is_child ? (
+                              <span style={{ color: SOFT }}> ({t.rsvp.child})</span>
+                            ) : null}
+                          </span>
+                          <span
+                            className="uppercase"
+                            style={{
+                              fontSize: 10,
+                              letterSpacing: "0.15em",
+                              color: a.attending ? LAV_DEEP : SOFT,
+                            }}
+                          >
+                            {a.attending ? t.rsvp.attending : t.rsvp.notAttending}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {recap.addressConfirmed && (
+                      <p className="font-sans mt-5" style={{ fontSize: 12, color: SOFT }}>
+                        ✓ Mailing address confirmed
+                      </p>
+                    )}
+                  </div>
+
                   <div className="mt-10 flex flex-col items-center gap-5">
                     <button
                       onClick={() => setStage("form")}

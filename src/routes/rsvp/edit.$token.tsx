@@ -76,7 +76,13 @@ function EditRsvpPage() {
     | { kind: "loading" }
     | { kind: "error"; reason: "malformed" | "invalid" | "expired" | "not_found" }
     | { kind: "ready"; guest: PublicGuest; rsvp: PublicRsvp | null }
-    | { kind: "done" }
+    | {
+        kind: "done";
+        status: PublicRsvp["status"];
+        submittedAt: string;
+        attendees: AttendeeChoice[];
+        addressConfirmed: boolean;
+      }
   >({ kind: "loading" });
 
   const [attendees, setAttendees] = useState<AttendeeChoice[]>([]);
@@ -145,7 +151,7 @@ function EditRsvpPage() {
     setSaving(true);
     setErr(null);
     try {
-      await runUpdate({
+      const res = await runUpdate({
         data: {
           token,
           attendees: cleaned,
@@ -156,7 +162,13 @@ function EditRsvpPage() {
           message,
         },
       });
-      setState({ kind: "done" });
+      setState({
+        kind: "done",
+        status: res.status,
+        submittedAt: res.submitted_at,
+        attendees: cleaned,
+        addressConfirmed,
+      });
     } catch (e) {
       setErr(rsvpErrorMessage(e, t));
     } finally {
@@ -270,27 +282,77 @@ function EditRsvpPage() {
           )}
 
           {state.kind === "done" && (
-            <div
-              className="text-center font-sans"
-              style={{ fontSize: 14, color: SOFT, lineHeight: 1.7 }}
-            >
-              <p className="font-serif italic" style={{ fontSize: 20, color: INK }}>
+            <div className="font-sans" style={{ fontSize: 14, color: SOFT, lineHeight: 1.7 }}>
+              <p className="text-center font-serif italic" style={{ fontSize: 20, color: INK }}>
                 Your response has been updated.
               </p>
-              <p className="mt-3">A fresh copy will be on its way to your inbox.</p>
-              <Link
-                to="/"
-                className="mt-6 inline-block uppercase"
-                style={{
-                  fontSize: 11,
-                  letterSpacing: "0.24em",
-                  color: LAV_DEEP,
-                  borderBottom: `1px solid ${LAV_DEEP}`,
-                  paddingBottom: 2,
-                }}
-              >
-                Back to the site
-              </Link>
+              <p className="mt-3 text-center">A fresh copy will be on its way to your inbox.</p>
+
+              <div className="mt-8 border" style={{ borderColor: HAIRLINE, padding: "24px 28px" }}>
+                <p
+                  className="uppercase font-sans"
+                  style={{
+                    fontSize: 11,
+                    letterSpacing: "0.3em",
+                    color: LAV_DEEP,
+                    margin: "0 0 4px",
+                  }}
+                >
+                  {state.status === "attending"
+                    ? t.rsvp.attending
+                    : state.status === "not_attending"
+                      ? t.rsvp.notAttending
+                      : `${t.rsvp.attending} / ${t.rsvp.notAttending}`}
+                </p>
+                <p className="font-sans" style={{ fontSize: 12, color: SOFT, margin: "0 0 18px" }}>
+                  Submitted {new Date(state.submittedAt).toLocaleString()}
+                </p>
+                <div className="space-y-2">
+                  {state.attendees.map((a, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between font-sans"
+                      style={{ fontSize: 14, color: INK }}
+                    >
+                      <span>
+                        {a.name}
+                        {a.is_child ? <span style={{ color: SOFT }}> ({t.rsvp.child})</span> : null}
+                      </span>
+                      <span
+                        className="uppercase"
+                        style={{
+                          fontSize: 10,
+                          letterSpacing: "0.15em",
+                          color: a.attending ? LAV_DEEP : SOFT,
+                        }}
+                      >
+                        {a.attending ? t.rsvp.attending : t.rsvp.notAttending}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                {state.addressConfirmed && (
+                  <p className="font-sans mt-5" style={{ fontSize: 12, color: SOFT }}>
+                    ✓ Mailing address confirmed
+                  </p>
+                )}
+              </div>
+
+              <div className="text-center">
+                <Link
+                  to="/"
+                  className="mt-8 inline-block uppercase"
+                  style={{
+                    fontSize: 11,
+                    letterSpacing: "0.24em",
+                    color: LAV_DEEP,
+                    borderBottom: `1px solid ${LAV_DEEP}`,
+                    paddingBottom: 2,
+                  }}
+                >
+                  Back to the site
+                </Link>
+              </div>
             </div>
           )}
 

@@ -774,7 +774,7 @@ function RsvpsPanel() {
                         </span>
                       )}
                     </td>
-                    <td className="py-3 pr-4 text-xs">
+                    <td className="py-3 pr-4 text-xs" title="Invited · actually attending">
                       {r.party_members.length || 1}
                       {r.rsvp ? (
                         <span className="text-muted-foreground"> · {attending.length}✓</span>
@@ -1443,9 +1443,33 @@ function GuestEditor({
                 Their RSVP
               </div>
               <div className="text-sm mt-1">
-                Status: <span className="font-medium">{row.rsvp.status}</span> · Submitted{" "}
-                {new Date(row.rsvp.submitted_at).toLocaleString()}
+                Status: <span className="font-medium">{row.rsvp.status.replace("_", " ")}</span> ·
+                Submitted {new Date(row.rsvp.submitted_at).toLocaleString()}
               </div>
+
+              {/* This is what the household actually submitted, which can
+              differ from "Guests on this invite" above — a guest can add up
+              to one name beyond the invited roster when they RSVP. Editing
+              the invite list above does not change this. */}
+              <div className="mt-2 space-y-1">
+                {row.rsvp.attendees.map((a, i) => (
+                  <div key={i} className="text-sm flex items-center justify-between max-w-xs">
+                    <span>
+                      {a.name}
+                      {a.is_child ? " (child)" : ""}
+                    </span>
+                    <span
+                      className={`text-[10px] uppercase tracking-[0.15em] ${a.attending ? "text-primary" : "text-muted-foreground"}`}
+                    >
+                      {a.attending ? "attending" : "not attending"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {row.rsvp.address_confirmed && (
+                <div className="text-sm mt-2 text-muted-foreground">✓ Address confirmed</div>
+              )}
               {row.rsvp.song_request && (
                 <div className="text-sm mt-1">Song: {row.rsvp.song_request}</div>
               )}
