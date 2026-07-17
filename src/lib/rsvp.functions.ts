@@ -1,6 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
+import { hasAdminRole } from "@/lib/admin.functions";
 import { z } from "zod";
 import { SITE } from "@/lib/site";
 
@@ -75,11 +78,12 @@ export interface AdminGuestRow {
 
 // ---------- Helpers ----------
 
-async function ensureAdmin(userId: string) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { hasAdminRole } = await import("@/lib/admin.functions");
-  if (!(await hasAdminRole(supabaseAdmin, userId))) throw new Error("Forbidden");
-  return supabaseAdmin;
+// Uses the caller's own RLS-scoped client (attached by requireSupabaseAuth), not
+// the service-role client — enforced both here and by the matching
+// "has_role(auth.uid(), 'admin')" ALL-command RLS policies on guests/rsvps.
+async function ensureAdmin(sb: SupabaseClient<Database>, userId: string) {
+  if (!(await hasAdminRole(sb, userId))) throw new Error("Forbidden");
+  return sb;
 }
 
 function randomSlug(len = 6): string {
@@ -738,7 +742,7 @@ export const updateRsvpByToken = createServerFn({ method: "POST" })
 export const listGuestsWithRsvps = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<AdminGuestRow[]> => {
-    const sb = await ensureAdmin(context.userId);
+    const sb = await ensureAdmin(context.supabase, context.userId);
     const { data: guests } = await sb
       .from("guests")
       .select("*")
@@ -790,7 +794,7 @@ export const unlockGuestPhoneVerify = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
-    const sb = await ensureAdmin(context.userId);
+    const sb = await ensureAdmin(context.supabase, context.userId);
     const { error } = await sb
       .from("guests")
       .update({
@@ -830,7 +834,7 @@ export const upsertGuest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => guestUpsertSchema.parse(d))
   .handler(async ({ data, context }): Promise<{ id: string; slug: string }> => {
-    const sb = await ensureAdmin(context.userId);
+    const sb = await ensureAdmin(context.supabase, context.userId);
 
     const payload = {
       primary_name: data.primary_name,
@@ -882,7 +886,7 @@ export const deleteGuest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
-    const sb = await ensureAdmin(context.userId);
+    const sb = await ensureAdmin(context.supabase, context.userId);
     const { error } = await sb.from("guests").delete().eq("id", data.id);
     if (error) {
       console.error("deleteGuest failed", error);
@@ -899,7 +903,7 @@ export const bulkDeleteGuests = createServerFn({ method: "POST" })
     z.object({ ids: z.array(z.string().uuid()).min(1).max(200) }).parse(d),
   )
   .handler(async ({ data, context }): Promise<{ ok: boolean; count: number }> => {
-    const sb = await ensureAdmin(context.userId);
+    const sb = await ensureAdmin(context.supabase, context.userId);
     const { error } = await sb.from("guests").delete().in("id", data.ids);
     if (error) {
       console.error("bulkDeleteGuests failed", error);
@@ -1221,7 +1225,7 @@ export const importGuestsCsv = createServerFn({ method: "POST" })
       totals: { inserted: number; updated: number; errors: number };
       rows: ImportRowResult[];
     }> => {
-      const sb = await ensureAdmin(context.userId);
+      const sb = await ensureAdmin(context.supabase, context.userId);
       const dryRun = data.dryRun ?? false;
       const rows = parseCsv(data.csv);
       if (!rows.length) return { dryRun, totals: { inserted: 0, updated: 0, errors: 0 }, rows: [] };
