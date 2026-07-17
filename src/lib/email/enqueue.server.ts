@@ -1,6 +1,7 @@
 import * as React from "react";
 import { render } from "@react-email/render";
 import { TEMPLATES } from "@/lib/email-templates/registry";
+import { getOrCreateUnsubscribeToken } from "@/lib/email/unsubscribe-token.server";
 
 const SENDER_DOMAIN = "notify.morenowedding2026.com";
 const FROM = `Geovanni & Addison <noreply@${SENDER_DOMAIN}>`;
@@ -34,6 +35,18 @@ export async function enqueueAppEmail(opts: {
       .maybeSingle();
     if (suppressed) return { ok: false, error: "Suppressed" };
 
+    const unsubscribeToken = await getOrCreateUnsubscribeToken(supabaseAdmin, opts.to);
+    if (!unsubscribeToken) {
+      await supabaseAdmin.from("email_send_log").insert({
+        message_id: opts.idempotencyKey,
+        template_name: opts.templateName,
+        recipient_email: opts.to,
+        status: "failed",
+        error_message: "Failed to prepare unsubscribe token",
+      });
+      return { ok: false, error: "Failed to prepare unsubscribe token" };
+    }
+
     const element = React.createElement(entry.component, opts.data);
     const html = await render(element);
     const text = await render(element, { plainText: true });
@@ -62,6 +75,7 @@ export async function enqueueAppEmail(opts: {
         purpose: "transactional",
         label: opts.templateName,
         idempotency_key: opts.idempotencyKey,
+        unsubscribe_token: unsubscribeToken,
         queued_at: new Date().toISOString(),
       },
     });

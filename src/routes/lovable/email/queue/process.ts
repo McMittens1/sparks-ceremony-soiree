@@ -261,6 +261,17 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
             }
 
             try {
+              // The API rejects a retry that reuses the same idempotency_key
+              // as a prior failed attempt ("Send again with a new
+              // idempotency key") — pgmq redelivers the exact same payload
+              // on every retry, so without this every failure would
+              // deterministically burn all 5 retries straight into the DLQ
+              // instead of ever getting a real second attempt. message_id
+              // (used for email_send_log's own dedup) stays stable; only the
+              // key sent to the API varies per attempt.
+              const attemptIdempotencyKey = payload.idempotency_key
+                ? `${payload.idempotency_key}-attempt${failedAttempts}`
+                : undefined;
               await sendLovableEmail(
                 {
                   run_id: payload.run_id,
@@ -272,7 +283,7 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
                   text: payload.text,
                   purpose: payload.purpose,
                   label: payload.label,
-                  idempotency_key: payload.idempotency_key,
+                  idempotency_key: attemptIdempotencyKey,
                   unsubscribe_token: payload.unsubscribe_token,
                   message_id: payload.message_id,
                 },
