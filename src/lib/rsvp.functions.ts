@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { SITE } from "@/lib/site";
@@ -191,76 +192,112 @@ const RSVP_SELECT_COLUMNS =
 
 const PHONE_VERIFY_MAX_ATTEMPTS = 5;
 const PHONE_VERIFY_LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes
+// How long a "you picked this household from search results" token stays
+// valid — just long enough to carry the guest into the next screen and type
+// the last-4 digits.
+const SELECT_TOKEN_TTL_MS = 10 * 60 * 1000; // 10 minutes
 // How long a successful phone verification authorizes writes (address
-// updates, RSVP submission) for the same household — generous enough to
-// cover a slow, multi-field RSVP session in one sitting.
-const VERIFIED_SESSION_WINDOW_MS = 2 * 60 * 60 * 1000; // 2 hours
+// updates, RSVP submission) for the browser that verified — generous enough
+// to cover a slow, multi-field RSVP session in one sitting. Unlike the old
+// household-row flag this replaced, this token is only ever handed to the
+// browser that actually passed the last-4 check, so this window being long
+// doesn't widen who can use it — just how long that one browser stays
+// authorized.
+const SESSION_TOKEN_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
 // How long a Method 2 (personalized text link) token stays valid — this
 // needs to work for months, sent well before the wedding.
 const VERIFY_LINK_TTL_MS = 270 * 24 * 60 * 60 * 1000; // ~9 months
 
-async function isRecentlyVerified(guestId: string): Promise<boolean> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin
-    .from("guests")
-    .select("phone_verify_last_success_at")
-    .eq("id", guestId)
-    .maybeSingle();
-  if (!data?.phone_verify_last_success_at) return false;
+// Lightweight, best-effort per-IP rate limit for the public search box.
+// Proportionate to this app's real traffic (a few dozen households), not a
+// distributed limiter — resets whenever the server process restarts, which
+// is an acceptable tradeoff here rather than a database table.
+const LOOKUP_RATE_LIMIT_MAX = 20;
+const LOOKUP_RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+const lookupAttempts = new Map<string, { count: number; resetAt: number }>();
+
+function isLookupRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = lookupAttempts.get(ip);
+  if (!entry || now > entry.resetAt) {
+    lookupAttempts.set(ip, { count: 1, resetAt: now + LOOKUP_RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+  entry.count += 1;
+  return entry.count > LOOKUP_RATE_LIMIT_MAX;
+}
+
+function requestIp(): string {
+  const headers = getRequest()?.headers;
   return (
-    Date.now() - new Date(data.phone_verify_last_success_at).getTime() < VERIFIED_SESSION_WINDOW_MS
+    headers?.get("cf-connecting-ip") ??
+    headers?.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    "unknown"
   );
 }
 
 // ---------- Public server functions ----------
 
-// Fuzzy name lookup, returns lightweight matches.
+// Fuzzy name lookup, returns lightweight matches. Deliberately never returns
+// the real invite code (slug) — a search result hands back a short-lived
+// "select" token instead, so a name search can't be used to harvest the
+// codes that (combined with a phone-verify session) authorize writes. See
+// resolveVerifyTarget/verifyHouseholdAccess below for how the token is
+// redeemed.
 export const lookupGuest = createServerFn({ method: "POST" })
-  .validator((d: { query: string }) =>
-    z.object({ query: z.string().trim().min(1).max(120) }).parse(d),
+  .validator((d: { query: string; honeypot?: string }) =>
+    z
+      .object({
+        query: z.string().trim().min(1).max(120),
+        honeypot: z.string().max(200).optional().nullable(),
+      })
+      .parse(d),
   )
   .handler(
     async ({
       data,
-    }): Promise<{ matches: { slug: string; primary_name: string; party_size: number }[] }> => {
+    }): Promise<{
+      matches: { selectToken: string; primary_name: string; party_size: number }[];
+    }> => {
+      // Bots that fill every field trip this; report an empty result rather
+      // than an error so it looks like a normal no-match search.
+      if (data.honeypot && data.honeypot.trim().length > 0) return { matches: [] };
+      if (isLookupRateLimited(requestIp())) return { matches: [] };
+
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { signRsvpToken } = await import("@/lib/rsvp-token.server");
       const q = data.query.trim();
+
+      const toMatches = (rows: { id: string; primary_name: string; party_members: unknown }[]) =>
+        Promise.all(
+          rows.map(async (r) => ({
+            selectToken: await signRsvpToken(r.id, "select", SELECT_TOKEN_TTL_MS),
+            primary_name: r.primary_name,
+            party_size: Array.isArray(r.party_members) ? (r.party_members as unknown[]).length : 0,
+          })),
+        );
 
       // Try exact slug match first (invites are case-insensitive short codes).
       const upper = q.toUpperCase();
       if (/^[A-Z0-9]{4,10}$/.test(upper)) {
         const { data: bySlug } = await supabaseAdmin
           .from("guests")
-          .select("slug, primary_name, party_members")
+          .select("id, primary_name, party_members")
           .eq("slug", upper)
           .limit(1);
         if (bySlug && bySlug.length) {
-          return {
-            matches: bySlug.map((r) => ({
-              slug: r.slug,
-              primary_name: r.primary_name,
-              party_size: Array.isArray(r.party_members)
-                ? (r.party_members as unknown[]).length
-                : 0,
-            })),
-          };
+          return { matches: await toMatches(bySlug) };
         }
       }
 
       // Fuzzy name search using pg_trgm (case-insensitive, tolerates typos).
       const { data: rows } = await supabaseAdmin
         .from("guests")
-        .select("slug, primary_name, party_members")
+        .select("id, primary_name, party_members")
         .ilike("primary_name", `%${q}%`)
         .limit(8);
 
-      return {
-        matches: (rows ?? []).map((r) => ({
-          slug: r.slug,
-          primary_name: r.primary_name,
-          party_size: Array.isArray(r.party_members) ? (r.party_members as unknown[]).length : 0,
-        })),
-      };
+      return { matches: await toMatches(rows ?? []) };
     },
   );
 
@@ -276,7 +313,13 @@ export const lookupGuest = createServerFn({ method: "POST" })
 async function resolveVerifyTarget(input: {
   slug?: string;
   token?: string;
+  selectToken?: string;
 }): Promise<string | null> {
+  if (input.selectToken) {
+    const { verifyRsvpToken } = await import("@/lib/rsvp-token.server");
+    const v = await verifyRsvpToken(input.selectToken, "select");
+    return v.ok ? v.guestId : null;
+  }
   if (input.token) {
     const { verifyRsvpToken } = await import("@/lib/rsvp-token.server");
     const v = await verifyRsvpToken(input.token, "verify");
@@ -299,15 +342,16 @@ async function resolveVerifyTarget(input: {
 // by name before they've proven anything. Reveals a name, nothing else: no
 // address, phone, party list, or RSVP status.
 export const getVerifyTargetLabel = createServerFn({ method: "POST" })
-  .validator((d: { slug?: string; token?: string }) =>
+  .validator((d: { slug?: string; token?: string; selectToken?: string }) =>
     z
       .object({
         slug: z.string().trim().max(20).optional(),
         token: z.string().min(10).max(400).optional(),
+        selectToken: z.string().min(10).max(400).optional(),
       })
       .refine(
-        (v) => Boolean(v.slug) !== Boolean(v.token),
-        "Provide either a code or a link, not both",
+        (v) => [v.slug, v.token, v.selectToken].filter(Boolean).length === 1,
+        "Provide exactly one of a code, a link, or a selection",
       )
       .parse(d),
   )
@@ -328,12 +372,16 @@ const verifyAccessSchema = z
   .object({
     slug: z.string().trim().max(20).optional(),
     token: z.string().min(10).max(400).optional(),
+    selectToken: z.string().min(10).max(400).optional(),
     last4: z
       .string()
       .trim()
       .regex(/^\d{4}$/, "Enter the last 4 digits"),
   })
-  .refine((d) => Boolean(d.slug) !== Boolean(d.token), "Provide either a code or a link, not both");
+  .refine(
+    (d) => [d.slug, d.token, d.selectToken].filter(Boolean).length === 1,
+    "Provide exactly one of a code, a link, or a selection",
+  );
 
 export const verifyHouseholdAccess = createServerFn({ method: "POST" })
   .validator((d: unknown) => verifyAccessSchema.parse(d))
@@ -341,7 +389,7 @@ export const verifyHouseholdAccess = createServerFn({ method: "POST" })
     async ({
       data,
     }): Promise<
-      | { ok: true; guest: PublicGuest; rsvp: PublicRsvp | null }
+      | { ok: true; guest: PublicGuest; rsvp: PublicRsvp | null; sessionToken: string }
       | { ok: false; reason: "not_found" | "invalid" | "locked" }
     > => {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -392,31 +440,33 @@ export const verifyHouseholdAccess = createServerFn({ method: "POST" })
         .eq("guest_id", g.id)
         .maybeSingle();
 
-      return { ok: true, guest, rsvp: mapRsvpRow(r) };
+      // Issued only to the browser that just passed the last-4 check — this
+      // is what authorizes updateGuestAddress/submitRsvp below, replacing
+      // the old approach of remembering "verified" on the household row
+      // (which anyone holding the invite code could ride along on).
+      const { signRsvpToken } = await import("@/lib/rsvp-token.server");
+      const sessionToken = await signRsvpToken(g.id, "session", SESSION_TOKEN_TTL_MS);
+
+      return { ok: true, guest, rsvp: mapRsvpRow(r), sessionToken };
     },
   );
 
 // Address-only update, independent of RSVP status and the rsvp_open flag —
 // so a household can confirm or add their mailing address any time after
-// verifying, whether or not RSVP is open yet. Requires having verified
-// recently (see isRecentlyVerified); a bare slug alone is not enough,
-// otherwise this would quietly reopen the door phone verification closes.
+// verifying, whether or not RSVP is open yet. Requires the session token
+// minted by a successful verifyHouseholdAccess call — a bare slug/id is not
+// enough, otherwise this would quietly reopen the door phone verification
+// closes.
 export const updateGuestAddress = createServerFn({ method: "POST" })
   .validator((d: unknown) =>
-    z.object({ slug: z.string().trim().min(1).max(20), address: addressSchema }).parse(d),
+    z.object({ sessionToken: z.string().min(10).max(400), address: addressSchema }).parse(d),
   )
   .handler(async ({ data }): Promise<{ ok: true }> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: g } = await supabaseAdmin
-      .from("guests")
-      .select("id")
-      .eq("slug", data.slug.toUpperCase())
-      .maybeSingle();
-    if (!g) throw new Error("household_not_found");
-    if (!(await isRecentlyVerified(g.id))) {
-      throw new Error("not_verified");
-    }
+    const { verifyRsvpToken } = await import("@/lib/rsvp-token.server");
+    const v = await verifyRsvpToken(data.sessionToken, "session");
+    if (!v.ok) throw new Error("not_verified");
 
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const now = new Date().toISOString();
     const { error } = await supabaseAdmin
       .from("guests")
@@ -430,7 +480,7 @@ export const updateGuestAddress = createServerFn({ method: "POST" })
         address_confirmed_at: now,
         address_updated_at: now,
       })
-      .eq("id", g.id);
+      .eq("id", v.guestId);
     if (error) {
       console.error("updateGuestAddress failed", error);
       throw new Error("save_failed");
@@ -439,7 +489,7 @@ export const updateGuestAddress = createServerFn({ method: "POST" })
   });
 
 const submitSchema = z.object({
-  slug: z.string().trim().min(1).max(20),
+  sessionToken: z.string().min(10).max(400),
   attendees: z.array(attendeeSchema).min(1).max(20),
   address_confirmed: z.boolean(),
   address: addressSchema.optional(),
@@ -448,7 +498,7 @@ const submitSchema = z.object({
   message: z.string().trim().max(1000).optional().or(z.literal("")),
 });
 
-const editSchema = submitSchema.omit({ slug: true });
+const editSchema = submitSchema.omit({ sessionToken: true });
 type EditRsvpInput = z.infer<typeof editSchema>;
 
 // Shared write path used by public submit and token-based edit.
@@ -600,18 +650,18 @@ export const submitRsvp = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<{ ok: true }> => {
     const { isFeatureEnabled } = await import("@/lib/feature-flags.functions");
     if (!(await isFeatureEnabled("rsvp_open"))) throw new Error("rsvp_closed");
+    const { verifyRsvpToken } = await import("@/lib/rsvp-token.server");
+    const v = await verifyRsvpToken(data.sessionToken, "session");
+    if (!v.ok) throw new Error("not_verified");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: g, error: gErr } = await supabaseAdmin
       .from("guests")
-      .select("id")
-      .eq("slug", data.slug.toUpperCase())
+      .select("id, slug")
+      .eq("id", v.guestId)
       .maybeSingle();
     if (gErr || !g) throw new Error("household_not_found");
-    if (!(await isRecentlyVerified(g.id))) {
-      throw new Error("not_verified");
-    }
-    const { slug: _slug, ...rest } = data;
-    await writeRsvp(g.id, rest, data.slug.toUpperCase(), SITE.siteUrl);
+    const { sessionToken: _t, ...rest } = data;
+    await writeRsvp(g.id, rest, g.slug, SITE.siteUrl);
     return { ok: true };
   });
 
@@ -831,6 +881,23 @@ export const deleteGuest = createServerFn({ method: "POST" })
       throw new Error("Couldn't delete this invitation. Please try again.");
     }
     return { ok: true };
+  });
+
+// rsvps.guest_id has ON DELETE CASCADE, so each household's RSVP row (if
+// any) is removed automatically — no separate cleanup needed here.
+export const bulkDeleteGuests = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d: { ids: string[] }) =>
+    z.object({ ids: z.array(z.string().uuid()).min(1).max(200) }).parse(d),
+  )
+  .handler(async ({ data, context }): Promise<{ ok: boolean; count: number }> => {
+    const sb = await ensureAdmin(context.userId);
+    const { error } = await sb.from("guests").delete().in("id", data.ids);
+    if (error) {
+      console.error("bulkDeleteGuests failed", error);
+      throw new Error("Couldn't delete those invitations. Please try again.");
+    }
+    return { ok: true, count: data.ids.length };
   });
 
 // Master CSV import — columns household_name (or legacy primary_name),

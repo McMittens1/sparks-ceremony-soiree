@@ -35,7 +35,7 @@ export const Route = createFileRoute("/rsvp")({
 });
 
 type Stage = "lookup" | "verify" | "form" | "done";
-type VerifyTarget = { slug: string } | { token: string };
+type VerifyTarget = { slug: string } | { token: string } | { selectToken: string };
 
 // CSS-variable shorthands for inline styles where a Tailwind class doesn't fit
 // (e.g. dynamic borderBottom, background). Class-based color usage below still
@@ -116,7 +116,7 @@ function rsvpErrorMessage(e: unknown, t: Dict): string {
   return key ? t.rsvp[key] : t.rsvp.errGeneric;
 }
 
-type Match = { slug: string; primary_name: string; party_size: number };
+type Match = { selectToken: string; primary_name: string; party_size: number };
 
 function RsvpPage() {
   const { t, lang } = useLang();
@@ -140,6 +140,7 @@ function RsvpPage() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [honeypot, setHoneypot] = useState("");
   const [matches, setMatches] = useState<Match[] | null>(null);
   const [matchesLoading, setMatchesLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -154,6 +155,7 @@ function RsvpPage() {
   const [verifyErr, setVerifyErr] = useState<string | null>(null);
 
   const [guest, setGuest] = useState<PublicGuest | null>(null);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [existingRsvp, setExistingRsvp] = useState<PublicRsvp | null>(null);
   const [attendees, setAttendees] = useState<AttendeeChoice[]>([]);
   const [address, setAddress] = useState<GuestAddress>({});
@@ -189,8 +191,9 @@ function RsvpPage() {
     }
   }
 
-  function hydrateFromGuest(g: PublicGuest, r: PublicRsvp | null) {
+  function hydrateFromGuest(g: PublicGuest, r: PublicRsvp | null, token: string) {
     setGuest(g);
+    setSessionToken(token);
     setExistingRsvp(r);
     setEmail(g.email ?? "");
     setAddressMode("view");
@@ -222,7 +225,7 @@ function RsvpPage() {
     try {
       const res = await runVerify({ data: { ...pendingTarget, last4 } });
       if (res.ok) {
-        hydrateFromGuest(res.guest, res.rsvp);
+        hydrateFromGuest(res.guest, res.rsvp, res.sessionToken);
       } else if (res.reason === "locked") {
         setVerifyErr(t.rsvp.verifyLocked);
       } else {
@@ -253,7 +256,7 @@ function RsvpPage() {
     const id = ++searchRequestId.current;
     const handle = setTimeout(async () => {
       try {
-        const res = await runLookup({ data: { query: q } });
+        const res = await runLookup({ data: { query: q, honeypot } });
         if (searchRequestId.current !== id) return; // a newer keystroke superseded this request
         setMatches(res.matches);
         setActiveIndex(res.matches.length > 0 ? 0 : -1);
@@ -271,7 +274,7 @@ function RsvpPage() {
 
   function selectMatch(m: Match) {
     setDropdownOpen(false);
-    void beginVerify({ slug: m.slug }, m.primary_name);
+    void beginVerify({ selectToken: m.selectToken }, m.primary_name);
   }
 
   function onLookupSubmit(e: React.FormEvent) {
@@ -309,11 +312,11 @@ function RsvpPage() {
   }
 
   async function saveAddress() {
-    if (!guest) return;
+    if (!guest || !sessionToken) return;
     setAddressSaving(true);
     setAddressErr(null);
     try {
-      await runUpdateAddress({ data: { slug: guest.slug, address } });
+      await runUpdateAddress({ data: { sessionToken, address } });
       setAddressMode("view");
       setAddressSaved(true);
       setAddressConfirmed(true);
@@ -326,7 +329,7 @@ function RsvpPage() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!guest) return;
+    if (!guest || !sessionToken) return;
     const cleaned = attendees.filter((a) => a.name.trim().length > 0);
     if (cleaned.length === 0) {
       setErr(t.rsvp.errNoName);
@@ -337,7 +340,7 @@ function RsvpPage() {
     try {
       await runSubmit({
         data: {
-          slug: guest.slug,
+          sessionToken,
           attendees: cleaned,
           address_confirmed: addressConfirmed,
           address,
@@ -535,7 +538,7 @@ function RsvpPage() {
                       aria-controls="rsvp-matches-listbox"
                       aria-activedescendant={
                         activeIndex >= 0 && matches?.[activeIndex]
-                          ? `rsvp-match-${matches[activeIndex].slug}`
+                          ? `rsvp-match-${activeIndex}`
                           : undefined
                       }
                       style={inputStyle}
@@ -564,8 +567,8 @@ function RsvpPage() {
                         ) : matches && matches.length > 0 ? (
                           matches.map((m, i) => (
                             <button
-                              key={m.slug}
-                              id={`rsvp-match-${m.slug}`}
+                              key={m.selectToken}
+                              id={`rsvp-match-${i}`}
                               role="option"
                               aria-selected={i === activeIndex}
                               type="button"
@@ -614,6 +617,18 @@ function RsvpPage() {
                       </div>
                     )}
                   </div>
+
+                  {/* Honeypot: hidden from sighted/keyboard users, some bots fill it anyway. */}
+                  <input
+                    type="text"
+                    name="website"
+                    value={honeypot}
+                    onChange={(e) => setHoneypot(e.target.value)}
+                    autoComplete="off"
+                    tabIndex={-1}
+                    aria-hidden="true"
+                    style={{ position: "absolute", left: -9999, width: 1, height: 1, opacity: 0 }}
+                  />
 
                   <div role="alert" aria-live="polite">
                     {err && (
@@ -1100,6 +1115,7 @@ function RsvpPage() {
                         onClick={() => {
                           setStage("lookup");
                           setGuest(null);
+                          setSessionToken(null);
                           setMatches(null);
                           setErr(null);
                         }}

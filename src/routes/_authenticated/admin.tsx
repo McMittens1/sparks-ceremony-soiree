@@ -19,6 +19,7 @@ import {
   listGuestsWithRsvps,
   upsertGuest,
   deleteGuest,
+  bulkDeleteGuests,
   importGuestsCsv,
   unlockGuestPhoneVerify,
   type AdminGuestRow,
@@ -132,6 +133,7 @@ function RsvpsPanel() {
   const t = useT();
   const loadRows = useServerFn(listGuestsWithRsvps);
   const runUnlock = useServerFn(unlockGuestPhoneVerify);
+  const runBulkDelete = useServerFn(bulkDeleteGuests);
   const [rows, setRows] = useState<AdminGuestRow[] | null>(null);
   const [filter, setFilter] = useState<"all" | "attending" | "not_attending" | "no_response">(
     "all",
@@ -147,6 +149,8 @@ function RsvpsPanel() {
   const [importOpen, setImportOpen] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [unlockingId, setUnlockingId] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   const refreshToken = useRef(0);
 
   async function refresh() {
@@ -167,6 +171,20 @@ function RsvpsPanel() {
       toast.success("Household unlocked.");
     } finally {
       setUnlockingId(null);
+    }
+  }
+
+  async function doBulkDelete() {
+    const n = selected.size;
+    setBusy(true);
+    try {
+      await runBulkDelete({ data: { ids: Array.from(selected) } });
+      setSelected(new Set());
+      await refresh();
+      toast.success(`${n} invitation${n === 1 ? "" : "s"} deleted.`);
+      setConfirmBulkDelete(false);
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -634,6 +652,12 @@ function RsvpsPanel() {
             Copy RSVP links
           </button>
           <button
+            onClick={() => setConfirmBulkDelete(true)}
+            className="border border-destructive text-destructive px-3 py-1 uppercase tracking-[0.2em]"
+          >
+            Delete {selected.size}
+          </button>
+          <button
             onClick={() => setSelected(new Set())}
             className="ml-auto text-muted-foreground uppercase tracking-[0.2em]"
           >
@@ -823,6 +847,16 @@ function RsvpsPanel() {
         />
       )}
       {importOpen && <CsvImporter onClose={() => setImportOpen(false)} onDone={refresh} />}
+      {confirmBulkDelete && (
+        <ConfirmDialog
+          title={`Delete ${selected.size} invitations?`}
+          description="This also deletes each household's RSVP, if they submitted one. This cannot be undone."
+          confirmLabel={`Delete ${selected.size}`}
+          busy={busy}
+          onConfirm={doBulkDelete}
+          onCancel={() => setConfirmBulkDelete(false)}
+        />
+      )}
     </div>
   );
 }

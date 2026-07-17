@@ -8,7 +8,7 @@
 // verification if checked against a different expected purpose, so an
 // "edit" token and a "verify" token can never be used interchangeably even
 // though they share a secret and wire format.
-export type TokenPurpose = "edit" | "verify";
+export type TokenPurpose = "edit" | "verify" | "select" | "session";
 
 const DEFAULT_TTL_MS = 90 * 24 * 60 * 60 * 1000; // 90 days
 

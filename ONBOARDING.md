@@ -35,9 +35,10 @@ A single source of truth for continuing this project with any AI assistant (Clau
 - The public site is a single long scrolling page (`src/routes/index.tsx`) composed of section components under `src/components/site/sections/`.
 - All copy, schedule, registry, wedding party, hotels, and FAQ data live in `src/lib/wedding-data.ts` so the site and MCP tools stay in sync.
 - A centralized **feature-flag system** (`feature_flags` DB table + `src/lib/feature-flags.functions.ts` + `src/hooks/use-feature-flags.ts`) gates guest-facing features that need to be turned on/off without a deploy. Currently gates `rsvp_open` and `guest_photo_uploads`. The admin Features panel uses an explicit **draft → confirm → save** workflow, not instant-toggle — see §5.
-- RSVP lookup is by name or short invitation slug. No guest accounts or passwords.
+- RSVP lookup is by name or short invitation slug. No guest accounts or passwords. The search endpoint (`lookupGuest`) never returns the real invite code — it hands back a short-lived signed "select" token instead (`src/lib/rsvp-token.server.ts`), so a name search alone can't be used to harvest invite codes. A successful last-4 phone check mints a separate "session" token (2h TTL) that's the only thing that authorizes `submitRsvp`/`updateGuestAddress` — it's issued to the verifying browser, not remembered on the household row, so someone else who obtains the invite code can't ride along on another household's already-verified window.
 - RSVP edit links are HMAC-signed tokens (`RSVP_EDIT_SECRET`) with a 90-day expiry; no login required. **By design, editing an existing RSVP via its signed token works even when `rsvp_open` is off** — the flag gates new submissions, not self-service edits to an RSVP a guest already made. See `HANDOFF.md` for the reasoning.
 - Admin access is behind an intentionally obscure URL: `/portal-ga-2026`. There is a single admin account; the first user to sign in via that page is auto-promoted to admin. The `/_authenticated` route guard checks the `admin` role itself (via a shared `hasAdminRole()` helper), not just that a user is signed in.
+- Admin server functions in `src/lib/admin.functions.ts` and `src/lib/feature-flags.functions.ts` run as the calling admin's own RLS-scoped client (`context.supabase`, attached by `requireSupabaseAuth`), not the service-role client — the app-level `ensureAdmin()` check is backed by a matching `has_role(auth.uid(), 'admin')` RLS policy on `guests`/`rsvps`/`guest_photos`/`feature_flags` and the `guest-photos` storage bucket. Guest/household management functions in `src/lib/rsvp.functions.ts` (`upsertGuest`, `deleteGuest`, `bulkDeleteGuests`, CSV import, etc.) still use the service-role client — not yet switched over, same policy-by-policy caution applies before doing so. `claimAdminIfFirst` and all anonymous guest-facing flows intentionally still use the service-role client.
 - The Wedding Party section (`src/components/site/WeddingParty.tsx`) uses a **collectible-card theme**: Groomsmen + Best Man are Pokémon/sports-card-style trading cards (`GroomsmanCard.tsx`) with a flip interaction; Bridesmaids + Maid of Honor are full-bleed editorial magazine covers (`MagazineCover.tsx`, masthead "SPARKS.") with no flip interaction. Both the Best Man's "Legendary" card and the Maid of Honor's "Collector's Edition" cover use a **categorical color inversion** (not just a size bump) to signal rarity — see §4 and `HANDOFF.md` for why.
 - All app-internal server logic uses `createServerFn` from `@tanstack/react-start`. Public HTTP endpoints (weather, `.ics`) live under `src/routes/api/public/`.
 - SEO/social metadata for every route is built through a shared `buildMeta()` helper (`src/lib/seo.ts`), not hand-duplicated per-route arrays.
@@ -46,15 +47,16 @@ A single source of truth for continuing this project with any AI assistant (Clau
 
 ## 2. Current state
 
-**As of this audit (2026-07-15), live production feature-flag values:**
-- `rsvp_open` → **false** (RSVP is built and fully functional, but not open to real guests yet)
-- `guest_photo_uploads` → **false** (photo upload is built and fully functional, but not open yet)
+**As of this audit (2026-07-17, verified live via direct DB query), production feature-flag values:**
+- `rsvp_open` → **true** — RSVP is open to real guests.
+- `guest_photo_uploads` → **false** — photo upload is built and fully functional, but not open yet.
+- `show_ushers` → **false** — the Ushers section of the Wedding Party page is built but hidden.
 
-Both are toggled from the Features tab in `/_authenticated/admin` — no code change needed to flip them on. **Check the live value before assuming either feature is "on" or "off"; this file only reflects a snapshot.**
+All three are toggled from the Features tab in `/_authenticated/admin` — no code change needed to flip them. **Check the live value before assuming a feature is "on" or "off"; this file only reflects a snapshot.**
 
-**Guest data:** the `guests` table currently has exactly **1 row** — a test/seed guest, not the real invite list. `rsvps` has 1 matching row. `guest_photos` is empty. **The real guest list has not been imported.** This is the single biggest blocker to actually opening `rsvp_open` — see Sprint 2 below.
+**Guest data:** the `guests` table has **52 real household rows** (the test/seed row from earlier in the project is gone — the real invite list has been imported). `rsvps` has 1 submitted response so far. `guest_photos` is empty.
 
-**Admin:** exactly 1 admin has claimed the account (`user_roles` has 1 `admin` row). The first-admin-claim flow has been exercised and works.
+**Admin:** exactly 1 admin has claimed the account (`user_roles` has 1 `admin` row, matching exactly one `auth.users` row — no orphans/mismatches as of the last direct check). The first-admin-claim flow has been exercised and works.
 
 ### Public site
 - Hero, countdown, story timeline, day-of schedule, wedding party, travel/lodging, registry, FAQ, and footer are all live.
@@ -71,14 +73,14 @@ Both are toggled from the Features tab in `/_authenticated/admin` — no code ch
 
 ### RSVP flow
 - `/rsvp` lets guests look up their invitation by name or slug and submit a response.
-- **Gating moved from a hardcoded constant to the feature-flag system.** There is no more `RSVP_OPEN` boolean in `src/routes/rsvp.tsx` — it reads the `rsvp_open` flag via `useFeatureFlag` and shows a "not open yet" disabled-form state when off. The server function `submitRsvp` independently re-checks the same flag server-side (`isRsvpOpen()` in `rsvp.functions.ts`) — don't rely on the client-side gate alone.
+- **Gating moved from a hardcoded constant to the feature-flag system.** There is no more `RSVP_OPEN` boolean in `src/routes/rsvp.tsx` — it reads the `rsvp_open` flag via `useFeatureFlag` and shows a "not open yet" disabled-form state when off. The server function `submitRsvp` independently re-checks the same flag server-side (`isFeatureEnabled("rsvp_open")`, the shared single-flag lookup in `feature-flags.functions.ts`) — don't rely on the client-side gate alone.
 - `/rsvp/edit/$token` allows guests to edit an existing RSVP using a signed token, **regardless of the `rsvp_open` flag** (intentional — see §1).
 - CSV import (`importGuestsCsv`) dedupes against existing guests by email or phone — deliberately never by name, since two real invitees can share a name.
 - Confirmation emails include an "Edit your RSVP" button with a fresh token.
 - Admin CSV export includes an `rsvp_url` column with the signed edit link.
 
 ### Admin dashboard (`/_authenticated/admin`)
-- **RSVPs tab:** view, filter, sort, edit guests, import CSV, export CSV, copy RSVP links.
+- **RSVPs tab:** view, filter, sort, edit guests, import CSV, export CSV, copy RSVP links, bulk-delete selected invitations (deleting a household also removes its RSVP row via `ON DELETE CASCADE`).
 - **Photos tab:** approve/reject/delete guest-uploaded photos, bulk actions, captions, keyboard-shortcut lightbox.
 - **Features tab:** toggle `rsvp_open` / `guest_photo_uploads` via an explicit draft → confirm → save flow (toggling doesn't take effect until you click Save and confirm the listed changes).
 - Activity strip shows recent RSVP and photo metrics.

@@ -74,7 +74,7 @@ A meta-point on process: this project's owner cares about *why*, not just *what*
 ## 6. Remaining priorities (ranked)
 
 1. **Write real wedding-party personalization copy** (`coverHeadline`/`coverSubline` for 7 people, `cardAttributes`/`cardAbility` for 8) — blocks the Wedding Party section from feeling finished. Needs the couple, not an AI.
-2. **Import the real guest list**, then flip `rsvp_open` on. Blocks the entire RSVP feature from being live for real guests.
+2. ~~Import the real guest list, then flip `rsvp_open` on.~~ **Done as of 2026-07-17** — `guests` has 52 real rows, `rsvp_open` is live. See ONBOARDING.md §2 for the current snapshot (verify live before trusting any snapshot).
 3. **Get real wedding-party photos** per the specs already given (background-removed, 232×388 for magazine covers; ratio 3:4 for the general avatar convention), then flip `guest_photo_uploads` on whenever the couple wants uploads open.
 4. **Live cross-device visual QA at 440px/1280px** — genuinely never done with a real browser this whole project. If your sandbox can boot a dev server (see §5's hook note), this is the highest-value QA task left; nothing in this codebase has had real visual confirmation beyond static code review and a hero-only screenshot tool.
 5. Sprint 4 (Performance & Analytics) — not started at all.
@@ -90,7 +90,7 @@ See `ONBOARDING.md` §3 for the full sprint-by-sprint breakdown with acceptance 
 | Sprint | Status |
 |---|---|
 | 1 — Content & Copy Freeze | ⚠️ Data model done, content almost entirely outstanding |
-| 2 — RSVP Launch Readiness | ⚠️ Code complete and verified; off pending real guest list |
+| 2 — RSVP Launch Readiness | ✅ Live — real guest list imported (52 households), `rsvp_open` is on |
 | 3 — Guest Photo Upload | ✅ Done; off pending the couple's choice to open it |
 | 4 — Performance & Analytics | ⬜ Not started |
 | 5 — Email Branding | ✅ Done |
@@ -114,3 +114,4 @@ If the couple does extend the Wedding Party card system to a new group (parents,
 - **When a background implementation agent reports success, verify the actual diff before believing "no regressions."** This session caught two real, if minor, self-introduced issues this way: an `eslint --fix` that reformatted unrelated pre-existing code (reverted, redone surgically), and the missing `edit.$token.tsx` fix mentioned above. Neither would have been caught by reading a summary alone.
 - **Don't assume a description of "already built" work is still accurate — verify against the live database, not just the code.** The RSVP and photo-upload features were described mid-session as "done," which was true of the code but not the full picture: the actual production feature-flag values were both `false` and the guest list was still test data. A code-only review would have missed this; a direct DB query didn't.
 - **Sandbox limitations are not always permanent — re-test them rather than carrying them forward as assumed facts.** This entire session operated under the assumption that `bun install`/a real dev server were unavailable, right up until the very end, when they turned out to be fixable in about 15 seconds once a hook (added by someone else, mid-session) was actually run. If a "known limitation" from earlier context hasn't been re-verified recently, don't repeat it as fact — check.
+- **`bun install`/`tsc`/`vite build` working in a sandbox does NOT mean a live dev server can reach production.** Confirmed directly (2026-07-17): this sandbox has no `RSVP_EDIT_SECRET` in its process env (only `SUPABASE_URL`/`SUPABASE_PUBLISHABLE_KEY` are in the tracked `.env`), and a direct `curl` to the Supabase REST endpoint gets a 403 from the outbound proxy — so a real `bun run dev` here can't sign RSVP tokens or reach the live database at all. The Lovable `query_database`/`get_project` MCP tools *do* work (they're routed through Lovable's own infra, not this sandbox's direct egress), and are the reliable way to verify live data/config from here. Don't assume a browser-driven E2E test against the real RSVP flow is possible from this sandbox without re-checking both of these first.
