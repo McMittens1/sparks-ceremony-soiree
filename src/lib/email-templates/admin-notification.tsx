@@ -12,6 +12,7 @@ import {
 } from "@react-email/components";
 import type { TemplateEntry } from "./registry";
 import { EMAIL_COLORS } from "./tokens";
+import { EmailMasthead } from "./masthead";
 
 interface AdminNotificationProps {
   kind?: "rsvp" | "photo";
@@ -33,9 +34,7 @@ const AdminNotificationEmail = ({
     <Preview>{headline}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Text style={eyebrow}>
-          Wedding site · {kind === "photo" ? "Photo upload" : "RSVP"}
-        </Text>
+        <EmailMasthead eyebrow={`Wedding site · ${kind === "photo" ? "Photo upload" : "RSVP"}`} />
         <Heading style={h1}>{headline}</Heading>
         {summary && <Text style={text}>{summary}</Text>}
         {details.length > 0 && (
@@ -79,14 +78,7 @@ export const template = {
 export default AdminNotificationEmail;
 
 const main = { backgroundColor: EMAIL_COLORS.ivory, fontFamily: "Arial, sans-serif" };
-const container = { padding: "40px 32px", maxWidth: 560 };
-const eyebrow = {
-  fontSize: "10px",
-  letterSpacing: "0.24em",
-  textTransform: "uppercase" as const,
-  color: EMAIL_COLORS.tanDeep,
-  margin: "0 0 18px",
-};
+const container = { padding: "48px 32px", maxWidth: 560 };
 const h1 = {
   fontFamily: "Georgia, 'Times New Roman', serif",
   fontStyle: "italic" as const,
@@ -94,6 +86,7 @@ const h1 = {
   color: EMAIL_COLORS.ink,
   margin: "0 0 20px",
   lineHeight: 1.3,
+  textAlign: "center" as const,
 };
 const text = { fontSize: "14px", color: EMAIL_COLORS.inkBody, lineHeight: 1.6, margin: "0 0 16px" };
 const block = {

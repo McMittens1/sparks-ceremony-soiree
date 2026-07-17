@@ -193,7 +193,9 @@ This is the living sprint plan. Pick up the next uncompleted sprint rather than 
 
 ### Sprint 5 — Email Branding & Template Polish — ✅ Done
 
-**Status:** Confirmed this session — `rsvp-confirmation.tsx` and `admin-notification.tsx` use only `EMAIL_COLORS.*` from `src/lib/email-templates/tokens.ts`, which mirrors `src/styles.css` exactly. No hardcoded hex in either template. Nothing left to do here unless the couple wants a design change.
+**Status:** `rsvp-confirmation.tsx`, `photo-received.tsx`, and `admin-notification.tsx` use only `EMAIL_COLORS.*` from `src/lib/email-templates/tokens.ts`, which mirrors `src/styles.css` exactly. No hardcoded hex in any template.
+
+**Updated 2026-07-17:** all three templates now share a `src/lib/email-templates/masthead.tsx` component (`EmailMasthead`/`EmailFooter`) instead of each defining its own eyebrow/footer text inline. The eyebrow line reads "The Wedding of Geovanni & Addison" (+ event date on the RSVP confirmation) rather than the guest's own name or a bare "Geovanni & Addison" — chosen as brand/title framing consistent with the site's `<title>` tag, not a personalization slot (the confirmation's *body* already opens with "Hi {guestName}," so the recipient's name isn't missing, just not duplicated into the header). Guest-facing templates (`rsvp-confirmation`, `photo-received`) also gained a shared `EmailFooter` sign-off ("With love, Geo & Addi" + site URL) and elevated info sections into bordered lavender-wash cards. `admin-notification.tsx` got the masthead but deliberately not the footer — "With love, Geo & Addi" would be an odd self-signed sign-off on an email the couple sends to themselves.
 
 ---
 

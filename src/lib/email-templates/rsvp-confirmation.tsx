@@ -13,6 +13,7 @@ import {
 } from "@react-email/components";
 import type { TemplateEntry } from "./registry";
 import { EMAIL_COLORS } from "./tokens";
+import { EmailMasthead, EmailFooter } from "./masthead";
 
 interface AttendeeLine {
   name: string;
@@ -58,7 +59,7 @@ const RsvpConfirmationEmail = ({
       <Preview>Your RSVP for Geovanni &amp; Addison — {headline}</Preview>
       <Body style={main}>
         <Container style={container}>
-          <Text style={eyebrow}>Geovanni &amp; Addison · {eventDate}</Text>
+          <EmailMasthead eyebrow={`The Wedding of Geovanni & Addison · ${eventDate}`} />
           <Heading style={h1}>{headline}</Heading>
           <Text style={text}>
             Hi {guestName}, we&rsquo;ve saved your RSVP. Here&rsquo;s a copy for your records.
@@ -104,11 +105,7 @@ const RsvpConfirmationEmail = ({
               {editUrl}
             </Link>
           </Text>
-          <Text style={footer}>
-            With love,
-            <br />
-            Geo &amp; Addi
-          </Text>
+          <EmailFooter />
         </Container>
       </Body>
     </Html>
@@ -141,15 +138,7 @@ const main = {
   backgroundColor: EMAIL_COLORS.ivory,
   fontFamily: "Georgia, 'Times New Roman', serif",
 };
-const container = { padding: "40px 32px", maxWidth: 560 };
-const eyebrow = {
-  fontFamily: "Arial, sans-serif",
-  fontSize: "10px",
-  letterSpacing: "0.24em",
-  textTransform: "uppercase" as const,
-  color: EMAIL_COLORS.tanDeep,
-  margin: "0 0 18px",
-};
+const container = { padding: "48px 32px", maxWidth: 560 };
 const h1 = {
   fontFamily: "Georgia, 'Times New Roman', serif",
   fontStyle: "italic" as const,
@@ -157,9 +146,15 @@ const h1 = {
   color: EMAIL_COLORS.ink,
   margin: "0 0 24px",
   lineHeight: 1.2,
+  textAlign: "center" as const,
 };
 const text = { fontSize: "15px", color: EMAIL_COLORS.inkBody, lineHeight: 1.7, margin: "0 0 16px" };
-const block = { margin: "24px 0" };
+const block = {
+  margin: "20px 0",
+  padding: "18px 22px",
+  background: EMAIL_COLORS.lavenderWash,
+  border: `1px solid ${EMAIL_COLORS.hairline}`,
+};
 const label = {
   fontFamily: "Arial, sans-serif",
   fontSize: "10px",
@@ -172,10 +167,3 @@ const item = { fontSize: "16px", color: EMAIL_COLORS.ink, margin: "4px 0" };
 const itemSoft = { fontSize: "14px", color: EMAIL_COLORS.inkSoft, margin: "2px 0 0" };
 const hr = { borderColor: EMAIL_COLORS.hairline, margin: "32px 0" };
 const link = { color: EMAIL_COLORS.tanDeep, textDecoration: "underline" };
-const footer = {
-  fontFamily: "Georgia, serif",
-  fontStyle: "italic" as const,
-  fontSize: "16px",
-  color: EMAIL_COLORS.ink,
-  margin: "32px 0 0",
-};
