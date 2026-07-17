@@ -18,10 +18,13 @@ export async function hasAdminRole(sb: SupabaseClient<Database>, userId: string)
   return !error && !!data;
 }
 
-async function ensureAdmin(userId: string) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  if (!(await hasAdminRole(supabaseAdmin, userId))) throw new Error("Forbidden");
-  return supabaseAdmin;
+// Uses the caller's own RLS-scoped client (attached by requireSupabaseAuth), not
+// the service-role client — admin write access is enforced both here and by the
+// matching "has_role(auth.uid(), 'admin')" RLS policies on these tables/bucket, so
+// there's a database-level backstop if this check is ever missed on a new endpoint.
+async function ensureAdmin(sb: SupabaseClient<Database>, userId: string) {
+  if (!(await hasAdminRole(sb, userId))) throw new Error("Forbidden");
+  return sb;
 }
 
 export interface AdminPhoto {
@@ -40,7 +43,7 @@ export const getAdminPhotos = createServerFn({ method: "POST" })
     z.object({ status: z.enum(["pending", "approved", "rejected"]) }).parse(d),
   )
   .handler(async ({ data, context }): Promise<AdminPhoto[]> => {
-    const sb = await ensureAdmin(context.userId);
+    const sb = await ensureAdmin(context.supabase, context.userId);
     const { data: rows } = await sb
       .from("guest_photos")
       .select("id, storage_path, caption, uploader_name, uploader_email, status, created_at")
@@ -74,7 +77,7 @@ export const setPhotoStatus = createServerFn({ method: "POST" })
     z.object({ id: z.string().uuid(), status: z.enum(["approved", "rejected"]) }).parse(d),
   )
   .handler(async ({ data, context }): Promise<{ ok: boolean }> => {
-    const sb = await ensureAdmin(context.userId);
+    const sb = await ensureAdmin(context.supabase, context.userId);
     await sb
       .from("guest_photos")
       .update({
@@ -97,7 +100,7 @@ export const bulkSetPhotoStatus = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }): Promise<{ ok: boolean; count: number }> => {
-    const sb = await ensureAdmin(context.userId);
+    const sb = await ensureAdmin(context.supabase, context.userId);
     const { error } = await sb
       .from("guest_photos")
       .update({
@@ -119,7 +122,7 @@ export const updatePhotoCaption = createServerFn({ method: "POST" })
     z.object({ id: z.string().uuid(), caption: z.string().max(PHOTO_CAPTION_MAX_LENGTH) }).parse(d),
   )
   .handler(async ({ data, context }): Promise<{ ok: boolean }> => {
-    const sb = await ensureAdmin(context.userId);
+    const sb = await ensureAdmin(context.supabase, context.userId);
     const trimmed = data.caption.trim();
     const { error } = await sb
       .from("guest_photos")
@@ -138,7 +141,7 @@ export const deletePhoto = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }): Promise<{ ok: boolean }> => {
-    const sb = await ensureAdmin(context.userId);
+    const sb = await ensureAdmin(context.supabase, context.userId);
     const { data: row } = await sb
       .from("guest_photos")
       .select("storage_path")
@@ -162,7 +165,7 @@ export const bulkDeletePhotos = createServerFn({ method: "POST" })
     z.object({ ids: z.array(z.string().uuid()).min(1).max(200) }).parse(d),
   )
   .handler(async ({ data, context }): Promise<{ ok: boolean; count: number }> => {
-    const sb = await ensureAdmin(context.userId);
+    const sb = await ensureAdmin(context.supabase, context.userId);
     const { data: rows } = await sb.from("guest_photos").select("storage_path").in("id", data.ids);
     const paths = (rows ?? []).map((r) => r.storage_path).filter(Boolean) as string[];
     if (paths.length) await sb.storage.from("guest-photos").remove(paths);
@@ -178,7 +181,7 @@ export const getPhotoCounts = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(
     async ({ context }): Promise<{ pending: number; approved: number; rejected: number }> => {
-      const sb = await ensureAdmin(context.userId);
+      const sb = await ensureAdmin(context.supabase, context.userId);
       const q = (s: "pending" | "approved" | "rejected") =>
         sb.from("guest_photos").select("id", { count: "exact", head: true }).eq("status", s);
       const [p, a, r] = await Promise.all([q("pending"), q("approved"), q("rejected")]);
@@ -197,7 +200,7 @@ export const getRecentActivity = createServerFn({ method: "POST" })
       photos_pending: number;
       photos_last_7d: number;
     }> => {
-      const sb = await ensureAdmin(context.userId);
+      const sb = await ensureAdmin(context.supabase, context.userId);
       const now = Date.now();
       const iso24 = new Date(now - 24 * 60 * 60 * 1000).toISOString();
       const iso7d = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();

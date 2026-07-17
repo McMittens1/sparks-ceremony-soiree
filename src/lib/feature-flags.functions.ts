@@ -1,12 +1,16 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
 import { z } from "zod";
 import { hasAdminRole } from "@/lib/admin.functions";
 
-async function ensureAdmin(userId: string) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  if (!(await hasAdminRole(supabaseAdmin, userId))) throw new Error("Forbidden");
-  return supabaseAdmin;
+// Uses the caller's own RLS-scoped client (attached by requireSupabaseAuth), not
+// the service-role client — enforced both here and by the matching
+// "has_role(auth.uid(), 'admin')" RLS policy on feature_flags.
+async function ensureAdmin(sb: SupabaseClient<Database>, userId: string) {
+  if (!(await hasAdminRole(sb, userId))) throw new Error("Forbidden");
+  return sb;
 }
 
 export interface FeatureFlag {
@@ -60,7 +64,7 @@ export const setFeatureFlags = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }): Promise<{ ok: boolean }> => {
-    const sb = await ensureAdmin(context.userId);
+    const sb = await ensureAdmin(context.supabase, context.userId);
     for (const change of data.changes) {
       const { error } = await sb
         .from("feature_flags")
