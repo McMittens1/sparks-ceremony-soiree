@@ -26,7 +26,7 @@ const AdminNotificationEmail = ({
   headline = "New activity",
   summary = "",
   details = [],
-  adminUrl = "https://morenowedding2026.com/admin",
+  adminUrl = "https://morenowedding2026.com/portal-ga-2026/dashboard",
 }: AdminNotificationProps) => (
   <Html lang="en" dir="ltr">
     <Head />
@@ -72,7 +72,7 @@ export const template = {
       { label: "Party size", value: "2" },
       { label: "Song request", value: "Vienna — Billy Joel" },
     ],
-    adminUrl: "https://morenowedding2026.com/admin",
+    adminUrl: "https://morenowedding2026.com/portal-ga-2026/dashboard",
   },
 } satisfies TemplateEntry;
 

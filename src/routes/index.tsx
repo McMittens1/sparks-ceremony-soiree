@@ -16,7 +16,7 @@ import { FaqSection } from "@/components/site/sections/FaqSection";
 export const Route = createFileRoute("/")({
   head: () => {
     const base = buildMeta({
-      title: "Geovanni & Addison · October 10, 2026",
+      title: "The Wedding of Geovanni & Addison · October 10, 2026",
       description:
         "The wedding website for Geovanni Moreno & Addison Hillman. Schedule, travel, registry, and RSVP for October 10, 2026 at Sparks' Barn, Louisville, NE.",
       image: `${SITE.siteUrl}${heroPortrait.url}`,

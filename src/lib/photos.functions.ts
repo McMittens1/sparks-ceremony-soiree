@@ -95,7 +95,7 @@ export const uploadGuestPhotos = createServerFn({ method: "POST" })
                   headline: `${uploaded} new photo${uploaded > 1 ? "s" : ""} from ${data.uploaderName}`,
                   summary: `Pending moderation in the admin dashboard.`,
                   details,
-                  adminUrl: `${SITE.siteUrl}/admin`,
+                  adminUrl: `${SITE.siteUrl}/portal-ga-2026/dashboard`,
                 },
               }),
             ),

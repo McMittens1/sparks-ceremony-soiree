@@ -116,6 +116,7 @@ const RSVP_ERROR_MESSAGES: Partial<Record<string, keyof Dict["rsvp"]>> = {
   link_expired: "errLinkExpired",
   link_invalid: "errLinkInvalid",
   save_failed: "errSaveFailed",
+  rate_limited: "errRateLimited",
 };
 
 function rsvpErrorMessage(e: unknown, t: Dict): string {

@@ -145,6 +145,7 @@ export interface Dict {
     errLinkExpired: string;
     errLinkInvalid: string;
     errSaveFailed: string;
+    errRateLimited: string;
   };
   admin: {
     title: string;
@@ -417,6 +418,7 @@ const en: Dict = {
     errLinkExpired: "This edit link has expired. Please contact us for a new one.",
     errLinkInvalid: "This edit link isn't valid. Please double-check it.",
     errSaveFailed: "We couldn't save that. Please try again in a moment.",
+    errRateLimited: "Too many submissions from this invitation. Please try again in a bit.",
   },
   admin: {
     title: "Admin",
@@ -692,6 +694,7 @@ const es: Dict = {
     errLinkExpired: "Este enlace de edición venció. Contáctanos para uno nuevo.",
     errLinkInvalid: "Este enlace de edición no es válido. Verifícalo de nuevo.",
     errSaveFailed: "No pudimos guardar eso. Intenta de nuevo en un momento.",
+    errRateLimited: "Demasiados envíos desde esta invitación. Intenta de nuevo en un rato.",
   },
   admin: {
     title: "Administración",

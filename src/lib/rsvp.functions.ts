@@ -240,6 +240,28 @@ function requestIp(): string {
   );
 }
 
+// Same best-effort, in-memory shape as the lookup limiter above, but keyed
+// by guest id rather than IP — the session token already restricts *who*
+// can call submitRsvp to one phone-verified household, but nothing stopped
+// that household from submitting repeatedly with a different, arbitrary
+// email typed in each time, which would spam real confirmation mail to
+// whatever address they chose. Keying by guest id (not IP) targets that
+// specific threat without penalizing households sharing a network.
+const SUBMIT_RATE_LIMIT_MAX = 10;
+const SUBMIT_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const submitAttempts = new Map<string, { count: number; resetAt: number }>();
+
+function isSubmitRateLimited(guestId: string): boolean {
+  const now = Date.now();
+  const entry = submitAttempts.get(guestId);
+  if (!entry || now > entry.resetAt) {
+    submitAttempts.set(guestId, { count: 1, resetAt: now + SUBMIT_RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+  entry.count += 1;
+  return entry.count > SUBMIT_RATE_LIMIT_MAX;
+}
+
 // ---------- Public server functions ----------
 
 // Fuzzy name lookup, returns lightweight matches. Deliberately never returns
@@ -640,7 +662,7 @@ async function writeRsvp(
               headline: `New RSVP: ${g.primary_name} — ${statusLabel}`,
               summary: `${g.primary_name} just submitted an RSVP.`,
               details,
-              adminUrl: `${siteOrigin}/admin`,
+              adminUrl: `${siteOrigin}/portal-ga-2026/dashboard`,
             },
           }),
         ),
@@ -662,6 +684,7 @@ export const submitRsvp = createServerFn({ method: "POST" })
       const { verifyRsvpToken } = await import("@/lib/rsvp-token.server");
       const v = await verifyRsvpToken(data.sessionToken, "session");
       if (!v.ok) throw new Error("not_verified");
+      if (isSubmitRateLimited(v.guestId)) throw new Error("rate_limited");
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: g, error: gErr } = await supabaseAdmin
         .from("guests")
@@ -722,6 +745,7 @@ export const updateRsvpByToken = createServerFn({ method: "POST" })
       const { verifyRsvpToken } = await import("@/lib/rsvp-token.server");
       const v = await verifyRsvpToken(data.token, "edit");
       if (!v.ok) throw new Error(v.reason === "expired" ? "link_expired" : "link_invalid");
+      if (isSubmitRateLimited(v.guestId)) throw new Error("rate_limited");
 
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: g } = await supabaseAdmin
@@ -805,6 +829,59 @@ export const unlockGuestPhoneVerify = createServerFn({ method: "POST" })
     if (error) {
       console.error("unlockGuestPhoneVerify failed", error);
       throw new Error("Couldn't unlock this household. Please try again.");
+    }
+    return { ok: true };
+  });
+
+// Re-sends the confirmation email for a household's current RSVP as-is —
+// does not resubmit or modify the RSVP itself. Reuses the same template
+// data shape writeRsvp builds for the original send, sourced from the
+// stored rsvp row instead of a fresh submission, with its own idempotency
+// key (each resend is a distinct send attempt, not a retry of the original).
+export const resendRsvpConfirmation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const sb = await ensureAdmin(context.supabase, context.userId);
+    const { data: g } = await sb
+      .from("guests")
+      .select("id, slug, primary_name, email")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!g) throw new Error("household_not_found");
+    if (!g.email) throw new Error("no_email_on_file");
+
+    const { data: r } = await sb
+      .from("rsvps")
+      .select(RSVP_SELECT_COLUMNS)
+      .eq("guest_id", g.id)
+      .maybeSingle();
+    if (!r) throw new Error("no_rsvp_yet");
+
+    const { enqueueAppEmail } = await import("@/lib/email/enqueue.server");
+    const { signRsvpToken } = await import("@/lib/rsvp-token.server");
+    const token = await signRsvpToken(g.id, "edit");
+    const editUrl = `${SITE.siteUrl}/rsvp/edit/${token}`;
+
+    const result = await enqueueAppEmail({
+      templateName: "rsvp-confirmation",
+      to: g.email,
+      idempotencyKey: `resend-${g.id}-${Date.now()}`,
+      data: {
+        guestName: g.primary_name,
+        status: r.status,
+        attendees: r.attendees,
+        slug: g.slug,
+        editUrl,
+        eventDate: SITE.eventDatePretty.en,
+        venue: SITE.venue,
+        address: SITE.address,
+        rsvpDeadline: SITE.rsvpDeadlinePretty.en,
+      },
+    });
+    if (!result.ok) {
+      console.error("resendRsvpConfirmation failed", result.error);
+      throw new Error("Couldn't resend the confirmation. Please try again.");
     }
     return { ok: true };
   });

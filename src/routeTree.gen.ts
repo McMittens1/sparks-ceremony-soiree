@@ -16,13 +16,13 @@ import { Route as McpRouteImport } from './routes/mcp'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
-import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as RsvpEditTokenRouteImport } from './routes/rsvp/edit.$token'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicWeddingDoticsRouteImport } from './routes/api/public/wedding[.]ics'
 import { Route as ApiPublicWeatherRouteImport } from './routes/api/public/weather'
+import { Route as AuthenticatedPortalGa2026DashboardRouteImport } from './routes/_authenticated/portal-ga-2026/dashboard'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -64,11 +64,6 @@ const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   path: '/email/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const Char91DotwellKnownChar93OauthProtectedResourceRoute =
   Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
     id: '/.well-known/oauth-protected-resource',
@@ -101,6 +96,12 @@ const ApiPublicWeatherRoute = ApiPublicWeatherRouteImport.update({
   path: '/api/public/weather',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedPortalGa2026DashboardRoute =
+  AuthenticatedPortalGa2026DashboardRouteImport.update({
+    id: '/portal-ga-2026/dashboard',
+    path: '/portal-ga-2026/dashboard',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const Char91DotmcpChar93InvokeToolToolRoute =
   Char91DotmcpChar93InvokeToolToolRouteImport.update({
     id: '/.mcp/invoke-tool/$tool',
@@ -144,9 +145,9 @@ export interface FileRoutesByFullPath {
   '/unsubscribe': typeof UnsubscribeRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
-  '/admin': typeof AuthenticatedAdminRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/portal-ga-2026/dashboard': typeof AuthenticatedPortalGa2026DashboardRoute
   '/api/public/weather': typeof ApiPublicWeatherRoute
   '/api/public/wedding.ics': typeof ApiPublicWeddingDoticsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -165,9 +166,9 @@ export interface FileRoutesByTo {
   '/unsubscribe': typeof UnsubscribeRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
-  '/admin': typeof AuthenticatedAdminRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/portal-ga-2026/dashboard': typeof AuthenticatedPortalGa2026DashboardRoute
   '/api/public/weather': typeof ApiPublicWeatherRoute
   '/api/public/wedding.ics': typeof ApiPublicWeddingDoticsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -188,9 +189,9 @@ export interface FileRoutesById {
   '/unsubscribe': typeof UnsubscribeRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
-  '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/_authenticated/portal-ga-2026/dashboard': typeof AuthenticatedPortalGa2026DashboardRoute
   '/api/public/weather': typeof ApiPublicWeatherRoute
   '/api/public/wedding.ics': typeof ApiPublicWeddingDoticsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -211,9 +212,9 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
-    | '/admin'
     | '/email/unsubscribe'
     | '/.mcp/invoke-tool/$tool'
+    | '/portal-ga-2026/dashboard'
     | '/api/public/weather'
     | '/api/public/wedding.ics'
     | '/lovable/email/suppression'
@@ -232,9 +233,9 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
-    | '/admin'
     | '/email/unsubscribe'
     | '/.mcp/invoke-tool/$tool'
+    | '/portal-ga-2026/dashboard'
     | '/api/public/weather'
     | '/api/public/wedding.ics'
     | '/lovable/email/suppression'
@@ -254,9 +255,9 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
-    | '/_authenticated/admin'
     | '/email/unsubscribe'
     | '/.mcp/invoke-tool/$tool'
+    | '/_authenticated/portal-ga-2026/dashboard'
     | '/api/public/weather'
     | '/api/public/wedding.ics'
     | '/lovable/email/suppression'
@@ -340,13 +341,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmailUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/admin': {
-      id: '/_authenticated/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AuthenticatedAdminRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/.well-known/oauth-protected-resource': {
       id: '/.well-known/oauth-protected-resource'
       path: '/.well-known/oauth-protected-resource'
@@ -388,6 +382,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/weather'
       preLoaderRoute: typeof ApiPublicWeatherRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/portal-ga-2026/dashboard': {
+      id: '/_authenticated/portal-ga-2026/dashboard'
+      path: '/portal-ga-2026/dashboard'
+      fullPath: '/portal-ga-2026/dashboard'
+      preLoaderRoute: typeof AuthenticatedPortalGa2026DashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/.mcp/invoke-tool/$tool': {
       id: '/.mcp/invoke-tool/$tool'
@@ -435,11 +436,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedPortalGa2026DashboardRoute: typeof AuthenticatedPortalGa2026DashboardRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedPortalGa2026DashboardRoute:
+    AuthenticatedPortalGa2026DashboardRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

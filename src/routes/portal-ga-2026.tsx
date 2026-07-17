@@ -36,7 +36,7 @@ function AuthPage() {
     supabase.auth.getUser().then(({ data }) => {
       if (!active) return;
       if (data.user) {
-        nav({ to: "/admin", replace: true });
+        nav({ to: "/portal-ga-2026/dashboard", replace: true });
       } else {
         setChecking(false);
       }
@@ -47,7 +47,7 @@ function AuthPage() {
   async function goAdmin() {
     try {
       await claim();
-      nav({ to: "/admin" });
+      nav({ to: "/portal-ga-2026/dashboard" });
     } catch (e) {
       setErr(e instanceof Error ? e.message : t.rsvp.errGeneric);
     }

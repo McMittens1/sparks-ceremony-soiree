@@ -101,7 +101,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     // exact equality, so a root-level canonical would render *alongside*
     // (not instead of) a more specific one from the active route.
     const { meta } = buildMeta({
-      title: "Geovanni & Addison · October 10, 2026",
+      title: "The Wedding of Geovanni & Addison · October 10, 2026",
       description:
         "The wedding website for Geovanni Moreno & Addison Hillman. Schedule, travel, registry, and RSVP for October 10, 2026 at Sparks' Barn, Louisville, NE.",
       image:

@@ -22,6 +22,7 @@ import {
   bulkDeleteGuests,
   importGuestsCsv,
   unlockGuestPhoneVerify,
+  resendRsvpConfirmation,
   type AdminGuestRow,
   type PartyMember,
   type ImportRowResult,
@@ -41,7 +42,7 @@ import { Switch } from "@/components/ui/switch";
 import { SITE } from "@/lib/site";
 import { PHOTO_CAPTION_MAX_LENGTH } from "@/lib/photo-config";
 
-export const Route = createFileRoute("/_authenticated/admin")({
+export const Route = createFileRoute("/_authenticated/portal-ga-2026/dashboard")({
   head: () => ({
     meta: [{ title: "Admin · Geo & Addison" }, { name: "robots", content: "noindex,nofollow" }],
   }),
@@ -1190,6 +1191,7 @@ function GuestEditor({
 }) {
   const runUpsert = useServerFn(upsertGuest);
   const runDelete = useServerFn(deleteGuest);
+  const runResend = useServerFn(resendRsvpConfirmation);
   const [primaryName, setPrimaryName] = useState(row?.primary_name ?? "");
   const [members, setMembers] = useState<PartyMember[]>(
     row?.party_members.length
@@ -1208,7 +1210,32 @@ function GuestEditor({
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [resending, setResending] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  function isInMembers(name: string): boolean {
+    const normalized = name.trim().toLowerCase();
+    return members.some((m) => m.name.trim().toLowerCase() === normalized);
+  }
+
+  function promoteToInviteList(name: string, isChild: boolean) {
+    if (isInMembers(name)) return;
+    setMembers((prev) => [...prev, { name, is_child: isChild }]);
+    toast.success(`Added ${name} to the invite list — remember to Save.`);
+  }
+
+  async function resendConfirmation() {
+    if (!row) return;
+    setResending(true);
+    try {
+      await runResend({ data: { id: row.id } });
+      toast.success("Confirmation email resent.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't resend the confirmation.");
+    } finally {
+      setResending(false);
+    }
+  }
 
   async function save() {
     setSaving(true);
@@ -1464,21 +1491,36 @@ function GuestEditor({
               {/* This is what the household actually submitted, which can
               differ from "Guests on this invite" above — a guest can add up
               to one name beyond the invited roster when they RSVP. Editing
-              the invite list above does not change this. */}
+              the invite list above does not change this automatically; use
+              "Add to invite list" below to promote an added name on purpose. */}
               <div className="mt-2 space-y-1">
-                {row.rsvp.attendees.map((a, i) => (
-                  <div key={i} className="text-sm flex items-center justify-between max-w-xs">
-                    <span>
-                      {a.name}
-                      {a.is_child ? " (child)" : ""}
-                    </span>
-                    <span
-                      className={`text-[10px] uppercase tracking-[0.15em] ${a.attending ? "text-primary" : "text-muted-foreground"}`}
-                    >
-                      {a.attending ? "attending" : "not attending"}
-                    </span>
-                  </div>
-                ))}
+                {row.rsvp.attendees.map((a, i) => {
+                  const alreadyListed = isInMembers(a.name);
+                  return (
+                    <div key={i} className="text-sm flex items-center justify-between gap-3">
+                      <span>
+                        {a.name}
+                        {a.is_child ? " (child)" : ""}
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <span
+                          className={`text-[10px] uppercase tracking-[0.15em] ${a.attending ? "text-primary" : "text-muted-foreground"}`}
+                        >
+                          {a.attending ? "attending" : "not attending"}
+                        </span>
+                        {!alreadyListed && (
+                          <button
+                            type="button"
+                            onClick={() => promoteToInviteList(a.name, a.is_child)}
+                            className="text-[10px] uppercase tracking-[0.15em] text-primary link-underline"
+                          >
+                            + Add to invite list
+                          </button>
+                        )}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
 
               {row.rsvp.address_confirmed && (
@@ -1488,6 +1530,17 @@ function GuestEditor({
                 <div className="text-sm mt-1">Song: {row.rsvp.song_request}</div>
               )}
               {row.rsvp.message && <div className="text-sm mt-1 italic">"{row.rsvp.message}"</div>}
+
+              {row.email && (
+                <button
+                  type="button"
+                  onClick={resendConfirmation}
+                  disabled={resending}
+                  className="mt-3 block text-[10px] uppercase tracking-[0.2em] text-primary link-underline disabled:opacity-50"
+                >
+                  {resending ? "Resending…" : "Resend confirmation email"}
+                </button>
+              )}
             </div>
           )}
 
