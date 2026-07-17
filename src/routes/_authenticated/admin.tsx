@@ -27,6 +27,16 @@ import {
   type ImportRowResult,
 } from "@/lib/rsvp.functions";
 import { getFeatureFlags, setFeatureFlags, type FeatureFlag } from "@/lib/feature-flags.functions";
+import {
+  getEmailSendLog,
+  getSuppressedEmails,
+  getEmailSendState,
+  SEND_LOG_LIMIT,
+  type EmailLogRow,
+  type SuppressedEmailRow,
+  type EmailSendState,
+  type EmailStatus,
+} from "@/lib/email.functions";
 import { Switch } from "@/components/ui/switch";
 import { SITE } from "@/lib/site";
 import { PHOTO_CAPTION_MAX_LENGTH } from "@/lib/photo-config";
@@ -38,7 +48,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: Admin,
 });
 
-type Tab = "rsvps" | "photos" | "features";
+type Tab = "rsvps" | "photos" | "features" | "emails";
 
 function Admin() {
   const t = useT();
@@ -65,7 +75,7 @@ function Admin() {
       <ActivityStrip />
 
       <div className="mt-6 flex gap-2 border-b border-border/40">
-        {(["rsvps", "photos", "features"] as const).map((k) => (
+        {(["rsvps", "photos", "features", "emails"] as const).map((k) => (
           <button
             key={k}
             onClick={() => setTab(k)}
@@ -77,7 +87,9 @@ function Admin() {
               ? t.admin.rsvpsTab
               : k === "photos"
                 ? t.admin.photosTab
-                : t.admin.featuresTab}
+                : k === "features"
+                  ? t.admin.featuresTab
+                  : t.admin.emailsTab}
           </button>
         ))}
       </div>
@@ -86,8 +98,10 @@ function Admin() {
         <RsvpsPanel />
       ) : tab === "photos" ? (
         <PhotosPanel />
-      ) : (
+      ) : tab === "features" ? (
         <FeatureFlagsPanel />
+      ) : (
+        <EmailsPanel />
       )}
     </div>
   );
@@ -2612,6 +2626,230 @@ function FeatureFlagsPanel() {
             </div>
           </div>
         </ModalBackdrop>
+      )}
+    </div>
+  );
+}
+
+// ================== Emails ==================
+
+type EmailStatusFilter = "all" | "sent" | "failed" | "pending" | "suppressed";
+
+// Groups failed | bounced | complained | dlq | unknown into one "failed"
+// bucket — anything that isn't an expected, non-alarming state — so a
+// glance at the summary strip answers "is anything broken" without needing
+// to know all 7 possible statuses.
+function isFailureStatus(status: EmailStatus | "unknown"): boolean {
+  return status !== "sent" && status !== "pending" && status !== "suppressed";
+}
+
+function matchesEmailFilter(status: EmailStatus | "unknown", filter: EmailStatusFilter): boolean {
+  if (filter === "all") return true;
+  if (filter === "failed") return isFailureStatus(status);
+  return status === filter;
+}
+
+function emailStatusPillClass(status: EmailStatus | "unknown"): string {
+  if (status === "sent") return "border-primary text-primary";
+  if (status === "pending") return "border-accent text-accent";
+  if (status === "suppressed") return "border-muted-foreground text-muted-foreground";
+  return "border-destructive text-destructive"; // failed | bounced | complained | dlq | unknown
+}
+
+function EmailsPanel() {
+  const t = useT();
+  const loadLog = useServerFn(getEmailSendLog);
+  const loadSuppressed = useServerFn(getSuppressedEmails);
+  const loadState = useServerFn(getEmailSendState);
+
+  const [log, setLog] = useState<EmailLogRow[] | null>(null);
+  const [suppressed, setSuppressed] = useState<SuppressedEmailRow[] | null>(null);
+  const [sendState, setSendState] = useState<EmailSendState | null>(null);
+  const [filter, setFilter] = useState<EmailStatusFilter>("all");
+
+  const logToken = useRef(0);
+  const suppressedToken = useRef(0);
+  const stateToken = useRef(0);
+
+  const refreshLog = useCallback(() => {
+    const token = ++logToken.current;
+    loadLog({})
+      .then((rows) => {
+        if (token === logToken.current) setLog(rows);
+      })
+      .catch(() => {});
+  }, [loadLog]);
+
+  const refreshSuppressed = useCallback(() => {
+    const token = ++suppressedToken.current;
+    loadSuppressed({})
+      .then((rows) => {
+        if (token === suppressedToken.current) setSuppressed(rows);
+      })
+      .catch(() => {});
+  }, [loadSuppressed]);
+
+  const refreshState = useCallback(() => {
+    const token = ++stateToken.current;
+    loadState({})
+      .then((s) => {
+        if (token === stateToken.current) setSendState(s);
+      })
+      .catch(() => {});
+  }, [loadState]);
+
+  useEffect(() => {
+    refreshLog();
+  }, [refreshLog]);
+  useEffect(() => {
+    refreshSuppressed();
+  }, [refreshSuppressed]);
+  useEffect(() => {
+    refreshState();
+  }, [refreshState]);
+
+  const summary = useMemo(() => {
+    const rows = log ?? [];
+    return {
+      sent: rows.filter((r) => r.status === "sent").length,
+      pending: rows.filter((r) => r.status === "pending").length,
+      suppressed: rows.filter((r) => r.status === "suppressed").length,
+      failed: rows.filter((r) => isFailureStatus(r.status)).length,
+    };
+  }, [log]);
+
+  const filtered = (log ?? []).filter((row) => matchesEmailFilter(row.status, filter));
+
+  const rateLimitedUntil =
+    sendState?.retry_after_until && new Date(sendState.retry_after_until).getTime() > Date.now()
+      ? sendState.retry_after_until
+      : null;
+
+  return (
+    <div className="mt-8">
+      <p className="text-xs text-muted-foreground max-w-2xl">
+        Read-only view into RSVP confirmations, admin notifications, and auth emails — the last{" "}
+        {SEND_LOG_LIMIT} send attempts, most recent first.
+      </p>
+
+      {rateLimitedUntil && (
+        <div className="mt-4 border border-destructive px-4 py-3 text-xs text-destructive">
+          Email sending is currently paused by the provider's rate limit — resumes{" "}
+          {new Date(rateLimitedUntil).toLocaleString()}.
+        </div>
+      )}
+
+      <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {(
+          [
+            ["sent", summary.sent],
+            ["failed", summary.failed],
+            ["pending", summary.pending],
+            ["suppressed", summary.suppressed],
+          ] as const
+        ).map(([label, n]) => (
+          <div key={label} className="border border-border/40 p-3 text-center bg-card/40">
+            <div
+              className={`text-xl font-serif ${label === "failed" && n > 0 ? "text-destructive" : "text-primary"}`}
+            >
+              {n}
+            </div>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mt-1">
+              {label}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-6">
+        <select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value as EmailStatusFilter)}
+          className="border border-input bg-background px-3 py-2 text-sm"
+        >
+          <option value="all">All statuses</option>
+          <option value="sent">Sent</option>
+          <option value="failed">Failed / bounced / complained</option>
+          <option value="pending">Pending</option>
+          <option value="suppressed">Suppressed</option>
+        </select>
+      </div>
+
+      {log === null ? (
+        <p className="mt-8 text-sm text-muted-foreground">{t.common.loading}</p>
+      ) : filtered.length === 0 ? (
+        <p className="mt-8 text-sm text-muted-foreground">No emails match this filter.</p>
+      ) : (
+        <div className="mt-6 overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              <tr className="border-b border-border/40">
+                <th className="py-2 pr-4 text-left">Sent</th>
+                <th className="py-2 pr-4 text-left">Template</th>
+                <th className="py-2 pr-4 text-left">Recipient</th>
+                <th className="py-2 pr-4 text-left">Status</th>
+                <th className="py-2 pr-4 text-left">Error</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((row) => (
+                <tr key={row.id} className="border-b border-border/20 align-top">
+                  <td className="py-3 pr-4 text-xs">{new Date(row.created_at).toLocaleString()}</td>
+                  <td className="py-3 pr-4 text-xs font-mono">{row.template_name}</td>
+                  <td className="py-3 pr-4 text-xs">{row.recipient_email}</td>
+                  <td className="py-3 pr-4">
+                    <span
+                      className={`text-[10px] uppercase tracking-[0.2em] px-2 py-1 border ${emailStatusPillClass(row.status)}`}
+                    >
+                      {row.status}
+                    </span>
+                  </td>
+                  <td
+                    className="py-3 pr-4 text-xs text-destructive max-w-xs truncate"
+                    title={row.error_message ?? undefined}
+                  >
+                    {row.error_message ?? "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <h3 className="mt-12 font-serif text-2xl text-primary">Suppressed addresses</h3>
+      <p className="mt-2 text-xs text-muted-foreground max-w-2xl">
+        These addresses won't receive any further mail — they unsubscribed, bounced, or complained.
+      </p>
+      {suppressed === null ? (
+        <p className="mt-8 text-sm text-muted-foreground">{t.common.loading}</p>
+      ) : suppressed.length === 0 ? (
+        <p className="mt-8 text-sm text-muted-foreground">No suppressed addresses.</p>
+      ) : (
+        <div className="mt-6 overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              <tr className="border-b border-border/40">
+                <th className="py-2 pr-4 text-left">Email</th>
+                <th className="py-2 pr-4 text-left">Reason</th>
+                <th className="py-2 pr-4 text-left">Since</th>
+              </tr>
+            </thead>
+            <tbody>
+              {suppressed.map((row) => (
+                <tr key={row.id} className="border-b border-border/20 align-top">
+                  <td className="py-3 pr-4 text-xs">{row.email}</td>
+                  <td className="py-3 pr-4">
+                    <span className="text-[10px] uppercase tracking-[0.2em] px-2 py-1 border border-muted-foreground text-muted-foreground">
+                      {row.reason}
+                    </span>
+                  </td>
+                  <td className="py-3 pr-4 text-xs">{new Date(row.created_at).toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

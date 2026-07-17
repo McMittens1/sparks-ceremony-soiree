@@ -123,6 +123,16 @@ function rsvpErrorMessage(e: unknown, t: Dict): string {
   return key ? t.rsvp[key] : t.rsvp.errGeneric;
 }
 
+// Calendar-date difference, not an exact-millisecond one — the deadline is
+// anchored at 23:59:59, so a plain (deadline - now) / day-in-ms diff almost
+// always has a leftover fraction of a day, and rounding that up would show
+// one more day than a guest counting on a calendar would expect.
+function daysBetweenCalendarDates(from: Date, to: Date): number {
+  const a = new Date(from.getFullYear(), from.getMonth(), from.getDate());
+  const b = new Date(to.getFullYear(), to.getMonth(), to.getDate());
+  return Math.round((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
+}
+
 type Match = { selectToken: string; primary_name: string; party_size: number };
 
 function RsvpPage() {
@@ -139,9 +149,7 @@ function RsvpPage() {
   const { enabled: rsvpOpen, loading: rsvpFlagLoading } = useFeatureFlag("rsvp_open");
 
   const isLate = Date.now() > new Date(SITE.rsvpDeadline).getTime();
-  const daysUntilDeadline = Math.ceil(
-    (new Date(SITE.rsvpDeadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
-  );
+  const daysUntilDeadline = daysBetweenCalendarDates(new Date(), new Date(SITE.rsvpDeadline));
 
   const [stage, setStage] = useState<Stage>("lookup");
   const [loading, setLoading] = useState(false);

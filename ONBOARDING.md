@@ -82,7 +82,8 @@ All three are toggled from the Features tab in `/_authenticated/admin` — no co
 ### Admin dashboard (`/_authenticated/admin`)
 - **RSVPs tab:** view, filter, sort, edit guests, import CSV, export CSV, copy RSVP links, bulk-delete selected invitations (deleting a household also removes its RSVP row via `ON DELETE CASCADE`).
 - **Photos tab:** approve/reject/delete guest-uploaded photos, bulk actions, captions, keyboard-shortcut lightbox.
-- **Features tab:** toggle `rsvp_open` / `guest_photo_uploads` via an explicit draft → confirm → save flow (toggling doesn't take effect until you click Save and confirm the listed changes).
+- **Features tab:** toggle `rsvp_open` / `guest_photo_uploads` / `show_ushers` via an explicit draft → confirm → save flow (toggling doesn't take effect until you click Save and confirm the listed changes).
+- **Emails tab:** read-only visibility into `email_send_log`/`suppressed_emails`/`email_send_state` (`src/lib/email.functions.ts`) — last 200 send attempts with status pills, a summary strip, a rate-limit-cooldown banner, and a suppressed-addresses list. Added because these tables previously had zero admin-facing read path (service-role-only RLS); a new migration (`20260717120000_admin_email_visibility.sql`) added admin SELECT policies. **While building this, found and fixed a real bug**: `src/lib/email/enqueue.server.ts` (used by every RSVP confirmation, admin notification, and photo-received email) was missing the `idempotency_key` field the email API requires — every app-triggered email had been failing since 2026-07-15 until this was fixed. Check the Emails tab after any suspected delivery issue before assuming it's something else.
 - Activity strip shows recent RSVP and photo metrics.
 
 ### Guest photo uploads
@@ -325,7 +326,7 @@ This is the living sprint plan. Pick up the next uncompleted sprint rather than 
 | `src/lib/email-templates/rsvp-confirmation.tsx`, `admin-notification.tsx` | On-brand transactional emails, styled via `email-templates/tokens.ts`. |
 | `src/routes/portal-ga-2026.tsx` | Admin sign-in page. |
 | `src/routes/_authenticated/route.tsx` | Auth + admin-role route guard for `/admin`. |
-| `src/routes/_authenticated/admin.tsx` | Admin dashboard (RSVPs + Photos + Features tabs). |
+| `src/routes/_authenticated/admin.tsx` | Admin dashboard (RSVPs + Photos + Features + Emails tabs). |
 | `src/routes/rsvp.tsx` | Public RSVP page — reads `rsvp_open` via the feature-flag hook. |
 | `src/routes/rsvp/edit.$token.tsx` | Signed-token RSVP edit page — intentionally not flag-gated. |
 | `src/routes/api/public/wedding[.]ics.ts` | iCalendar download endpoint, RFC 5545 line-folding + escaping. |
@@ -416,7 +417,7 @@ PROJECT ESSENTIALS:
 - Wedding data (schedule, registry, party, hotels, FAQ, story) lives in src/lib/wedding-data.ts. The wedding-party trading cards / magazine covers are mostly still placeholder copy — real headlines/attributes/abilities are outstanding, see Sprint 1.
 - Copy lives in src/i18n/dictionaries.ts (en + es; Spanish needs proofreading).
 - Admin sign-in is at /portal-ga-2026. There is intentionally only ONE admin account. The route guard checks the admin role itself, not just sign-in.
-- Admin dashboard is at /_authenticated/admin (RSVPs / Photos / Features tabs).
+- Admin dashboard is at /_authenticated/admin (RSVPs / Photos / Features / Emails tabs).
 - RSVP is at /rsvp; edit links use signed HMAC tokens at /rsvp/edit/$token (which intentionally bypasses the rsvp_open flag).
 - rsvp_open and guest_photo_uploads are DB-backed feature flags (feature_flags table, src/lib/feature-flags.functions.ts, src/hooks/use-feature-flags.ts) with a draft/confirm/save admin UI — not hardcoded booleans. Every flag-gated server function re-checks its flag server-side too.
 - SEO metadata goes through buildMeta() in src/lib/seo.ts, sourcing the absolute URL from SITE.siteUrl (src/lib/site.ts) — never hardcode a domain.

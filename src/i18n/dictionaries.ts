@@ -152,6 +152,7 @@ export interface Dict {
     rsvpsTab: string;
     photosTab: string;
     featuresTab: string;
+    emailsTab: string;
     totalsAttending: string;
     totalsDeclined: string;
     totalsPending: string;
@@ -423,6 +424,7 @@ const en: Dict = {
     rsvpsTab: "RSVPs",
     photosTab: "Photo queue",
     featuresTab: "Features",
+    emailsTab: "Emails",
     totalsAttending: "Attending",
     totalsDeclined: "Declined",
     totalsPending: "Pending",
@@ -697,6 +699,7 @@ const es: Dict = {
     rsvpsTab: "RSVPs",
     photosTab: "Cola de fotos",
     featuresTab: "Funciones",
+    emailsTab: "Correos",
     totalsAttending: "Asistirán",
     totalsDeclined: "No asisten",
     totalsPending: "Pendientes",

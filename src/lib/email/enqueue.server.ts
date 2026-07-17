@@ -61,6 +61,7 @@ export async function enqueueAppEmail(opts: {
         text,
         purpose: "transactional",
         label: opts.templateName,
+        idempotency_key: opts.idempotencyKey,
         queued_at: new Date().toISOString(),
       },
     });
