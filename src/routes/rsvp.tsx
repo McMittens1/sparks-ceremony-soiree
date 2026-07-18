@@ -124,13 +124,17 @@ function rsvpErrorMessage(e: unknown, t: Dict): string {
   return key ? t.rsvp[key] : t.rsvp.errGeneric;
 }
 
-// Calendar-date difference, not an exact-millisecond one — the deadline is
-// anchored at 23:59:59, so a plain (deadline - now) / day-in-ms diff almost
-// always has a leftover fraction of a day, and rounding that up would show
-// one more day than a guest counting on a calendar would expect.
+// Calendar-date difference in the wedding's own timezone (Central, matching
+// rsvpDeadline's -05:00), not the ambient server/browser one — getFullYear()
+// etc. read local-to-the-runtime fields, and this renders during SSR on a
+// server that runs in UTC, which shifts a 23:59:59-05:00 deadline into the
+// next UTC calendar day and silently adds a phantom day to the count. Using
+// Intl with an explicit timeZone keeps "today" and "the deadline" anchored
+// to the same real-world calendar regardless of where the code executes.
+const centralDateFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" });
 function daysBetweenCalendarDates(from: Date, to: Date): number {
-  const a = new Date(from.getFullYear(), from.getMonth(), from.getDate());
-  const b = new Date(to.getFullYear(), to.getMonth(), to.getDate());
+  const a = new Date(`${centralDateFormatter.format(from)}T00:00:00`);
+  const b = new Date(`${centralDateFormatter.format(to)}T00:00:00`);
   return Math.round((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
 }
 
