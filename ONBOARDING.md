@@ -34,7 +34,7 @@ A single source of truth for continuing this project with any AI assistant (Clau
 **Key architectural decisions:**
 - The public site is a single long scrolling page (`src/routes/index.tsx`) composed of section components under `src/components/site/sections/`.
 - All copy, schedule, registry, wedding party, hotels, and FAQ data live in `src/lib/wedding-data.ts` so the site and MCP tools stay in sync.
-- A centralized **feature-flag system** (`feature_flags` DB table + `src/lib/feature-flags.functions.ts` + `src/hooks/use-feature-flags.ts`) gates guest-facing features that need to be turned on/off without a deploy. Currently gates `rsvp_open` and `guest_photo_uploads`. The admin Features panel uses an explicit **draft → confirm → save** workflow, not instant-toggle — see §5.
+- A centralized **feature-flag system** (`feature_flags` DB table + `src/lib/feature-flags.functions.ts` + `src/hooks/use-feature-flags.ts`) gates guest-facing features that need to be turned on/off without a deploy. Currently gates `rsvp_open`, `guest_photo_uploads`, and `show_ushers`. The admin Features panel uses an explicit **draft → confirm → save** workflow, not instant-toggle — see §5.
 - RSVP lookup is by name or short invitation slug. No guest accounts or passwords. The search endpoint (`lookupGuest`) never returns the real invite code — it hands back a short-lived signed "select" token instead (`src/lib/rsvp-token.server.ts`), so a name search alone can't be used to harvest invite codes. A successful last-4 phone check mints a separate "session" token (2h TTL) that's the only thing that authorizes `submitRsvp`/`updateGuestAddress` — it's issued to the verifying browser, not remembered on the household row, so someone else who obtains the invite code can't ride along on another household's already-verified window.
 - RSVP edit links are HMAC-signed tokens (`RSVP_EDIT_SECRET`) with a 90-day expiry; no login required. **By design, editing an existing RSVP via its signed token works even when `rsvp_open` is off** — the flag gates new submissions, not self-service edits to an RSVP a guest already made. See `HANDOFF.md` for the reasoning.
 - Admin access is behind two intentionally obscure URLs: `/portal-ga-2026` (sign-in) and `/portal-ga-2026/dashboard` (the actual dashboard, gated by the `_authenticated` layout route's `beforeLoad` guard). There is a single admin account; the first user to sign in via that page is auto-promoted to admin. The guard checks the `admin` role itself (via a shared `hasAdminRole()` helper), not just that a user is signed in. **The dashboard used to live at the guessable `/admin`** — TanStack Router treats the `_authenticated` prefix as invisible layout scaffolding, so that was always the real URL, and visiting it while signed out redirected straight to `/portal-ga-2026`, leaking the "hidden" sign-in page to anyone who tried `/admin`. Fixed 2026-07-17 by nesting the dashboard under the obscure path so `/admin` now matches nothing (404). `robots.txt` also used to publicly list `Disallow: /portal-ga-2026` — a public file announcing the secret path defeats the point; removed. The correct mechanism is the page's own `noindex,nofollow` meta tag, which was already present.
@@ -69,7 +69,7 @@ All three are toggled from the Features tab in `/portal-ga-2026/dashboard` — n
 - **Personalization content is almost entirely outstanding.** Only the Best Man has a real field set (`cardRarity: "Legendary"`). Every other party member — all 6 bridesmaids, the Maid of Honor, all 8 groomsmen — is rendering on component-level placeholder fallback text for `cardAttributes`/`cardAbility`/`coverHeadline`/`coverSubline`. This is real, visible-to-guests unfinished content, not a code gap.
 - Photo spec for the magazine covers (once the user provides photos): 232×388px cover ratio, background-removed transparent PNG, waist-up to 3/4-length framing, soft even lighting. Full spec detail was given to the user in-conversation; not yet re-stated in this file since it's a one-time creative brief, not an evolving architectural fact.
 - Down the aisle first: Flower Girl (Ivy Smith), Ring Bearer (Alan Meza).
-- Ushers (9) exist in `wedding-data.ts` but are intentionally hard-disabled (`{false && ...}`) in `WeddingParty.tsx` — data preserved, rendering off by design.
+- Ushers (9) exist in `wedding-data.ts`; rendering is gated by the `show_ushers` feature flag in `WeddingParty.tsx` (`const { enabled: showUshers } = useFeatureFlag("show_ushers")`), currently **off** (see §2). This used to be a hardcoded `{false && ...}` conditional — replaced by the flag on 2026-07-16 (`supabase/migrations/20260716020000_show_ushers_flag.sql`) so the couple can turn it on themselves without a code change.
 
 ### RSVP flow
 - `/rsvp` lets guests look up their invitation by name or slug and submit a response.
@@ -150,18 +150,13 @@ This is the living sprint plan. Pick up the next uncompleted sprint rather than 
 
 ---
 
-### Sprint 2 — RSVP Launch Readiness — ⚠️ Code complete, not yet flipped on
+### Sprint 2 — RSVP Launch Readiness — ✅ Live
 
-**Status:** The RSVP flow is fully built, feature-flag-gated, and verified working end-to-end (lookup, submit, confirmation email, token-based edit, admin dashboard). It is currently **off** in production (`rsvp_open = false`) because the real guest list has not been imported.
+**Status:** The RSVP flow is fully built, feature-flag-gated, and verified working end-to-end (lookup, submit, confirmation email, token-based edit, admin dashboard). The real guest list (52 households) was imported and `rsvp_open` was turned on 2026-07-17 — RSVP is live to real guests. See §2 for the current live snapshot (always re-check before assuming).
 
-**Remaining scope:**
-- Import the real guest list via the admin CSV import in `/portal-ga-2026/dashboard` (dedup is by email/phone, verified correct).
-- Turn `rsvp_open` on via the admin Features tab once the list is loaded and ready.
-- Do one real end-to-end pass with a live guest lookup once the flag is on.
+**Remaining scope:** None — this sprint is done. If `rsvp_open` is ever off again, that's a deliberate admin choice, not unfinished work.
 
 **Key files:** `src/routes/rsvp.tsx`, `src/routes/rsvp/edit.$token.tsx`, `src/lib/rsvp.functions.ts`, `src/lib/rsvp-token.server.ts`, `src/lib/email-templates/rsvp-confirmation.tsx`, `src/routes/_authenticated/portal-ga-2026/dashboard.tsx`
-
-**Blockers:** Real guest list must be imported. `RSVP_EDIT_SECRET` env var must be set in production (unverified from this sandbox — confirm in Lovable Cloud env settings).
 
 ---
 
@@ -175,15 +170,14 @@ This is the living sprint plan. Pick up the next uncompleted sprint rather than 
 
 ---
 
-### Sprint 4 — Performance & Analytics — Not started
+### Sprint 4 — Performance & Analytics — ⚠️ Partially started
 
 **Goal:** Make the site fast and add lightweight, privacy-friendly event tracking.
 
 **Scope:**
-- Audit images (engagement photos, venue photos, party portraits) for lazy loading, sizing, and modern formats.
-- Add `loading="lazy"` and responsive `srcset` where appropriate; keep the hero preloaded.
-- Run a bundle-size check (`bun run build` and inspect `.output/` or use `vite-bundle-visualizer`) and remove unused dependencies if any.
-- Add minimal analytics (server-side counters, a small custom event logger, or a cookie-banner-free third party). Track at minimum: RSVP submit, photo upload start/complete, calendar click, registry click.
+- ~~Audit images... for lazy loading~~ **Done** — `loading="lazy"` is applied in `StoryTimeline.tsx`, `DaySection.tsx`, `TravelSection.tsx`, `PhotosSection.tsx`, and the admin dashboard's photo grid; the hero portrait correctly stays `loading="eager"`/`fetchPriority="high"`. Responsive `srcset` and modern-format (`.webp`/`.avif`) conversion are still outstanding.
+- Run a bundle-size check (`bun run build` and inspect `.output/` or use `vite-bundle-visualizer`) and remove unused dependencies if any. Not started.
+- Add minimal analytics (server-side counters, a small custom event logger, or a cookie-banner-free third party). Track at minimum: RSVP submit, photo upload start/complete, calendar click, registry click. Not started — no analytics/tracking code exists anywhere in the codebase yet.
 
 **Acceptance criteria:** No layout shift from images; bundle size reasonable; key user actions observable in the admin dashboard or an analytics view.
 
@@ -390,7 +384,7 @@ Before writing or changing code:
 2. Read `AGENTS.md` for Lovable-specific git guardrails.
 3. Read `src/lib/site.ts` and `src/lib/wedding-data.ts` to understand the data model.
 4. Read `src/styles.css` to internalize the color/type tokens.
-5. Check the **live** feature-flag values before assuming `rsvp_open`/`guest_photo_uploads` are on or off — query the `feature_flags` table or check the admin Features tab; this file's §2 is a snapshot, not a live source.
+5. Check the **live** feature-flag values before assuming `rsvp_open`/`guest_photo_uploads`/`show_ushers` are on or off — query the `feature_flags` table or check the admin Features tab; this file's §2 is a snapshot, not a live source.
 6. Try `bun install` / `bun run build` to verify the project compiles — if it fails on missing packages, see §8's sandbox note before concluding the codebase is broken.
 7. If you touch RSVP, admin, or email logic, test the affected flow in the browser or via the existing server functions.
 
@@ -410,7 +404,7 @@ BEFORE you make any code changes, do the following:
 2. Read AGENTS.md for git guardrails.
 3. Read src/lib/site.ts and src/lib/wedding-data.ts.
 4. Read src/styles.css to understand the color/type tokens.
-5. Check the LIVE feature_flags table (or admin Features tab) for rsvp_open / guest_photo_uploads — don't assume from this prompt.
+5. Check the LIVE feature_flags table (or admin Features tab) for rsvp_open / guest_photo_uploads / show_ushers — don't assume from this prompt.
 6. Read §3 of ONBOARDING.md (Remaining work / roadmap) and pick up the next uncompleted sprint rather than inventing new work.
 
 PROJECT ESSENTIALS:
@@ -421,7 +415,7 @@ PROJECT ESSENTIALS:
 - Admin sign-in is at /portal-ga-2026. There is intentionally only ONE admin account. The route guard checks the admin role itself, not just sign-in.
 - Admin dashboard is at /portal-ga-2026/dashboard (RSVPs / Photos / Features / Emails tabs).
 - RSVP is at /rsvp; edit links use signed HMAC tokens at /rsvp/edit/$token (which intentionally bypasses the rsvp_open flag).
-- rsvp_open and guest_photo_uploads are DB-backed feature flags (feature_flags table, src/lib/feature-flags.functions.ts, src/hooks/use-feature-flags.ts) with a draft/confirm/save admin UI — not hardcoded booleans. Every flag-gated server function re-checks its flag server-side too.
+- rsvp_open, guest_photo_uploads, and show_ushers are DB-backed feature flags (feature_flags table, src/lib/feature-flags.functions.ts, src/hooks/use-feature-flags.ts) with a draft/confirm/save admin UI — not hardcoded booleans. Every flag-gated server function re-checks its flag server-side too.
 - SEO metadata goes through buildMeta() in src/lib/seo.ts, sourcing the absolute URL from SITE.siteUrl (src/lib/site.ts) — never hardcode a domain.
 - All app-internal server logic uses createServerFn from @tanstack/react-start.
 - Public HTTP endpoints live under src/routes/api/public/.
