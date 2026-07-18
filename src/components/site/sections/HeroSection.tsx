@@ -124,8 +124,10 @@ export function HeroSection() {
                 objectFit: "contain",
                 display: "block",
                 mixBlendMode: "multiply",
-                WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 85%, transparent 100%)",
-                maskImage: "linear-gradient(to bottom, black 0%, black 85%, transparent 100%)",
+                WebkitMaskImage:
+                  "linear-gradient(to bottom, black 0%, black 55%, rgba(0,0,0,0.7) 72%, rgba(0,0,0,0.35) 86%, transparent 100%)",
+                maskImage:
+                  "linear-gradient(to bottom, black 0%, black 55%, rgba(0,0,0,0.7) 72%, rgba(0,0,0,0.35) 86%, transparent 100%)",
               }}
             />
           </div>
@@ -225,7 +227,7 @@ export function HeroSection() {
         >
           <img
             src={heroPortrait.url}
-            alt="Pencil illustration of Geovanni Moreno and Addison Hillman"
+            alt="Geovanni Moreno and Addison Hillman"
             loading="eager"
             fetchPriority="high"
             style={{
@@ -235,8 +237,10 @@ export function HeroSection() {
               objectFit: "contain",
               display: "block",
               mixBlendMode: "multiply",
-              WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 85%, transparent 100%)",
-              maskImage: "linear-gradient(to bottom, black 0%, black 85%, transparent 100%)",
+              WebkitMaskImage:
+                "linear-gradient(to bottom, black 0%, black 55%, rgba(0,0,0,0.7) 72%, rgba(0,0,0,0.35) 86%, transparent 100%)",
+              maskImage:
+                "linear-gradient(to bottom, black 0%, black 55%, rgba(0,0,0,0.7) 72%, rgba(0,0,0,0.35) 86%, transparent 100%)",
             }}
           />
         </div>
