@@ -1,7 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { SITE } from "@/lib/site";
-import { PHOTO_SIGNED_URL_TTL_SECONDS, PHOTO_CAPTION_MAX_LENGTH } from "@/lib/photo-config";
+import {
+  PHOTO_SIGNED_URL_TTL_SECONDS,
+  PHOTO_CAPTION_MAX_LENGTH,
+  PHOTO_MAX_FILES,
+  PHOTO_MAX_FILE_BYTES,
+  PHOTO_MAX_DATA_URL_LENGTH,
+} from "@/lib/photo-config";
 
 const uploadSchema = z.object({
   uploaderName: z.string().trim().min(1).max(80),
@@ -13,11 +19,11 @@ const uploadSchema = z.object({
       z.object({
         filename: z.string().min(1).max(200),
         contentType: z.string().regex(/^image\/(jpeg|png|webp|jpg)$/i),
-        dataUrl: z.string().startsWith("data:image/").max(15_000_000), // ~10 MB base64
+        dataUrl: z.string().startsWith("data:image/").max(PHOTO_MAX_DATA_URL_LENGTH),
       }),
     )
     .min(1)
-    .max(5),
+    .max(PHOTO_MAX_FILES),
 });
 
 export const uploadGuestPhotos = createServerFn({ method: "POST" })
@@ -33,7 +39,7 @@ export const uploadGuestPhotos = createServerFn({ method: "POST" })
     for (const f of data.files) {
       const base64 = f.dataUrl.split(",")[1] ?? "";
       const bytes = Buffer.from(base64, "base64");
-      if (bytes.byteLength > 10 * 1024 * 1024) continue;
+      if (bytes.byteLength > PHOTO_MAX_FILE_BYTES) continue;
       const ext = (f.contentType.split("/")[1] ?? "jpg").toLowerCase();
       const path = `${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}.${ext}`;
       const { error: upErr } = await supabaseAdmin.storage
@@ -95,7 +101,7 @@ export const uploadGuestPhotos = createServerFn({ method: "POST" })
                   headline: `${uploaded} new photo${uploaded > 1 ? "s" : ""} from ${data.uploaderName}`,
                   summary: `Pending moderation in the admin dashboard.`,
                   details,
-                  adminUrl: `${SITE.siteUrl}/portal-ga-2026/dashboard`,
+                  adminUrl: `${SITE.siteUrl}${SITE.adminUrl}`,
                 },
               }),
             ),

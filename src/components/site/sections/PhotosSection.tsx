@@ -5,9 +5,10 @@ import { SectionHeader } from "@/components/site/SectionHeader";
 import { Eyebrow } from "@/components/site/typography";
 import { useFeatureFlag } from "@/hooks/use-feature-flags";
 import { uploadGuestPhotos, listApprovedPhotos, type GalleryPhoto } from "@/lib/photos.functions";
+import { PHOTO_MAX_FILES, PHOTO_MAX_FILE_BYTES } from "@/lib/photo-config";
 
-const MAX_FILES = 5;
-const MAX_FILE_BYTES = 10 * 1024 * 1024;
+const MAX_FILE_MB = PHOTO_MAX_FILE_BYTES / (1024 * 1024);
+const UPLOAD_HINT = `Up to ${PHOTO_MAX_FILES} images, JPG or PNG, ${MAX_FILE_MB} MB each. Nothing goes public until we approve it.`;
 
 export function PhotosSection() {
   const { enabled: uploadsOpen } = useFeatureFlag("guest_photo_uploads");
@@ -66,7 +67,7 @@ function UploadFormComingSoon() {
         <span id="photo-share-heading">Share a photo</span>
       </Eyebrow>
       <p className="font-sans text-ink-soft" style={{ fontSize: 14, lineHeight: 1.7, margin: "0 0 26px" }}>
-        Up to 5 images, JPG or PNG, 10 MB each. Nothing goes public until we approve it.
+        {UPLOAD_HINT}
       </p>
       <div className="grid rs-stack-2" style={{ marginBottom: 20 }}>
         <div>
@@ -145,15 +146,15 @@ function UploadFormLive() {
 
   function onFilesChange(e: React.ChangeEvent<HTMLInputElement>) {
     const picked = Array.from(e.target.files ?? []);
-    if (picked.length > MAX_FILES) {
-      setError(`Choose up to ${MAX_FILES} photos.`);
+    if (picked.length > PHOTO_MAX_FILES) {
+      setError(`Choose up to ${PHOTO_MAX_FILES} photos.`);
       setFiles([]);
       e.target.value = "";
       return;
     }
-    const oversize = picked.find((f) => f.size > MAX_FILE_BYTES);
+    const oversize = picked.find((f) => f.size > PHOTO_MAX_FILE_BYTES);
     if (oversize) {
-      setError(`${oversize.name} is over 10 MB.`);
+      setError(`${oversize.name} is over ${MAX_FILE_MB} MB.`);
       setFiles([]);
       e.target.value = "";
       return;
@@ -222,7 +223,7 @@ function UploadFormLive() {
           Your photos are in — we&rsquo;ll take a look before they go live.
         </p>
         {uploadSummary && uploadSummary.uploaded < uploadSummary.total && (
-          <p className="font-sans" style={{ fontSize: 12, color: "#7a2f26", marginTop: 10 }}>
+          <p className="font-sans text-destructive" style={{ fontSize: 12, marginTop: 10 }}>
             {uploadSummary.uploaded} of {uploadSummary.total} photos made it through — the rest may
             have failed. Feel free to try those again.
           </p>
@@ -256,7 +257,7 @@ function UploadFormLive() {
         <span id="photo-share-heading">Share a photo</span>
       </Eyebrow>
       <p className="font-sans text-ink-soft" style={{ fontSize: 14, lineHeight: 1.7, margin: "0 0 26px" }}>
-        Up to 5 images, JPG or PNG, 10 MB each. Nothing goes public until we approve it.
+        {UPLOAD_HINT}
       </p>
       <div className="grid rs-stack-2" style={{ marginBottom: 20 }}>
         <div>
@@ -340,7 +341,7 @@ function UploadFormLive() {
       </label>
 
       {error && (
-        <p className="font-sans" style={{ fontSize: 12, color: "#7a2f26", marginBottom: 14 }}>
+        <p className="font-sans text-destructive" style={{ fontSize: 12, marginBottom: 14 }}>
           {error}
         </p>
       )}

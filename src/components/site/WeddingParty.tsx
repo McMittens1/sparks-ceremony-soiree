@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { PARTY, type PartyMember } from "@/lib/wedding-data";
-import { GroomsmanCard } from "@/components/site/GroomsmanCard";
+import { GroomsmanCard, BASE_WIDTH } from "@/components/site/GroomsmanCard";
 import { MagazineCover } from "@/components/site/MagazineCover";
 import { useFeatureFlag } from "@/hooks/use-feature-flags";
+
+const CARD_GRID_COLUMNS = `repeat(auto-fit, minmax(${BASE_WIDTH}px, ${BASE_WIDTH}px))`;
 
 export function WeddingParty() {
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -48,7 +50,7 @@ export function WeddingParty() {
       <div
         className="grid"
         style={{
-          gridTemplateColumns: "repeat(auto-fit, minmax(232px, 232px))",
+          gridTemplateColumns: CARD_GRID_COLUMNS,
           justifyContent: "center",
           gap: 24,
         }}
@@ -105,7 +107,7 @@ export function WeddingParty() {
           <div
             className="grid"
             style={{
-              gridTemplateColumns: "repeat(auto-fit, minmax(232px, 232px))",
+              gridTemplateColumns: CARD_GRID_COLUMNS,
               justifyContent: "center",
               gap: 24,
             }}

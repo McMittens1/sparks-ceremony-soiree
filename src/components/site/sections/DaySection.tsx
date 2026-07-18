@@ -5,6 +5,15 @@ import { SITE } from "@/lib/site";
 
 const SITE_HOST = new URL(SITE.siteUrl).hostname;
 
+// Google Calendar wants UTC "YYYYMMDDTHHMMSSZ" — Date.toISOString() is
+// always UTC regardless of the ambient runtime timezone, so this is safe
+// to derive directly from SITE.eventDate/eventEndDate (unlike local
+// getters, which read the ambient timezone rather than the ISO string's
+// own offset).
+const toGCalUtc = (iso: string) =>
+  new Date(iso).toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+const GCAL_DATES = `${toGCalUtc(SITE.eventDate)}/${toGCalUtc(SITE.eventEndDate)}`;
+
 export function DaySection() {
   return (
     <section id="day" className="border-t border-hairline rs-section-bleed bg-lavender-deep">
@@ -103,9 +112,9 @@ export function DaySection() {
               </a>
               <a
                 href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
-                  "Geovanni & Addison — Wedding",
-                )}&dates=20261010T220000Z/20261011T043000Z&location=${encodeURIComponent(
-                  "Sparks' Barn, 13817 108th St, Louisville, NE 68037",
+                  `${SITE.couple} — Wedding`,
+                )}&dates=${GCAL_DATES}&location=${encodeURIComponent(
+                  `${SITE.venue}, ${SITE.address}`,
                 )}&details=${encodeURIComponent(`The wedding of Geo & Addi. See ${SITE_HOST}.`)}`}
                 target="_blank"
                 rel="noopener"

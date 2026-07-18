@@ -2,8 +2,8 @@ import * as React from "react";
 import { render } from "@react-email/render";
 import { TEMPLATES } from "@/lib/email-templates/registry";
 import { getOrCreateUnsubscribeToken } from "@/lib/email/unsubscribe-token.server";
+import { SENDER_DOMAIN } from "@/lib/email/sender";
 
-const SENDER_DOMAIN = "notify.morenowedding2026.com";
 const FROM = `Geovanni & Addison <noreply@${SENDER_DOMAIN}>`;
 
 /**

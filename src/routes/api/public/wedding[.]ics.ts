@@ -1,14 +1,30 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SITE } from "@/lib/site";
 
-// Fixed event details — Sparks' Barn, October 10, 2026, 5:00–11:30 PM CT.
-const DTSTART = "20261010T170000";
-const DTEND = "20261010T233000";
 const TZID = "America/Chicago";
+
+// SITE.eventDate/eventEndDate already encode local wall-clock time via
+// their explicit -05:00 offset (correct for this date's CDT), so a plain
+// substring gives the right ICS local-time format without going through
+// Date-object local getters — those read the AMBIENT runtime timezone,
+// not the string's own offset, which is exactly the bug this pattern
+// avoids (see the RSVP countdown fix in rsvp.tsx for the same issue).
+const toIcsLocal = (iso: string) => iso.slice(0, 19).replace(/[-:]/g, "");
+const DTSTART = toIcsLocal(SITE.eventDate);
+const DTEND = toIcsLocal(SITE.eventEndDate);
+
+// Intl with an explicit timeZone is safe to derive prose from — unlike the
+// local getters above, it doesn't depend on the ambient runtime timezone.
+const ceremonyTimePretty = new Intl.DateTimeFormat("en-US", {
+  timeZone: TZID,
+  hour: "numeric",
+  minute: "2-digit",
+}).format(new Date(SITE.eventDate));
+
 const SUMMARY = `${SITE.couple} — Wedding`;
 const LOCATION = `${SITE.venue}, ${SITE.address}`;
 const SITE_HOST = new URL(SITE.siteUrl).hostname;
-const DESCRIPTION = `The wedding of ${SITE.partnerA} and ${SITE.partnerB}. Ceremony at 5:00 PM. See ${SITE_HOST} for the full schedule.`;
+const DESCRIPTION = `The wedding of ${SITE.partnerA} and ${SITE.partnerB}. Ceremony at ${ceremonyTimePretty}. See ${SITE_HOST} for the full schedule.`;
 const URL_ = SITE.siteUrl;
 const UID = `wedding-2026-10-10@${SITE_HOST}`;
 

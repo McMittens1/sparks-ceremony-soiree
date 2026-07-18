@@ -1,7 +1,10 @@
 import { useState } from "react";
 
-const BASE_WIDTH = 232;
-const BASE_HEIGHT = 388;
+// Exported so MagazineCover.tsx (which must match these exactly, see its
+// own comment) and WeddingParty.tsx's grid layout derive from one source
+// instead of re-typing 232/388 independently.
+export const BASE_WIDTH = 232;
+export const BASE_HEIGHT = 388;
 
 const DEFAULT_ATTRIBUTES: { label: string; value: string }[] = [
   { label: "Specialty", value: "Add this groomsman's specialty here." },

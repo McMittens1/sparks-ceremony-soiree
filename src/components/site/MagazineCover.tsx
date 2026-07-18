@@ -1,7 +1,6 @@
-// Matches GroomsmanCard's BASE_WIDTH/BASE_HEIGHT exactly so the two
-// "collectible" sections read as an equal-sized pair.
-const BASE_WIDTH = 232;
-const BASE_HEIGHT = 388;
+// Imported from GroomsmanCard so the two "collectible" sections read as an
+// equal-sized pair and can't silently drift apart.
+import { BASE_WIDTH, BASE_HEIGHT } from "@/components/site/GroomsmanCard";
 
 const MASTHEAD = "SPARKS.";
 const VENUE_DATELINE = "Louisville, Nebraska";

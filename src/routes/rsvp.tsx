@@ -56,6 +56,7 @@ const TAN = "var(--color-tan)";
 const TAN_DEEP = "var(--color-tan-deep)";
 const BODY = "var(--color-ink-body)";
 const SOFT = "var(--color-ink-soft)";
+const DANGER = "var(--color-destructive)";
 
 // Styled input (Cormorant italic on a hairline underline) matching the prototype.
 const inputStyle: React.CSSProperties = {
@@ -659,7 +660,7 @@ function RsvpPage() {
 
                   <div role="alert" aria-live="polite">
                     {err && (
-                      <div className="mt-6 font-sans" style={{ fontSize: 14, color: "#7a2f26" }}>
+                      <div className="mt-6 font-sans" style={{ fontSize: 14, color: DANGER }}>
                         <p>{err}</p>
                         <p className="mt-2 italic font-serif" style={{ color: SOFT, fontSize: 13 }}>
                           {SITE.rsvpFallbackContact}
@@ -723,7 +724,7 @@ function RsvpPage() {
 
                   <div role="alert" aria-live="polite">
                     {verifyErr && (
-                      <div className="mt-6 font-sans" style={{ fontSize: 14, color: "#7a2f26" }}>
+                      <div className="mt-6 font-sans" style={{ fontSize: 14, color: DANGER }}>
                         <p>{verifyErr}</p>
                         <p className="mt-2 italic font-serif" style={{ color: SOFT, fontSize: 13 }}>
                           {SITE.rsvpFallbackContact}
@@ -987,7 +988,7 @@ function RsvpPage() {
                               !looksLikeUsZip(address.postal_code ?? "") && (
                                 <p
                                   className="font-sans"
-                                  style={{ fontSize: 11, color: "#7a2f26", marginTop: 6 }}
+                                  style={{ fontSize: 11, color: DANGER, marginTop: 6 }}
                                 >
                                   Doesn&rsquo;t look like a US ZIP (12345 or 12345-6789).
                                 </p>
@@ -1004,7 +1005,7 @@ function RsvpPage() {
                           />
                         </div>
                         {addressErr && (
-                          <p className="mt-3 font-sans" style={{ fontSize: 13, color: "#7a2f26" }}>
+                          <p className="mt-3 font-sans" style={{ fontSize: 13, color: DANGER }}>
                             {addressErr}
                           </p>
                         )}
@@ -1130,7 +1131,7 @@ function RsvpPage() {
 
                     <div role="alert" aria-live="polite">
                       {err && (
-                        <p className="font-sans" style={{ fontSize: 14, color: "#7a2f26" }}>
+                        <p className="font-sans" style={{ fontSize: 14, color: DANGER }}>
                           {err}
                         </p>
                       )}

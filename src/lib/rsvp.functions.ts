@@ -662,7 +662,7 @@ async function writeRsvp(
               headline: `New RSVP: ${g.primary_name} — ${statusLabel}`,
               summary: `${g.primary_name} just submitted an RSVP.`,
               details,
-              adminUrl: `${siteOrigin}/portal-ga-2026/dashboard`,
+              adminUrl: `${siteOrigin}${SITE.adminUrl}`,
             },
           }),
         ),

@@ -34,6 +34,7 @@ const LAV_DEEP = "var(--color-lavender-deep)";
 const TAN = "var(--color-tan)";
 const TAN_DEEP = "var(--color-tan-deep)";
 const SOFT = "var(--color-ink-soft)";
+const DANGER = "var(--color-destructive)";
 
 const inputStyle: React.CSSProperties = {
   fontFamily: "Cormorant, serif",
@@ -538,7 +539,7 @@ function EditRsvpPage() {
               </section>
 
               {err && (
-                <p className="font-sans" style={{ fontSize: 14, color: "#7a2f26" }}>
+                <p className="font-sans" style={{ fontSize: 14, color: DANGER }}>
                   {err}
                 </p>
               )}

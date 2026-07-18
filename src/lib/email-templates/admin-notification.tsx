@@ -13,6 +13,7 @@ import {
 import type { TemplateEntry } from "./registry";
 import { EMAIL_COLORS } from "./tokens";
 import { EmailMasthead } from "./masthead";
+import { SITE } from "@/lib/site";
 
 interface AdminNotificationProps {
   kind?: "rsvp" | "photo";
@@ -27,7 +28,7 @@ const AdminNotificationEmail = ({
   headline = "New activity",
   summary = "",
   details = [],
-  adminUrl = "https://morenowedding2026.com/portal-ga-2026/dashboard",
+  adminUrl = `${SITE.siteUrl}${SITE.adminUrl}`,
 }: AdminNotificationProps) => (
   <Html lang="en" dir="ltr">
     <Head />
@@ -71,7 +72,7 @@ export const template = {
       { label: "Party size", value: "2" },
       { label: "Song request", value: "Vienna — Billy Joel" },
     ],
-    adminUrl: "https://morenowedding2026.com/portal-ga-2026/dashboard",
+    adminUrl: `${SITE.siteUrl}${SITE.adminUrl}`,
   },
 } satisfies TemplateEntry;
 

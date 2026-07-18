@@ -8,7 +8,7 @@ const CLIMATOLOGY = { highF: 71, lowF: 45, precipPct: 22, sunset: "6:53 PM", isF
 
 type WeatherPayload = typeof CLIMATOLOGY;
 
-const EVENT_DATE_ISO = "2026-10-10";
+const EVENT_DATE_ISO = SITE.eventDate.slice(0, 10);
 // Approximate coordinates for Louisville, NE (the venue's town) — NWS forecast
 // grid cells are ~2.5km, so town-center precision is plenty for a high/low/
 // rain-chance summary.
@@ -76,9 +76,7 @@ export const Route = createFileRoute("/api/public/weather")({
   server: {
     handlers: {
       GET: async () => {
-        const daysUntil =
-          (new Date(`${EVENT_DATE_ISO}T17:00:00-05:00`).getTime() - Date.now()) /
-          (1000 * 60 * 60 * 24);
+        const daysUntil = (new Date(SITE.eventDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
         let body: WeatherPayload = CLIMATOLOGY;
         if (daysUntil >= 0 && daysUntil <= NWS_WINDOW_DAYS) {
           body = (await fetchNwsForecast()) ?? CLIMATOLOGY;

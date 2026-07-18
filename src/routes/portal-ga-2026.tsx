@@ -15,7 +15,7 @@ export const Route = createFileRoute("/portal-ga-2026")({
     buildMeta({
       title: "Admin sign-in",
       description: "Private sign-in page for wedding site administrators.",
-      url: `${SITE.siteUrl}/portal-ga-2026`,
+      url: `${SITE.siteUrl}${SITE.adminSignInUrl}`,
       robots: "noindex,nofollow",
     }),
   component: AuthPage,
@@ -36,7 +36,7 @@ function AuthPage() {
     supabase.auth.getUser().then(({ data }) => {
       if (!active) return;
       if (data.user) {
-        nav({ to: "/portal-ga-2026/dashboard", replace: true });
+        nav({ to: SITE.adminUrl, replace: true });
       } else {
         setChecking(false);
       }
@@ -47,7 +47,7 @@ function AuthPage() {
   async function goAdmin() {
     try {
       await claim();
-      nav({ to: "/portal-ga-2026/dashboard" });
+      nav({ to: SITE.adminUrl });
     } catch (e) {
       setErr(e instanceof Error ? e.message : t.rsvp.errGeneric);
     }

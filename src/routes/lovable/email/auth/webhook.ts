@@ -15,6 +15,7 @@ import { RecoveryEmail } from "@/lib/email-templates/recovery";
 import { EmailChangeEmail } from "@/lib/email-templates/email-change";
 import { ReauthenticationEmail } from "@/lib/email-templates/reauthentication";
 import { SITE } from "@/lib/site";
+import { SENDER_DOMAIN } from "@/lib/email/sender";
 
 const EMAIL_SUBJECTS: Record<string, string> = {
   signup: "Confirm your email",
@@ -40,12 +41,6 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 
 // Configuration
 const SITE_NAME = SITE.couple;
-// SENDER_DOMAIN/FROM_DOMAIN are the verified sender subdomain FQDN — this
-// MUST match the subdomain delegated to Lovable's nameservers, so it's kept
-// as its own value rather than derived from SITE.siteUrl (which is the
-// root domain, a different string).
-const SENDER_DOMAIN = "notify.morenowedding2026.com";
-const FROM_DOMAIN = "notify.morenowedding2026.com";
 
 function redactEmail(email: string | null | undefined): string {
   if (!email) return "***";
@@ -176,7 +171,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
             run_id,
             message_id: messageId,
             to: hookData.email,
-            from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+            from: `${SITE_NAME} <noreply@${SENDER_DOMAIN}>`,
             sender_domain: SENDER_DOMAIN,
             subject: EMAIL_SUBJECTS[emailType] || "Notification",
             html,
