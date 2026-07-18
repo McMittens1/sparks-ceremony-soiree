@@ -24,20 +24,13 @@ function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="font-serif italic text-6xl" style={{ color: "#2A2520" }}>
-          404
-        </h1>
+        <h1 className="font-serif italic text-6xl text-ink">404</h1>
         <p className="mt-4 text-sm text-muted-foreground">This page isn't part of our story.</p>
         <div className="mt-6">
           <Link
             to="/"
-            className="inline-flex items-center justify-center border px-5 py-2 text-sm uppercase"
-            style={{
-              borderColor: "#2A2520",
-              color: "#2A2520",
-              letterSpacing: "0.2em",
-              fontSize: 11,
-            }}
+            className="inline-flex items-center justify-center border border-ink text-ink px-5 py-2 text-sm uppercase"
+            style={{ letterSpacing: "0.2em", fontSize: 11 }}
           >
             Go home
           </Link>
@@ -64,26 +57,15 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
               router.invalidate();
               reset();
             }}
-            className="border px-5 py-2 text-sm uppercase bg-ink text-ivory"
-            style={{
-              borderColor: "#2A2520",
-              background: "#2A2520",
-              color: "#F8F4EC",
-              letterSpacing: "0.2em",
-              fontSize: 11,
-            }}
+            className="border border-ink px-5 py-2 text-sm uppercase bg-ink text-ivory"
+            style={{ letterSpacing: "0.2em", fontSize: 11 }}
           >
             Try again
           </button>
           <a
             href="/"
-            className="border px-5 py-2 text-sm uppercase"
-            style={{
-              borderColor: "#2A2520",
-              color: "#2A2520",
-              letterSpacing: "0.2em",
-              fontSize: 11,
-            }}
+            className="border border-ink text-ink px-5 py-2 text-sm uppercase"
+            style={{ letterSpacing: "0.2em", fontSize: 11 }}
           >
             Go home
           </a>

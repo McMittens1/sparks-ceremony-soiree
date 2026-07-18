@@ -78,7 +78,7 @@ function UnsubscribePage() {
         style={{
           width: 480,
           maxWidth: "100%",
-          border: "1px solid var(--color-hairline, #E5DFD0)",
+          border: "1px solid var(--color-hairline, #E1D6C3)",
           background: "#FFFFFF",
           padding: "48px 44px",
           textAlign: "center",
@@ -102,7 +102,7 @@ function UnsubscribePage() {
         >
           {title(state)}
         </h1>
-        <p style={{ fontSize: 15, color: "#4A423A", lineHeight: 1.7, margin: "0 0 26px" }}>
+        <p style={{ fontSize: 15, color: "#4A4238", lineHeight: 1.7, margin: "0 0 26px" }}>
           {body(state)}
         </p>
         {state.kind === "ready" && (

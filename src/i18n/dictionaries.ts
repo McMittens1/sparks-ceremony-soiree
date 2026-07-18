@@ -22,20 +22,9 @@ export interface Dict {
     back: string;
     close: string;
   };
-  home: {
-    kicker: string;
-    title: string;
-    dateLine: string;
-    intro: string;
-    countdownLabel: string;
-    days: string;
-    hours: string;
-    minutes: string;
-    seconds: string;
-    rsvpCta: string;
-    detailsCta: string;
-  };
-  story: { title: string; lead: string; timeline: { year: string; body: string }[] };
+  // Consumed directly by the MCP tools (src/lib/mcp/tools/dress-code.ts,
+  // travel.ts) exposed to external AI assistants — not dead despite not
+  // being read by any site component.
   details: {
     title: string;
     lead: string;
@@ -46,7 +35,6 @@ export interface Dict {
     venueTitle: string;
     venueBody: string;
   };
-  party: { title: string; lead: string };
   travel: {
     title: string;
     lead: string;
@@ -66,22 +54,6 @@ export interface Dict {
     weatherSunset: string;
     weatherAdvice: string;
   };
-  photos: {
-    title: string;
-    lead: string;
-    empty: string;
-    uploadTitle: string;
-    uploadHint: string;
-    uploaderName: string;
-    uploaderEmail: string;
-    caption: string;
-    files: string;
-    uploadCta: string;
-    uploading: string;
-    uploadDone: string;
-  };
-  registry: { title: string; lead: string };
-  faq: { title: string; lead: string; items: { q: string; a: string }[] };
   rsvp: {
     title: string;
     deadlineLine: string;
@@ -205,30 +177,6 @@ const en: Dict = {
     back: "Back",
     close: "Close",
   },
-  home: {
-    kicker: "The Wedding of",
-    title: "The Big Day",
-    dateLine: "October 10, 2026",
-    intro:
-      "Welcome to our wedding website — everything you need for the celebration lives here: the schedule, travel details, our registry, and how to RSVP.",
-    countdownLabel: "Counting down",
-    days: "days",
-    hours: "hours",
-    minutes: "minutes",
-    seconds: "seconds",
-    rsvpCta: "RSVP now",
-    detailsCta: "See the details",
-  },
-  story: {
-    title: "Our Story",
-    lead: "How we got from a first hello to forever.",
-    timeline: [
-      { year: "2019", body: "We met." },
-      { year: "2021", body: "Made it official." },
-      { year: "2024", body: "The yes." },
-      { year: "2026", body: "Forever." },
-    ],
-  },
   details: {
     title: "The Day",
     lead: "Everything happens at Sparks' Barn — ceremony, dinner, dancing.",
@@ -248,7 +196,6 @@ const en: Dict = {
     venueBody:
       "Sparks' Barn is an open-air barn on farmland outside Louisville, NE. Ceremony is outdoors on the lawn; reception is inside the barn.",
   },
-  party: { title: "Wedding Party", lead: "The friends and family standing with us that night." },
   travel: {
     title: "Getting There",
     lead: "Sparks' Barn is in Louisville, Nebraska — about 25 minutes south of Omaha and 40 minutes east of Lincoln.",
@@ -299,58 +246,6 @@ const en: Dict = {
     weatherSunset: "Sunset",
     weatherAdvice:
       "The ceremony is outdoors and the barn cools off fast after sunset. Bring a light jacket or wrap and shoes you can walk on grass in.",
-  },
-  photos: {
-    title: "Photos",
-    lead: "A shared gallery, coming after the wedding. We'll open uploads closer to the day.",
-    empty: "Photos will appear here after the wedding.",
-    uploadTitle: "Share a photo",
-    uploadHint: "Up to 5 images, JPG or PNG, 10 MB each. Nothing goes public until we approve it.",
-    uploaderName: "Your name",
-    uploaderEmail: "Email (optional)",
-    caption: "Caption (optional)",
-    files: "Choose photos",
-    uploadCta: "Upload",
-    uploading: "Uploading…",
-    uploadDone: "Thank you — your photos are pending approval.",
-  },
-  registry: {
-    title: "Registry",
-    lead: "Your presence is the gift. If you'd like to do more, these are the places we've registered.",
-  },
-  faq: {
-    title: "FAQ",
-    lead: "The questions we've been getting most.",
-    items: [
-      {
-        q: "Where is the wedding?",
-        a: "Sparks' Barn, 13817 108th St, Louisville, NE 68037 — about 25 minutes south of Omaha and 40 minutes east of Lincoln.",
-      },
-      {
-        q: "Can I bring a plus-one?",
-        a: "Only if your invitation names a plus-one or the RSVP page lets you add more than one guest. If you're not sure, RSVP with the names listed on your invite and reach out if something's missing.",
-      },
-      {
-        q: "Are kids welcome?",
-        a: "Yes. Add them to your party on the RSVP page and mark them as a child so we can plan headcount and meals.",
-      },
-      {
-        q: "What time should I arrive?",
-        a: "Doors open at 4:30 PM. The ceremony starts at 5:00 PM sharp — please be seated by 4:55.",
-      },
-      {
-        q: "What's the dress code?",
-        a: "Cocktail attire in warm neutrals, lavender, or plum. Skip stilettos — the barn floor is uneven and the ceremony is on grass. Flats or block heels work great.",
-      },
-      {
-        q: "Is it indoors or outdoors?",
-        a: "The ceremony is outdoors on the lawn (weather permitting). Cocktails, dinner, and dancing are inside the barn.",
-      },
-      {
-        q: "Where should I stay?",
-        a: "We haven't blocked rooms. The Travel section lists well-known hotels in Plattsmouth (closest), Lincoln, and Omaha — pick whatever's easiest for you.",
-      },
-    ],
   },
   rsvp: {
     title: "RSVP",
@@ -478,30 +373,6 @@ const es: Dict = {
     back: "Atrás",
     close: "Cerrar",
   },
-  home: {
-    kicker: "La boda de",
-    title: "El gran día",
-    dateLine: "10 de octubre de 2026",
-    intro:
-      "Bienvenidos a nuestro sitio de boda — aquí encontrarán todo para la celebración: el programa, cómo llegar, mesa de regalos y cómo confirmar asistencia.",
-    countdownLabel: "En cuenta regresiva",
-    days: "días",
-    hours: "horas",
-    minutes: "minutos",
-    seconds: "segundos",
-    rsvpCta: "Confirmar asistencia",
-    detailsCta: "Ver los detalles",
-  },
-  story: {
-    title: "Nuestra historia",
-    lead: "Del primer hola al para siempre.",
-    timeline: [
-      { year: "2019", body: "Nos conocimos." },
-      { year: "2021", body: "Lo hicimos oficial." },
-      { year: "2024", body: "El sí." },
-      { year: "2026", body: "Para siempre." },
-    ],
-  },
   details: {
     title: "El día",
     lead: "Todo pasa en Sparks' Barn — ceremonia, cena y baile.",
@@ -521,7 +392,6 @@ const es: Dict = {
     venueBody:
       "Sparks' Barn es un granero abierto en el campo cerca de Louisville, NE. Ceremonia al aire libre; recepción dentro del granero.",
   },
-  party: { title: "Cortejo", lead: "Las personas que estarán con nosotros esa noche." },
   travel: {
     title: "Cómo llegar",
     lead: "Sparks' Barn está en Louisville, Nebraska — a unos 25 minutos al sur de Omaha y 40 minutos al este de Lincoln.",
@@ -575,59 +445,6 @@ const es: Dict = {
     weatherSunset: "Atardecer",
     weatherAdvice:
       "La ceremonia es al aire libre y el granero enfría rápido tras la puesta del sol. Trae una chaqueta ligera y zapatos cómodos para pisar el césped.",
-  },
-  photos: {
-    title: "Fotos",
-    lead: "Una galería compartida, disponible después de la boda. Abriremos las subidas cerca del día.",
-    empty: "Las fotos aparecerán aquí después de la boda.",
-    uploadTitle: "Compartir una foto",
-    uploadHint:
-      "Hasta 5 imágenes, JPG o PNG, 10 MB cada una. Nada se hace público hasta que lo aprobemos.",
-    uploaderName: "Tu nombre",
-    uploaderEmail: "Correo (opcional)",
-    caption: "Descripción (opcional)",
-    files: "Elegir fotos",
-    uploadCta: "Subir",
-    uploading: "Subiendo…",
-    uploadDone: "Gracias — tus fotos están en revisión.",
-  },
-  registry: {
-    title: "Mesa de regalos",
-    lead: "Tu presencia es el regalo. Si quieres hacer más, aquí están nuestros registros.",
-  },
-  faq: {
-    title: "Preguntas frecuentes",
-    lead: "Lo que más nos preguntan.",
-    items: [
-      {
-        q: "¿Dónde es la boda?",
-        a: "Sparks' Barn, 13817 108th St, Louisville, NE 68037 — a unos 25 minutos al sur de Omaha y 40 minutos al este de Lincoln.",
-      },
-      {
-        q: "¿Puedo llevar acompañante?",
-        a: "Solo si tu invitación indica +1 o si la página de RSVP te permite agregar más de un invitado. Si no estás seguro, confirma con los nombres de tu invitación y avísanos si falta alguien.",
-      },
-      {
-        q: "¿Se admiten niños?",
-        a: "Sí. Agrégalos a tu grupo en la página de RSVP y márcalos como niño para el conteo y la comida.",
-      },
-      {
-        q: "¿A qué hora debo llegar?",
-        a: "Las puertas abren a las 4:30 PM. La ceremonia empieza puntual a las 5:00 PM — por favor toma tu lugar antes de las 4:55.",
-      },
-      {
-        q: "¿Cuál es el código de vestimenta?",
-        a: "Cóctel en tonos cálidos, lavanda o ciruela. Evita tacones muy finos — el piso del granero es irregular y la ceremonia es sobre césped. Tacón bajo o zapato plano funcionan bien.",
-      },
-      {
-        q: "¿Es al aire libre o dentro?",
-        a: "La ceremonia es al aire libre en el jardín (si el clima lo permite). Cóctel, cena y baile son dentro del granero.",
-      },
-      {
-        q: "¿Dónde me hospedo?",
-        a: "No tenemos bloque de habitaciones. La sección de Cómo llegar lista hoteles conocidos en Plattsmouth (el más cercano), Lincoln y Omaha — elige el que más te convenga.",
-      },
-    ],
   },
   rsvp: {
     title: "Confirmar asistencia",

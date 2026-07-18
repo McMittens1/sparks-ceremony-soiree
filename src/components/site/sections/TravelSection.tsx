@@ -17,6 +17,11 @@ export function TravelSection() {
   const [copied, setCopied] = useState(false);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(SITE.address)}`;
+  // Split "13817 108th St, Louisville, NE 68037" into a street line and a
+  // city/state/zip line so the display matches SITE.address exactly instead
+  // of re-typing it — the copy-address button and directions link below
+  // already read from SITE.address, so this keeps all three in sync.
+  const [addressLine1, ...addressRest] = SITE.address.split(", ");
   async function copyAddress() {
     try {
       await navigator.clipboard.writeText(SITE.address);
@@ -66,9 +71,9 @@ export function TravelSection() {
             className="font-sans text-ink-body"
             style={{ fontSize: 16, lineHeight: 1.7, margin: 0 }}
           >
-            13817 108th St
+            {addressLine1}
             <br />
-            Louisville, NE 68037
+            {addressRest.join(", ")}
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <a
