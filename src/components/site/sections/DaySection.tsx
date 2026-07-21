@@ -89,35 +89,31 @@ export function DaySection() {
             <Eyebrow color="gold" size="md" style={{ marginBottom: 20 }}>
               Day-of schedule
             </Eyebrow>
-            {DAY_SCHEDULE.map((group, gi) => (
-              <div key={group.title} style={{ marginTop: gi > 0 ? 32 : 0 }}>
-                <Eyebrow color="gold" size="sm" style={{ marginBottom: 6 }}>
-                  {group.title}
-                </Eyebrow>
-                {group.items.map((s, i, arr) => (
-                  <div
-                    key={i}
-                    className="grid items-baseline"
-                    style={{
-                      gridTemplateColumns: "88px 1fr",
-                      gap: 20,
-                      padding: "16px 0",
-                      borderTop: "1px solid rgba(248,244,236,0.15)",
-                      borderBottom:
-                        i === arr.length - 1 ? "1px solid rgba(248,244,236,0.15)" : undefined,
-                    }}
-                  >
-                    <span className="font-serif italic text-gold" style={{ fontSize: 22 }}>
-                      {s.time}
-                    </span>
-                    <span
-                      className="font-sans"
-                      style={{ fontSize: 16, color: "rgba(248,244,236,0.92)" }}
-                    >
-                      {s.label}
-                    </span>
-                  </div>
-                ))}
+            {DAY_SCHEDULE.map((s, i, arr) => (
+              <div
+                key={i}
+                className="grid items-baseline"
+                style={{
+                  gridTemplateColumns: "104px 1fr",
+                  gap: 20,
+                  padding: "16px 0",
+                  borderTop: "1px solid rgba(248,244,236,0.15)",
+                  borderBottom:
+                    i === arr.length - 1 ? "1px solid rgba(248,244,236,0.15)" : undefined,
+                }}
+              >
+                <span
+                  className="font-serif italic text-gold"
+                  style={{ fontSize: 22, whiteSpace: "nowrap" }}
+                >
+                  {s.time}
+                </span>
+                <span
+                  className="font-sans"
+                  style={{ fontSize: 16, color: "rgba(248,244,236,0.92)" }}
+                >
+                  {s.label}
+                </span>
               </div>
             ))}
             <div className="flex flex-wrap gap-3" style={{ marginTop: 24 }}>

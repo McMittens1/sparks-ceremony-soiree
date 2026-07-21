@@ -8,7 +8,7 @@ export const SITE = {
   venue: "Sparks' Barn",
   city: "Louisville, Nebraska",
   address: "13817 108th St, Louisville, NE 68037",
-  eventDate: "2026-10-10T15:30:00-05:00",
+  eventDate: "2026-10-10T15:00:00-05:00",
   eventDatePretty: { en: "October 10, 2026", es: "10 de octubre de 2026" },
   // Send-off — the other end of the "event window" alongside eventDate,
   // used to build the .ics file and the Google Calendar link so neither

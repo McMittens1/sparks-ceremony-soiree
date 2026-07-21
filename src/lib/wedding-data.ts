@@ -137,7 +137,7 @@ export const HOTELS: HotelGroup[] = [
 
 export const FAQ_LOGISTICS: { q: string; a: string; open?: boolean }[] = [
   { q: "Where is the wedding?", a: "Sparks' Barn, 13817 108th St, Louisville, NE 68037. About 25 minutes south of Omaha and 40 minutes east of Lincoln.", open: true },
-  { q: "What time should I arrive?", a: "Doors open at 3:00 PM. The ceremony starts at 3:30 PM sharp — please be seated by 3:25." },
+  { q: "What time should I arrive?", a: "Doors open at 2:30 PM. The ceremony starts at 3:00 PM sharp — please be seated by 2:55." },
   { q: "Is it indoors or outdoors?", a: "The ceremony is outdoors on the lawn (weather permitting). Cocktails, dinner, and dancing are inside the barn." },
   { q: "Where should I stay?", a: "We haven't blocked rooms. The Travel section lists well-known hotels in Plattsmouth (closest), Lincoln, and Omaha — pick whatever's easiest for you." },
 ];
@@ -192,38 +192,13 @@ export const DATE_CARDS: { n: string; cap: string }[] = [
 ];
 
 export type ScheduleItem = { time: string; label: string };
-export type ScheduleGroup = { title: string; items: ScheduleItem[] };
 
-export const DAY_SCHEDULE: ScheduleGroup[] = [
-  {
-    title: "Ceremony",
-    items: [
-      { time: "3:00", label: "Guests arrive" },
-      { time: "3:30", label: "Ceremony" },
-      { time: "4:00", label: "Cocktail hour" },
-    ],
-  },
-  {
-    title: "Reception",
-    items: [
-      { time: "4:30", label: "Reception begins" },
-      { time: "4:45", label: "Wedding party entrance" },
-      { time: "5:00", label: "First dance" },
-      { time: "5:10", label: "Dinner" },
-      { time: "6:00", label: "Toasts" },
-      { time: "6:15", label: "Father-daughter dance" },
-      { time: "6:20", label: "Mother-son dance" },
-      { time: "6:30", label: "Cake cutting" },
-      { time: "6:40", label: "Bouquet toss" },
-      { time: "6:45", label: "Garter toss" },
-      { time: "6:50", label: "Open dancing begins" },
-    ],
-  },
-  {
-    title: "Evening",
-    items: [
-      { time: "7:00", label: "Dancing & Celebration" },
-      { time: "Midnight", label: "Celebration Ends" },
-    ],
-  },
+export const DAY_SCHEDULE: ScheduleItem[] = [
+  { time: "2:30", label: "Guest Arrival" },
+  { time: "3:00", label: "Wedding Ceremony" },
+  { time: "3:30", label: "Cocktail Hour" },
+  { time: "4:30", label: "Reception Begins" },
+  { time: "5:00", label: "Dinner" },
+  { time: "7:00", label: "Dancing and Celebration" },
+  { time: "Midnight", label: "Celebration Concludes" },
 ];
