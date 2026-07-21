@@ -280,6 +280,23 @@
 }
 .story-line.is-in { transform: scaleY(1); }
 
+/* Day section schedule rail — dark-bg timeline (continuous line + diamond
+   markers), same visual grammar as .story-line/.diamond-in but one rail
+   spanning a whole list rather than one gutter per row, and colored via
+   inline rgba/gold since DaySection is the site's only dark section. */
+.day-rail-line {
+  transform-origin: top;
+  transform: scaleY(0);
+  transition: transform 1100ms cubic-bezier(0.77, 0, 0.175, 1);
+}
+.day-rail-dot {
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(0deg) scale(0.4);
+  transition: opacity 600ms ease, transform 650ms cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.day-rail.is-in .day-rail-line { transform: scaleY(1); }
+.day-rail.is-in .day-rail-dot { opacity: 1; transform: translate(-50%, -50%) rotate(45deg) scale(1); }
+
 /* Countdown digit — subtle enter when value changes */
 @keyframes count-flip {
   0%   { opacity: 0; transform: translateY(-6px); }
