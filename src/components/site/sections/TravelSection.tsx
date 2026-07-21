@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { DiamondDivider } from "@/components/site/DiamondDivider";
 import { SectionHeader } from "@/components/site/SectionHeader";
-import { BodyProse, DisplayHeading, Eyebrow } from "@/components/site/typography";
+import { BodyProse, Eyebrow } from "@/components/site/typography";
 import { HOTELS } from "@/lib/wedding-data";
-import { SITE } from "@/lib/site";
 
 interface WeatherData {
   highF: number;
@@ -14,23 +13,7 @@ interface WeatherData {
 }
 
 export function TravelSection() {
-  const [copied, setCopied] = useState(false);
   const [weather, setWeather] = useState<WeatherData | null>(null);
-  const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(SITE.address)}`;
-  // Split "13817 108th St, Louisville, NE 68037" into a street line and a
-  // city/state/zip line so the display matches SITE.address exactly instead
-  // of re-typing it — the copy-address button and directions link below
-  // already read from SITE.address, so this keeps all three in sync.
-  const [addressLine1, ...addressRest] = SITE.address.split(", ");
-  async function copyAddress() {
-    try {
-      await navigator.clipboard.writeText(SITE.address);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
-    } catch {
-      /* ignore */
-    }
-  }
   useEffect(() => {
     let cancelled = false;
     fetch("/api/public/weather")
@@ -48,95 +31,13 @@ export function TravelSection() {
   return (
     <section id="travel" className="border-t border-hairline rs-section">
       <SectionHeader
-        eyebrow="V · Getting There"
-        title="Getting There"
-        subhead="Sparks' Barn is in Louisville, Nebraska, about 25 minutes south of Omaha and 40 minutes east of Lincoln."
+        eyebrow="V · Travel"
+        title="Travel"
+        subhead="Sparks' Barn is in Louisville, Nebraska, about 25 minutes south of Omaha and 40 minutes east of Lincoln. Here's what to know if you're coming from out of town."
       />
       <DiamondDivider className="mt-9" />
 
-      <div className="grid items-start rs-stack" style={{ marginTop: 64 }}>
-        <div>
-          <Eyebrow color="lavender-deep" style={{ marginBottom: 14 }}>
-            Venue address
-          </Eyebrow>
-          <DisplayHeading
-            as="h3"
-            size="sm"
-            italic
-            style={{ margin: "0 0 8px", fontSize: 28, lineHeight: 1.3 }}
-          >
-            Sparks&rsquo; Barn
-          </DisplayHeading>
-          <p
-            className="font-sans text-ink-body"
-            style={{ fontSize: 16, lineHeight: 1.7, margin: 0 }}
-          >
-            {addressLine1}
-            <br />
-            {addressRest.join(", ")}
-          </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <a
-              href={directionsUrl}
-              target="_blank"
-              rel="noopener"
-              className="uppercase font-sans"
-              style={{
-                fontSize: 10,
-                letterSpacing: "0.2em",
-                color: "var(--color-ivory)",
-                background: "var(--color-lavender-deep)",
-                padding: "10px 16px",
-              }}
-            >
-              Get directions →
-            </a>
-            <button
-              type="button"
-              onClick={copyAddress}
-              className="uppercase font-sans"
-              style={{
-                fontSize: 10,
-                letterSpacing: "0.2em",
-                color: "var(--color-lavender-deep)",
-                border: "1px solid var(--color-lavender-deep)",
-                background: "transparent",
-                padding: "10px 16px",
-              }}
-              aria-live="polite"
-            >
-              {copied ? "Copied ✓" : "Copy address"}
-            </button>
-            <a
-              href={SITE.mapLink}
-              target="_blank"
-              rel="noopener"
-              className="uppercase font-sans self-center"
-              style={{ fontSize: 10, letterSpacing: "0.2em", color: "var(--color-tan-deep)" }}
-            >
-              Open in maps →
-            </a>
-          </div>
-        </div>
-        <div
-          style={{
-            aspectRatio: "16 / 7",
-            background: "#EFE9DD",
-            border: "1px solid #C9BB9F",
-            overflow: "hidden",
-          }}
-        >
-          <iframe
-            src={SITE.mapEmbed}
-            title="Sparks' Barn on the map"
-            className="w-full h-full"
-            style={{ border: 0, filter: "grayscale(0.2) sepia(0.1)" }}
-            loading="lazy"
-          />
-        </div>
-      </div>
-
-      <div style={{ marginTop: 72 }}>
+      <div style={{ marginTop: 64 }}>
         <Eyebrow color="lavender-deep" style={{ marginBottom: 10 }}>
           Where to stay
         </Eyebrow>
@@ -176,47 +77,37 @@ export function TravelSection() {
       </div>
 
       <div
-        className="grid border-t border-hairline rs-stack-2"
-        style={{ marginTop: 72, paddingTop: 48 }}
+        className="border-t border-hairline"
+        style={{ marginTop: 72, paddingTop: 48, maxWidth: 640 }}
       >
-        <div>
-          <Eyebrow color="lavender-deep" style={{ marginBottom: 10 }}>
-            Parking
-          </Eyebrow>
-          <BodyProse style={{ fontSize: 16, lineHeight: 1.75 }}>
-            Free on-site parking. You can leave a car overnight if you&rsquo;re getting a ride home.
-          </BodyProse>
-        </div>
-        <div>
-          <Eyebrow color="lavender-deep" style={{ marginBottom: 10 }}>
-            What to pack
-          </Eyebrow>
-          {weather ? (
-            <div style={{ marginBottom: 12 }}>
-              <span
-                className="uppercase font-sans"
-                style={{ fontSize: 10, letterSpacing: "0.2em", color: "var(--color-tan-deep)" }}
-              >
-                {weather.isForecast ? "Live forecast" : "Typical early October"}
-              </span>
-              <p className="font-sans text-ink" style={{ fontSize: 15, margin: "4px 0 0" }}>
-                High {weather.highF}°F · Low {weather.lowF}°F · {weather.precipPct}% chance of rain
-                · Sunset {weather.sunset}
-              </p>
-            </div>
-          ) : (
-            <p
-              className="font-sans"
-              style={{ fontSize: 13, color: "var(--color-tan-deep)", marginBottom: 12 }}
+        <Eyebrow color="lavender-deep" style={{ marginBottom: 10 }}>
+          What to pack
+        </Eyebrow>
+        {weather ? (
+          <div style={{ marginBottom: 12 }}>
+            <span
+              className="uppercase font-sans"
+              style={{ fontSize: 10, letterSpacing: "0.2em", color: "var(--color-tan-deep)" }}
             >
-              Checking the forecast…
+              {weather.isForecast ? "Live forecast" : "Typical early October"}
+            </span>
+            <p className="font-sans text-ink" style={{ fontSize: 15, margin: "4px 0 0" }}>
+              High {weather.highF}°F · Low {weather.lowF}°F · {weather.precipPct}% chance of rain ·
+              Sunset {weather.sunset}
             </p>
-          )}
-          <BodyProse style={{ fontSize: 16, lineHeight: 1.75 }}>
-            The ceremony is outdoors and the barn cools off fast after sunset. Bring a light jacket
-            or wrap and shoes you can walk on grass in.
-          </BodyProse>
-        </div>
+          </div>
+        ) : (
+          <p
+            className="font-sans"
+            style={{ fontSize: 13, color: "var(--color-tan-deep)", marginBottom: 12 }}
+          >
+            Checking the forecast…
+          </p>
+        )}
+        <BodyProse style={{ fontSize: 16, lineHeight: 1.75 }}>
+          The ceremony is outdoors and the barn cools off fast after sunset. Bring a light jacket or
+          wrap and shoes you can walk on grass in.
+        </BodyProse>
       </div>
     </section>
   );

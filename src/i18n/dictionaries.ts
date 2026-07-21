@@ -28,8 +28,6 @@ export interface Dict {
   details: {
     title: string;
     lead: string;
-    scheduleTitle: string;
-    schedule: { time: string; label: string }[];
     dressTitle: string;
     dressBody: string;
     venueTitle: string;
@@ -38,11 +36,8 @@ export interface Dict {
   travel: {
     title: string;
     lead: string;
-    mapTitle: string;
-    addressLabel: string;
     hotelsTitle: string;
     hotelsBody: string;
-    hotelGroups: { area: string; drive: string; items: { name: string; city: string }[] }[];
     parkingTitle: string;
     parkingBody: string;
     weatherTitle: string;
@@ -180,15 +175,6 @@ const en: Dict = {
   details: {
     title: "The Day",
     lead: "Everything happens at Sparks' Barn — ceremony, dinner, dancing.",
-    scheduleTitle: "Day-of schedule",
-    schedule: [
-      { time: "4:30 PM", label: "Guests arrive" },
-      { time: "5:00 PM", label: "Ceremony" },
-      { time: "5:45 PM", label: "Cocktail hour" },
-      { time: "7:00 PM", label: "Dinner & toasts" },
-      { time: "8:30 PM", label: "First dance & open floor" },
-      { time: "11:30 PM", label: "Send-off" },
-    ],
     dressTitle: "Dress code",
     dressBody:
       "Cocktail attire in warm neutrals, lavender, or plum. Skip stilettos — the barn floor is uneven, and the lawn is grass.",
@@ -199,41 +185,9 @@ const en: Dict = {
   travel: {
     title: "Getting There",
     lead: "Sparks' Barn is in Louisville, Nebraska — about 25 minutes south of Omaha and 40 minutes east of Lincoln.",
-    mapTitle: "The venue on the map",
-    addressLabel: "Venue address",
     hotelsTitle: "Where to stay",
     hotelsBody:
       "We haven't blocked rooms anywhere. Most out-of-town guests stay in Lincoln or Omaha — here are well-known options in each area.",
-    hotelGroups: [
-      {
-        area: "Closest to the venue (Plattsmouth)",
-        drive: "~15 min drive",
-        items: [
-          { name: "Cobblestone Inn & Suites", city: "Plattsmouth, NE" },
-          { name: "American Inn", city: "Plattsmouth, NE" },
-        ],
-      },
-      {
-        area: "Lincoln",
-        drive: "~40 min drive",
-        items: [
-          { name: "Graduate by Hilton Lincoln", city: "Downtown Lincoln" },
-          { name: "Hilton Garden Inn Lincoln Downtown / Haymarket", city: "Haymarket, Lincoln" },
-          { name: "Hyatt Place Lincoln / Haymarket", city: "Haymarket, Lincoln" },
-          { name: "Hampton Inn Lincoln South", city: "South Lincoln (near I-80)" },
-        ],
-      },
-      {
-        area: "Omaha / Airport (OMA)",
-        drive: "~30–40 min drive",
-        items: [
-          { name: "Hilton Omaha Downtown", city: "Downtown Omaha" },
-          { name: "Hyatt Place Omaha / Downtown - Old Market", city: "Old Market, Omaha" },
-          { name: "Hampton Inn & Suites Omaha - Downtown", city: "Downtown Omaha" },
-          { name: "Courtyard by Marriott Omaha East / Council Bluffs", city: "Near OMA airport" },
-        ],
-      },
-    ],
     parkingTitle: "Parking",
     parkingBody:
       "Free on-site parking. You can leave a car overnight if you're getting a ride home.",
@@ -376,15 +330,6 @@ const es: Dict = {
   details: {
     title: "El día",
     lead: "Todo pasa en Sparks' Barn — ceremonia, cena y baile.",
-    scheduleTitle: "Programa del día",
-    schedule: [
-      { time: "4:30 PM", label: "Llegada de invitados" },
-      { time: "5:00 PM", label: "Ceremonia" },
-      { time: "5:45 PM", label: "Cóctel" },
-      { time: "7:00 PM", label: "Cena y brindis" },
-      { time: "8:30 PM", label: "Primer baile" },
-      { time: "11:30 PM", label: "Despedida" },
-    ],
     dressTitle: "Código de vestimenta",
     dressBody:
       "Cóctel en tonos cálidos, lavanda o ciruela. Evita tacones muy finos — el piso del granero es irregular.",
@@ -395,44 +340,9 @@ const es: Dict = {
   travel: {
     title: "Cómo llegar",
     lead: "Sparks' Barn está en Louisville, Nebraska — a unos 25 minutos al sur de Omaha y 40 minutos al este de Lincoln.",
-    mapTitle: "El lugar en el mapa",
-    addressLabel: "Dirección del lugar",
     hotelsTitle: "Dónde alojarse",
     hotelsBody:
       "No tenemos bloque de habitaciones. La mayoría de invitados de fuera se quedan en Lincoln o Omaha — aquí van opciones conocidas en cada zona.",
-    hotelGroups: [
-      {
-        area: "Más cerca del lugar (Plattsmouth)",
-        drive: "~15 min en auto",
-        items: [
-          { name: "Cobblestone Inn & Suites", city: "Plattsmouth, NE" },
-          { name: "American Inn", city: "Plattsmouth, NE" },
-        ],
-      },
-      {
-        area: "Lincoln",
-        drive: "~40 min en auto",
-        items: [
-          { name: "Graduate by Hilton Lincoln", city: "Centro de Lincoln" },
-          { name: "Hilton Garden Inn Lincoln Downtown / Haymarket", city: "Haymarket, Lincoln" },
-          { name: "Hyatt Place Lincoln / Haymarket", city: "Haymarket, Lincoln" },
-          { name: "Hampton Inn Lincoln South", city: "Sur de Lincoln (cerca I-80)" },
-        ],
-      },
-      {
-        area: "Omaha / Aeropuerto (OMA)",
-        drive: "~30–40 min en auto",
-        items: [
-          { name: "Hilton Omaha Downtown", city: "Centro de Omaha" },
-          { name: "Hyatt Place Omaha / Downtown - Old Market", city: "Old Market, Omaha" },
-          { name: "Hampton Inn & Suites Omaha - Downtown", city: "Centro de Omaha" },
-          {
-            name: "Courtyard by Marriott Omaha East / Council Bluffs",
-            city: "Cerca del aeropuerto OMA",
-          },
-        ],
-      },
-    ],
     parkingTitle: "Estacionamiento",
     parkingBody:
       "Gratis en el lugar. Puedes dejar el auto durante la noche si vuelves con alguien más.",

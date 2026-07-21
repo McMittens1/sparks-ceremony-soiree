@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { DATE_CARDS, DAY_SCHEDULE } from "@/lib/wedding-data";
 import { DisplayHeading, Eyebrow } from "@/components/site/typography";
 import barnAerial from "@/assets/venue/sparks-barn-aerial.jpg.asset.json";
@@ -14,7 +15,23 @@ const toGCalUtc = (iso: string) =>
   new Date(iso).toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
 const GCAL_DATES = `${toGCalUtc(SITE.eventDate)}/${toGCalUtc(SITE.eventEndDate)}`;
 
+const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(SITE.address)}`;
+// Split "13817 108th St, Louisville, NE 68037" into a street line and a
+// city/state/zip line so the display matches SITE.address exactly instead
+// of re-typing it — mirrors the same pattern used in TravelSection.tsx.
+const [addressLine1, ...addressRest] = SITE.address.split(", ");
+
 export function DaySection() {
+  const [copied, setCopied] = useState(false);
+  async function copyAddress() {
+    try {
+      await navigator.clipboard.writeText(SITE.address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      /* ignore */
+    }
+  }
   return (
     <section id="day" className="border-t border-hairline rs-section-bleed bg-lavender-deep">
       <div className="mx-auto" style={{ maxWidth: 1400 }}>
@@ -72,28 +89,35 @@ export function DaySection() {
             <Eyebrow color="gold" size="md" style={{ marginBottom: 20 }}>
               Day-of schedule
             </Eyebrow>
-            {DAY_SCHEDULE.map((s, i, arr) => (
-              <div
-                key={i}
-                className="grid items-baseline"
-                style={{
-                  gridTemplateColumns: "88px 1fr",
-                  gap: 20,
-                  padding: "16px 0",
-                  borderTop: "1px solid rgba(248,244,236,0.15)",
-                  borderBottom:
-                    i === arr.length - 1 ? "1px solid rgba(248,244,236,0.15)" : undefined,
-                }}
-              >
-                <span className="font-serif italic text-gold" style={{ fontSize: 22 }}>
-                  {s.time}
-                </span>
-                <span
-                  className="font-sans"
-                  style={{ fontSize: 16, color: "rgba(248,244,236,0.92)" }}
-                >
-                  {s.label}
-                </span>
+            {DAY_SCHEDULE.map((group, gi) => (
+              <div key={group.title} style={{ marginTop: gi > 0 ? 32 : 0 }}>
+                <Eyebrow color="gold" size="sm" style={{ marginBottom: 6 }}>
+                  {group.title}
+                </Eyebrow>
+                {group.items.map((s, i, arr) => (
+                  <div
+                    key={i}
+                    className="grid items-baseline"
+                    style={{
+                      gridTemplateColumns: "88px 1fr",
+                      gap: 20,
+                      padding: "16px 0",
+                      borderTop: "1px solid rgba(248,244,236,0.15)",
+                      borderBottom:
+                        i === arr.length - 1 ? "1px solid rgba(248,244,236,0.15)" : undefined,
+                    }}
+                  >
+                    <span className="font-serif italic text-gold" style={{ fontSize: 22 }}>
+                      {s.time}
+                    </span>
+                    <span
+                      className="font-sans"
+                      style={{ fontSize: 16, color: "rgba(248,244,236,0.92)" }}
+                    >
+                      {s.label}
+                    </span>
+                  </div>
+                ))}
               </div>
             ))}
             <div className="flex flex-wrap gap-3" style={{ marginTop: 24 }}>
@@ -153,6 +177,87 @@ export function DaySection() {
                 Sparks&rsquo; Barn · Photo: Olsen Photography
               </figcaption>
             </figure>
+            <div>
+              <Eyebrow color="gold" size="md" style={{ marginBottom: 10 }}>
+                Arrival &amp; Parking
+              </Eyebrow>
+              <p
+                className="font-sans"
+                style={{
+                  fontSize: 16,
+                  lineHeight: 1.7,
+                  color: "rgba(248,244,236,0.88)",
+                  margin: "0 0 14px",
+                }}
+              >
+                {addressLine1}
+                <br />
+                {addressRest.join(", ")}
+              </p>
+              <div className="flex flex-wrap items-center gap-3" style={{ marginBottom: 14 }}>
+                <a
+                  href={directionsUrl}
+                  target="_blank"
+                  rel="noopener"
+                  className="uppercase font-sans inline-block"
+                  style={{
+                    fontSize: 10,
+                    letterSpacing: "0.22em",
+                    color: "var(--color-ivory)",
+                    border: "1px solid rgba(248,244,236,0.5)",
+                    padding: "10px 16px",
+                  }}
+                >
+                  Get directions →
+                </a>
+                <button
+                  type="button"
+                  onClick={copyAddress}
+                  className="uppercase font-sans inline-block"
+                  style={{
+                    fontSize: 10,
+                    letterSpacing: "0.22em",
+                    color: "var(--color-ivory)",
+                    border: "1px solid rgba(248,244,236,0.5)",
+                    background: "transparent",
+                    padding: "10px 16px",
+                  }}
+                  aria-live="polite"
+                >
+                  {copied ? "Copied ✓" : "Copy address"}
+                </button>
+                <a
+                  href={SITE.mapLink}
+                  target="_blank"
+                  rel="noopener"
+                  className="uppercase font-sans inline-block"
+                  style={{ fontSize: 10, letterSpacing: "0.22em", color: "rgba(248,244,236,0.65)" }}
+                >
+                  Open in maps →
+                </a>
+              </div>
+              <div style={{ aspectRatio: "16 / 7", overflow: "hidden", marginBottom: 14 }}>
+                <iframe
+                  src={SITE.mapEmbed}
+                  title="Sparks' Barn on the map"
+                  className="w-full h-full"
+                  style={{ border: 0, filter: "grayscale(0.3) sepia(0.15) brightness(0.9)" }}
+                  loading="lazy"
+                />
+              </div>
+              <p
+                className="font-sans"
+                style={{
+                  fontSize: 16,
+                  lineHeight: 1.75,
+                  color: "rgba(248,244,236,0.88)",
+                  margin: 0,
+                }}
+              >
+                Free on-site parking. You can leave a car overnight if you&rsquo;re getting a ride
+                home.
+              </p>
+            </div>
             <div>
               <Eyebrow color="gold" size="md" style={{ marginBottom: 10 }}>
                 Dress code

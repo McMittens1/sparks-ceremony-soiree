@@ -8,12 +8,13 @@ export const SITE = {
   venue: "Sparks' Barn",
   city: "Louisville, Nebraska",
   address: "13817 108th St, Louisville, NE 68037",
-  eventDate: "2026-10-10T17:00:00-05:00",
+  eventDate: "2026-10-10T15:30:00-05:00",
   eventDatePretty: { en: "October 10, 2026", es: "10 de octubre de 2026" },
   // Send-off — the other end of the "event window" alongside eventDate,
   // used to build the .ics file and the Google Calendar link so neither
-  // has to restate the date/time independently.
-  eventEndDate: "2026-10-10T23:30:00-05:00",
+  // has to restate the date/time independently. No formal send-off is
+  // planned — the celebration just runs until midnight (next calendar day).
+  eventEndDate: "2026-10-11T00:00:00-05:00",
   mapEmbed: "https://www.google.com/maps?q=13817+108th+St,+Louisville,+NE+68037&output=embed",
   mapLink:
     "https://www.google.com/maps/search/?api=1&query=13817+108th+St%2C+Louisville%2C+NE+68037",
