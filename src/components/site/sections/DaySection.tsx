@@ -88,8 +88,11 @@ export function DaySection() {
         </Reveal>
 
         <div className="grid rs-stack" style={{ marginTop: 72 }}>
-          {/* LEFT — bordered itinerary card: date badge + schedule rail + calendar actions */}
-          <Reveal variant="left">
+          {/* LEFT — bordered itinerary card: date badge + schedule rail + calendar actions.
+              self-start stops this column from stretching to match the taller right
+              column (CSS Grid's default align-items:stretch), which was leaving a band
+              of empty background below the card's border. */}
+          <Reveal variant="left" className="self-start">
             <div
               style={{
                 borderTop: "2px solid var(--color-gold)",
@@ -200,7 +203,19 @@ export function DaySection() {
                 </ol>
               </div>
 
-              <div className="flex flex-wrap gap-3" style={{ marginTop: 26 }}>
+              <p
+                className="font-sans"
+                style={{
+                  fontSize: 13,
+                  lineHeight: 1.6,
+                  color: "rgba(248,244,236,0.65)",
+                  marginTop: 18,
+                }}
+              >
+                Please arrive 15–30 minutes before the 3:00 PM ceremony to park and find your seat.
+              </p>
+
+              <div className="flex flex-wrap gap-3" style={{ marginTop: 20 }}>
                 <a
                   href="/api/public/wedding.ics"
                   className="uppercase font-sans inline-block"
@@ -330,7 +345,9 @@ export function DaySection() {
         {/* Footnote band — dress code + venue, promoted out of the right column stack
             into their own full-width two-up row via the shared .rs-stack-2 grid */}
         <Reveal variant="up">
-          <div className="grid rs-stack-2" style={{ marginTop: 44 }}>
+          {/* rs-stack (not rs-stack-2) so these columns share the exact same grid
+              math as the card/photo row above — same edges, same breakpoint. */}
+          <div className="grid rs-stack" style={{ marginTop: 44 }}>
             <div>
               <Eyebrow color="gold" size="md" style={{ marginBottom: 10 }}>
                 Dress code
