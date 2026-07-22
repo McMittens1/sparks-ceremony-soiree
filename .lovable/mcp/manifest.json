@@ -52,7 +52,7 @@
       {
         "name": "get_schedule",
         "title": "Day-of schedule",
-        "description": "Timeline of the wedding day (ceremony, cocktail hour, dinner, dancing, send-off).",
+        "description": "Timeline of the wedding day, from the ceremony through the end of the night.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
