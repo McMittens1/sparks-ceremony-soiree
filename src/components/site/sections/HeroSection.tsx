@@ -1,83 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { SITE } from "@/lib/site";
+import { Countdown, COUNTDOWN_HERO_VISIBLE } from "@/components/site/Countdown";
 import heroPortrait from "@/assets/engagement/hero-portrait.png.asset.json";
-
-function diff(target: number) {
-  const ms = Math.max(0, target - Date.now());
-  return {
-    d: Math.floor(ms / 86_400_000),
-    h: Math.floor((ms % 86_400_000) / 3_600_000),
-    m: Math.floor((ms % 3_600_000) / 60_000),
-    s: Math.floor((ms % 60_000) / 1000),
-  };
-}
-const pad = (n: number | null) => (n === null ? "--" : String(n).padStart(2, "0"));
-
-function HeroCountdown() {
-  const target = new Date(SITE.eventDate).getTime();
-  const [tick, setTick] = useState<ReturnType<typeof diff> | null>(null);
-  useEffect(() => {
-    setTick(diff(target));
-    const id = setInterval(() => setTick(diff(target)), 1000);
-    return () => clearInterval(id);
-  }, [target]);
-  const items: [string, string][] = [
-    [pad(tick?.d ?? null), "Days"],
-    [pad(tick?.h ?? null), "Hrs"],
-    [pad(tick?.m ?? null), "Min"],
-    [pad(tick?.s ?? null), "Sec"],
-  ];
-  return (
-    <div
-      className="lg:hidden w-full mx-auto"
-      style={{ maxWidth: 460, marginTop: "clamp(20px, 4svh, 40px)" }}
-      aria-label="Countdown to the wedding"
-    >
-      <p
-        className="uppercase font-sans text-tan"
-        style={{
-          fontSize: 9,
-          letterSpacing: "0.42em",
-          margin: "0 0 14px",
-        }}
-      >
-        Counting Down
-      </p>
-      <div
-        className="grid grid-cols-4"
-        style={{
-          borderTop: "1px solid rgba(42,37,32,0.18)",
-          borderBottom: "1px solid rgba(42,37,32,0.18)",
-        }}
-      >
-        {items.map(([val, label], i) => (
-          <div
-            key={label}
-            className="text-center"
-            style={{
-              padding: "14px 4px 12px",
-              borderLeft: i === 0 ? undefined : "1px solid rgba(42,37,32,0.14)",
-            }}
-          >
-            <div
-              className="font-serif tabular-nums text-ink"
-              style={{ fontWeight: 500, fontSize: "clamp(28px, 7vw, 40px)", lineHeight: 1 }}
-            >
-              {val}
-            </div>
-            <p
-              className="uppercase text-tan-deep"
-              style={{ fontSize: 9, letterSpacing: "0.24em", marginTop: 8 }}
-            >
-              {label}
-            </p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 export function HeroSection() {
   return (
@@ -214,7 +137,13 @@ export function HeroSection() {
               See details
             </a>
           </div>
-          <HeroCountdown />
+          <div
+            className={`${COUNTDOWN_HERO_VISIBLE} w-full mx-auto`}
+            style={{ maxWidth: 460, marginTop: "clamp(20px, 4svh, 40px)" }}
+            aria-label="Countdown to the wedding"
+          >
+            <Countdown variant="hero" />
+          </div>
         </div>
 
         <div
