@@ -136,6 +136,7 @@ function UploadFormComingSoon() {
 
 function UploadFormLive() {
   const runUpload = useServerFn(uploadGuestPhotos);
+  const track = useAnalytics();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [caption, setCaption] = useState("");
