@@ -4,6 +4,7 @@ import { DisplayHeading, Eyebrow } from "@/components/site/typography";
 import { Reveal } from "@/components/site/Reveal";
 import barnAerial from "@/assets/venue/sparks-barn-aerial.jpg.asset.json";
 import { SITE } from "@/lib/site";
+import { useAnalytics } from "@/lib/analytics";
 
 const SITE_HOST = new URL(SITE.siteUrl).hostname;
 
