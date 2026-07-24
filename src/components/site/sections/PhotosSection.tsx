@@ -4,6 +4,7 @@ import { DiamondDivider } from "@/components/site/DiamondDivider";
 import { SectionHeader } from "@/components/site/SectionHeader";
 import { Eyebrow } from "@/components/site/typography";
 import { useFeatureFlag } from "@/hooks/use-feature-flags";
+import { useAnalytics } from "@/lib/analytics";
 import { uploadGuestPhotos, listApprovedPhotos, type GalleryPhoto } from "@/lib/photos.functions";
 import { PHOTO_MAX_FILES, PHOTO_MAX_FILE_BYTES } from "@/lib/photo-config";
 
@@ -135,6 +136,7 @@ function UploadFormComingSoon() {
 
 function UploadFormLive() {
   const runUpload = useServerFn(uploadGuestPhotos);
+  const track = useAnalytics();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [caption, setCaption] = useState("");
@@ -203,6 +205,7 @@ function UploadFormLive() {
       });
       setUploadSummary({ uploaded: result.uploaded, total: encoded.length });
       setStatus("done");
+      track("photo_upload", { uploaded: result.uploaded, total: encoded.length });
       setName("");
       setEmail("");
       setCaption("");

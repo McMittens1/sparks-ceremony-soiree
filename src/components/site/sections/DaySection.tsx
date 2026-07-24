@@ -4,6 +4,7 @@ import { DisplayHeading, Eyebrow } from "@/components/site/typography";
 import { Reveal } from "@/components/site/Reveal";
 import barnAerial from "@/assets/venue/sparks-barn-aerial.jpg.asset.json";
 import { SITE } from "@/lib/site";
+import { useAnalytics } from "@/lib/analytics";
 
 const SITE_HOST = new URL(SITE.siteUrl).hostname;
 
@@ -35,6 +36,7 @@ const pillStyle: CSSProperties = {
 };
 
 export function DaySection() {
+  const track = useAnalytics();
   const [copied, setCopied] = useState(false);
   async function copyAddress() {
     try {
@@ -218,6 +220,7 @@ export function DaySection() {
               <div className="flex flex-wrap gap-3" style={{ marginTop: 20 }}>
                 <a
                   href="/api/public/wedding.ics"
+                  onClick={() => track("calendar_click", { provider: "ics" })}
                   className="uppercase font-sans inline-block"
                   style={pillStyle}
                 >
@@ -231,6 +234,7 @@ export function DaySection() {
                   )}&details=${encodeURIComponent(`The wedding of Geo & Addi. See ${SITE_HOST}.`)}`}
                   target="_blank"
                   rel="noopener"
+                  onClick={() => track("calendar_click", { provider: "google" })}
                   className="uppercase font-sans inline-block"
                   style={pillStyle}
                 >
@@ -245,12 +249,21 @@ export function DaySection() {
             <div className="grid content-start" style={{ gap: 36 }}>
               <figure style={{ margin: 0 }}>
                 <div style={{ aspectRatio: "16 / 9", overflow: "hidden" }}>
-                  <img
-                    src={barnAerial.url}
-                    alt="Sparks' Barn at sunset — aerial view of the red barn, patio, and Nebraska farmland."
-                    loading="lazy"
-                    className="w-full h-full object-cover"
-                  />
+                  <picture>
+                    <source
+                      srcSet="/images/sparks-barn-aerial-800.webp 800w, /images/sparks-barn-aerial-1200.webp 1200w"
+                      sizes="(max-width: 1023px) 100vw, 50vw"
+                      type="image/webp"
+                    />
+                    <img
+                      src={barnAerial.url}
+                      alt="Sparks' Barn at sunset — aerial view of the red barn, patio, and Nebraska farmland."
+                      loading="lazy"
+                      width={1920}
+                      height={1078}
+                      className="w-full h-full object-cover"
+                    />
+                  </picture>
                 </div>
                 <figcaption
                   className="uppercase font-sans"

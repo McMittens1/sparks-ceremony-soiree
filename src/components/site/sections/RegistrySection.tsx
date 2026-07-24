@@ -1,8 +1,10 @@
 import { DiamondDivider } from "@/components/site/DiamondDivider";
 import { SectionHeader } from "@/components/site/SectionHeader";
 import { REGISTRY } from "@/lib/wedding-data";
+import { useAnalytics } from "@/lib/analytics";
 
 export function RegistrySection() {
+  const track = useAnalytics();
   return (
     <section id="registry" className="border-t border-hairline rs-section">
       <SectionHeader
@@ -48,6 +50,7 @@ export function RegistrySection() {
                     href={r.href}
                     target="_blank"
                     rel="noopener"
+                    onClick={() => track("registry_click", { name: r.name, lead: true })}
                     className="uppercase font-sans inline-block text-center bg-ink text-ivory border border-ink"
                     style={{
                       marginTop: 24,
@@ -63,6 +66,7 @@ export function RegistrySection() {
                     href={r.href}
                     target="_blank"
                     rel="noopener"
+                    onClick={() => track("registry_click", { name: r.name, lead: false })}
                     className="uppercase font-sans inline-block self-start text-lavender-deep border-b border-lavender-deep"
                     style={{
                       marginTop: 24,

@@ -6,6 +6,7 @@ import type { Dict } from "@/i18n/dictionaries";
 import { useFeatureFlag } from "@/hooks/use-feature-flags";
 import { SITE } from "@/lib/site";
 import { buildMeta } from "@/lib/seo";
+import { useAnalytics } from "@/lib/analytics";
 import {
   lookupGuest,
   getVerifyTargetLabel,
@@ -149,6 +150,7 @@ function RsvpPage() {
   const runVerify = useServerFn(verifyHouseholdAccess);
   const runUpdateAddress = useServerFn(updateGuestAddress);
   const runSubmit = useServerFn(submitRsvp);
+  const track = useAnalytics();
   // Admin-controlled via the Features tab. Gates RSVP submission only —
   // household lookup/verification and address management work regardless,
   // since guests may reach this page well before RSVP officially opens.
@@ -378,6 +380,7 @@ function RsvpPage() {
         submittedAt: res.submitted_at,
       });
       setStage("done");
+      track("rsvp_submit", { status: res.status, attendees: cleaned.length });
     } catch (e) {
       setErr(rsvpErrorMessage(e, t));
     } finally {

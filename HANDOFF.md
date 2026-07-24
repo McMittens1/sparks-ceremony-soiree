@@ -134,3 +134,53 @@ If the couple does extend the Wedding Party card system to a new group (parents,
 - **Missing admin visibility isn't just an inconvenience — it can hide a real, active bug indefinitely.** Building the read-only Emails admin tab surfaced that every app-triggered email (RSVP confirmations, admin notifications, photo-received) had been silently failing to send since 2026-07-15, invisible because nothing ever surfaced `email_send_log`. The couple's own test RSVP confirmation never arrived and nobody knew. When a feature request says "we have no visibility into X," treat that as a strong signal there may already be a live, undetected problem in X — check the underlying data before assuming the feature request is purely precautionary.
 - **Fixing the first error you find is not the same as fixing the bug — re-check live data after every fix, especially for a multi-stage pipeline.** The email failure above took three separate rounds to actually resolve: fixing the missing `idempotency_key` (round 1) just exposed the next rejection, a missing `unsubscribe_token` (round 2), which in turn exposed a structural retry bug where every failure was guaranteed to exhaust its retries because the retry logic reused the same idempotency key pgmq had already gotten rejected (round 3). Each round was found by querying `email_send_log` again after the previous "fix" shipped, not by assuming the first plausible-looking error was the whole story. A pipeline with multiple sequential validation steps (or multiple independent bugs) will surface its errors one at a time, in order — declaring victory after the first one clears is a trap worth naming explicitly.
 - **A table having no explicit `GRANT ... TO authenticated` in its migration does NOT mean `authenticated` has no table-level access.** Initially assumed (incorrectly) that `email_send_log`/`suppressed_emails`/`email_send_state` needed a new `GRANT SELECT` because `email_infra.sql` only had `GRANT ALL ... TO service_role`. A live query against `information_schema.role_table_grants` showed `anon` and `authenticated` already had full table-level privileges on these tables (and on `guests`, checked for comparison) — Supabase applies broad default privileges to `anon`/`authenticated` on every `public` schema table at project creation, and RLS is the *only* real enforcement layer, by design. The `GRANT SELECT` statements added in `20260717120000_admin_email_visibility.sql` are harmless (idempotent, and narrower than what already existed) but were not actually the missing piece — the new `has_role(auth.uid(),'admin')` RLS policies were. Don't infer a table's real access surface from one migration file's grants; check `information_schema.role_table_grants` directly.
+
+---
+
+## 10. Sprint 4 engineering hygiene (2026-07-24)
+
+This session picked the "Sprint 4 engineering hygiene" wedge from the roadmap and completed the analytics and image-optimization tracks.
+
+### Bundle-size audit
+
+Ran `bun run build` and inspected the generated chunks. Snapshot:
+- Client total: ~1.4 MB across chunks.
+- Server total: ~4.3 MB across chunks.
+- `xlsx` is lazy-loaded in the admin CSV import flow.
+- `recharts` is installed but currently unused in the built output.
+- No immediate action required; the site is not heavy enough to justify a major chunking refactor before launch.
+
+### Anonymous analytics
+
+Goal: understand guest behavior without accounts, cookies, or PII.
+
+Implementation:
+- New table: `public.analytics_events` (`id`, `event_name text not null`, `event_data jsonb default '{}'::jsonb`, `source_url text`, `created_at timestamptz default now()`).
+- Migration grants `ALL` to `service_role` only; no `anon`/`authenticated` grants and no RLS policies. The table is intentionally invisible to the Data API for guests.
+- Server function: `trackEvent` in `src/lib/analytics.functions.ts` validates `event` against an allow-list and writes via the service-role client.
+- Client hook: `useAnalytics` in `src/lib/analytics.ts` exposes `track(event, data?)` and calls the server function.
+- Wired events:
+  - `rsvp_submit` — successful RSVP submission.
+  - `photo_upload` — successful guest photo upload.
+  - `calendar_click` — "Add to Calendar" / `.ics` interaction.
+  - `registry_click` — any registry link click, with `name` and `lead` in `event_data`.
+- Verified end-to-end by driving a Playwright session, clicking the Zola registry link, then querying `analytics_events` and finding a `registry_click` row with `{"lead": true, "name": "Zola"}`.
+
+### Image optimization
+
+Goal: serve smaller image formats where supported without breaking older browsers or social crawlers.
+
+Implementation:
+- Generated WebP variants with `ffmpeg`:
+  - `public/images/hero-portrait-600.webp` (~46 KB)
+  - `public/images/hero-portrait-1200.webp` (~162 KB)
+  - `public/images/sparks-barn-aerial-800.webp` (~36 KB)
+  - `public/images/sparks-barn-aerial-1200.webp` (~71 KB)
+- `HeroSection.tsx` and `DaySection.tsx` now render `<picture>` elements with `srcset` and fall back to the original PNG/JPG.
+- `index.tsx` preloads `/images/hero-portrait-1200.webp`.
+- Verified with `curl` that the 1200w WebP returns 200 OK and the correct `content-type`.
+
+### Remaining Sprint 4 work
+
+- Apply `<picture>`/WebP srcset to the remaining Story section photos once the couple decides the photo strategy (remove / generic engagement / cutouts).
+- Re-run visual QA at 440px and 1280px after any Story section image change.
