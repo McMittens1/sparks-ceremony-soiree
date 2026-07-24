@@ -64,6 +64,10 @@ All three are toggled from the Features tab in `/portal-ga-2026/dashboard` — n
 
 **Admin:** exactly 1 admin has claimed the account (`user_roles` has 1 `admin` row). The first-admin-claim flow has been exercised and works. Single-admin invariant is enforced by the app; do not add multi-admin logic.
 
+**Analytics (live, 2026-07-24):** `analytics_events` table exists and is wired to four events: `rsvp_submit`, `photo_upload`, `calendar_click`, `registry_click`. Writes are service-role only; no direct guest reads. The table had at least one verified `registry_click` row after Playwright QA.
+
+**Image optimization (live, 2026-07-24):** Hero portrait and venue aerial have WebP variants in `public/images/` and are served via `<picture>` srcset. Remaining engagement/Story photos will follow once the Story photo decision is made.
+
 ### Public site
 - Hero, countdown, story timeline, day-of schedule, wedding party, travel/lodging, registry, FAQ, and footer are all live.
 - Mobile-first, single-page scroll experience with a sticky header.
