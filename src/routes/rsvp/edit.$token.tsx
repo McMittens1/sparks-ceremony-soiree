@@ -13,6 +13,20 @@ import {
   type AttendeeChoice,
   type GuestAddress,
 } from "@/lib/rsvp.functions";
+import {
+  INK,
+  IVORY,
+  HAIRLINE,
+  LAV,
+  LAV_DEEP,
+  TAN,
+  TAN_DEEP,
+  SOFT,
+  DANGER,
+  inputStyle,
+  smallLabelStyle,
+  sectionLabelStyle,
+} from "@/lib/rsvp-ui";
 
 export const Route = createFileRoute("/rsvp/edit/$token")({
   ssr: false,
@@ -25,29 +39,6 @@ export const Route = createFileRoute("/rsvp/edit/$token")({
     }),
   component: EditRsvpPage,
 });
-
-const INK = "var(--color-ink)";
-const IVORY = "var(--color-ivory)";
-const HAIRLINE = "var(--color-hairline)";
-const LAV = "var(--color-lavender)";
-const LAV_DEEP = "var(--color-lavender-deep)";
-const TAN = "var(--color-tan)";
-const TAN_DEEP = "var(--color-tan-deep)";
-const SOFT = "var(--color-ink-soft)";
-const DANGER = "var(--color-destructive)";
-
-const inputStyle: React.CSSProperties = {
-  fontFamily: "Cormorant, serif",
-  fontStyle: "italic",
-  fontSize: 19,
-  color: INK,
-  border: "none",
-  borderBottom: `1px solid ${TAN_DEEP}`,
-  background: "transparent",
-  width: "100%",
-  padding: "0 0 10px",
-  boxSizing: "border-box",
-};
 
 // updateRsvpByToken throws a short error code (see rsvp.functions.ts)
 // rather than English prose, so the message shown here matches the
@@ -197,9 +188,7 @@ function EditRsvpPage() {
           to="/"
           className="uppercase font-sans"
           style={{
-            fontSize: 10,
-            letterSpacing: "0.2em",
-            color: LAV_DEEP,
+            ...smallLabelStyle(LAV_DEEP),
             borderBottom: `1px solid ${LAV_DEEP}`,
             padding: "2px 0",
           }}
@@ -291,15 +280,7 @@ function EditRsvpPage() {
               <p className="mt-3 text-center">A fresh copy will be on its way to your inbox.</p>
 
               <div className="mt-8 border" style={{ borderColor: HAIRLINE, padding: "24px 28px" }}>
-                <p
-                  className="uppercase font-sans"
-                  style={{
-                    fontSize: 11,
-                    letterSpacing: "0.3em",
-                    color: LAV_DEEP,
-                    margin: "0 0 4px",
-                  }}
-                >
+                <p className="uppercase font-sans" style={sectionLabelStyle("0 0 4px")}>
                   {state.status === "attending"
                     ? t.rsvp.attending
                     : state.status === "not_attending"
@@ -360,10 +341,7 @@ function EditRsvpPage() {
 
           {state.kind === "ready" && (
             <form onSubmit={onSubmit} className="space-y-10">
-              <p
-                className="uppercase font-sans"
-                style={{ fontSize: 10, letterSpacing: "0.2em", color: LAV }}
-              >
+              <p className="uppercase font-sans" style={smallLabelStyle(LAV)}>
                 {state.guest.primary_name}
                 {state.rsvp && (
                   <> — last saved {new Date(state.rsvp.updated_at).toLocaleDateString()}</>
@@ -371,15 +349,7 @@ function EditRsvpPage() {
               </p>
 
               <section>
-                <p
-                  className="uppercase font-sans"
-                  style={{
-                    fontSize: 11,
-                    letterSpacing: "0.3em",
-                    color: LAV_DEEP,
-                    margin: "0 0 8px",
-                  }}
-                >
+                <p className="uppercase font-sans" style={sectionLabelStyle("0 0 8px")}>
                   Your party
                 </p>
                 <p
@@ -428,7 +398,7 @@ function EditRsvpPage() {
                           type="button"
                           onClick={() => removeAttendee(i)}
                           className="uppercase font-sans"
-                          style={{ fontSize: 10, letterSpacing: "0.2em", color: TAN_DEEP }}
+                          style={smallLabelStyle(TAN_DEEP)}
                         >
                           {t.rsvp.remove}
                         </button>
@@ -440,29 +410,21 @@ function EditRsvpPage() {
                   type="button"
                   onClick={addAttendee}
                   className="mt-4 uppercase font-sans"
-                  style={{ fontSize: 10, letterSpacing: "0.2em", color: LAV_DEEP }}
+                  style={smallLabelStyle(LAV_DEEP)}
                 >
                   {t.rsvp.addGuest}
                 </button>
               </section>
 
               <section className="space-y-3">
-                <p
-                  className="uppercase font-sans"
-                  style={{ fontSize: 11, letterSpacing: "0.3em", color: LAV_DEEP }}
-                >
+                <p className="uppercase font-sans" style={sectionLabelStyle(undefined)}>
                   {t.rsvp.contactTitle}
                 </p>
                 <div>
                   <label
                     htmlFor="edit-rsvp-email"
                     className="block uppercase font-sans"
-                    style={{
-                      fontSize: 11,
-                      letterSpacing: "0.3em",
-                      color: LAV_DEEP,
-                      margin: "0 0 6px",
-                    }}
+                    style={sectionLabelStyle("0 0 6px")}
                   >
                     {t.rsvp.email}
                   </label>
@@ -480,12 +442,7 @@ function EditRsvpPage() {
                   <label
                     htmlFor="edit-rsvp-song"
                     className="block uppercase font-sans"
-                    style={{
-                      fontSize: 11,
-                      letterSpacing: "0.3em",
-                      color: LAV_DEEP,
-                      margin: "0 0 6px",
-                    }}
+                    style={sectionLabelStyle("0 0 6px")}
                   >
                     Song request (optional)
                   </label>
@@ -502,12 +459,7 @@ function EditRsvpPage() {
                   <label
                     htmlFor="edit-rsvp-message"
                     className="block uppercase font-sans"
-                    style={{
-                      fontSize: 11,
-                      letterSpacing: "0.3em",
-                      color: LAV_DEEP,
-                      margin: "0 0 6px",
-                    }}
+                    style={sectionLabelStyle("0 0 6px")}
                   >
                     {t.rsvp.message}
                   </label>
@@ -576,12 +528,10 @@ function Pill({ active, onClick, label }: { active: boolean; onClick: () => void
       onClick={onClick}
       className="uppercase font-sans"
       style={{
+        ...smallLabelStyle(active ? IVORY : INK),
         padding: "8px 14px",
-        fontSize: 10,
-        letterSpacing: "0.2em",
         border: `1px solid ${active ? INK : HAIRLINE}`,
         background: active ? INK : "transparent",
-        color: active ? IVORY : INK,
       }}
     >
       {label}

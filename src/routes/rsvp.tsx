@@ -17,6 +17,21 @@ import {
   type AttendeeChoice,
   type GuestAddress,
 } from "@/lib/rsvp.functions";
+import {
+  INK,
+  IVORY,
+  HAIRLINE,
+  LAV,
+  LAV_DEEP,
+  TAN,
+  TAN_DEEP,
+  BODY,
+  SOFT,
+  DANGER,
+  inputStyle,
+  smallLabelStyle,
+  sectionLabelStyle,
+} from "@/lib/rsvp-ui";
 
 type SubmitRecap = {
   status: PublicRsvp["status"];
@@ -43,43 +58,6 @@ export const Route = createFileRoute("/rsvp")({
 
 type Stage = "lookup" | "verify" | "form" | "done";
 type VerifyTarget = { slug: string } | { token: string } | { selectToken: string };
-
-// CSS-variable shorthands for inline styles where a Tailwind class doesn't fit
-// (e.g. dynamic borderBottom, background). Class-based color usage below still
-// prefers text-ink / bg-ink / border-hairline etc.
-const INK = "var(--color-ink)";
-const IVORY = "var(--color-ivory)";
-const HAIRLINE = "var(--color-hairline)";
-const LAV = "var(--color-lavender)";
-const LAV_DEEP = "var(--color-lavender-deep)";
-const TAN = "var(--color-tan)";
-const TAN_DEEP = "var(--color-tan-deep)";
-const BODY = "var(--color-ink-body)";
-const SOFT = "var(--color-ink-soft)";
-const DANGER = "var(--color-destructive)";
-
-// Styled input (Cormorant italic on a hairline underline) matching the prototype.
-const inputStyle: React.CSSProperties = {
-  fontFamily: "Cormorant, serif",
-  fontStyle: "italic",
-  fontSize: 19,
-  color: INK,
-  border: "none",
-  borderBottom: `1px solid ${TAN_DEEP}`,
-  background: "transparent",
-  width: "100%",
-  padding: "0 0 10px",
-  boxSizing: "border-box",
-};
-
-const eyebrow: React.CSSProperties = {
-  fontFamily: "Work Sans, sans-serif",
-  fontSize: 10,
-  letterSpacing: "0.2em",
-  textTransform: "uppercase",
-  color: TAN,
-  margin: "0 0 8px",
-};
 
 function formatAddress(a: GuestAddress): string[] {
   const lines: string[] = [];
@@ -407,9 +385,7 @@ function RsvpPage() {
           to="/"
           className="uppercase font-sans"
           style={{
-            fontSize: 10,
-            letterSpacing: "0.2em",
-            color: LAV_DEEP,
+            ...smallLabelStyle(LAV_DEEP),
             borderBottom: `1px solid ${LAV_DEEP}`,
             padding: "2px 0",
           }}
@@ -743,7 +719,7 @@ function RsvpPage() {
                       setVerifyErr(null);
                     }}
                     className="mt-8 block mx-auto uppercase font-sans"
-                    style={{ fontSize: 10, letterSpacing: "0.2em", color: TAN_DEEP }}
+                    style={smallLabelStyle(TAN_DEEP)}
                   >
                     {t.rsvp.verifyBack}
                   </button>
@@ -754,10 +730,7 @@ function RsvpPage() {
               {stage === "form" && guest && (
                 <form onSubmit={onSubmit} className="space-y-10">
                   {existingRsvp && (
-                    <p
-                      className="uppercase font-sans"
-                      style={{ fontSize: 10, letterSpacing: "0.2em", color: LAV_DEEP }}
-                    >
+                    <p className="uppercase font-sans" style={smallLabelStyle(LAV_DEEP)}>
                       Editing your response — last saved{" "}
                       {new Date(existingRsvp.updated_at).toLocaleDateString()}.
                     </p>
@@ -776,16 +749,7 @@ function RsvpPage() {
                     }}
                   >
                     <section>
-                      <p
-                        style={{
-                          ...eyebrow,
-                          color: LAV_DEEP,
-                          letterSpacing: "0.3em",
-                          fontSize: 11,
-                        }}
-                      >
-                        Your party
-                      </p>
+                      <p style={sectionLabelStyle("0 0 8px")}>Your party</p>
                       <p
                         className="font-sans"
                         style={{ fontSize: 14, color: SOFT, margin: "0 0 20px", lineHeight: 1.6 }}
@@ -837,11 +801,7 @@ function RsvpPage() {
                                 type="button"
                                 onClick={() => removeAttendee(i)}
                                 className="uppercase font-sans"
-                                style={{
-                                  fontSize: 10,
-                                  letterSpacing: "0.2em",
-                                  color: TAN_DEEP,
-                                }}
+                                style={smallLabelStyle(TAN_DEEP)}
                               >
                                 {t.rsvp.remove}
                               </button>
@@ -854,9 +814,7 @@ function RsvpPage() {
                         onClick={addAttendee}
                         className="mt-4 uppercase font-sans"
                         style={{
-                          fontSize: 10,
-                          letterSpacing: "0.2em",
-                          color: LAV_DEEP,
+                          ...smallLabelStyle(LAV_DEEP),
                           borderBottom: `1px solid ${LAV_DEEP}`,
                           paddingBottom: 3,
                         }}
@@ -871,16 +829,7 @@ function RsvpPage() {
                   edit only on request, save immediately on its own. */}
                   <section aria-labelledby="rsvp-address-heading">
                     <div className="flex items-center justify-between flex-wrap gap-2">
-                      <p
-                        id="rsvp-address-heading"
-                        style={{
-                          ...eyebrow,
-                          color: LAV_DEEP,
-                          letterSpacing: "0.3em",
-                          fontSize: 11,
-                          margin: 0,
-                        }}
-                      >
+                      <p id="rsvp-address-heading" style={sectionLabelStyle(0)}>
                         Mailing address
                       </p>
                       {addressMode === "view" && (
@@ -893,9 +842,7 @@ function RsvpPage() {
                           }}
                           className="uppercase font-sans"
                           style={{
-                            fontSize: 10,
-                            letterSpacing: "0.2em",
-                            color: LAV_DEEP,
+                            ...smallLabelStyle(LAV_DEEP),
                             borderBottom: `1px solid ${LAV_DEEP}`,
                             paddingBottom: 2,
                           }}
@@ -1031,7 +978,7 @@ function RsvpPage() {
                             type="button"
                             onClick={() => setAddressMode("view")}
                             className="uppercase font-sans"
-                            style={{ fontSize: 10, letterSpacing: "0.2em", color: TAN_DEEP }}
+                            style={smallLabelStyle(TAN_DEEP)}
                           >
                             {t.rsvp.addressCancel}
                           </button>
@@ -1057,13 +1004,7 @@ function RsvpPage() {
                         <label
                           htmlFor="rsvp-email"
                           className="block"
-                          style={{
-                            ...eyebrow,
-                            color: LAV_DEEP,
-                            letterSpacing: "0.3em",
-                            fontSize: 11,
-                            margin: "0 0 6px",
-                          }}
+                          style={sectionLabelStyle("0 0 6px")}
                         >
                           Email — for your RSVP confirmation
                         </label>
@@ -1082,12 +1023,7 @@ function RsvpPage() {
                         <label
                           htmlFor="rsvp-song"
                           className="block"
-                          style={{
-                            ...eyebrow,
-                            color: LAV_DEEP,
-                            letterSpacing: "0.3em",
-                            fontSize: 11,
-                          }}
+                          style={sectionLabelStyle("0 0 8px")}
                         >
                           Song request (optional)
                         </label>
@@ -1104,12 +1040,7 @@ function RsvpPage() {
                         <label
                           htmlFor="rsvp-message"
                           className="block"
-                          style={{
-                            ...eyebrow,
-                            color: LAV_DEEP,
-                            letterSpacing: "0.3em",
-                            fontSize: 11,
-                          }}
+                          style={sectionLabelStyle("0 0 8px")}
                         >
                           {t.rsvp.message}
                         </label>
@@ -1148,7 +1079,7 @@ function RsvpPage() {
                           setErr(null);
                         }}
                         className="uppercase font-sans"
-                        style={{ fontSize: 10, letterSpacing: "0.2em", color: TAN_DEEP }}
+                        style={smallLabelStyle(TAN_DEEP)}
                       >
                         ← {t.common.back}
                       </button>
@@ -1171,7 +1102,7 @@ function RsvpPage() {
                     </div>
                     <p
                       className="text-center uppercase font-sans mt-4"
-                      style={{ fontSize: 10, letterSpacing: "0.2em", color: SOFT }}
+                      style={smallLabelStyle(SOFT)}
                     >
                       {t.rsvp.resubmitNote}
                     </p>
@@ -1193,15 +1124,7 @@ function RsvpPage() {
                   </p>
 
                   <div className="border" style={{ borderColor: HAIRLINE, padding: "24px 28px" }}>
-                    <p
-                      style={{
-                        ...eyebrow,
-                        color: LAV_DEEP,
-                        letterSpacing: "0.3em",
-                        fontSize: 11,
-                        margin: "0 0 4px",
-                      }}
-                    >
+                    <p style={sectionLabelStyle("0 0 4px")}>
                       {recap.status === "attending"
                         ? t.rsvp.attending
                         : recap.status === "not_attending"
@@ -1254,9 +1177,7 @@ function RsvpPage() {
                       onClick={() => setStage("form")}
                       className="uppercase font-sans"
                       style={{
-                        fontSize: 10,
-                        letterSpacing: "0.2em",
-                        color: LAV_DEEP,
+                        ...smallLabelStyle(LAV_DEEP),
                         borderBottom: `1px solid ${LAV_DEEP}`,
                         paddingBottom: 3,
                       }}
@@ -1297,12 +1218,10 @@ function PillToggle({
       aria-pressed={active}
       className="uppercase font-sans transition-colors"
       style={{
+        ...smallLabelStyle(active ? IVORY : BODY),
         padding: "8px 14px",
-        fontSize: 10,
-        letterSpacing: "0.2em",
         border: `1px solid ${active ? INK : HAIRLINE}`,
         background: active ? INK : "transparent",
-        color: active ? IVORY : BODY,
         cursor: "pointer",
       }}
     >

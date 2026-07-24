@@ -3,6 +3,7 @@ import { Body, Container, Head, Heading, Html, Preview, Text } from "@react-emai
 import type { TemplateEntry } from "./registry";
 import { EMAIL_COLORS } from "./tokens";
 import { EmailMasthead, EmailFooter } from "./masthead";
+import { SITE } from "@/lib/site";
 
 interface PhotoReceivedProps {
   uploaderName?: string;
@@ -15,7 +16,7 @@ const PhotoReceivedEmail = ({ uploaderName = "Friend", count = 1 }: PhotoReceive
     <Preview>We got your {count === 1 ? "photo" : "photos"} — thank you!</Preview>
     <Body style={main}>
       <Container style={container}>
-        <EmailMasthead eyebrow="The Wedding of Geovanni & Addison" />
+        <EmailMasthead eyebrow={`The Wedding of ${SITE.couple}`} />
         <Heading style={h1}>Thanks for the photos.</Heading>
         <Text style={text}>
           Hi {uploaderName}, we received your upload

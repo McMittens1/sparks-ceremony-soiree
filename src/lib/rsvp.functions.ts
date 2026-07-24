@@ -93,6 +93,12 @@ function randomSlug(len = 6): string {
   return out;
 }
 
+// Both randomSlug() insert-retry loops (upsertGuest and the bulk import) use
+// this same cap — a shared constant keeps that retry budget in sync without
+// forcing the two loops (whose bodies differ — one returns {id, slug}, the
+// other mutates an import-plan row) into a single shared function.
+const SLUG_COLLISION_MAX_RETRIES = 5;
+
 // Strips formatting and a recognized US (1) or Mexico (52 / 521) country
 // code down to a bare national number. Used for dedup, storage-agnostic
 // last-4-digit verification, and format validation alike — a phone number
@@ -943,7 +949,7 @@ export const upsertGuest = createServerFn({ method: "POST" })
     }
 
     // Insert with unique slug (retry on collision).
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < SLUG_COLLISION_MAX_RETRIES; i++) {
       const slug = (data.slug || randomSlug()).toUpperCase();
       const { data: ins, error } = await sb
         .from("guests")
@@ -1343,7 +1349,7 @@ export const importGuestsCsv = createServerFn({ method: "POST" })
               primary_name: string;
               phone: string;
             };
-            for (let i = 0; i < 5; i++) {
+            for (let i = 0; i < SLUG_COLLISION_MAX_RETRIES; i++) {
               const slug = p.slug || randomSlug();
               const { error } = await sb.from("guests").insert({ ...payload, slug });
               if (!error) {

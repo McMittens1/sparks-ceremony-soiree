@@ -14,6 +14,7 @@ import {
 import type { TemplateEntry } from "./registry";
 import { EMAIL_COLORS } from "./tokens";
 import { EmailMasthead, EmailFooter } from "./masthead";
+import { SITE } from "@/lib/site";
 
 interface AttendeeLine {
   name: string;
@@ -56,10 +57,12 @@ const RsvpConfirmationEmail = ({
   return (
     <Html lang="en" dir="ltr">
       <Head />
-      <Preview>Your RSVP for Geovanni &amp; Addison — {headline}</Preview>
+      <Preview>
+        Your RSVP for {SITE.couple} — {headline}
+      </Preview>
       <Body style={main}>
         <Container style={container}>
-          <EmailMasthead eyebrow={`The Wedding of Geovanni & Addison · ${eventDate}`} />
+          <EmailMasthead eyebrow={`The Wedding of ${SITE.couple} · ${eventDate}`} />
           <Heading style={h1}>{headline}</Heading>
           <Text style={text}>
             Hi {guestName}, we&rsquo;ve saved your RSVP. Here&rsquo;s a copy for your records.
@@ -114,7 +117,7 @@ const RsvpConfirmationEmail = ({
 
 export const template = {
   component: RsvpConfirmationEmail,
-  subject: "Your RSVP for Geovanni & Addison",
+  subject: `Your RSVP for ${SITE.couple}`,
   displayName: "RSVP confirmation",
   previewData: {
     guestName: "Jane Doe",

@@ -31,6 +31,8 @@ const DEFAULT_BATCH_SIZE = 10;
 const DEFAULT_SEND_DELAY_MS = 200;
 const DEFAULT_AUTH_TTL_MINUTES = 15;
 const DEFAULT_TRANSACTIONAL_TTL_MINUTES = 60;
+const DEFAULT_RETRY_AFTER_SECONDS = 60;
+const ERROR_MESSAGE_MAX_LENGTH = 1000;
 
 // Check if an error is a rate-limit (429) response.
 // Uses EmailAPIError.status when available (email-js >=0.x with structured errors),
@@ -54,9 +56,12 @@ function isForbidden(error: unknown): boolean {
 // Extract Retry-After seconds from a structured EmailAPIError, or default to 60s.
 function getRetryAfterSeconds(error: unknown): number {
   if (error && typeof error === "object" && "retryAfterSeconds" in error) {
-    return (error as { retryAfterSeconds: number | null }).retryAfterSeconds ?? 60;
+    return (
+      (error as { retryAfterSeconds: number | null }).retryAfterSeconds ??
+      DEFAULT_RETRY_AFTER_SECONDS
+    );
   }
-  return 60;
+  return DEFAULT_RETRY_AFTER_SECONDS;
 }
 
 async function moveToDlq(
@@ -327,7 +332,7 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
                   template_name: payload.label || queue,
                   recipient_email: payload.to,
                   status: "failed",
-                  error_message: errorMsg.slice(0, 1000),
+                  error_message: errorMsg.slice(0, ERROR_MESSAGE_MAX_LENGTH),
                 });
 
                 const retryAfterSecs = getRetryAfterSeconds(error);
@@ -346,7 +351,7 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
               // 403s are permanent configuration or authorization failures for this
               // message, so move straight to DLQ and stop processing the rest of the batch.
               if (isForbidden(error)) {
-                await moveToDlq(supabase, queue, msg, errorMsg.slice(0, 1000));
+                await moveToDlq(supabase, queue, msg, errorMsg.slice(0, ERROR_MESSAGE_MAX_LENGTH));
                 return Response.json({ processed: totalProcessed, stopped: "forbidden" });
               }
 
@@ -356,7 +361,7 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
                 template_name: payload.label || queue,
                 recipient_email: payload.to,
                 status: "failed",
-                error_message: errorMsg.slice(0, 1000),
+                error_message: errorMsg.slice(0, ERROR_MESSAGE_MAX_LENGTH),
               });
               if (payload?.message_id && typeof payload.message_id === "string") {
                 failedAttemptsByMessageId.set(payload.message_id, failedAttempts + 1);

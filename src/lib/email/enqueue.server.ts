@@ -3,8 +3,10 @@ import { render } from "@react-email/render";
 import { TEMPLATES } from "@/lib/email-templates/registry";
 import { getOrCreateUnsubscribeToken } from "@/lib/email/unsubscribe-token.server";
 import { SENDER_DOMAIN } from "@/lib/email/sender";
+import { SITE } from "@/lib/site";
 
-const FROM = `Geovanni & Addison <noreply@${SENDER_DOMAIN}>`;
+const SITE_NAME = SITE.couple;
+const FROM = `${SITE_NAME} <noreply@${SENDER_DOMAIN}>`;
 
 /**
  * Server-only: renders a registered app email template and enqueues it into
@@ -50,8 +52,7 @@ export async function enqueueAppEmail(opts: {
     const element = React.createElement(entry.component, opts.data);
     const html = await render(element);
     const text = await render(element, { plainText: true });
-    const subject =
-      typeof entry.subject === "function" ? entry.subject(opts.data) : entry.subject;
+    const subject = typeof entry.subject === "function" ? entry.subject(opts.data) : entry.subject;
 
     const messageId = opts.idempotencyKey;
 
