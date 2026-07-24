@@ -380,6 +380,7 @@ function RsvpPage() {
         submittedAt: res.submitted_at,
       });
       setStage("done");
+      track("rsvp_submit", { status: res.status, attendees: cleaned.length });
     } catch (e) {
       setErr(rsvpErrorMessage(e, t));
     } finally {
