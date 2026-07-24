@@ -4,6 +4,7 @@ import { DiamondDivider } from "@/components/site/DiamondDivider";
 import { SectionHeader } from "@/components/site/SectionHeader";
 import { Eyebrow } from "@/components/site/typography";
 import { useFeatureFlag } from "@/hooks/use-feature-flags";
+import { useAnalytics } from "@/lib/analytics";
 import { uploadGuestPhotos, listApprovedPhotos, type GalleryPhoto } from "@/lib/photos.functions";
 import { PHOTO_MAX_FILES, PHOTO_MAX_FILE_BYTES } from "@/lib/photo-config";
 
