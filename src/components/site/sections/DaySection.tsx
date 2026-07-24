@@ -247,12 +247,21 @@ export function DaySection() {
             <div className="grid content-start" style={{ gap: 36 }}>
               <figure style={{ margin: 0 }}>
                 <div style={{ aspectRatio: "16 / 9", overflow: "hidden" }}>
-                  <img
-                    src={barnAerial.url}
-                    alt="Sparks' Barn at sunset — aerial view of the red barn, patio, and Nebraska farmland."
-                    loading="lazy"
-                    className="w-full h-full object-cover"
-                  />
+                  <picture>
+                    <source
+                      srcSet="/images/sparks-barn-aerial-800.webp 800w, /images/sparks-barn-aerial-1200.webp 1200w"
+                      sizes="(max-width: 1023px) 100vw, 50vw"
+                      type="image/webp"
+                    />
+                    <img
+                      src={barnAerial.url}
+                      alt="Sparks' Barn at sunset — aerial view of the red barn, patio, and Nebraska farmland."
+                      loading="lazy"
+                      width={1920}
+                      height={1078}
+                      className="w-full h-full object-cover"
+                    />
+                  </picture>
                 </div>
                 <figcaption
                   className="uppercase font-sans"
