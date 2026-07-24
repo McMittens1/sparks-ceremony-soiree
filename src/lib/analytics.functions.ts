@@ -9,7 +9,10 @@ const ALLOWED_EVENTS = [
   "registry_click",
 ] as const;
 
-const eventSchema = z.enum(ALLOWED_EVENTS);
+const eventSchema = z.string().refine(
+  (v): v is AnalyticsEvent => ALLOWED_EVENTS.includes(v as AnalyticsEvent),
+  { message: "Invalid analytics event name" },
+);
 
 const trackSchema = z.object({
   event: eventSchema,
