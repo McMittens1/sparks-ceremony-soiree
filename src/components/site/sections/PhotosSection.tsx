@@ -205,6 +205,7 @@ function UploadFormLive() {
       });
       setUploadSummary({ uploaded: result.uploaded, total: encoded.length });
       setStatus("done");
+      track("photo_upload", { uploaded: result.uploaded, total: encoded.length });
       setName("");
       setEmail("");
       setCaption("");
