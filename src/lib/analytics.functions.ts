@@ -16,7 +16,7 @@ const eventSchema = z.string().refine(
 
 const trackSchema = z.object({
   event: eventSchema,
-  data: z.record(z.unknown()).default({}),
+  data: z.record(z.string(), z.unknown()).default({}),
 });
 
 export type AnalyticsEvent = (typeof ALLOWED_EVENTS)[number];
