@@ -36,6 +36,7 @@ const pillStyle: CSSProperties = {
 };
 
 export function DaySection() {
+  const track = useAnalytics();
   const [copied, setCopied] = useState(false);
   async function copyAddress() {
     try {
