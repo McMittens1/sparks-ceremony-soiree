@@ -6,6 +6,7 @@ import type { Dict } from "@/i18n/dictionaries";
 import { useFeatureFlag } from "@/hooks/use-feature-flags";
 import { SITE } from "@/lib/site";
 import { buildMeta } from "@/lib/seo";
+import { useAnalytics } from "@/lib/analytics";
 import {
   lookupGuest,
   getVerifyTargetLabel,
