@@ -1,46 +1,72 @@
-# Read-Only Codebase Audit Report
+# Plan: Reconcile Onboarding Docs with Reality + Standing Instruction for Future Sessions
 
-## Summary
-The codebase is unusually clean for a project this size. RSVP gating, countdown breakpoints, feature flags, and the design-token CSS are all deliberately centralized and heavily commented to prevent the kind of drift this audit was asked to find. No dead application files, no duplicate components/logic, no contradictory Tailwind/CSS, no stale RSVP or countdown code, and every feature flag is wired to real behavior on both client and server. The only "unused" code is the standard shadcn/ui component library, which is expected boilerplate.
+## Goal
+Make `ONBOARDING.md` and `HANDOFF.md` an accurate mirror of the live project as of today, then install a standing rule so every future session keeps them accurate as part of normal work — not as a separate chore.
 
-## Critical/High Findings
-None found.
+---
 
-## Moderate Findings
-None found.
+## Part 1 — Deep verification pass (read-only, before any edits)
 
-## Low Findings
+I'll verify every factual claim in `ONBOARDING.md` and `HANDOFF.md` against the actual codebase and live DB, not just the ones I've already checked. Categories:
 
-**1. Large, feature-dense files — `src/lib/rsvp.functions.ts` (~1425 lines) and `src/routes/rsvp.tsx` (~1312 lines)**
-- Severity: low
-- Evidence: `rsvp.functions.ts` contains ~15 top-level helpers (validation, rate limiting, CSV import/export, verification, write path) in one module; `rsvp.tsx` renders the entire lookup/verify/party/extras/address flow in one component tree.
-- Why it matters: not a correctness bug — every helper checked (`normalizePhone`, `isValidPhone`, `parseCsv`, `planImportRows`, etc.) is single-purpose and non-duplicated. Size just makes future review/refactor slower and increases merge-conflict surface.
-- Suggested fix (optional): split CSV import/export and rate-limiting helpers out of `rsvp.functions.ts` into sibling modules. Defer until a real refactor lands nearby.
+1. **Live DB state** — re-query row counts for `guests`, `rsvps`, `guest_photos`, `user_roles`, `feature_flags`, `app_config`, and any table the docs reference. Confirm current flag values.
+2. **Routes & auth** — walk `src/routes/` and confirm every route the docs mention still exists at the claimed path, and every route that exists is either documented or intentionally omitted.
+3. **Server functions & gating** — verify each `*.functions.ts` gating claim (RSVP open, photo uploads, admin checks) by reading the actual handler.
+4. **Email pipeline** — confirm sender domain, templates registered, masthead usage, unsubscribe route, and queue processor endpoint match docs.
+5. **MCP tools** — list actual tools under `src/lib/mcp/tools/`, confirm each is auth-gated per the current `src/lib/mcp/index.ts`.
+6. **Site constants** — `src/lib/site.ts` (URL, dates, deadline) vs. docs.
+7. **Wedding data** — role counts (bridesmaids, groomsmen, ushers, kids), which members have real card copy vs. placeholders, `DAY_SCHEDULE` row count and contents.
+8. **Feature flags** — every flag defined vs. every flag consumed (client + server); flag values in DB vs. docs.
+9. **Build & lint state** — one `bun run build:dev` to confirm green.
+10. **Roadmap accuracy** — cross-check the "remaining work" / sprint sections against what has actually shipped so completed items get moved out of the backlog.
 
-**2. `TemplateEntry.component: ComponentType<any>` — `src/lib/email-templates/registry.ts:14`**
-- Severity: low
-- Evidence: the field is typed `any` because the registry is heterogeneous and props are decoded from runtime JSON; a comment above the line explains this.
-- Why it matters: loosens type safety for email template props, but the tradeoff is documented and the registry has 3 real entries — right-sized, not over-engineered.
-- Suggested fix: none needed; documented deliberate tradeoff.
+Findings will be a delta list: for each doc claim, `MATCHES`, `STALE (correct to X)`, or `MISSING (add X)`.
 
-## No Issues Found
+## Part 2 — Rewrite the docs to match
 
-- **Duplicate components / duplicated logic** — No parallel implementations. Section components (`HeroSection`, `CountdownSection`, `StorySection`, etc.) are single-purpose and non-overlapping. Typography primitives in `src/components/site/typography.tsx` (`Eyebrow`, `DisplayHeading`, `Subhead`, `BodyProse`) each have 2+ real call sites — genuine compression, not speculative abstraction.
-- **Dead / unreferenced application files** — Every file under `src/components/site`, `src/lib`, `src/hooks`, `src/i18n` is referenced by at least one other module. No orphaned application code.
-- **Contradictory Tailwind / CSS** — `src/styles.css` (~454 lines) has no duplicate keyframes or selectors. The only `!important` rules are two narrowly-scoped, intentional ones (`.mobile-menu-*` hidden above `md`, and the `prefers-reduced-motion` block). Custom tokens in `@theme inline` (`--color-ink`, `--color-lavender`, etc.) are all consumed via `text-*`/`bg-*` utilities. The `.rs-stack*` responsive grid contract is documented and matches the breakpoints actually used (640/768/1024).
-- **Stale RSVP logic or copy** — `SITE.rsvpDeadline` / `rsvpDeadlinePretty` (`src/lib/site.ts:30-36`) are read wherever the deadline is shown (`rsvp.tsx:36,452`, `rsvp.functions.ts:631,879`). The `rsvp_open` flag gates identical UI and server paths (client: `rsvp.tsx:768-775,1043-1052,1157-1166`; server: `rsvp.functions.ts:683`), with the address-update path explicitly and correctly excluded from the gate on both ends. No references to removed fields.
-- **Stale countdown logic / breakpoint behavior** — `src/components/site/Countdown.tsx:24-25` defines `COUNTDOWN_HERO_VISIBLE = "lg:hidden"` and `COUNTDOWN_SECTION_VISIBLE = "hidden lg:block"` as the single source of truth. `HeroSection.tsx:141` and `CountdownSection.tsx:9` both import these constants instead of hardcoding breakpoints. Hero image visibility (`HeroSection.tsx:32,150`) uses the same `lg` boundary, so hero-image ↔ countdown handoff is aligned.
-- **Feature flags vs. rendered behavior** — Three flags exist end-to-end and are each read where expected: `show_ushers` (`WeddingParty.tsx:12`), `guest_photo_uploads` (client `PhotosSection.tsx:14`, server `photos.functions.ts:34`), `rsvp_open` (client `rsvp.tsx:155`, server `rsvp.functions.ts:683`). No defined-but-unread flag, no hardcoded true/false, no UI that ignores a disabled flag.
-- **Unnecessary / misleading / overly complicated abstractions** — `Reveal.tsx`, `use-active-section.ts`, the typography primitives, `isFeatureEnabled`, and the MCP tools registry (`src/lib/mcp/index.ts`) each have multiple real consumers or an explicit single-source-of-truth rationale. No prop-forwarding wrappers or single-entry "config" objects found.
+Update `ONBOARDING.md` and `HANDOFF.md` in place with:
 
-## Positive Findings
-- Extensive in-code comments proactively document *why* shared constants exist and reference the past bug they prevent (e.g. the `COUNTDOWN_HERO_VISIBLE` / `COUNTDOWN_SECTION_VISIBLE` comment naming the earlier breakpoint-drift incident; the `rsvpDeadlinePretty` comment mirroring `eventDatePretty`).
-- `SITE` in `src/lib/site.ts` is a genuine single source of truth for dates, URLs, and copy fallbacks — no re-typed dates or URLs elsewhere.
-- Server-side and client-side flag/deadline checks are kept in lockstep by design ("gated by rsvp_open, same as the party section" comments).
-- `src/components/ui/*` shadcn library is cleanly separated from application code; the 34-of-43 unused entries are expected scaffolding, not technical debt.
+- Corrected live-data section (guests=0, rsvps=0, photos=0 today, with a note that this reflects pre-import state).
+- Corrected `DAY_SCHEDULE` row count (6, not 7) and any other numeric drift found in Part 1.
+- Roadmap trimmed of anything already shipped; anything discovered mid-refactor added.
+- New timestamp + short "last verified against" note at the top of each doc so future sessions can tell at a glance whether the doc is fresh.
 
-## Overall Recommendation
-No cleanup action required. The two low-severity items (large RSVP files, `any` in the email template registry) are optional readability improvements, not defects, and can be deferred indefinitely without risk. Continue building against the current structure.
+I will **not** touch design, features, or behavior in this pass. Docs only.
 
-## Final Verdict
-**Clean**
+## Part 3 — Standing instruction for future sessions
+
+Add a short, load-bearing rule to `AGENTS.md` (already loaded automatically by Claude Code / Cursor / this assistant on session start) that reads roughly:
+
+> **Docs-are-code rule.** `ONBOARDING.md`, `HANDOFF.md`, and `.lovable/plan.md` are part of the deliverable. At the end of any turn that changes routes, server functions, DB schema, feature flags, wedding data, email pipeline, MCP tools, or completes a roadmap item, update the affected doc in the same turn. Never leave the docs describing a past state. If you can't tell whether a doc is stale, re-verify against the codebase/DB before asserting current state — do not trust the doc's own claims. Treat "the docs still say X" the same as "the code still does X": a bug.
+
+Plus a shorter mirror in `.claude/settings.json` `session-start.sh` output so it's surfaced on every Claude Code session, and a one-liner reminder in the reusable onboarding prompt block already inside `ONBOARDING.md`.
+
+I'll also give you a **paste-ready prompt** you can drop into any assistant's custom-instructions box that enforces the same rule plus the "work like a professional engineer on a live site" expectations:
+
+- Verify current state before asserting it.
+- Never ship changes to `main` without a build check.
+- Never break RLS or the single-admin invariant.
+- Preserve design decisions unless explicitly asked to change them.
+- Keep docs in sync in the same turn as the code change.
+- Small, reviewable, reversible changes.
+
+## Part 4 — Story section note (holding, not part of this plan)
+
+You floated either removing story photos or swapping them for generic engagement pics unless backgrounds are removed. I'll leave that decision open and address it in a separate follow-up once you've decided — it's a design change, not a doc-accuracy issue, and I don't want to bundle it with a verification pass.
+
+---
+
+## Out of scope for this plan
+
+- Any code, design, or behavior change.
+- Re-importing the 52 households (that's its own decision — needs your source data or confirmation you'll import via the admin CSV importer).
+- Wedding-party copy, Spanish proofread, email deliverability test, mobile QA — all remain on the roadmap for later sprints.
+
+## Deliverables
+
+1. Updated `ONBOARDING.md` (accurate, timestamped).
+2. Updated `HANDOFF.md` (accurate, timestamped).
+3. Updated `.lovable/plan.md` roadmap (shipped items removed, current state reflected).
+4. New "docs-are-code" rule appended to `AGENTS.md`.
+5. Paste-ready custom-instructions prompt returned in chat for you to reuse in Claude Code / Cursor / ChatGPT / here.
+6. Short summary of what was stale and what was corrected.
