@@ -185,22 +185,14 @@ export function HeroSection() {
             justifyContent: "center",
           }}
         >
-          <img
-            src={heroPortrait.url}
+          <HeroImage
             alt="Geovanni Moreno and Addison Hillman"
-            loading="eager"
-            fetchPriority="high"
             style={{
               width: "100%",
               height: "auto",
               maxHeight: "100%",
               objectFit: "contain",
               display: "block",
-              mixBlendMode: "multiply",
-              WebkitMaskImage:
-                "linear-gradient(to bottom, black 0%, black 55%, rgba(0,0,0,0.7) 72%, rgba(0,0,0,0.35) 86%, transparent 100%)",
-              maskImage:
-                "linear-gradient(to bottom, black 0%, black 55%, rgba(0,0,0,0.7) 72%, rgba(0,0,0,0.35) 86%, transparent 100%)",
             }}
           />
         </div>
