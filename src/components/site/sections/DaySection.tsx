@@ -220,6 +220,7 @@ export function DaySection() {
               <div className="flex flex-wrap gap-3" style={{ marginTop: 20 }}>
                 <a
                   href="/api/public/wedding.ics"
+                  onClick={() => track("calendar_click", { provider: "ics" })}
                   className="uppercase font-sans inline-block"
                   style={pillStyle}
                 >
@@ -233,6 +234,7 @@ export function DaySection() {
                   )}&details=${encodeURIComponent(`The wedding of Geo & Addi. See ${SITE_HOST}.`)}`}
                   target="_blank"
                   rel="noopener"
+                  onClick={() => track("calendar_click", { provider: "google" })}
                   className="uppercase font-sans inline-block"
                   style={pillStyle}
                 >
