@@ -1,6 +1,10 @@
 # Moreno Wedding 2026 — Onboarding Package
 
+**Last verified against the live codebase + database: 2026-07-24.** Update this line every time you re-verify. If it's stale by more than a session or two, re-verify before trusting any specific claim below — this doc is only useful if it mirrors reality.
+
 A single source of truth for continuing this project with any AI assistant (Claude Code, Cursor, etc.). Read this file in full before making changes. A companion document, `HANDOFF.md`, captures narrative context, judgment calls, and lessons learned from the most recent development session — read that too if it exists.
+
+> **Docs-are-code rule.** `ONBOARDING.md`, `HANDOFF.md`, and `.lovable/plan.md` are part of the deliverable. Any turn that changes routes, server functions, DB schema, feature flags, wedding data, email pipeline, MCP tools, or completes a roadmap item must update the affected doc in the same turn and bump the "Last verified" date above. Never leave the docs describing a past state. If you can't tell whether a doc claim is current, re-verify against the codebase/DB before restating it — treat "the docs still say X" the same as "the code still does X": a bug worth fixing.
 
 > **Git policy — read this first:** All work on this project happens directly on the `main` branch. No feature branches, no dev branch, no pull requests, ever — commit and push straight to `main`. This isn't a default you should second-guess; it's a deliberate choice tied to how this repo syncs bidirectionally with Lovable (see §8). If you're about to run `git checkout -b`, stop.
 
@@ -12,7 +16,7 @@ A single source of truth for continuing this project with any AI assistant (Clau
 
 **Live URLs:**
 - Custom domain: https://morenowedding2026.com (canonical form used everywhere in code — no `www`)
-- Published Lovable URL: https://sparks-ceremony-soiree.lovable.app (Lovable's own hosting subdomain; not the domain guests see)
+- Published Lovable URL: https://morenowedding2026.lovable.app (Lovable's own hosting subdomain; not the domain guests see)
 - Preview URL: https://id-preview--a290ad4a-bc98-421e-bbac-091b5ceb23e6.lovable.app
 - Lovable project ID: `a290ad4a-bc98-421e-bbac-091b5ceb23e6` (workspace `8lk3HziGBvuDvQuiDZjW`) — needed for any Lovable MCP tool call (`query_database`, `get_project`, etc.)
 
