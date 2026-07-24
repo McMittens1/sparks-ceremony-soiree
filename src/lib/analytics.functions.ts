@@ -9,8 +9,17 @@ const ALLOWED_EVENTS = [
   "registry_click",
 ] as const;
 
+const eventSchema = z.union(
+  ALLOWED_EVENTS.map((v) => z.literal(v)) as [
+    z.ZodLiteral<"rsvp_submit">,
+    z.ZodLiteral<"photo_upload">,
+    z.ZodLiteral<"calendar_click">,
+    z.ZodLiteral<"registry_click">,
+  ],
+);
+
 const trackSchema = z.object({
-  event: z.enum(ALLOWED_EVENTS),
+  event: eventSchema,
   data: z.record(z.unknown()).default({}),
 });
 
@@ -28,7 +37,9 @@ export const trackEvent = createServerFn({ method: "POST" })
     const request = getRequest();
     const sourceUrl = request?.headers.get("referer") ?? null;
 
-    await supabaseAdmin.from("analytics_events").insert({
+    // The generated Supabase types lag behind new migrations; cast until the
+    // schema is refreshed.
+    await (supabaseAdmin as any).from("analytics_events").insert({
       event_name: data.event,
       event_data: data.data,
       source_url: sourceUrl,
