@@ -1,8 +1,10 @@
 import { DiamondDivider } from "@/components/site/DiamondDivider";
 import { SectionHeader } from "@/components/site/SectionHeader";
 import { REGISTRY } from "@/lib/wedding-data";
+import { useAnalytics } from "@/lib/analytics";
 
 export function RegistrySection() {
+  const track = useAnalytics();
   return (
     <section id="registry" className="border-t border-hairline rs-section">
       <SectionHeader
