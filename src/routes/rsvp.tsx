@@ -150,6 +150,7 @@ function RsvpPage() {
   const runVerify = useServerFn(verifyHouseholdAccess);
   const runUpdateAddress = useServerFn(updateGuestAddress);
   const runSubmit = useServerFn(submitRsvp);
+  const track = useAnalytics();
   // Admin-controlled via the Features tab. Gates RSVP submission only —
   // household lookup/verification and address management work regardless,
   // since guests may reach this page well before RSVP officially opens.
