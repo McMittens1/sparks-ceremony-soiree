@@ -9,14 +9,7 @@ const ALLOWED_EVENTS = [
   "registry_click",
 ] as const;
 
-const eventSchema = z.union(
-  ALLOWED_EVENTS.map((v) => z.literal(v)) as [
-    z.ZodLiteral<"rsvp_submit">,
-    z.ZodLiteral<"photo_upload">,
-    z.ZodLiteral<"calendar_click">,
-    z.ZodLiteral<"registry_click">,
-  ],
-);
+const eventSchema = z.enum(ALLOWED_EVENTS);
 
 const trackSchema = z.object({
   event: eventSchema,
