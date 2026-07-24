@@ -1,6 +1,10 @@
 # Moreno Wedding 2026 — Onboarding Package
 
+**Last verified against the live codebase + database: 2026-07-24.** Update this line every time you re-verify. If it's stale by more than a session or two, re-verify before trusting any specific claim below — this doc is only useful if it mirrors reality.
+
 A single source of truth for continuing this project with any AI assistant (Claude Code, Cursor, etc.). Read this file in full before making changes. A companion document, `HANDOFF.md`, captures narrative context, judgment calls, and lessons learned from the most recent development session — read that too if it exists.
+
+> **Docs-are-code rule.** `ONBOARDING.md`, `HANDOFF.md`, and `.lovable/plan.md` are part of the deliverable. Any turn that changes routes, server functions, DB schema, feature flags, wedding data, email pipeline, MCP tools, or completes a roadmap item must update the affected doc in the same turn and bump the "Last verified" date above. Never leave the docs describing a past state. If you can't tell whether a doc claim is current, re-verify against the codebase/DB before restating it — treat "the docs still say X" the same as "the code still does X": a bug worth fixing.
 
 > **Git policy — read this first:** All work on this project happens directly on the `main` branch. No feature branches, no dev branch, no pull requests, ever — commit and push straight to `main`. This isn't a default you should second-guess; it's a deliberate choice tied to how this repo syncs bidirectionally with Lovable (see §8). If you're about to run `git checkout -b`, stop.
 
@@ -12,7 +16,7 @@ A single source of truth for continuing this project with any AI assistant (Clau
 
 **Live URLs:**
 - Custom domain: https://morenowedding2026.com (canonical form used everywhere in code — no `www`)
-- Published Lovable URL: https://sparks-ceremony-soiree.lovable.app (Lovable's own hosting subdomain; not the domain guests see)
+- Published Lovable URL: https://morenowedding2026.lovable.app (Lovable's own hosting subdomain; not the domain guests see)
 - Preview URL: https://id-preview--a290ad4a-bc98-421e-bbac-091b5ceb23e6.lovable.app
 - Lovable project ID: `a290ad4a-bc98-421e-bbac-091b5ceb23e6` (workspace `8lk3HziGBvuDvQuiDZjW`) — needed for any Lovable MCP tool call (`query_database`, `get_project`, etc.)
 
@@ -47,16 +51,16 @@ A single source of truth for continuing this project with any AI assistant (Clau
 
 ## 2. Current state
 
-**As of this audit (2026-07-17, verified live via direct DB query), production feature-flag values:**
-- `rsvp_open` → **true** — RSVP is open to real guests.
+**As of 2026-07-24, verified live via direct DB query, production feature-flag values:**
+- `rsvp_open` → **true** — the flag is on, so the form accepts submissions in principle.
 - `guest_photo_uploads` → **false** — photo upload is built and fully functional, but not open yet.
 - `show_ushers` → **false** — the Ushers section of the Wedding Party page is built but hidden.
 
 All three are toggled from the Features tab in `/portal-ga-2026/dashboard` — no code change needed to flip them. **Check the live value before assuming a feature is "on" or "off"; this file only reflects a snapshot.**
 
-**Guest data:** the `guests` table has **52 real household rows** (the test/seed row from earlier in the project is gone — the real invite list has been imported). `rsvps` has 1 submitted response so far. `guest_photos` is empty.
+**Guest data (live, 2026-07-24):** the `guests` table is **empty (0 rows)**, `rsvps` is **empty (0 rows)**, `guest_photos` is empty. The real 52-household import that ran earlier in the project's life is not present in the current environment — either it was wiped or the previous verified snapshot (2026-07-17) was taken against a different environment. Practically: `rsvp_open` is technically true, but a real guest hitting `/rsvp` right now will fail lookup. Re-importing the household list via the admin dashboard's CSV importer is a prerequisite before RSVP is meaningfully "live" again. `email_send_log` has 39 historical rows (audit trail); `email_send_state` has 1 row; `suppressed_emails` is empty.
 
-**Admin:** exactly 1 admin has claimed the account (`user_roles` has 1 `admin` row, matching exactly one `auth.users` row — no orphans/mismatches as of the last direct check). The first-admin-claim flow has been exercised and works.
+**Admin:** exactly 1 admin has claimed the account (`user_roles` has 1 `admin` row). The first-admin-claim flow has been exercised and works. Single-admin invariant is enforced by the app; do not add multi-admin logic.
 
 ### Public site
 - Hero, countdown, story timeline, day-of schedule, wedding party, travel/lodging, registry, FAQ, and footer are all live.
@@ -150,11 +154,11 @@ This is the living sprint plan. Pick up the next uncompleted sprint rather than 
 
 ---
 
-### Sprint 2 — RSVP Launch Readiness — ✅ Live
+### Sprint 2 — RSVP Launch Readiness — ⚠️ Code done, blocked on guest re-import
 
-**Status:** The RSVP flow is fully built, feature-flag-gated, and verified working end-to-end (lookup, submit, confirmation email, token-based edit, admin dashboard). The real guest list (52 households) was imported and `rsvp_open` was turned on 2026-07-17 — RSVP is live to real guests. See §2 for the current live snapshot (always re-check before assuming).
+**Status:** The RSVP flow is fully built, feature-flag-gated, and works end-to-end in code (lookup, submit, confirmation email, token-based edit, admin dashboard). `rsvp_open` is on. **But `guests` is empty (0 rows) as of 2026-07-24** — the real household list is not present in this environment, so lookup will fail for every real guest until re-imported. See §2.
 
-**Remaining scope:** None — this sprint is done. If `rsvp_open` is ever off again, that's a deliberate admin choice, not unfinished work.
+**Remaining scope:** re-import the household list (admin dashboard's CSV importer). No code work.
 
 **Key files:** `src/routes/rsvp.tsx`, `src/routes/rsvp/edit.$token.tsx`, `src/lib/rsvp.functions.ts`, `src/lib/rsvp-token.server.ts`, `src/lib/email-templates/rsvp-confirmation.tsx`, `src/routes/_authenticated/portal-ga-2026/dashboard.tsx`
 
