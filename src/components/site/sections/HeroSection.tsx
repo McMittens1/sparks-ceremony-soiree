@@ -2,6 +2,45 @@ import { Link } from "@tanstack/react-router";
 import { Countdown, COUNTDOWN_HERO_VISIBLE } from "@/components/site/Countdown";
 import heroPortrait from "@/assets/engagement/hero-portrait.png.asset.json";
 
+const HERO_SRCSET = "/images/hero-portrait-600.webp 600w, /images/hero-portrait-1200.webp 1200w";
+const HERO_SIZES = "(max-width: 1023px) 300px, 50vw";
+
+function HeroImage({
+  alt,
+  className,
+  style,
+}: {
+  alt: string;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <picture className={className} style={style}>
+      <source srcSet={HERO_SRCSET} sizes={HERO_SIZES} type="image/webp" />
+      <img
+        src={heroPortrait.url}
+        alt={alt}
+        loading="eager"
+        fetchPriority="high"
+        width={1256}
+        height={1024}
+        style={{
+          width: "100%",
+          height: "auto",
+          maxHeight: "100%",
+          objectFit: "contain",
+          display: "block",
+          mixBlendMode: "multiply",
+          WebkitMaskImage:
+            "linear-gradient(to bottom, black 0%, black 55%, rgba(0,0,0,0.7) 72%, rgba(0,0,0,0.35) 86%, transparent 100%)",
+          maskImage:
+            "linear-gradient(to bottom, black 0%, black 55%, rgba(0,0,0,0.7) 72%, rgba(0,0,0,0.35) 86%, transparent 100%)",
+        }}
+      />
+    </picture>
+  );
+}
+
 export function HeroSection() {
   return (
     <section
