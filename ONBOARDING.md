@@ -1,6 +1,6 @@
 # Moreno Wedding 2026 — Onboarding Package
 
-**Last verified against the live codebase + database: 2026-07-24.** Update this line every time you re-verify. If it's stale by more than a session or two, re-verify before trusting any specific claim below — this doc is only useful if it mirrors reality.
+**Last verified against the live codebase + database: 2026-07-27.** Update this line every time you re-verify. If it's stale by more than a session or two, re-verify before trusting any specific claim below — this doc is only useful if it mirrors reality.
 
 A single source of truth for continuing this project with any AI assistant (Claude Code, Cursor, etc.). Read this file in full before making changes. A companion document, `HANDOFF.md`, captures narrative context, judgment calls, and lessons learned from the most recent development session — read that too if it exists.
 
@@ -66,7 +66,9 @@ All three are toggled from the Features tab in `/portal-ga-2026/dashboard` — n
 
 **Analytics (live, 2026-07-24):** `analytics_events` table exists and is wired to four events: `rsvp_submit`, `photo_upload`, `calendar_click`, `registry_click`. Writes are service-role only; no direct guest reads. The table had at least one verified `registry_click` row after Playwright QA.
 
-**Image optimization (live, 2026-07-24):** Hero portrait and venue aerial have WebP variants in `public/images/` and are served via `<picture>` srcset. Remaining engagement/Story photos will follow once the Story photo decision is made.
+**Image optimization (live, 2026-07-24):** Hero portrait and venue aerial have WebP variants in `public/images/` and are served via `<picture>` srcset. Remaining engagement/Story photos will follow once the real per-entry Story photos land.
+
+**Our Story (rebuilt 2026-07-27):** Six entries, final copy, in `STORY_ENTRIES` (`src/lib/wedding-data.ts`). One `StoryEntry` type — `{ n, date, place, title, body, photos, layout }`. `layout` is `"split"` (entries 01–05, alternating text/photo cluster with the hairline gutter, promotes at `md`) or `"finale"` (entry 06, centered closing panel with a three-across photo row). The old nine-entry `dated`/`montage` variants and the `photoStart`/`photoCount` index math are gone. `photos` is a list of named slot keys (`fav`, `eng06`, …) resolved by `PHOTO_SRC` in `StoryTimeline.tsx`; **every current Story image is a placeholder** — real per-entry photos are swapped in one key at a time, so keys currently repeat across entries by design.
 
 ### Public site
 - Hero, countdown, story timeline, day-of schedule, wedding party, travel/lodging, registry, FAQ, and footer are all live.
@@ -420,7 +422,7 @@ BEFORE you make any code changes, do the following:
 PROJECT ESSENTIALS:
 - Tech stack: TanStack Start v1, React 19, Vite 8, Tailwind CSS v4, TypeScript strict, Lovable Cloud (Supabase-backed but never say "Supabase" to users).
 - Public site is a single scrolling page at src/routes/index.tsx composed of sections in src/components/site/sections/.
-- Wedding data (schedule, registry, party, hotels, FAQ, story) lives in src/lib/wedding-data.ts. The wedding-party trading cards / magazine covers are mostly still placeholder copy — real headlines/attributes/abilities are outstanding, see Sprint 1.
+- Wedding data (schedule, registry, party, hotels, FAQ, six-entry story) lives in src/lib/wedding-data.ts. The wedding-party trading cards / magazine covers are mostly still placeholder copy — real headlines/attributes/abilities are outstanding, see Sprint 1.
 - Copy lives in src/i18n/dictionaries.ts (en + es; Spanish needs proofreading).
 - Admin sign-in is at /portal-ga-2026. There is intentionally only ONE admin account. The route guard checks the admin role itself, not just sign-in.
 - Admin dashboard is at /portal-ga-2026/dashboard (RSVPs / Photos / Features / Emails tabs).
