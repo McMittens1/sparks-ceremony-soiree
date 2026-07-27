@@ -1,6 +1,6 @@
 # Handoff — Moreno Wedding 2026 Website
 
-**Last verified against the live codebase + database: 2026-07-24.** Bump this line whenever you re-verify. Read `ONBOARDING.md` first — it's the current-state reference; this file is the narrative behind decisions.
+**Last verified against the live codebase + database: 2026-07-27.** Bump this line whenever you re-verify. Read `ONBOARDING.md` first — it's the current-state reference; this file is the narrative behind decisions.
 
 Originally written at the end of a development session that took this project from "RSVP disabled, no feature flags, generic wedding-party avatars" to "RSVP + photo uploads live behind a real feature-flag system, a from-scratch collectible-card wedding party section, and a full pre-launch QA pass." This document is for whichever AI picks the project up next. If `ONBOARDING.md` and this file disagree on current state, trust `ONBOARDING.md`; use this one for reasoning. If a paragraph here starts to feel stale, fold what's still true into `ONBOARDING.md` and remove or revise it here rather than let two sources of truth drift.
 
@@ -182,5 +182,16 @@ Implementation:
 
 ### Remaining Sprint 4 work
 
-- Apply `<picture>`/WebP srcset to the remaining Story section photos once the couple decides the photo strategy (remove / generic engagement / cutouts).
+- Apply `<picture>`/WebP srcset to the remaining Story section photos once the real per-entry photos land (all current Story images are placeholders).
 - Re-run visual QA at 440px and 1280px after any Story section image change.
+
+---
+
+## Our Story rebuild (2026-07-27)
+
+The couple finalized the story copy and cut it from nine entries to six, so the section was rebuilt rather than trimmed.
+
+- **One entry shape.** `DatedStoryEntry` / `MontageStoryEntry` and the `photoStart`/`photoCount` modulo indexing are deleted. `StoryEntry` is now `{ n, date, place, title, body, photos, layout }` and the numeral comes from the entry's own `n`, not a derived counter.
+- **Named photo slots.** `photos` holds keys (`fav`, `eng74`, …) that `StoryTimeline.tsx` maps to assets via `PHOTO_SRC`. Every image today is a placeholder engagement shot, so keys repeat across entries; that's intentional and disappears as real per-entry photos are dropped in one key at a time. Do not "fix" the repeats by re-shuffling — replace the key.
+- **Layout.** Entries 01–05 alternate text/photo-cluster around the hairline gutter (promotes at `md`, single column below with text above photos). Each cluster is one tall main photo plus a 2- or 3-up side column, giving 3–4 photos per entry. Entry 06 is a `finale`: centered eyebrow/title/copy with a three-across photo row, so the section closes on a different beat instead of a sixth identical row.
+- Verified with `bun run build:dev` plus Playwright screenshots at 440 / 768 / 1024 / 1440 — six entries render, no horizontal overflow.
