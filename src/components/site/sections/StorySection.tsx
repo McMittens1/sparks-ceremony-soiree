@@ -8,7 +8,7 @@ export function StorySection() {
       <SectionHeader
         eyebrow="II · Our Story"
         title="Our Story"
-        subhead="How we got from a first hello to forever."
+        subhead="The short version of how all of this happened."
       />
       <DiamondDivider className="mt-9" />
       <StoryTimeline />
