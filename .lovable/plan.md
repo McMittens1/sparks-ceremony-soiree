@@ -1,59 +1,64 @@
-# Roadmap — Moreno Wedding 2026
+## Goal
 
-**Last verified against the live codebase + database: 2026-07-24.** Update on every material change.
+Replace the nine-entry Our Story timeline with the finalized six-entry copy, and reshape the layout so it reads as purpose-built for six moments — with a denser photo cluster per entry, since the current engagement shots are placeholders that will be swapped for unique per-entry photos later.
 
-## Current state (short)
+## What changes
 
-- Site is feature-complete for launch.
-- `rsvp_open = true`, `guest_photo_uploads = false`, `show_ushers = false`.
-- **`guests` table is empty (0 rows).** Prior 52-household import is not present in the current environment — RSVP lookup will fail for real guests until re-imported. Highest-priority unblock.
-- `rsvps = 0`, `guest_photos = 0`. `email_send_log` has 39 historical rows.
-- 1 admin claimed.
-- Wedding-party personalization: only the Best Man has a real `cardRarity`. All 6 bridesmaids, Maid of Honor, and 8 groomsmen render placeholder fallback text.
-- `DAY_SCHEDULE` has 6 rows (Ceremony 3:00, Cocktail 3:30, Reception 4:30, Dinner 5:00, Dancing 7:00, Concludes Midnight).
-- **Sprint 4 engineering hygiene is in progress.** Analytics events table + server function + client hook are live and wired to RSVP submit, photo upload, calendar click, and registry click. Hero portrait and venue aerial now serve responsive WebP via `<picture>` srcset. Remaining image optimization is blocked on the Story section photo decision.
-- Build: `bun run build:dev` clean.
+### 1. Content (`src/lib/wedding-data.ts`)
 
-## Priority order
+- Delete all nine current `STORY_ENTRIES` and both entry variants (`DatedStoryEntry` / `MontageStoryEntry`) plus the `photoStart` / `photoCount` index math.
+- Replace with a single `StoryEntry` type: `{ n, date, place, title, body, photos, layout }`.
+  - `photos` is a list of named photo keys (e.g. `"eng74"`) — one explicit slot per image, so swapping in the real photo for a slot is a one-line edit. No modulo indexing into a shared pool.
+  - `layout` is `"split"` (alternating text/photo cluster) or `"finale"` (centered closing panel).
+- Six entries, copy verbatim as supplied (including "Fall 2024" for entry 04 and "May 16, 2025" for entry 05). Curly quotes preserved.
+- Section subhead becomes "The short version of how all of this happened." (in `StorySection.tsx`).
 
-1. **Re-import household CSV** via the admin dashboard. Blocks RSVP from being real. Needs the couple's data.
-2. **Wedding-party personalization copy** — `coverHeadline`/`coverSubline` for 7 people, `cardAttributes`/`cardAbility` for 8. Needs the couple's writing.
-3. **Story section photo decision** — couple is deciding between (a) removing photos, (b) generic engagement photos, (c) background-removed cutouts. Open, not blocked on code.
-4. **End-to-end email deliverability test** once real guests exist. The three-stage email fix (2026-07-17) is in code but was explicitly flagged "don't assume it's fixed"; watch `email_send_log` after a real send.
-5. **Live cross-device visual QA at 440px / 1280px** — now performed with Playwright on the Hero section. Re-run after any future layout or image change.
-6. **Spanish dictionary proofread** — mirrors English, needs a native-speaker pass.
-7. **Sprint 4 remainder** — complete image `srcset`/WebP conversion for remaining photos once #3 is decided; bundle-size audit already done; analytics already implemented.
-8. **Optional flag flips** — `guest_photo_uploads`, `show_ushers` — couple's call, no code work.
+### 2. Photo distribution — 3–4 per entry
 
-## Sprint 4 engineering hygiene — status
+Placeholder frames will repeat across entries for now; each slot is independent and named, so the repeats disappear the moment real photos land.
 
-### Done
-- **Bundle-size audit (2026-07-24):** client total ~1.4 MB, server total ~4.3 MB. `xlsx` is lazy-loaded. `recharts` is installed but unused in the current build.
-- **Analytics pipeline (2026-07-24):**
-  - New `public.analytics_events` table: `id`, `event_name`, `event_data` (jsonb), `source_url`, `created_at`.
-  - Service-role-only writes; no `anon`/`authenticated` grants and no RLS policies by design — guests never query this table directly.
-  - Server function: `src/lib/analytics.functions.ts` (`trackEvent`), validated with Zod.
-  - Client hook: `src/lib/analytics.ts` (`useAnalytics`).
-  - Wired events: `rsvp_submit` (RSVP success), `photo_upload` (guest photo upload success), `calendar_click` (ICS or Google Calendar), `registry_click` (any registry link).
-  - Verified end-to-end: a `registry_click` for Zola was recorded in `analytics_events` during Playwright QA.
-- **Image optimization (2026-07-24):**
-  - Generated WebP variants in `public/images/`: `hero-portrait-600.webp` (46 KB), `hero-portrait-1200.webp` (162 KB), `sparks-barn-aerial-800.webp` (36 KB), `sparks-barn-aerial-1200.webp` (71 KB).
-  - `<picture>` srcset wired in `HeroSection.tsx` and `DaySection.tsx`; preload link in `index.tsx` points to the 1200w WebP.
+| Entry | Photos | Cluster shape |
+|---|---|---|
+| 01 First date | 4 | 1 tall main + 3 stacked |
+| 02 The boys met | 3 | 1 tall main + 2 stacked |
+| 03 Years in between | 4 | 1 tall main + 3 stacked (widest — matches "the photos beside this paragraph") |
+| 04 Moved in together | 3 | 1 tall main + 2 stacked |
+| 05 The proposal | 4 | 1 tall main + 3 stacked |
+| 06 See you at the barn | 3 | centered wide row |
 
-### Remaining
-- Apply `<picture>`/WebP srcset to remaining images once the Story section photo strategy is decided (engagement photos, cutouts, or none).
-- Re-run visual QA after the Story section photo decision.
+The existing main-plus-stack cluster already handles a variable side column; it gets a small change so 3 side photos stay legible rather than squeezing into slivers (side column caps at 3, tighter aspect on mobile where the side row scrolls into a 2-up + 1 arrangement instead of a 3-across strip).
 
-## Out of scope unless explicitly requested
+### 3. Layout (`src/components/site/StoryTimeline.tsx`)
 
-- Multi-admin accounts.
-- Public sign-up.
-- Renaming the admin URLs.
-- Splitting the single-page composition into separate page routes.
-- New features (guest book, seating chart, livestream) — this project is deliberately scoped to launch.
+Rebuild around one row component rather than two divergent ones:
 
-## Post-wedding (blocked until 2026-10-10)
+```text
+01  [ text ]   |  [ photos ]       04  [ text ]   |  [ photos ]
+02  [ photos ] |  [ text ]         05  [ photos ] |  [ text ]
+03  [ text ]   |  [ photos ]
 
-- Batch-approve day-of photos in the admin dashboard.
-- Optional thank-you / recap section on the homepage.
-- Optionally freeze RSVP edits while preserving read-only access.
+          06  ——  centered title + copy, 3-photo wide row  ——
+```
+
+- Entries 01–05 use the existing alternating two-column grid with the hairline gutter + diamond (promotes at `md`; below that, single column with text above photos).
+- Entry 06 is a centered finale: eyebrow date/place, title, copy, then a three-across photo row — a deliberate closing beat instead of a sixth identical alternating row.
+- The old full-width montage grid variant is deleted.
+- Ghost numerals come from each entry's own `n` (01–06), not derived counting.
+- `Reveal`, `photo-zoom`, hairline borders, `loading="lazy"`, and the `StoryGutter` line/diamond reveal are all preserved.
+
+### 4. Cleanup and verification
+
+- Remove CSS in `src/styles.css` used only by the deleted montage grid (keep `.story-line` / `.diamond-in`).
+- Nav anchor `#story` and section numeral `II` unchanged; re-checked after the rebuild.
+- Run `bun run build:dev`, then Playwright screenshots at 440 / 768 / 1024 / 1440 to confirm rhythm, no overflow, and correct alternation.
+
+### 5. Documentation (same turn)
+
+- `ONBOARDING.md` — story timeline description + "Last verified" bump, and a note that story photos are named placeholder slots awaiting real per-entry images.
+- `HANDOFF.md` — six-entry restructure, retired montage variant, placeholder-slot convention.
+- `.lovable/plan.md` — replace the open "Story photo decision" item with "swap placeholder story photos for real per-entry images", and unblock the remaining WebP/srcset work.
+
+## Notes
+
+- Content stays centralized in `wedding-data.ts` (still shared with the MCP tools); only asset imports live in the component.
+- No database, server function, or backend change is involved.
