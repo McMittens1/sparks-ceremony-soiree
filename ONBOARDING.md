@@ -1,6 +1,6 @@
 # Moreno Wedding 2026 — Onboarding Package
 
-**Last verified against the live codebase + database: 2026-07-27.** Update this line every time you re-verify. If it's stale by more than a session or two, re-verify before trusting any specific claim below — this doc is only useful if it mirrors reality.
+**Last verified against the live codebase + database: 2026-07-28.** Update this line every time you re-verify. If it's stale by more than a session or two, re-verify before trusting any specific claim below — this doc is only useful if it mirrors reality.
 
 A single source of truth for continuing this project with any AI assistant (Claude Code, Cursor, etc.). Read this file in full before making changes. A companion document, `HANDOFF.md`, captures narrative context, judgment calls, and lessons learned from the most recent development session — read that too if it exists.
 
@@ -68,7 +68,7 @@ All three are toggled from the Features tab in `/portal-ga-2026/dashboard` — n
 
 **Image optimization (live, 2026-07-24):** Hero portrait and venue aerial have WebP variants in `public/images/` and are served via `<picture>` srcset. Remaining engagement/Story photos will follow once the real per-entry Story photos land.
 
-**Our Story (rebuilt 2026-07-27):** Six entries, final copy, in `STORY_ENTRIES` (`src/lib/wedding-data.ts`). One `StoryEntry` type — `{ n, date, place, title, body, photos, layout }`. `layout` is `"split"` (entries 01–05, alternating text/photo cluster with the hairline gutter, promotes at `md`) or `"finale"` (entry 06, centered closing panel with a three-across photo row). The old nine-entry `dated`/`montage` variants and the `photoStart`/`photoCount` index math are gone. `photos` is a list of named slot keys (`fav`, `eng06`, …) resolved by `PHOTO_SRC` in `StoryTimeline.tsx`; **every current Story image is a placeholder** — real per-entry photos are swapped in one key at a time, so keys currently repeat across entries by design.
+**Our Story (rebuilt 2026-07-27):** Six entries, final copy, in `STORY_ENTRIES` (`src/lib/wedding-data.ts`). One `StoryEntry` type — `{ n, date, place, title, body, photos, layout }`. `layout` is `"split"` (entries 01–05, alternating text/photo cluster with the hairline gutter, promotes at `md`) or `"finale"` (entry 06, centered closing panel with a three-across photo row). The old nine-entry `dated`/`montage` variants and the `photoStart`/`photoCount` index math are gone. `photos` is a list of named slot keys (`fav`, `eng06`, …) resolved by `PHOTO_SRC` in `StoryTimeline.tsx`. **Entry 05 ("The proposal") now uses four real Joyo Theater proposal photos** (`propKneel`, `propMarquee`, `propRing`, `propCouple`) with real alt text via the optional `photoAlts` array (index-matched to `photos`). Every other entry's images are still placeholders — real per-entry photos are swapped in one key at a time, so placeholder keys still repeat across entries by design.
 
 ### Public site
 - Hero, countdown, story timeline, day-of schedule, wedding party, travel/lodging, registry, FAQ, and footer are all live.
