@@ -122,7 +122,7 @@ function SplitRow({
 }: {
   entry: StoryEntry;
   flip: boolean;
-  photos: string[];
+  photos: Photo[];
 }) {
   // Design contract: two-column + gutter layout promotes at md (768px), NOT lg.
   // Below md, single column with text above photos.
