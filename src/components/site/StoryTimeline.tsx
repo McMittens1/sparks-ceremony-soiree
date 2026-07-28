@@ -49,9 +49,9 @@ export function StoryTimeline() {
     <div>
       {STORY_ENTRIES.map((entry, i) =>
         entry.layout === "finale" ? (
-          <FinaleRow key={entry.n} entry={entry} photos={srcFor(entry)} />
+          <FinaleRow key={entry.n} entry={entry} photos={photosFor(entry)} />
         ) : (
-          <SplitRow key={entry.n} entry={entry} flip={i % 2 === 1} photos={srcFor(entry)} />
+          <SplitRow key={entry.n} entry={entry} flip={i % 2 === 1} photos={photosFor(entry)} />
         ),
       )}
     </div>
