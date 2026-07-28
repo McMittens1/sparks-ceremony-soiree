@@ -225,7 +225,13 @@ export const STORY_ENTRIES: StoryEntry[] = [
     place: "The Joyo Theater · Havelock",
     title: "The proposal",
     body: "Geo told Addi they were going to see a movie at the Joyo, which was technically true. He just left out a few minor details, including that he had rented the entire theater, made a video for her, and created several increasingly strange fake movie trailers to mix in with the real ones. After the video and trailers finished, he walked her outside, where the marquee read, \u201CAddi, will you marry me?\u201D She said yes. Addi still insists she knew what was happening, but to her credit, she let Geo finish the entire production.",
-    photos: ["eng75", "eng27", "eng19", "eng15"],
+    photos: ["propKneel", "propMarquee", "propRing", "propCouple"],
+    photoAlts: [
+      "Geo on one knee proposing to Addi outside the Joyo Theater",
+      "The Joyo Theater marquee reading \u201CWill you marry me Addi\u201D",
+      "Geo holding up the engagement ring in front of the Joyo marquee",
+      "Addi and Geo together under the Joyo marquee after she said yes",
+    ],
     layout: "split",
   },
   {
