@@ -13,9 +13,14 @@ import eng19 from "@/assets/engagement/Geo_AddiEngagement-19.jpg.asset.json";
 import eng15 from "@/assets/engagement/Geo_AddiEngagement-15.jpg.asset.json";
 import eng13 from "@/assets/engagement/Geo_AddiEngagement-13.jpg.asset.json";
 import eng10 from "@/assets/engagement/Geo_AddiEngagement-10.jpg.asset.json";
+import propKneel from "@/assets/proposal/proposal-kneel.jpg.asset.json";
+import propMarquee from "@/assets/proposal/proposal-marquee.jpg.asset.json";
+import propRing from "@/assets/proposal/proposal-ring.jpg.asset.json";
+import propCouple from "@/assets/proposal/proposal-couple.jpg.asset.json";
 
-// Placeholder imagery — each story photo slot is named in wedding-data.ts so a
-// real photo can be dropped in one key at a time.
+// Entry 05 uses the real proposal photos. Every other slot is still a
+// placeholder engagement shot, named in wedding-data.ts so a real photo can be
+// dropped in one key at a time.
 const PHOTO_SRC: Record<StoryPhotoKey, string> = {
   fav: fav.url,
   eng06: eng06.url,
@@ -28,9 +33,16 @@ const PHOTO_SRC: Record<StoryPhotoKey, string> = {
   eng75: eng75.url,
   eng82: eng82.url,
   eng94: eng94.url,
+  propKneel: propKneel.url,
+  propMarquee: propMarquee.url,
+  propRing: propRing.url,
+  propCouple: propCouple.url,
 };
 
-const srcFor = (entry: StoryEntry) => entry.photos.map((k) => PHOTO_SRC[k]);
+type Photo = { src: string; alt: string };
+
+const photosFor = (entry: StoryEntry): Photo[] =>
+  entry.photos.map((k, i) => ({ src: PHOTO_SRC[k], alt: entry.photoAlts?.[i] ?? "" }));
 
 export function StoryTimeline() {
   return (
