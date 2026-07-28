@@ -164,7 +164,11 @@ export type StoryPhotoKey =
   | "eng74"
   | "eng75"
   | "eng82"
-  | "eng94";
+  | "eng94"
+  | "propKneel"
+  | "propMarquee"
+  | "propRing"
+  | "propCouple";
 
 export type StoryEntry = {
   n: string;
@@ -173,6 +177,8 @@ export type StoryEntry = {
   title: string;
   body: string;
   photos: StoryPhotoKey[];
+  /** Optional alt text, index-matched to `photos`. Omit for decorative placeholders. */
+  photoAlts?: string[];
   layout: "split" | "finale";
 };
 
