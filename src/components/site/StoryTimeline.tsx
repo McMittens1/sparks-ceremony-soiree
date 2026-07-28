@@ -78,14 +78,14 @@ function GhostNumeral({ label }: { label: string }) {
   );
 }
 
-function PhotoCluster({ photos }: { photos: string[] }) {
+function PhotoCluster({ photos }: { photos: Photo[] }) {
   const [main, ...rest] = photos;
   return (
     <>
       <div className="relative photo-zoom w-full aspect-[4/5] md:aspect-auto md:h-full md:w-auto md:flex-[0_0_60%]">
         <img
-          src={main}
-          alt=""
+          src={main.src}
+          alt={main.alt}
           loading="lazy"
           className="w-full h-full object-cover object-top md:object-center border border-hairline"
         />
@@ -96,14 +96,14 @@ function PhotoCluster({ photos }: { photos: string[] }) {
             rest.length >= 3 ? "grid-cols-3" : "grid-cols-2"
           }`}
         >
-          {rest.map((src, j) => (
+          {rest.map((photo, j) => (
             <div
               key={j}
               className="aspect-square md:aspect-auto md:flex-1 md:min-h-0 photo-zoom"
             >
               <img
-                src={src}
-                alt=""
+                src={photo.src}
+                alt={photo.alt}
                 loading="lazy"
                 className="w-full h-full object-cover border border-hairline"
               />
