@@ -246,11 +246,11 @@ function FinaleRow({ entry, photos }: { entry: StoryEntry; photos: string[] }) {
           {entry.body}
         </BodyProse>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 lg:gap-3.5 text-left">
-          {photos.map((src, i) => (
+          {photos.map((photo, i) => (
             <div key={i} className="photo-zoom w-full aspect-[4/5] sm:aspect-[3/4]">
               <img
-                src={src}
-                alt=""
+                src={photo.src}
+                alt={photo.alt}
                 loading="lazy"
                 className="w-full h-full object-cover border border-hairline"
               />
