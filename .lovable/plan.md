@@ -1,21 +1,26 @@
-## Status — Our Story rebuild: DONE (2026-07-27)
+## Goal
 
-The nine-entry timeline was replaced with the finalized six-entry copy and the layout was rebuilt around it.
+Replace the four placeholder engagement photos in Our Story entry 05 ("The proposal") with real proposal photos from the Joyo Theater shoot.
 
-- `src/lib/wedding-data.ts` — one `StoryEntry` type `{ n, date, place, title, body, photos, layout }`; six entries, copy verbatim. `DatedStoryEntry` / `MontageStoryEntry` and the `photoStart` / `photoCount` index math are deleted.
-- `src/components/site/StoryTimeline.tsx` — entries 01–05 alternate text/photo cluster around the hairline gutter (promotes at `md`); entry 06 is a centered `finale` with a three-across photo row. Ghost numerals come from each entry's own `n`. `Reveal`, `photo-zoom`, hairline borders and `loading="lazy"` preserved.
-- `src/components/site/sections/StorySection.tsx` — subhead is "The short version of how all of this happened."
-- Verified: `bun run build:dev` clean; Playwright at 440 / 768 / 1024 / 1440 shows six entries, correct alternation, no horizontal overflow. `#story` anchor and section numeral `II` unchanged.
+## Photo selection
 
-## Open items
+Entry 05 renders as a split row: one large main photo (60% width, full row height on md+) plus a row/column of smaller square-ish photos. Picking for that shape:
 
-1. **Swap placeholder story photos for real per-entry images.** Every image in the Story section is a placeholder engagement shot, so keys repeat across entries. Replacement is a one-key edit in the entry's `photos` array plus an asset import mapped in `PHOTO_SRC`.
-2. **Apply `<picture>`/WebP srcset to Story photos** once the real images land (hero portrait and venue aerial already have WebP variants).
-3. **Guest re-import** — the `guests` table is empty; households must be re-imported before invitations go out.
-4. **Wedding-party card copy** — headlines/attributes/abilities are still placeholder.
-5. Re-run visual QA at 440px and 1280px after any Story image change.
+- **Main (large):** `IMG_7697.jpg` — Geo on one knee under the marquee, full vertical composition. It's the narrative moment and the only shot that reads clearly at large size.
+- **Secondary 1:** `IMG_7613-2.jpg` — the color marquee "WILL YOU MARRY ME ADDI" with no people; sets the place, crops well square.
+- **Secondary 2:** `IMG_7629.jpg` — the ring held up against the blurred marquee; strong detail shot, landscape so it crops square cleanly.
+- **Secondary 3:** `IMG_7757.jpg` — the two of them together under the marquee after she said yes; closes the beat.
 
-## Notes
+Not used: `IMG_7613.jpg` (black-and-white duplicate of the color marquee — the site has no other B&W imagery, so it would read as a mistake), `IMG_7631.jpg` (near-duplicate of the ring shot), `IMG_7674.jpg` (pre-proposal handhold, weaker), `IMG_7742.jpg` (close-up portrait — lovely, but redundant next to IMG_7757 and better saved for another section).
 
-- Story content stays centralized in `wedding-data.ts` (shared with the MCP tools); only asset imports live in the component.
-- No database, server function, or backend change was involved in this rebuild.
+## Technical changes
+
+1. Upload the four selected files as Lovable CDN assets via `lovable-assets create` from `/mnt/user-uploads/`, writing pointers to `src/assets/proposal/*.asset.json`. No binaries land in the repo.
+2. `src/lib/wedding-data.ts` — add four proposal keys to the `StoryPhotoKey` union (`propKneel`, `propMarquee`, `propRing`, `propCouple`) and set entry 05's `photos` to `["propKneel", "propMarquee", "propRing", "propCouple"]`. No copy changes.
+3. `src/components/site/StoryTimeline.tsx` — import the four new pointers and add them to `PHOTO_SRC`. Keep the existing placeholder keys for entries 01–04 and 06 untouched.
+4. Add meaningful `alt` text for these four (currently all story photos use `alt=""`), since they now carry real content. Keep `loading="lazy"`.
+5. Docs: update `.lovable/plan.md` (entry 05 is no longer placeholder) and the `mem://content/story-photos` memory; bump "Last verified" in `ONBOARDING.md` / `HANDOFF.md` per the docs-are-code rule.
+
+## Verification
+
+`bun run build:dev` clean, then Playwright screenshots of `#story` entry 05 at 440px and 1280px to confirm the main photo's crop keeps Geo and Addi in frame and the three secondaries don't crop the marquee text badly. If the square crop cuts the marquee wording, I'll adjust `object-position` on those tiles only.
