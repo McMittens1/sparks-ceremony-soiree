@@ -219,7 +219,7 @@ function StoryGutter() {
   );
 }
 
-function FinaleRow({ entry, photos }: { entry: StoryEntry; photos: string[] }) {
+function FinaleRow({ entry, photos }: { entry: StoryEntry; photos: Photo[] }) {
   return (
     <div className="relative mt-16 md:mt-24 lg:mt-28">
       <GhostNumeral label={entry.n} />
