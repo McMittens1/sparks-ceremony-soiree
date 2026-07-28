@@ -13,9 +13,14 @@ import eng19 from "@/assets/engagement/Geo_AddiEngagement-19.jpg.asset.json";
 import eng15 from "@/assets/engagement/Geo_AddiEngagement-15.jpg.asset.json";
 import eng13 from "@/assets/engagement/Geo_AddiEngagement-13.jpg.asset.json";
 import eng10 from "@/assets/engagement/Geo_AddiEngagement-10.jpg.asset.json";
+import propKneel from "@/assets/proposal/proposal-kneel.jpg.asset.json";
+import propMarquee from "@/assets/proposal/proposal-marquee.jpg.asset.json";
+import propRing from "@/assets/proposal/proposal-ring.jpg.asset.json";
+import propCouple from "@/assets/proposal/proposal-couple.jpg.asset.json";
 
-// Placeholder imagery — each story photo slot is named in wedding-data.ts so a
-// real photo can be dropped in one key at a time.
+// Entry 05 uses the real proposal photos. Every other slot is still a
+// placeholder engagement shot, named in wedding-data.ts so a real photo can be
+// dropped in one key at a time.
 const PHOTO_SRC: Record<StoryPhotoKey, string> = {
   fav: fav.url,
   eng06: eng06.url,
@@ -28,18 +33,25 @@ const PHOTO_SRC: Record<StoryPhotoKey, string> = {
   eng75: eng75.url,
   eng82: eng82.url,
   eng94: eng94.url,
+  propKneel: propKneel.url,
+  propMarquee: propMarquee.url,
+  propRing: propRing.url,
+  propCouple: propCouple.url,
 };
 
-const srcFor = (entry: StoryEntry) => entry.photos.map((k) => PHOTO_SRC[k]);
+type Photo = { src: string; alt: string };
+
+const photosFor = (entry: StoryEntry): Photo[] =>
+  entry.photos.map((k, i) => ({ src: PHOTO_SRC[k], alt: entry.photoAlts?.[i] ?? "" }));
 
 export function StoryTimeline() {
   return (
     <div>
       {STORY_ENTRIES.map((entry, i) =>
         entry.layout === "finale" ? (
-          <FinaleRow key={entry.n} entry={entry} photos={srcFor(entry)} />
+          <FinaleRow key={entry.n} entry={entry} photos={photosFor(entry)} />
         ) : (
-          <SplitRow key={entry.n} entry={entry} flip={i % 2 === 1} photos={srcFor(entry)} />
+          <SplitRow key={entry.n} entry={entry} flip={i % 2 === 1} photos={photosFor(entry)} />
         ),
       )}
     </div>
@@ -66,14 +78,14 @@ function GhostNumeral({ label }: { label: string }) {
   );
 }
 
-function PhotoCluster({ photos }: { photos: string[] }) {
+function PhotoCluster({ photos }: { photos: Photo[] }) {
   const [main, ...rest] = photos;
   return (
     <>
       <div className="relative photo-zoom w-full aspect-[4/5] md:aspect-auto md:h-full md:w-auto md:flex-[0_0_60%]">
         <img
-          src={main}
-          alt=""
+          src={main.src}
+          alt={main.alt}
           loading="lazy"
           className="w-full h-full object-cover object-top md:object-center border border-hairline"
         />
@@ -84,14 +96,14 @@ function PhotoCluster({ photos }: { photos: string[] }) {
             rest.length >= 3 ? "grid-cols-3" : "grid-cols-2"
           }`}
         >
-          {rest.map((src, j) => (
+          {rest.map((photo, j) => (
             <div
               key={j}
               className="aspect-square md:aspect-auto md:flex-1 md:min-h-0 photo-zoom"
             >
               <img
-                src={src}
-                alt=""
+                src={photo.src}
+                alt={photo.alt}
                 loading="lazy"
                 className="w-full h-full object-cover border border-hairline"
               />
@@ -110,7 +122,7 @@ function SplitRow({
 }: {
   entry: StoryEntry;
   flip: boolean;
-  photos: string[];
+  photos: Photo[];
 }) {
   // Design contract: two-column + gutter layout promotes at md (768px), NOT lg.
   // Below md, single column with text above photos.
@@ -207,7 +219,7 @@ function StoryGutter() {
   );
 }
 
-function FinaleRow({ entry, photos }: { entry: StoryEntry; photos: string[] }) {
+function FinaleRow({ entry, photos }: { entry: StoryEntry; photos: Photo[] }) {
   return (
     <div className="relative mt-16 md:mt-24 lg:mt-28">
       <GhostNumeral label={entry.n} />
@@ -234,11 +246,11 @@ function FinaleRow({ entry, photos }: { entry: StoryEntry; photos: string[] }) {
           {entry.body}
         </BodyProse>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 lg:gap-3.5 text-left">
-          {photos.map((src, i) => (
+          {photos.map((photo, i) => (
             <div key={i} className="photo-zoom w-full aspect-[4/5] sm:aspect-[3/4]">
               <img
-                src={src}
-                alt=""
+                src={photo.src}
+                alt={photo.alt}
                 loading="lazy"
                 className="w-full h-full object-cover border border-hairline"
               />
