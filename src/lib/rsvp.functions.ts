@@ -385,8 +385,9 @@ async function resolveVerifyTarget(input: {
 
 // A lightweight, pre-verification label for a deep link (either a personalized
 // token or a plain ?g=slug link) — lets the verify screen greet the household
-// by name before they've proven anything. Reveals a name, nothing else: no
-// address, phone, party list, or RSVP status.
+// by name and ask the right question before they've proven anything. Reveals
+// a name and which factor is being asked, nothing else: no address, phone,
+// ZIP, party list, or RSVP status.
 export const getVerifyTargetLabel = createServerFn({ method: "POST" })
   .validator((d: { slug?: string; token?: string; selectToken?: string }) =>
     z
@@ -401,28 +402,32 @@ export const getVerifyTargetLabel = createServerFn({ method: "POST" })
       )
       .parse(d),
   )
-  .handler(async ({ data }): Promise<{ ok: true; primary_name: string } | { ok: false }> => {
-    const guestId = await resolveVerifyTarget(data);
-    if (!guestId) return { ok: false };
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: g } = await supabaseAdmin
-      .from("guests")
-      .select("primary_name")
-      .eq("id", guestId)
-      .maybeSingle();
-    if (!g) return { ok: false };
-    return { ok: true, primary_name: g.primary_name };
-  });
+  .handler(
+    async ({
+      data,
+    }): Promise<{ ok: true; primary_name: string; factor: VerifyFactor } | { ok: false }> => {
+      const guestId = await resolveVerifyTarget(data);
+      if (!guestId) return { ok: false };
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: g } = await supabaseAdmin
+        .from("guests")
+        .select("primary_name, phone, postal_code")
+        .eq("id", guestId)
+        .maybeSingle();
+      if (!g) return { ok: false };
+      return { ok: true, primary_name: g.primary_name, factor: verifyFactorFor(g) };
+    },
+  );
 
 const verifyAccessSchema = z
   .object({
     slug: z.string().trim().max(20).optional(),
     token: z.string().min(10).max(400).optional(),
     selectToken: z.string().min(10).max(400).optional(),
-    last4: z
-      .string()
-      .trim()
-      .regex(/^\d{4}$/, "Enter the last 4 digits"),
+    // One free-form answer to whichever question the server asked; its
+    // shape is validated against that factor inside the handler, so the
+    // client can't pick which check it wants to be graded against.
+    answer: z.string().trim().min(1).max(20),
   })
   .refine(
     (d) => [d.slug, d.token, d.selectToken].filter(Boolean).length === 1,
@@ -444,7 +449,9 @@ export const verifyHouseholdAccess = createServerFn({ method: "POST" })
 
       const { data: g } = await supabaseAdmin
         .from("guests")
-        .select(`${GUEST_SELECT_COLUMNS}, phone_verify_failed_attempts, phone_verify_locked_until`)
+        .select(
+          `${GUEST_SELECT_COLUMNS}, phone, postal_code, phone_verify_failed_attempts, phone_verify_locked_until`,
+        )
         .eq("id", guestId)
         .maybeSingle();
       if (!g) return { ok: false, reason: "not_found" };
@@ -454,8 +461,16 @@ export const verifyHouseholdAccess = createServerFn({ method: "POST" })
         return { ok: false, reason: "locked" };
       }
 
-      const expectedLast4 = normalizePhone(g.phone).slice(-4);
-      if (expectedLast4.length !== 4 || expectedLast4 !== data.last4) {
+      const factor = verifyFactorFor(g);
+      const given = data.answer.replace(/\D/g, "");
+      const matches =
+        factor === "phone_last4"
+          ? given.length === 4 && normalizePhone(g.phone ?? "").slice(-4) === given
+          : factor === "zip"
+            ? given.length === 5 && normalizeZip(g.postal_code) === given
+            : false;
+
+      if (!matches) {
         const attempts = (g.phone_verify_failed_attempts ?? 0) + 1;
         const locked = attempts >= PHONE_VERIFY_MAX_ATTEMPTS;
         await supabaseAdmin
@@ -486,10 +501,10 @@ export const verifyHouseholdAccess = createServerFn({ method: "POST" })
         .eq("guest_id", g.id)
         .maybeSingle();
 
-      // Issued only to the browser that just passed the last-4 check — this
-      // is what authorizes updateGuestAddress/submitRsvp below, replacing
-      // the old approach of remembering "verified" on the household row
-      // (which anyone holding the invite code could ride along on).
+      // Issued only to the browser that just answered correctly — this is
+      // what authorizes submitRsvp below, replacing the old approach of
+      // remembering "verified" on the household row (which anyone holding
+      // the invite code could ride along on).
       const { signRsvpToken } = await import("@/lib/rsvp-token.server");
       const sessionToken = await signRsvpToken(g.id, "session", SESSION_TOKEN_TTL_MS);
 
@@ -497,42 +512,6 @@ export const verifyHouseholdAccess = createServerFn({ method: "POST" })
     },
   );
 
-// Address-only update, independent of RSVP status and the rsvp_open flag —
-// so a household can confirm or add their mailing address any time after
-// verifying, whether or not RSVP is open yet. Requires the session token
-// minted by a successful verifyHouseholdAccess call — a bare slug/id is not
-// enough, otherwise this would quietly reopen the door phone verification
-// closes.
-export const updateGuestAddress = createServerFn({ method: "POST" })
-  .validator((d: unknown) =>
-    z.object({ sessionToken: z.string().min(10).max(400), address: addressSchema }).parse(d),
-  )
-  .handler(async ({ data }): Promise<{ ok: true }> => {
-    const { verifyRsvpToken } = await import("@/lib/rsvp-token.server");
-    const v = await verifyRsvpToken(data.sessionToken, "session");
-    if (!v.ok) throw new Error("not_verified");
-
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const now = new Date().toISOString();
-    const { error } = await supabaseAdmin
-      .from("guests")
-      .update({
-        address_line1: data.address.line1?.trim() || null,
-        address_line2: data.address.line2?.trim() || null,
-        city: data.address.city?.trim() || null,
-        state: data.address.state?.trim() || null,
-        postal_code: data.address.postal_code?.trim() || null,
-        country: data.address.country?.trim() || null,
-        address_confirmed_at: now,
-        address_updated_at: now,
-      })
-      .eq("id", v.guestId);
-    if (error) {
-      console.error("updateGuestAddress failed", error);
-      throw new Error("save_failed");
-    }
-    return { ok: true };
-  });
 
 const submitSchema = z.object({
   sessionToken: z.string().min(10).max(400),
