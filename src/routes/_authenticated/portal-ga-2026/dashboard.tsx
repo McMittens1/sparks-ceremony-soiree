@@ -205,9 +205,32 @@ function RsvpsPanel() {
     }
   }
 
+  // Deliberately ignores the current filter view: the point of this action is
+  // "leave no test household behind", so it always targets every test-prefixed
+  // row in the table. Cascade on rsvps.guest_id takes their RSVPs with them.
+  async function doPurgeTestData() {
+    const ids = testRows.map((r) => r.id);
+    if (!ids.length) return;
+    setBusy(true);
+    try {
+      await runBulkDelete({ data: { ids } });
+      setSelected(new Set());
+      await refresh();
+      toast.success(`${ids.length} test household${ids.length === 1 ? "" : "s"} deleted.`);
+      setConfirmPurgeTest(false);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   useEffect(() => {
     refresh().catch(() => {});
   }, []);
+
+  const testRows = useMemo(
+    () => (rows ?? []).filter((r) => isTestHousehold(r.primary_name)),
+    [rows],
+  );
 
   const filtered = useMemo(() => {
     if (!rows) return [];
@@ -222,6 +245,11 @@ function RsvpsPanel() {
       if (partySize === "3plus" && size < 3) return false;
       if (noFactorOnly && r.verify_factor !== "none") return false;
       if (songOnly && !(r.rsvp?.song_request ?? "").trim()) return false;
+      if (testFilter !== "any") {
+        const isTest = isTestHousehold(r.primary_name);
+        if (testFilter === "only" && !isTest) return false;
+        if (testFilter === "hide" && isTest) return false;
+      }
       if (filter === "all") return true;
       if (filter === "no_response") return !r.rsvp;
       if (!r.rsvp) return false;
