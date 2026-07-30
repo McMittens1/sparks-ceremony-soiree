@@ -1389,13 +1389,13 @@ function GuestEditor({
               <PhoneInput
                 value={phone}
                 onChange={setPhone}
-                placeholder="Phone (required)"
-                required
+                placeholder="Phone (optional)"
                 className="w-full border border-input bg-background px-3 py-2 text-sm"
               />
               <p className="mt-1 text-[10px] text-muted-foreground">
-                Required — the last 4 digits verify a household before their RSVP is shown. US or
-                Mexico, 10 digits.
+                Optional. If set, the last 4 digits verify this household. If blank, they verify
+                with their ZIP code instead — so one of the two is required. US or Mexico, 10
+                digits.
               </p>
             </div>
             <input
