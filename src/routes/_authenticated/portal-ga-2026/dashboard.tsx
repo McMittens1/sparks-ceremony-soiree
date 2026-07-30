@@ -28,6 +28,7 @@ import {
   type ImportRowResult,
 } from "@/lib/rsvp.functions";
 import { getFeatureFlags, setFeatureFlags, type FeatureFlag } from "@/lib/feature-flags.functions";
+import { TEST_HOUSEHOLD_PREFIX, isTestHousehold } from "@/lib/test-data";
 import {
   getEmailSendLog,
   getSuppressedEmails,
