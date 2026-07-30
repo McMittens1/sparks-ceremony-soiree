@@ -512,12 +512,11 @@ export const verifyHouseholdAccess = createServerFn({ method: "POST" })
     },
   );
 
-
+// Addresses are admin-owned: we already hold them, guests never see or edit
+// them, so an RSVP submission carries no address fields at all.
 const submitSchema = z.object({
   sessionToken: z.string().min(10).max(400),
   attendees: z.array(attendeeSchema).min(1).max(20),
-  address_confirmed: z.boolean(),
-  address: addressSchema.optional(),
   email: z.string().trim().email().max(200).optional().or(z.literal("")),
   song_request: z.string().trim().max(200).optional().or(z.literal("")),
   message: z.string().trim().max(1000).optional().or(z.literal("")),
