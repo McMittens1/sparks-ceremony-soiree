@@ -286,7 +286,18 @@ function RsvpsPanel() {
       return 0;
     });
     return list;
-  }, [rows, search, cityFilter, partySize, noFactorOnly, songOnly, filter, sortKey, sortDir]);
+  }, [
+    rows,
+    search,
+    cityFilter,
+    partySize,
+    noFactorOnly,
+    songOnly,
+    testFilter,
+    filter,
+    sortKey,
+    sortDir,
+  ]);
 
   // Drop selection entries no longer visible
   useEffect(() => {
