@@ -618,6 +618,16 @@ function RsvpsPanel() {
           />
           Has song request
         </label>
+        <select
+          value={testFilter}
+          onChange={(e) => setTestFilter(e.target.value as typeof testFilter)}
+          className="border border-input bg-background px-3 py-2 text-sm"
+          title={`Test households are named with the "${TEST_HOUSEHOLD_PREFIX}" prefix`}
+        >
+          <option value="any">Real + test</option>
+          <option value="hide">Real households only</option>
+          <option value="only">Test households only</option>
+        </select>
         <button
           onClick={() => setEditing("new")}
           className="ml-auto text-xs uppercase tracking-[0.2em] border border-primary text-primary px-3 py-2 hover:bg-primary hover:text-primary-foreground"
