@@ -65,6 +65,10 @@ export interface Dict {
     verifyTitle: string;
     verifyHint: string;
     verifyPlaceholder: string;
+    // ZIP variants: households we don't have a phone number for verify
+    // with the ZIP code their invitation was mailed to instead.
+    verifyHintZip: string;
+    verifyPlaceholderZip: string;
     verifyCta: string;
     verifying: string;
     verifyInvalid: string;
