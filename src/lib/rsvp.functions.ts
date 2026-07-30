@@ -555,33 +555,11 @@ async function writeRsvp(
   const status: PublicRsvp["status"] =
     anyYes && anyNo ? "partial" : anyYes ? "attending" : "not_attending";
 
-  const guestPatch: {
-    email?: string | null;
-    address_line1?: string | null;
-    address_line2?: string | null;
-    city?: string | null;
-    state?: string | null;
-    postal_code?: string | null;
-    country?: string | null;
-    address_confirmed_at?: string;
-    address_updated_at?: string;
-  } = {};
-  if (typeof data.email === "string") guestPatch.email = data.email.trim() || null;
-  if (data.address) {
-    guestPatch.address_line1 = data.address.line1?.trim() || null;
-    guestPatch.address_line2 = data.address.line2?.trim() || null;
-    guestPatch.city = data.address.city?.trim() || null;
-    guestPatch.state = data.address.state?.trim() || null;
-    guestPatch.postal_code = data.address.postal_code?.trim() || null;
-    guestPatch.country = data.address.country?.trim() || null;
-    // Keep the admin "last confirmed" view accurate regardless of whether
-    // an address came in via updateGuestAddress or a full RSVP submission.
-    const stamp = new Date().toISOString();
-    guestPatch.address_updated_at = stamp;
-    if (data.address_confirmed) guestPatch.address_confirmed_at = stamp;
-  }
-  if (Object.keys(guestPatch).length > 0) {
-    await supabaseAdmin.from("guests").update(guestPatch).eq("id", g.id);
+  // Email is the only guest-writable household field left; addresses are
+  // maintained in the admin dashboard.
+  const email = typeof data.email === "string" ? data.email.trim() || null : undefined;
+  if (email !== undefined) {
+    await supabaseAdmin.from("guests").update({ email }).eq("id", g.id);
   }
 
   const now = new Date().toISOString();
@@ -590,8 +568,6 @@ async function writeRsvp(
       guest_id: g.id,
       status,
       attendees: data.attendees,
-      address_confirmed: data.address_confirmed,
-      address: data.address ?? null,
       song_request: data.song_request?.trim() || null,
       message: data.message?.trim() || null,
       submitted_at: now,
