@@ -11,18 +11,16 @@ import {
   lookupGuest,
   getVerifyTargetLabel,
   verifyHouseholdAccess,
-  updateGuestAddress,
   submitRsvp,
   type PublicGuest,
   type PublicRsvp,
   type AttendeeChoice,
-  type GuestAddress,
+  type VerifyFactor,
 } from "@/lib/rsvp.functions";
 
 type SubmitRecap = {
   status: PublicRsvp["status"];
   attendees: AttendeeChoice[];
-  addressConfirmed: boolean;
   submittedAt: string;
 };
 
@@ -82,29 +80,10 @@ const eyebrow: React.CSSProperties = {
   margin: "0 0 8px",
 };
 
-function formatAddress(a: GuestAddress): string[] {
-  const lines: string[] = [];
-  if (a.line1) lines.push([a.line1, a.line2].filter(Boolean).join(" "));
-  const cityLine = [a.city, [a.state, a.postal_code].filter(Boolean).join(" ")]
-    .filter(Boolean)
-    .join(", ");
-  if (cityLine) lines.push(cityLine);
-  if (a.country) lines.push(a.country);
-  return lines;
-}
-
-function hasAddress(a: GuestAddress): boolean {
-  return Boolean(a.line1 || a.city || a.postal_code);
-}
-
-function looksLikeUsZip(v: string): boolean {
-  return /^\d{5}(-\d{4})?$/.test(v.trim());
-}
-
 const LOOKUP_MIN_CHARS = 2;
 const LOOKUP_DEBOUNCE_MS = 300;
 
-// updateGuestAddress/submitRsvp throw a short error code (see
+// submitRsvp throws a short error code (see
 // rsvp.functions.ts) rather than English prose, so the message shown here
 // matches the guest's chosen language instead of always being English.
 // Any code without a mapping — or a raw DB error message that slipped
@@ -148,11 +127,10 @@ function RsvpPage() {
   const runLookup = useServerFn(lookupGuest);
   const runGetLabel = useServerFn(getVerifyTargetLabel);
   const runVerify = useServerFn(verifyHouseholdAccess);
-  const runUpdateAddress = useServerFn(updateGuestAddress);
   const runSubmit = useServerFn(submitRsvp);
   const track = useAnalytics();
   // Admin-controlled via the Features tab. Gates RSVP submission only —
-  // household lookup/verification and address management work regardless,
+  // household lookup/verification work regardless,
   // since guests may reach this page well before RSVP officially opens.
   const { enabled: rsvpOpen, loading: rsvpFlagLoading } = useFeatureFlag("rsvp_open");
 
@@ -173,7 +151,11 @@ function RsvpPage() {
   // Verify stage
   const [pendingTarget, setPendingTarget] = useState<VerifyTarget | null>(null);
   const [verifyLabel, setVerifyLabel] = useState<string | null>(null);
-  const [last4, setLast4] = useState("");
+  // Which question this household gets asked. Decided by the server from
+  // the row itself (phone if we have one, else the mailed-to ZIP) — the
+  // client only renders it, and the server re-derives it when grading.
+  const [verifyFactor, setVerifyFactor] = useState<VerifyFactor>("phone_last4");
+  const [answer, setAnswer] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [verifyErr, setVerifyErr] = useState<string | null>(null);
 
@@ -181,12 +163,6 @@ function RsvpPage() {
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [existingRsvp, setExistingRsvp] = useState<PublicRsvp | null>(null);
   const [attendees, setAttendees] = useState<AttendeeChoice[]>([]);
-  const [address, setAddress] = useState<GuestAddress>({});
-  const [addressConfirmed, setAddressConfirmed] = useState(false);
-  const [addressMode, setAddressMode] = useState<"view" | "edit">("view");
-  const [addressSaving, setAddressSaving] = useState(false);
-  const [addressSaved, setAddressSaved] = useState(false);
-  const [addressErr, setAddressErr] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [songRequest, setSongRequest] = useState("");
   const [message, setMessage] = useState("");
@@ -203,15 +179,18 @@ function RsvpPage() {
     setPendingTarget(target);
     setStage("verify");
     setVerifyErr(null);
-    setLast4("");
+    setAnswer("");
     setVerifyLabel(knownLabel ?? null);
-    if (!knownLabel) {
-      try {
-        const res = await runGetLabel({ data: target });
-        if (res.ok) setVerifyLabel(res.primary_name);
-      } catch {
-        // Non-fatal — the verify screen still works without a greeting.
+    // Always fetch, even when the name came from the lookup list: the
+    // factor is the part we can't guess, and it decides the prompt.
+    try {
+      const res = await runGetLabel({ data: target });
+      if (res.ok) {
+        setVerifyLabel(res.primary_name);
+        setVerifyFactor(res.factor);
       }
+    } catch {
+      // Non-fatal — the verify screen still works with the phone default.
     }
   }
 
@@ -220,21 +199,14 @@ function RsvpPage() {
     setSessionToken(token);
     setExistingRsvp(r);
     setEmail(g.email ?? "");
-    setAddressMode("view");
-    setAddressSaved(false);
-    setAddressErr(null);
     if (r) {
       setAttendees(
         r.attendees.length ? r.attendees : g.party_members.map((m) => ({ ...m, attending: false })),
       );
-      setAddress(r.address ?? g.address);
-      setAddressConfirmed(r.address_confirmed);
       setSongRequest(r.song_request ?? "");
       setMessage(r.message ?? "");
     } else {
       setAttendees(g.party_members.map((m) => ({ ...m, attending: true })));
-      setAddress(g.address);
-      setAddressConfirmed(false);
       setSongRequest("");
       setMessage("");
     }
@@ -243,11 +215,11 @@ function RsvpPage() {
 
   async function onVerifySubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!pendingTarget || !/^\d{4}$/.test(last4)) return;
+    if (!pendingTarget || !answerComplete) return;
     setVerifying(true);
     setVerifyErr(null);
     try {
-      const res = await runVerify({ data: { ...pendingTarget, last4 } });
+      const res = await runVerify({ data: { ...pendingTarget, answer } });
       if (res.ok) {
         hydrateFromGuest(res.guest, res.rsvp, res.sessionToken);
       } else if (res.reason === "locked") {
@@ -335,22 +307,6 @@ function RsvpPage() {
     setAttendees((prev) => prev.filter((_, idx) => idx !== i));
   }
 
-  async function saveAddress() {
-    if (!guest || !sessionToken) return;
-    setAddressSaving(true);
-    setAddressErr(null);
-    try {
-      await runUpdateAddress({ data: { sessionToken, address } });
-      setAddressMode("view");
-      setAddressSaved(true);
-      setAddressConfirmed(true);
-    } catch (e) {
-      setAddressErr(rsvpErrorMessage(e, t));
-    } finally {
-      setAddressSaving(false);
-    }
-  }
-
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!guest || !sessionToken) return;
@@ -366,8 +322,6 @@ function RsvpPage() {
         data: {
           sessionToken,
           attendees: cleaned,
-          address_confirmed: addressConfirmed,
-          address,
           email,
           song_request: songRequest,
           message,
@@ -376,7 +330,6 @@ function RsvpPage() {
       setRecap({
         status: res.status,
         attendees: cleaned,
-        addressConfirmed,
         submittedAt: res.submitted_at,
       });
       setStage("done");
@@ -869,180 +822,6 @@ function RsvpPage() {
                     </section>
                   </fieldset>
 
-                  {/* Address — independent of rsvp_open and of RSVP submission.
-                  Starts collapsed: view the address on file (or "none yet"),
-                  edit only on request, save immediately on its own. */}
-                  <section aria-labelledby="rsvp-address-heading">
-                    <div className="flex items-center justify-between flex-wrap gap-2">
-                      <p
-                        id="rsvp-address-heading"
-                        style={{
-                          ...eyebrow,
-                          color: LAV_DEEP,
-                          letterSpacing: "0.3em",
-                          fontSize: 11,
-                          margin: 0,
-                        }}
-                      >
-                        Mailing address
-                      </p>
-                      {addressMode === "view" && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setAddressMode("edit");
-                            setAddressSaved(false);
-                            setAddressErr(null);
-                          }}
-                          className="uppercase font-sans"
-                          style={{
-                            fontSize: 10,
-                            letterSpacing: "0.2em",
-                            color: LAV_DEEP,
-                            borderBottom: `1px solid ${LAV_DEEP}`,
-                            paddingBottom: 2,
-                          }}
-                        >
-                          {hasAddress(address) ? t.rsvp.addressEditCta : t.rsvp.addressAddCta}
-                        </button>
-                      )}
-                    </div>
-
-                    {addressMode === "view" ? (
-                      <div className="mt-3">
-                        {hasAddress(address) ? (
-                          <div
-                            className="font-serif italic"
-                            style={{ fontSize: 17, color: INK, lineHeight: 1.6 }}
-                          >
-                            {formatAddress(address).map((line, i) => (
-                              <div key={i}>{line}</div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="font-sans italic" style={{ fontSize: 13, color: SOFT }}>
-                            {t.rsvp.addressNotOnFile}
-                          </p>
-                        )}
-                        {addressSaved && (
-                          <p className="mt-2 font-sans" style={{ fontSize: 12, color: LAV_DEEP }}>
-                            {t.rsvp.addressSaved}
-                          </p>
-                        )}
-                      </div>
-                    ) : (
-                      <>
-                        <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-6">
-                          <div className="col-span-2">
-                            <input
-                              value={address.line1 ?? ""}
-                              onChange={(e) => setAddress({ ...address, line1: e.target.value })}
-                              placeholder="Street address"
-                              aria-label="Street address"
-                              autoComplete="address-line1"
-                              maxLength={200}
-                              style={inputStyle}
-                            />
-                          </div>
-                          <div className="col-span-2">
-                            <input
-                              value={address.line2 ?? ""}
-                              onChange={(e) => setAddress({ ...address, line2: e.target.value })}
-                              placeholder="Apt / suite (optional)"
-                              aria-label="Apartment or suite (optional)"
-                              autoComplete="address-line2"
-                              maxLength={200}
-                              style={inputStyle}
-                            />
-                          </div>
-                          <input
-                            value={address.city ?? ""}
-                            onChange={(e) => setAddress({ ...address, city: e.target.value })}
-                            placeholder="City"
-                            aria-label="City"
-                            autoComplete="address-level2"
-                            maxLength={120}
-                            style={inputStyle}
-                          />
-                          <input
-                            value={address.state ?? ""}
-                            onChange={(e) => setAddress({ ...address, state: e.target.value })}
-                            placeholder="State"
-                            aria-label="State"
-                            autoComplete="address-level1"
-                            maxLength={60}
-                            style={inputStyle}
-                          />
-                          <div>
-                            <input
-                              value={address.postal_code ?? ""}
-                              onChange={(e) =>
-                                setAddress({ ...address, postal_code: e.target.value })
-                              }
-                              placeholder="ZIP / postal"
-                              aria-label="ZIP or postal code"
-                              autoComplete="postal-code"
-                              maxLength={20}
-                              style={inputStyle}
-                            />
-                            {(address.postal_code ?? "").trim() &&
-                              (!(address.country ?? "").trim() ||
-                                /^us(a)?$/i.test((address.country ?? "").trim())) &&
-                              !looksLikeUsZip(address.postal_code ?? "") && (
-                                <p
-                                  className="font-sans"
-                                  style={{ fontSize: 11, color: DANGER, marginTop: 6 }}
-                                >
-                                  Doesn&rsquo;t look like a US ZIP (12345 or 12345-6789).
-                                </p>
-                              )}
-                          </div>
-                          <input
-                            value={address.country ?? ""}
-                            onChange={(e) => setAddress({ ...address, country: e.target.value })}
-                            placeholder="Country (if not US)"
-                            aria-label="Country"
-                            autoComplete="country-name"
-                            maxLength={60}
-                            style={inputStyle}
-                          />
-                        </div>
-                        {addressErr && (
-                          <p className="mt-3 font-sans" style={{ fontSize: 13, color: DANGER }}>
-                            {addressErr}
-                          </p>
-                        )}
-                        <div className="flex items-center gap-4 mt-5">
-                          <button
-                            type="button"
-                            onClick={saveAddress}
-                            disabled={addressSaving}
-                            className="uppercase font-sans"
-                            style={{
-                              background: INK,
-                              color: IVORY,
-                              padding: "12px 28px",
-                              fontSize: 10,
-                              letterSpacing: "0.24em",
-                              border: `1px solid ${INK}`,
-                              opacity: addressSaving ? 0.5 : 1,
-                            }}
-                          >
-                            {addressSaving ? t.rsvp.addressSaving : t.rsvp.addressSaveCta}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setAddressMode("view")}
-                            className="uppercase font-sans"
-                            style={{ fontSize: 10, letterSpacing: "0.2em", color: TAN_DEEP }}
-                          >
-                            {t.rsvp.addressCancel}
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </section>
-
                   {/* Extras — gated by rsvp_open, same as the party section. */}
                   <fieldset
                     disabled={!rsvpOpen}
@@ -1244,12 +1023,6 @@ function RsvpPage() {
                         </div>
                       ))}
                     </div>
-
-                    {recap.addressConfirmed && (
-                      <p className="font-sans mt-5" style={{ fontSize: 12, color: SOFT }}>
-                        ✓ Mailing address confirmed
-                      </p>
-                    )}
                   </div>
 
                   <div className="mt-10 flex flex-col items-center gap-5">
