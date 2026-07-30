@@ -700,6 +700,24 @@ function RsvpsPanel() {
         </div>
       )}
 
+      {testRows.length > 0 && (
+        <div className="mt-3 flex flex-wrap items-center gap-3 border border-destructive/40 bg-destructive/5 px-4 py-2 text-xs">
+          <span className="text-foreground">
+            <span className="font-medium text-destructive">{testRows.length}</span> test household
+            {testRows.length === 1 ? "" : "s"} in the live database — visible to anyone who searches
+            for them on the site.
+          </span>
+          <button
+            onClick={() => setConfirmPurgeTest(true)}
+            className="ml-auto border border-destructive text-destructive px-3 py-1 uppercase tracking-[0.2em]"
+          >
+            Purge test data ({testRows.length})
+          </button>
+        </div>
+      )}
+
+
+
       {selected.size > 0 && (
         <div className="mt-4 flex flex-wrap items-center gap-3 border border-primary/40 bg-primary/5 px-4 py-2 text-xs">
           <span className="uppercase tracking-[0.2em] text-primary">{selected.size} selected</span>
