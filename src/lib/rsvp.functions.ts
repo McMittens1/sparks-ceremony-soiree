@@ -1181,30 +1181,33 @@ function planImportRows(
 
     const isUpdate = !!matched;
 
-    // Phone: blank is fine on an update (leave unchanged); a non-blank value
-    // must always be valid; a new household always needs one (it's NOT NULL
-    // and the primary fallback match key).
-    if (rec.phone?.trim()) {
-      if (!isValidPhone(rec.phone)) {
-        results.push({
-          row: rowNumber,
-          action: "error",
-          household_name,
-          warnings,
-          error: "Invalid phone number.",
-        });
-        return;
-      }
-    } else if (!isUpdate) {
+    // Phone: optional now that some households are ZIP-verified, but a
+    // non-blank value must always be valid.
+    if (rec.phone?.trim() && !isValidPhone(rec.phone)) {
       results.push({
         row: rowNumber,
         action: "error",
         household_name,
         warnings,
-        error: "Missing phone number (required for a new household).",
+        error: "Invalid phone number.",
       });
       return;
     }
+
+    // Mirrors guests_has_verify_factor: a new household with neither a
+    // phone nor a ZIP could never pass verification, so reject it here
+    // rather than letting the insert fail on the constraint.
+    if (!isUpdate && !rec.phone?.trim() && !rec.postal_code?.trim()) {
+      results.push({
+        row: rowNumber,
+        action: "error",
+        household_name,
+        warnings,
+        error: "A new household needs either a phone number or a ZIP code (used to verify).",
+      });
+      return;
+    }
+
 
     if (rec.email?.trim() && !z.string().email().safeParse(rec.email.trim()).success) {
       results.push({
