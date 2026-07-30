@@ -218,7 +218,7 @@ function RsvpsPanel() {
       if (partySize === "1" && size !== 1) return false;
       if (partySize === "2" && size !== 2) return false;
       if (partySize === "3plus" && size < 3) return false;
-      if (noFactorOnly && r.rsvp?.address_confirmed) return false;
+      if (noFactorOnly && r.verify_factor !== "none") return false;
       if (songOnly && !(r.rsvp?.song_request ?? "").trim()) return false;
       if (filter === "all") return true;
       if (filter === "no_response") return !r.rsvp;
