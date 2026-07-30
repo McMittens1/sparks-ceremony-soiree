@@ -1788,8 +1788,11 @@ function CsvImporter({
               matches an existing household for an update — omit it to always insert new.
             </p>
             <p className="mt-2 text-xs text-muted-foreground">
-              <span className="text-foreground">Phone is required for new households</span> — it's
-              how they verify themselves before their RSVP is shown. On an update (matched by slug,
+              <span className="text-foreground">
+                New households need either a phone or a postal_code
+              </span>{" "}
+              — that's how they verify themselves before their RSVP is shown (last 4 of the phone
+              if we have one, otherwise the ZIP we mailed to). On an update (matched by slug,
               phone, or email), a{" "}
               <span className="text-foreground">blank cell leaves that field unchanged</span> — it's
               never treated as "clear this."
