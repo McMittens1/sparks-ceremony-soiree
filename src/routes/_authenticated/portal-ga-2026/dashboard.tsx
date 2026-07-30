@@ -1134,13 +1134,13 @@ function reportHtml(list: AdminGuestRow[]): string {
           <h2>${esc(r.primary_name)} <span class="slug">${esc(r.slug)}</span></h2>
           <div class="grid">
             <div><span class="label">Invited party</span><p>${esc(members)}</p></div>
-            <div><span class="label">Phone</span><p>${esc(formatPhoneDisplay(r.phone))}</p></div>
+            <div><span class="label">Phone</span><p>${r.phone ? esc(formatPhoneDisplay(r.phone)) : "<em>None on file</em>"}</p></div>
             <div><span class="label">Email</span><p>${r.email ? esc(r.email) : "<em>None on file</em>"}</p></div>
             <div><span class="label">Mailing address</span><p>${addressLines(r)}</p></div>
+            <div><span class="label">Verifies with</span><p>${r.verify_factor === "phone_last4" ? "Last 4 of phone" : r.verify_factor === "zip" ? "ZIP code" : "<em>Nothing on file</em>"}</p></div>
             <div><span class="label">RSVP status</span><p>${esc(r.rsvp?.status?.replace("_", " ") ?? "no response yet")}</p></div>
             <div><span class="label">Attending</span><p>${attending.length ? esc(attending.join(", ")) : "—"}</p></div>
             ${declined.length ? `<div><span class="label">Not attending</span><p>${esc(declined.join(", "))}</p></div>` : ""}
-            <div><span class="label">Address confirmed</span><p>${r.rsvp?.address_confirmed ? "Yes" : "No"}</p></div>
             ${r.rsvp?.song_request ? `<div><span class="label">Song request</span><p>${esc(r.rsvp.song_request)}</p></div>` : ""}
             ${r.rsvp?.message ? `<div><span class="label">Message</span><p>${esc(r.rsvp.message)}</p></div>` : ""}
             ${r.invite_notes ? `<div><span class="label">Internal notes</span><p>${esc(r.invite_notes)}</p></div>` : ""}
