@@ -564,7 +564,7 @@ function RsvpsPanel() {
             checked={noFactorOnly}
             onChange={(e) => setNoFactorOnly(e.target.checked)}
           />
-          Address unconfirmed
+          Can't verify (no phone/ZIP)
         </label>
         <label className="text-xs text-muted-foreground flex items-center gap-1">
           <input
