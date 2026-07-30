@@ -208,8 +208,9 @@ function mapRsvpRow(
   };
 }
 
-const GUEST_SELECT_COLUMNS =
-  "id, slug, primary_name, party_members, email, phone, address_line1, address_line2, city, state, postal_code, country";
+// Only what the guest-facing flow renders. Verification reads phone /
+// postal_code separately so those never ride along into a PublicGuest.
+const GUEST_SELECT_COLUMNS = "id, primary_name, party_members, email";
 const RSVP_SELECT_COLUMNS =
   "status, attendees, address_confirmed, address, song_request, message, submitted_at, updated_at";
 
