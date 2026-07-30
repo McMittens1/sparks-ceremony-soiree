@@ -955,6 +955,17 @@ function RsvpsPanel() {
           onCancel={() => setConfirmBulkDelete(false)}
         />
       )}
+
+      {confirmPurgeTest && (
+        <ConfirmDialog
+          title={`Purge ${testRows.length} test household${testRows.length === 1 ? "" : "s"}?`}
+          description={`Deletes every household named with the "${TEST_HOUSEHOLD_PREFIX}" prefix, plus their RSVPs, regardless of the current filter. This cannot be undone.`}
+          confirmLabel={`Purge ${testRows.length}`}
+          busy={busy}
+          onConfirm={doPurgeTestData}
+          onCancel={() => setConfirmPurgeTest(false)}
+        />
+      )}
     </div>
   );
 }
