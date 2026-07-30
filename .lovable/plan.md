@@ -4,6 +4,15 @@ Last updated: 2026-07-30.
 
 ## Recently shipped
 
+### Test-data guardrails + environment audit (2026-07-30) — DONE
+
+Verified — not assumed — that the Lovable preview and the live domain share exactly one database, that publishing deploys code only and never touches rows, and that no seed script or automated data loading exists anywhere in the repo. Current-state details live in `ONBOARDING.md` §2 ("Environments and test data"); the reasoning, including why a second environment was rejected, is in `HANDOFF.md`.
+
+- `src/lib/test-data.ts` owns `TEST_HOUSEHOLD_PREFIX = "ZZTEST"` and `isTestHousehold()` — the single source of truth. Don't inline the prefix elsewhere.
+- Admin RSVPs tab: a **Real + test / Real households only / Test households only** filter, plus a red banner counted across the whole dataset (not the filtered view) with a one-click **Purge test data (n)** action behind a confirmation dialog.
+- Verified end to end: created a `ZZTEST` household, confirmed the banner and count, purged it, re-queried the DB — `guests` 0 rows, `rsvps` 0 rows.
+- Known-and-intentional leftovers after a purge: `email_send_log`, `analytics_events`, `suppressed_emails`, `email_unsubscribe_tokens`. Only `suppressed_emails` has teeth — a suppressed test address blocks later mail to it.
+
 ### Per-household RSVP verification + guest-facing address removal (2026-07-30) — DONE
 
 Shipped exactly as planned. See `ONBOARDING.md` §2 for current-state behavior and `HANDOFF.md` for the reasoning.
@@ -18,7 +27,16 @@ Shipped exactly as planned. See `ONBOARDING.md` §2 for current-state behavior a
 
 ## Next up
 
-1. **Import the real household list.** `guests` currently holds 1 test row. This is the last hard blocker before RSVP is meaningfully live. Every CSV row now needs a phone or a postal code; run the import, then use the "Can't verify" filter to confirm zero rows come back.
+1. **Import the real household list.** `guests` is currently empty (0 rows, re-verified 2026-07-30). This is the last hard blocker before RSVP is meaningfully live. Every CSV row needs a phone or a postal code; run the import, then use the **Can't verify** filter to confirm zero rows come back, and the test filter to confirm no `ZZTEST` rows survived.
 2. **Verify the email pipeline end to end after the import** from the admin Emails tab — check the send log, don't assume. (See `ONBOARDING.md` §5 for the history of this one silently failing for two days.)
 3. **Wedding-party personalization copy** — still placeholder text for several members.
 4. **Post-launch:** guest photo uploads (`guest_photo_uploads` flag is off by the couple's choice), and a day-of "what's happening now" view if wanted.
+
+## Pre-launch cleanup checklist
+
+Run as queries, not from memory, before invitations go out:
+
+- `guests` contains only real households (no `ZZTEST` prefix, test filter shows 0).
+- `rsvps` is empty.
+- `guest_photos` and the `guest-photos` storage bucket are empty.
+- No real guest address sits in `suppressed_emails`.

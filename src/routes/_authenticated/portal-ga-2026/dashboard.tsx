@@ -28,6 +28,7 @@ import {
   type ImportRowResult,
 } from "@/lib/rsvp.functions";
 import { getFeatureFlags, setFeatureFlags, type FeatureFlag } from "@/lib/feature-flags.functions";
+import { TEST_HOUSEHOLD_PREFIX, isTestHousehold } from "@/lib/test-data";
 import {
   getEmailSendLog,
   getSuppressedEmails,
@@ -158,6 +159,7 @@ function RsvpsPanel() {
   const [cityFilter, setCityFilter] = useState("");
   const [noFactorOnly, setNoFactorOnly] = useState(false);
   const [songOnly, setSongOnly] = useState(false);
+  const [testFilter, setTestFilter] = useState<"any" | "only" | "hide">("any");
   const [sortKey, setSortKey] = useState<SortKey>("submitted");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [editing, setEditing] = useState<AdminGuestRow | "new" | null>(null);
@@ -166,6 +168,7 @@ function RsvpsPanel() {
   const [unlockingId, setUnlockingId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const [confirmPurgeTest, setConfirmPurgeTest] = useState(false);
   const refreshToken = useRef(0);
 
   async function refresh() {
@@ -203,9 +206,32 @@ function RsvpsPanel() {
     }
   }
 
+  // Deliberately ignores the current filter view: the point of this action is
+  // "leave no test household behind", so it always targets every test-prefixed
+  // row in the table. Cascade on rsvps.guest_id takes their RSVPs with them.
+  async function doPurgeTestData() {
+    const ids = testRows.map((r) => r.id);
+    if (!ids.length) return;
+    setBusy(true);
+    try {
+      await runBulkDelete({ data: { ids } });
+      setSelected(new Set());
+      await refresh();
+      toast.success(`${ids.length} test household${ids.length === 1 ? "" : "s"} deleted.`);
+      setConfirmPurgeTest(false);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   useEffect(() => {
     refresh().catch(() => {});
   }, []);
+
+  const testRows = useMemo(
+    () => (rows ?? []).filter((r) => isTestHousehold(r.primary_name)),
+    [rows],
+  );
 
   const filtered = useMemo(() => {
     if (!rows) return [];
@@ -220,6 +246,11 @@ function RsvpsPanel() {
       if (partySize === "3plus" && size < 3) return false;
       if (noFactorOnly && r.verify_factor !== "none") return false;
       if (songOnly && !(r.rsvp?.song_request ?? "").trim()) return false;
+      if (testFilter !== "any") {
+        const isTest = isTestHousehold(r.primary_name);
+        if (testFilter === "only" && !isTest) return false;
+        if (testFilter === "hide" && isTest) return false;
+      }
       if (filter === "all") return true;
       if (filter === "no_response") return !r.rsvp;
       if (!r.rsvp) return false;
@@ -255,7 +286,18 @@ function RsvpsPanel() {
       return 0;
     });
     return list;
-  }, [rows, search, cityFilter, partySize, noFactorOnly, songOnly, filter, sortKey, sortDir]);
+  }, [
+    rows,
+    search,
+    cityFilter,
+    partySize,
+    noFactorOnly,
+    songOnly,
+    testFilter,
+    filter,
+    sortKey,
+    sortDir,
+  ]);
 
   // Drop selection entries no longer visible
   useEffect(() => {
@@ -493,6 +535,7 @@ function RsvpsPanel() {
     cityFilter.trim() !== "",
     noFactorOnly,
     songOnly,
+    testFilter !== "any",
   ].filter(Boolean).length;
 
   function clearFilters() {
@@ -502,6 +545,7 @@ function RsvpsPanel() {
     setCityFilter("");
     setNoFactorOnly(false);
     setSongOnly(false);
+    setTestFilter("any");
   }
 
   return (
@@ -574,6 +618,16 @@ function RsvpsPanel() {
           />
           Has song request
         </label>
+        <select
+          value={testFilter}
+          onChange={(e) => setTestFilter(e.target.value as typeof testFilter)}
+          className="border border-input bg-background px-3 py-2 text-sm"
+          title={`Test households are named with the "${TEST_HOUSEHOLD_PREFIX}" prefix`}
+        >
+          <option value="any">Real + test</option>
+          <option value="hide">Real households only</option>
+          <option value="only">Test households only</option>
+        </select>
         <button
           onClick={() => setEditing("new")}
           className="ml-auto text-xs uppercase tracking-[0.2em] border border-primary text-primary px-3 py-2 hover:bg-primary hover:text-primary-foreground"
@@ -645,6 +699,24 @@ function RsvpsPanel() {
           </button>
         </div>
       )}
+
+      {testRows.length > 0 && (
+        <div className="mt-3 flex flex-wrap items-center gap-3 border border-destructive/40 bg-destructive/5 px-4 py-2 text-xs">
+          <span className="text-foreground">
+            <span className="font-medium text-destructive">{testRows.length}</span> test household
+            {testRows.length === 1 ? "" : "s"} in the live database — visible to anyone who searches
+            for them on the site.
+          </span>
+          <button
+            onClick={() => setConfirmPurgeTest(true)}
+            className="ml-auto border border-destructive text-destructive px-3 py-1 uppercase tracking-[0.2em]"
+          >
+            Purge test data ({testRows.length})
+          </button>
+        </div>
+      )}
+
+
 
       {selected.size > 0 && (
         <div className="mt-4 flex flex-wrap items-center gap-3 border border-primary/40 bg-primary/5 px-4 py-2 text-xs">
@@ -881,6 +953,17 @@ function RsvpsPanel() {
           busy={busy}
           onConfirm={doBulkDelete}
           onCancel={() => setConfirmBulkDelete(false)}
+        />
+      )}
+
+      {confirmPurgeTest && (
+        <ConfirmDialog
+          title={`Purge ${testRows.length} test household${testRows.length === 1 ? "" : "s"}?`}
+          description={`Deletes every household named with the "${TEST_HOUSEHOLD_PREFIX}" prefix, plus their RSVPs, regardless of the current filter. This cannot be undone.`}
+          confirmLabel={`Purge ${testRows.length}`}
+          busy={busy}
+          onConfirm={doPurgeTestData}
+          onCancel={() => setConfirmPurgeTest(false)}
         />
       )}
     </div>
