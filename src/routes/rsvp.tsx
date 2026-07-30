@@ -627,9 +627,10 @@ function RsvpPage() {
                 </form>
               )}
 
-              {/* Verify — last 4 digits of the household's phone, shared by name
-              lookup and a personalized link alike. Neither path reveals
-              anything about the household until this succeeds. */}
+              {/* Verify — one question per household: last 4 of the phone we
+              have, or the ZIP we mailed the invitation to when we don't.
+              Shared by name lookup and a personalized link alike; neither
+              path reveals anything about the household until it succeeds. */}
               {stage === "verify" && (
                 <form onSubmit={onVerifySubmit} noValidate>
                   {verifyLabel && (
@@ -641,28 +642,32 @@ function RsvpPage() {
                     </p>
                   )}
                   <label
-                    htmlFor="rsvp-verify-last4"
+                    htmlFor="rsvp-verify-answer"
                     className="block text-center font-sans"
                     style={{ fontSize: 14, color: SOFT, margin: "0 0 30px" }}
                   >
-                    {t.rsvp.verifyHint}
+                    {verifyHint}
                   </label>
                   <input
-                    id="rsvp-verify-last4"
+                    id="rsvp-verify-answer"
                     autoFocus
-                    value={last4}
-                    onChange={(e) => setLast4(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                    placeholder={t.rsvp.verifyPlaceholder}
-                    aria-label={t.rsvp.verifyHint}
+                    value={answer}
+                    onChange={(e) =>
+                      setAnswer(e.target.value.replace(/\D/g, "").slice(0, answerLength))
+                    }
+                    placeholder={
+                      verifyFactor === "zip" ? t.rsvp.verifyPlaceholderZip : t.rsvp.verifyPlaceholder
+                    }
+                    aria-label={verifyHint}
                     inputMode="numeric"
                     autoComplete="off"
-                    maxLength={4}
+                    maxLength={answerLength}
                     className="text-center"
                     style={{ ...inputStyle, letterSpacing: "0.5em" }}
                   />
                   <button
                     type="submit"
-                    disabled={verifying || last4.length !== 4}
+                    disabled={verifying || !answerComplete}
                     className="mt-8 block w-full uppercase font-sans"
                     style={{
                       background: INK,
@@ -671,8 +676,8 @@ function RsvpPage() {
                       fontSize: 11,
                       letterSpacing: "0.26em",
                       border: `1px solid ${INK}`,
-                      opacity: verifying || last4.length !== 4 ? 0.5 : 1,
-                      cursor: verifying || last4.length !== 4 ? "not-allowed" : "pointer",
+                      opacity: verifying || !answerComplete ? 0.5 : 1,
+                      cursor: verifying || !answerComplete ? "not-allowed" : "pointer",
                     }}
                   >
                     {verifying ? t.rsvp.verifying : t.rsvp.verifyCta}
@@ -695,7 +700,7 @@ function RsvpPage() {
                       setStage("lookup");
                       setPendingTarget(null);
                       setVerifyLabel(null);
-                      setLast4("");
+                      setAnswer("");
                       setVerifyErr(null);
                     }}
                     className="mt-8 block mx-auto uppercase font-sans"
