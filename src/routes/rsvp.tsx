@@ -158,6 +158,9 @@ function RsvpPage() {
   const [answer, setAnswer] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [verifyErr, setVerifyErr] = useState<string | null>(null);
+  const answerLength = verifyFactor === "zip" ? 5 : 4;
+  const answerComplete = answer.length === answerLength;
+  const verifyHint = verifyFactor === "zip" ? t.rsvp.verifyHintZip : t.rsvp.verifyHint;
 
   const [guest, setGuest] = useState<PublicGuest | null>(null);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
