@@ -158,6 +158,7 @@ function RsvpsPanel() {
   const [cityFilter, setCityFilter] = useState("");
   const [noFactorOnly, setNoFactorOnly] = useState(false);
   const [songOnly, setSongOnly] = useState(false);
+  const [testFilter, setTestFilter] = useState<"any" | "only" | "hide">("any");
   const [sortKey, setSortKey] = useState<SortKey>("submitted");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [editing, setEditing] = useState<AdminGuestRow | "new" | null>(null);
@@ -166,6 +167,7 @@ function RsvpsPanel() {
   const [unlockingId, setUnlockingId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const [confirmPurgeTest, setConfirmPurgeTest] = useState(false);
   const refreshToken = useRef(0);
 
   async function refresh() {
