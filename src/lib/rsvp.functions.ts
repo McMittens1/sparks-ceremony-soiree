@@ -150,38 +150,38 @@ const addressSchema = z.object({
 
 function mapGuestRow(row: {
   id: string;
-  slug: string;
   primary_name: string;
   party_members: unknown;
   email: string | null;
-  phone: string;
-  address_line1: string | null;
-  address_line2: string | null;
-  city: string | null;
-  state: string | null;
-  postal_code: string | null;
-  country: string | null;
 }): PublicGuest {
   const party = Array.isArray(row.party_members)
     ? (row.party_members as PartyMember[]).filter((p) => p && typeof p.name === "string")
     : [];
   return {
     id: row.id,
-    slug: row.slug,
     primary_name: row.primary_name,
     party_members: party,
     email: row.email,
-    phone: row.phone,
-    address: {
-      line1: row.address_line1 ?? undefined,
-      line2: row.address_line2 ?? undefined,
-      city: row.city ?? undefined,
-      state: row.state ?? undefined,
-      postal_code: row.postal_code ?? undefined,
-      country: row.country ?? undefined,
-    },
   };
 }
+
+// US ZIPs are compared on their first 5 digits only, so "92078-1234",
+// " 92078 " and "92078" all match the same household.
+function normalizeZip(v: string | null | undefined): string {
+  return (v ?? "").replace(/\D/g, "").slice(0, 5);
+}
+
+// The one place the challenge is chosen. Phone wins when we have one
+// (stronger secret); ZIP is the fallback for address-only households.
+export function verifyFactorFor(row: {
+  phone: string | null;
+  postal_code: string | null;
+}): VerifyFactor {
+  if (normalizePhone(row.phone ?? "").length >= 4) return "phone_last4";
+  if (normalizeZip(row.postal_code).length === 5) return "zip";
+  return "none";
+}
+
 
 function mapRsvpRow(
   r: {
