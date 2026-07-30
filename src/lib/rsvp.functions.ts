@@ -1003,7 +1003,7 @@ function isLikelyUsZip(v: string): boolean {
 interface ExistingGuestRef {
   id: string;
   slug: string;
-  phone: string;
+  phone: string | null;
   email: string | null;
 }
 
@@ -1066,7 +1066,7 @@ function planImportRows(
     else map.set(key, [g]);
   }
   for (const g of existing) {
-    const p = normalizePhone(g.phone);
+    const p = normalizePhone(g.phone ?? "");
     if (p) addTo(byPhone, p, g);
     if (g.email) addTo(byEmail, normalizeEmail(g.email), g);
   }
@@ -1326,14 +1326,11 @@ export const importGuestsCsv = createServerFn({ method: "POST" })
       if (!dryRun) {
         for (const p of planned) {
           if (p.action === "insert" && p.payload) {
-            // primary_name/phone are always set on an insert-planned row (see
-            // planImportRows) even though GuestWritePayload marks them
+            // primary_name is always set on an insert-planned row (see
+            // planImportRows) even though GuestWritePayload marks it
             // optional to also cover update rows — asserted here, not
             // re-validated, since that invariant already holds by construction.
-            const payload = p.payload as GuestWritePayload & {
-              primary_name: string;
-              phone: string;
-            };
+            const payload = p.payload as GuestWritePayload & { primary_name: string };
             for (let i = 0; i < 5; i++) {
               const slug = p.slug || randomSlug();
               const { error } = await sb.from("guests").insert({ ...payload, slug });
