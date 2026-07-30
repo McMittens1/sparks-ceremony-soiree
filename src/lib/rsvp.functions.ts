@@ -29,19 +29,32 @@ export interface GuestAddress {
   country?: string;
 }
 
+// What the guest-facing RSVP flow is allowed to see about its own
+// household after verifying. Deliberately narrow: no slug (the invite code
+// authorizes nothing on its own, but there's no reason to hand it out), no
+// phone, and no mailing address — we already hold the addresses and guests
+// no longer confirm or edit them, so shipping one to the browser would put
+// a full street address in devtools for no benefit. Email stays because the
+// guest types it themselves to receive a confirmation.
 export interface PublicGuest {
   id: string;
-  slug: string;
   primary_name: string;
   party_members: PartyMember[];
   email: string | null;
-  phone: string;
-  address: GuestAddress;
 }
+
+// Which single question a household is challenged with. Chosen server-side
+// from what's on file — the guest never picks, and never sees the other
+// option. Phone last-4 is the stronger secret, so it wins when we have one;
+// ZIP is the fallback for households we only have a mailing address for.
+// "none" can only happen if the DB check constraint were dropped.
+export type VerifyFactor = "phone_last4" | "zip" | "none";
 
 export interface PublicRsvp {
   status: "attending" | "not_attending" | "partial";
   attendees: AttendeeChoice[];
+  // Retained for historical rows submitted while the guest-facing address
+  // confirm step still existed; the current flow never writes them.
   address_confirmed: boolean;
   address: GuestAddress | null;
   song_request: string | null;
@@ -55,7 +68,7 @@ export interface AdminGuestRow {
   slug: string;
   primary_name: string;
   party_members: PartyMember[];
-  phone: string;
+  phone: string | null;
   email: string | null;
   address_line1: string | null;
   address_line2: string | null;
@@ -69,12 +82,18 @@ export interface AdminGuestRow {
   rsvp: PublicRsvp | null;
   edit_token: string;
   verify_token: string;
+  // Which challenge this household will be asked at verification time, so
+  // gaps are visible in the dashboard before invitations go out.
+  verify_factor: VerifyFactor;
   address_confirmed_at: string | null;
   address_updated_at: string | null;
+  // Named phone_* for historical reasons; these count *verification*
+  // attempts regardless of which factor was asked.
   phone_verify_locked_until: string | null;
   phone_verify_failed_attempts: number;
   phone_verify_last_success_at: string | null;
 }
+
 
 // ---------- Helpers ----------
 
@@ -131,38 +150,38 @@ const addressSchema = z.object({
 
 function mapGuestRow(row: {
   id: string;
-  slug: string;
   primary_name: string;
   party_members: unknown;
   email: string | null;
-  phone: string;
-  address_line1: string | null;
-  address_line2: string | null;
-  city: string | null;
-  state: string | null;
-  postal_code: string | null;
-  country: string | null;
 }): PublicGuest {
   const party = Array.isArray(row.party_members)
     ? (row.party_members as PartyMember[]).filter((p) => p && typeof p.name === "string")
     : [];
   return {
     id: row.id,
-    slug: row.slug,
     primary_name: row.primary_name,
     party_members: party,
     email: row.email,
-    phone: row.phone,
-    address: {
-      line1: row.address_line1 ?? undefined,
-      line2: row.address_line2 ?? undefined,
-      city: row.city ?? undefined,
-      state: row.state ?? undefined,
-      postal_code: row.postal_code ?? undefined,
-      country: row.country ?? undefined,
-    },
   };
 }
+
+// US ZIPs are compared on their first 5 digits only, so "92078-1234",
+// " 92078 " and "92078" all match the same household.
+function normalizeZip(v: string | null | undefined): string {
+  return (v ?? "").replace(/\D/g, "").slice(0, 5);
+}
+
+// The one place the challenge is chosen. Phone wins when we have one
+// (stronger secret); ZIP is the fallback for address-only households.
+export function verifyFactorFor(row: {
+  phone: string | null;
+  postal_code: string | null;
+}): VerifyFactor {
+  if (normalizePhone(row.phone ?? "").length >= 4) return "phone_last4";
+  if (normalizeZip(row.postal_code).length === 5) return "zip";
+  return "none";
+}
+
 
 function mapRsvpRow(
   r: {
@@ -189,8 +208,9 @@ function mapRsvpRow(
   };
 }
 
-const GUEST_SELECT_COLUMNS =
-  "id, slug, primary_name, party_members, email, phone, address_line1, address_line2, city, state, postal_code, country";
+// Only what the guest-facing flow renders. Verification reads phone /
+// postal_code separately so those never ride along into a PublicGuest.
+const GUEST_SELECT_COLUMNS = "id, primary_name, party_members, email";
 const RSVP_SELECT_COLUMNS =
   "status, attendees, address_confirmed, address, song_request, message, submitted_at, updated_at";
 
@@ -365,8 +385,9 @@ async function resolveVerifyTarget(input: {
 
 // A lightweight, pre-verification label for a deep link (either a personalized
 // token or a plain ?g=slug link) — lets the verify screen greet the household
-// by name before they've proven anything. Reveals a name, nothing else: no
-// address, phone, party list, or RSVP status.
+// by name and ask the right question before they've proven anything. Reveals
+// a name and which factor is being asked, nothing else: no address, phone,
+// ZIP, party list, or RSVP status.
 export const getVerifyTargetLabel = createServerFn({ method: "POST" })
   .validator((d: { slug?: string; token?: string; selectToken?: string }) =>
     z
@@ -381,28 +402,32 @@ export const getVerifyTargetLabel = createServerFn({ method: "POST" })
       )
       .parse(d),
   )
-  .handler(async ({ data }): Promise<{ ok: true; primary_name: string } | { ok: false }> => {
-    const guestId = await resolveVerifyTarget(data);
-    if (!guestId) return { ok: false };
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: g } = await supabaseAdmin
-      .from("guests")
-      .select("primary_name")
-      .eq("id", guestId)
-      .maybeSingle();
-    if (!g) return { ok: false };
-    return { ok: true, primary_name: g.primary_name };
-  });
+  .handler(
+    async ({
+      data,
+    }): Promise<{ ok: true; primary_name: string; factor: VerifyFactor } | { ok: false }> => {
+      const guestId = await resolveVerifyTarget(data);
+      if (!guestId) return { ok: false };
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: g } = await supabaseAdmin
+        .from("guests")
+        .select("primary_name, phone, postal_code")
+        .eq("id", guestId)
+        .maybeSingle();
+      if (!g) return { ok: false };
+      return { ok: true, primary_name: g.primary_name, factor: verifyFactorFor(g) };
+    },
+  );
 
 const verifyAccessSchema = z
   .object({
     slug: z.string().trim().max(20).optional(),
     token: z.string().min(10).max(400).optional(),
     selectToken: z.string().min(10).max(400).optional(),
-    last4: z
-      .string()
-      .trim()
-      .regex(/^\d{4}$/, "Enter the last 4 digits"),
+    // One free-form answer to whichever question the server asked; its
+    // shape is validated against that factor inside the handler, so the
+    // client can't pick which check it wants to be graded against.
+    answer: z.string().trim().min(1).max(20),
   })
   .refine(
     (d) => [d.slug, d.token, d.selectToken].filter(Boolean).length === 1,
@@ -424,7 +449,9 @@ export const verifyHouseholdAccess = createServerFn({ method: "POST" })
 
       const { data: g } = await supabaseAdmin
         .from("guests")
-        .select(`${GUEST_SELECT_COLUMNS}, phone_verify_failed_attempts, phone_verify_locked_until`)
+        .select(
+          `${GUEST_SELECT_COLUMNS}, phone, postal_code, phone_verify_failed_attempts, phone_verify_locked_until`,
+        )
         .eq("id", guestId)
         .maybeSingle();
       if (!g) return { ok: false, reason: "not_found" };
@@ -434,8 +461,16 @@ export const verifyHouseholdAccess = createServerFn({ method: "POST" })
         return { ok: false, reason: "locked" };
       }
 
-      const expectedLast4 = normalizePhone(g.phone).slice(-4);
-      if (expectedLast4.length !== 4 || expectedLast4 !== data.last4) {
+      const factor = verifyFactorFor(g);
+      const given = data.answer.replace(/\D/g, "");
+      const matches =
+        factor === "phone_last4"
+          ? given.length === 4 && normalizePhone(g.phone ?? "").slice(-4) === given
+          : factor === "zip"
+            ? given.length === 5 && normalizeZip(g.postal_code) === given
+            : false;
+
+      if (!matches) {
         const attempts = (g.phone_verify_failed_attempts ?? 0) + 1;
         const locked = attempts >= PHONE_VERIFY_MAX_ATTEMPTS;
         await supabaseAdmin
@@ -466,10 +501,10 @@ export const verifyHouseholdAccess = createServerFn({ method: "POST" })
         .eq("guest_id", g.id)
         .maybeSingle();
 
-      // Issued only to the browser that just passed the last-4 check — this
-      // is what authorizes updateGuestAddress/submitRsvp below, replacing
-      // the old approach of remembering "verified" on the household row
-      // (which anyone holding the invite code could ride along on).
+      // Issued only to the browser that just answered correctly — this is
+      // what authorizes submitRsvp below, replacing the old approach of
+      // remembering "verified" on the household row (which anyone holding
+      // the invite code could ride along on).
       const { signRsvpToken } = await import("@/lib/rsvp-token.server");
       const sessionToken = await signRsvpToken(g.id, "session", SESSION_TOKEN_TTL_MS);
 
@@ -477,48 +512,11 @@ export const verifyHouseholdAccess = createServerFn({ method: "POST" })
     },
   );
 
-// Address-only update, independent of RSVP status and the rsvp_open flag —
-// so a household can confirm or add their mailing address any time after
-// verifying, whether or not RSVP is open yet. Requires the session token
-// minted by a successful verifyHouseholdAccess call — a bare slug/id is not
-// enough, otherwise this would quietly reopen the door phone verification
-// closes.
-export const updateGuestAddress = createServerFn({ method: "POST" })
-  .validator((d: unknown) =>
-    z.object({ sessionToken: z.string().min(10).max(400), address: addressSchema }).parse(d),
-  )
-  .handler(async ({ data }): Promise<{ ok: true }> => {
-    const { verifyRsvpToken } = await import("@/lib/rsvp-token.server");
-    const v = await verifyRsvpToken(data.sessionToken, "session");
-    if (!v.ok) throw new Error("not_verified");
-
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const now = new Date().toISOString();
-    const { error } = await supabaseAdmin
-      .from("guests")
-      .update({
-        address_line1: data.address.line1?.trim() || null,
-        address_line2: data.address.line2?.trim() || null,
-        city: data.address.city?.trim() || null,
-        state: data.address.state?.trim() || null,
-        postal_code: data.address.postal_code?.trim() || null,
-        country: data.address.country?.trim() || null,
-        address_confirmed_at: now,
-        address_updated_at: now,
-      })
-      .eq("id", v.guestId);
-    if (error) {
-      console.error("updateGuestAddress failed", error);
-      throw new Error("save_failed");
-    }
-    return { ok: true };
-  });
-
+// Addresses are admin-owned: we already hold them, guests never see or edit
+// them, so an RSVP submission carries no address fields at all.
 const submitSchema = z.object({
   sessionToken: z.string().min(10).max(400),
   attendees: z.array(attendeeSchema).min(1).max(20),
-  address_confirmed: z.boolean(),
-  address: addressSchema.optional(),
   email: z.string().trim().email().max(200).optional().or(z.literal("")),
   song_request: z.string().trim().max(200).optional().or(z.literal("")),
   message: z.string().trim().max(1000).optional().or(z.literal("")),
@@ -557,33 +555,11 @@ async function writeRsvp(
   const status: PublicRsvp["status"] =
     anyYes && anyNo ? "partial" : anyYes ? "attending" : "not_attending";
 
-  const guestPatch: {
-    email?: string | null;
-    address_line1?: string | null;
-    address_line2?: string | null;
-    city?: string | null;
-    state?: string | null;
-    postal_code?: string | null;
-    country?: string | null;
-    address_confirmed_at?: string;
-    address_updated_at?: string;
-  } = {};
-  if (typeof data.email === "string") guestPatch.email = data.email.trim() || null;
-  if (data.address) {
-    guestPatch.address_line1 = data.address.line1?.trim() || null;
-    guestPatch.address_line2 = data.address.line2?.trim() || null;
-    guestPatch.city = data.address.city?.trim() || null;
-    guestPatch.state = data.address.state?.trim() || null;
-    guestPatch.postal_code = data.address.postal_code?.trim() || null;
-    guestPatch.country = data.address.country?.trim() || null;
-    // Keep the admin "last confirmed" view accurate regardless of whether
-    // an address came in via updateGuestAddress or a full RSVP submission.
-    const stamp = new Date().toISOString();
-    guestPatch.address_updated_at = stamp;
-    if (data.address_confirmed) guestPatch.address_confirmed_at = stamp;
-  }
-  if (Object.keys(guestPatch).length > 0) {
-    await supabaseAdmin.from("guests").update(guestPatch).eq("id", g.id);
+  // Email is the only guest-writable household field left; addresses are
+  // maintained in the admin dashboard.
+  const email = typeof data.email === "string" ? data.email.trim() || null : undefined;
+  if (email !== undefined) {
+    await supabaseAdmin.from("guests").update({ email }).eq("id", g.id);
   }
 
   const now = new Date().toISOString();
@@ -592,8 +568,6 @@ async function writeRsvp(
       guest_id: g.id,
       status,
       attendees: data.attendees,
-      address_confirmed: data.address_confirmed,
-      address: data.address ?? null,
       song_request: data.song_request?.trim() || null,
       message: data.message?.trim() || null,
       submitted_at: now,
@@ -804,6 +778,7 @@ export const listGuestsWithRsvps = createServerFn({ method: "POST" })
       rsvp: rsvpByGuest.get(g.id) ?? null,
       edit_token: editTokens[i],
       verify_token: verifyTokens[i],
+      verify_factor: verifyFactorFor(g),
       address_confirmed_at: g.address_confirmed_at,
       address_updated_at: g.address_updated_at,
       phone_verify_locked_until: g.phone_verify_locked_until,
@@ -886,26 +861,42 @@ export const resendRsvpConfirmation = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-const guestUpsertSchema = z.object({
-  id: z.string().uuid().optional(),
-  slug: z.string().trim().max(20).optional().or(z.literal("")),
-  primary_name: z.string().trim().min(1).max(200),
-  party_members: z.array(partyMemberSchema).max(20),
-  phone: z
-    .string()
-    .trim()
-    .min(1, "Phone number is required")
-    .max(40)
-    .refine(isValidPhone, "Enter a valid 10-digit US or Mexico phone number"),
-  email: z.string().trim().email().max(200).optional().or(z.literal("")),
-  address_line1: z.string().trim().max(200).optional().or(z.literal("")),
-  address_line2: z.string().trim().max(200).optional().or(z.literal("")),
-  city: z.string().trim().max(120).optional().or(z.literal("")),
-  state: z.string().trim().max(60).optional().or(z.literal("")),
-  postal_code: z.string().trim().max(20).optional().or(z.literal("")),
-  country: z.string().trim().max(60).optional().or(z.literal("")),
-  invite_notes: z.string().trim().max(1000).optional().or(z.literal("")),
-});
+const guestUpsertSchema = z
+  .object({
+    id: z.string().uuid().optional(),
+    slug: z.string().trim().max(20).optional().or(z.literal("")),
+    primary_name: z.string().trim().min(1).max(200),
+    party_members: z.array(partyMemberSchema).max(20),
+    // Optional: we don't have a phone number for every household. A blank
+    // phone means this household verifies by ZIP instead.
+    phone: z
+      .string()
+      .trim()
+      .max(40)
+      .optional()
+      .or(z.literal(""))
+      .refine(
+        (v) => !v || isValidPhone(v),
+        "Enter a valid 10-digit US or Mexico phone number",
+      ),
+    email: z.string().trim().email().max(200).optional().or(z.literal("")),
+    address_line1: z.string().trim().max(200).optional().or(z.literal("")),
+    address_line2: z.string().trim().max(200).optional().or(z.literal("")),
+    city: z.string().trim().max(120).optional().or(z.literal("")),
+    state: z.string().trim().max(60).optional().or(z.literal("")),
+    postal_code: z.string().trim().max(20).optional().or(z.literal("")),
+    country: z.string().trim().max(60).optional().or(z.literal("")),
+    invite_notes: z.string().trim().max(1000).optional().or(z.literal("")),
+  })
+  // Mirrors the guests_has_verify_factor DB constraint: a household with
+  // neither a phone nor a ZIP could never pass verification.
+  .refine(
+    (d) => !!d.phone?.trim() || !!d.postal_code?.trim(),
+    {
+      message: "Add either a phone number or a ZIP code so this household can verify.",
+      path: ["phone"],
+    },
+  );
 
 export const upsertGuest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -916,7 +907,7 @@ export const upsertGuest = createServerFn({ method: "POST" })
     const payload = {
       primary_name: data.primary_name,
       party_members: data.party_members as unknown as import("@/integrations/supabase/types").Json,
-      phone: normalizePhone(data.phone),
+      phone: data.phone?.trim() ? normalizePhone(data.phone) : null,
       email: data.email ? normalizeEmail(data.email) : null,
       address_line1: data.address_line1 || null,
       address_line2: data.address_line2 || null,
@@ -1012,7 +1003,7 @@ function isLikelyUsZip(v: string): boolean {
 interface ExistingGuestRef {
   id: string;
   slug: string;
-  phone: string;
+  phone: string | null;
   email: string | null;
 }
 
@@ -1075,7 +1066,7 @@ function planImportRows(
     else map.set(key, [g]);
   }
   for (const g of existing) {
-    const p = normalizePhone(g.phone);
+    const p = normalizePhone(g.phone ?? "");
     if (p) addTo(byPhone, p, g);
     if (g.email) addTo(byEmail, normalizeEmail(g.email), g);
   }
@@ -1190,30 +1181,33 @@ function planImportRows(
 
     const isUpdate = !!matched;
 
-    // Phone: blank is fine on an update (leave unchanged); a non-blank value
-    // must always be valid; a new household always needs one (it's NOT NULL
-    // and the primary fallback match key).
-    if (rec.phone?.trim()) {
-      if (!isValidPhone(rec.phone)) {
-        results.push({
-          row: rowNumber,
-          action: "error",
-          household_name,
-          warnings,
-          error: "Invalid phone number.",
-        });
-        return;
-      }
-    } else if (!isUpdate) {
+    // Phone: optional now that some households are ZIP-verified, but a
+    // non-blank value must always be valid.
+    if (rec.phone?.trim() && !isValidPhone(rec.phone)) {
       results.push({
         row: rowNumber,
         action: "error",
         household_name,
         warnings,
-        error: "Missing phone number (required for a new household).",
+        error: "Invalid phone number.",
       });
       return;
     }
+
+    // Mirrors guests_has_verify_factor: a new household with neither a
+    // phone nor a ZIP could never pass verification, so reject it here
+    // rather than letting the insert fail on the constraint.
+    if (!isUpdate && !rec.phone?.trim() && !rec.postal_code?.trim()) {
+      results.push({
+        row: rowNumber,
+        action: "error",
+        household_name,
+        warnings,
+        error: "A new household needs either a phone number or a ZIP code (used to verify).",
+      });
+      return;
+    }
+
 
     if (rec.email?.trim() && !z.string().email().safeParse(rec.email.trim()).success) {
       results.push({
@@ -1335,14 +1329,11 @@ export const importGuestsCsv = createServerFn({ method: "POST" })
       if (!dryRun) {
         for (const p of planned) {
           if (p.action === "insert" && p.payload) {
-            // primary_name/phone are always set on an insert-planned row (see
-            // planImportRows) even though GuestWritePayload marks them
+            // primary_name is always set on an insert-planned row (see
+            // planImportRows) even though GuestWritePayload marks it
             // optional to also cover update rows — asserted here, not
             // re-validated, since that invariant already holds by construction.
-            const payload = p.payload as GuestWritePayload & {
-              primary_name: string;
-              phone: string;
-            };
+            const payload = p.payload as GuestWritePayload & { primary_name: string };
             for (let i = 0; i < 5; i++) {
               const slug = p.slug || randomSlug();
               const { error } = await sb.from("guests").insert({ ...payload, slug });

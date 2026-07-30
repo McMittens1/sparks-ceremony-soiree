@@ -11,7 +11,6 @@ import {
   type PublicGuest,
   type PublicRsvp,
   type AttendeeChoice,
-  type GuestAddress,
 } from "@/lib/rsvp.functions";
 
 export const Route = createFileRoute("/rsvp/edit/$token")({
@@ -83,13 +82,10 @@ function EditRsvpPage() {
         status: PublicRsvp["status"];
         submittedAt: string;
         attendees: AttendeeChoice[];
-        addressConfirmed: boolean;
       }
   >({ kind: "loading" });
 
   const [attendees, setAttendees] = useState<AttendeeChoice[]>([]);
-  const [address, setAddress] = useState<GuestAddress>({});
-  const [addressConfirmed, setAddressConfirmed] = useState(false);
   const [email, setEmail] = useState("");
   const [songRequest, setSongRequest] = useState("");
   const [message, setMessage] = useState("");
@@ -114,13 +110,10 @@ function EditRsvpPage() {
               ? rsvp.attendees
               : guest.party_members.map((m) => ({ ...m, attending: false })),
           );
-          setAddress(rsvp.address ?? guest.address);
-          setAddressConfirmed(rsvp.address_confirmed);
           setSongRequest(rsvp.song_request ?? "");
           setMessage(rsvp.message ?? "");
         } else {
           setAttendees(guest.party_members.map((m) => ({ ...m, attending: true })));
-          setAddress(guest.address);
         }
         setState({ kind: "ready", guest, rsvp });
       } catch {
@@ -157,8 +150,6 @@ function EditRsvpPage() {
         data: {
           token,
           attendees: cleaned,
-          address_confirmed: addressConfirmed,
-          address,
           email,
           song_request: songRequest,
           message,
@@ -169,7 +160,6 @@ function EditRsvpPage() {
         status: res.status,
         submittedAt: res.submitted_at,
         attendees: cleaned,
-        addressConfirmed,
       });
     } catch (e) {
       setErr(rsvpErrorMessage(e, t));
@@ -333,11 +323,6 @@ function EditRsvpPage() {
                     </div>
                   ))}
                 </div>
-                {state.addressConfirmed && (
-                  <p className="font-sans mt-5" style={{ fontSize: 12, color: SOFT }}>
-                    ✓ Mailing address confirmed
-                  </p>
-                )}
               </div>
 
               <div className="text-center">
@@ -525,17 +510,6 @@ function EditRsvpPage() {
                     }}
                   />
                 </div>
-                <label
-                  className="flex items-center gap-2 font-sans"
-                  style={{ fontSize: 13, color: SOFT }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={addressConfirmed}
-                    onChange={(e) => setAddressConfirmed(e.target.checked)}
-                  />
-                  Address on file is correct
-                </label>
               </section>
 
               {err && (

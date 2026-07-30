@@ -198,7 +198,7 @@ export type Database = {
           id: string
           invite_notes: string | null
           party_members: Json
-          phone: string
+          phone: string | null
           phone_verify_failed_attempts: number
           phone_verify_last_success_at: string | null
           phone_verify_locked_until: string | null
@@ -220,7 +220,7 @@ export type Database = {
           id?: string
           invite_notes?: string | null
           party_members?: Json
-          phone: string
+          phone?: string | null
           phone_verify_failed_attempts?: number
           phone_verify_last_success_at?: string | null
           phone_verify_locked_until?: string | null
@@ -242,7 +242,7 @@ export type Database = {
           id?: string
           invite_notes?: string | null
           party_members?: Json
-          phone?: string
+          phone?: string | null
           phone_verify_failed_attempts?: number
           phone_verify_last_success_at?: string | null
           phone_verify_locked_until?: string | null

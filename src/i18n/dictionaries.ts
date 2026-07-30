@@ -65,6 +65,10 @@ export interface Dict {
     verifyTitle: string;
     verifyHint: string;
     verifyPlaceholder: string;
+    // ZIP variants: households we don't have a phone number for verify
+    // with the ZIP code their invitation was mailed to instead.
+    verifyHintZip: string;
+    verifyPlaceholderZip: string;
     verifyCta: string;
     verifying: string;
     verifyInvalid: string;
@@ -218,6 +222,8 @@ const en: Dict = {
     verifyTitle: "Verify your household",
     verifyHint: "Enter the last 4 digits of the phone number on file for your household.",
     verifyPlaceholder: "••••",
+    verifyHintZip: "Enter the 5-digit ZIP code your invitation was mailed to.",
+    verifyPlaceholderZip: "•••••",
     verifyCta: "Continue",
     verifying: "Checking…",
     verifyInvalid: "That doesn't match what we have on file. Please try again.",
@@ -372,6 +378,8 @@ const es: Dict = {
     verifyTitle: "Verifica tu hogar",
     verifyHint: "Escribe los últimos 4 dígitos del teléfono registrado para tu hogar.",
     verifyPlaceholder: "••••",
+    verifyHintZip: "Escribe el código postal de 5 dígitos al que enviamos tu invitación.",
+    verifyPlaceholderZip: "•••••",
     verifyCta: "Continuar",
     verifying: "Verificando…",
     verifyInvalid: "Eso no coincide con lo que tenemos registrado. Intenta de nuevo.",

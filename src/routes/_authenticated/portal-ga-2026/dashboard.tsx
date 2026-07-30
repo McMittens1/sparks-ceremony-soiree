@@ -156,7 +156,7 @@ function RsvpsPanel() {
   const [search, setSearch] = useState("");
   const [partySize, setPartySize] = useState<"any" | "1" | "2" | "3plus">("any");
   const [cityFilter, setCityFilter] = useState("");
-  const [addrOnly, setAddrOnly] = useState(false);
+  const [noFactorOnly, setNoFactorOnly] = useState(false);
   const [songOnly, setSongOnly] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>("submitted");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -218,7 +218,7 @@ function RsvpsPanel() {
       if (partySize === "1" && size !== 1) return false;
       if (partySize === "2" && size !== 2) return false;
       if (partySize === "3plus" && size < 3) return false;
-      if (addrOnly && r.rsvp?.address_confirmed) return false;
+      if (noFactorOnly && r.verify_factor !== "none") return false;
       if (songOnly && !(r.rsvp?.song_request ?? "").trim()) return false;
       if (filter === "all") return true;
       if (filter === "no_response") return !r.rsvp;
@@ -255,7 +255,7 @@ function RsvpsPanel() {
       return 0;
     });
     return list;
-  }, [rows, search, cityFilter, partySize, addrOnly, songOnly, filter, sortKey, sortDir]);
+  }, [rows, search, cityFilter, partySize, noFactorOnly, songOnly, filter, sortKey, sortDir]);
 
   // Drop selection entries no longer visible
   useEffect(() => {
@@ -351,6 +351,7 @@ function RsvpsPanel() {
       "postal_code",
       "country",
       "invite_notes",
+      "verify_factor",
       "rsvp_status",
       "rsvp_attendees",
       "address_confirmed",
@@ -379,6 +380,7 @@ function RsvpsPanel() {
         r.postal_code,
         r.country,
         r.invite_notes,
+        r.verify_factor,
         r.rsvp?.status ?? "no_response",
         attendeesField(r.rsvp),
         r.rsvp?.address_confirmed ? "yes" : "no",
@@ -489,7 +491,7 @@ function RsvpsPanel() {
     filter !== "all",
     partySize !== "any",
     cityFilter.trim() !== "",
-    addrOnly,
+    noFactorOnly,
     songOnly,
   ].filter(Boolean).length;
 
@@ -498,7 +500,7 @@ function RsvpsPanel() {
     setFilter("all");
     setPartySize("any");
     setCityFilter("");
-    setAddrOnly(false);
+    setNoFactorOnly(false);
     setSongOnly(false);
   }
 
@@ -559,10 +561,10 @@ function RsvpsPanel() {
         <label className="text-xs text-muted-foreground flex items-center gap-1">
           <input
             type="checkbox"
-            checked={addrOnly}
-            onChange={(e) => setAddrOnly(e.target.checked)}
+            checked={noFactorOnly}
+            onChange={(e) => setNoFactorOnly(e.target.checked)}
           />
-          Address unconfirmed
+          Can't verify (no phone/ZIP)
         </label>
         <label className="text-xs text-muted-foreground flex items-center gap-1">
           <input
@@ -768,6 +770,15 @@ function RsvpsPanel() {
                         {r.phone ? formatPhoneDisplay(r.phone) : ""}
                         {r.phone && r.email ? " · " : ""}
                         {r.email ? r.email : ""}
+                      </div>
+                      {/* How this household proves who they are. "None" means
+                      they can't get in at all — needs a phone or a ZIP. */}
+                      <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground/80">
+                        {r.verify_factor === "phone_last4"
+                          ? "Verifies: phone"
+                          : r.verify_factor === "zip"
+                            ? "Verifies: ZIP"
+                            : "⚠ No verify factor"}
                       </div>
                     </td>
                     <td className="py-3 pr-4">
@@ -1134,13 +1145,13 @@ function reportHtml(list: AdminGuestRow[]): string {
           <h2>${esc(r.primary_name)} <span class="slug">${esc(r.slug)}</span></h2>
           <div class="grid">
             <div><span class="label">Invited party</span><p>${esc(members)}</p></div>
-            <div><span class="label">Phone</span><p>${esc(formatPhoneDisplay(r.phone))}</p></div>
+            <div><span class="label">Phone</span><p>${r.phone ? esc(formatPhoneDisplay(r.phone)) : "<em>None on file</em>"}</p></div>
             <div><span class="label">Email</span><p>${r.email ? esc(r.email) : "<em>None on file</em>"}</p></div>
             <div><span class="label">Mailing address</span><p>${addressLines(r)}</p></div>
+            <div><span class="label">Verifies with</span><p>${r.verify_factor === "phone_last4" ? "Last 4 of phone" : r.verify_factor === "zip" ? "ZIP code" : "<em>Nothing on file</em>"}</p></div>
             <div><span class="label">RSVP status</span><p>${esc(r.rsvp?.status?.replace("_", " ") ?? "no response yet")}</p></div>
             <div><span class="label">Attending</span><p>${attending.length ? esc(attending.join(", ")) : "—"}</p></div>
             ${declined.length ? `<div><span class="label">Not attending</span><p>${esc(declined.join(", "))}</p></div>` : ""}
-            <div><span class="label">Address confirmed</span><p>${r.rsvp?.address_confirmed ? "Yes" : "No"}</p></div>
             ${r.rsvp?.song_request ? `<div><span class="label">Song request</span><p>${esc(r.rsvp.song_request)}</p></div>` : ""}
             ${r.rsvp?.message ? `<div><span class="label">Message</span><p>${esc(r.rsvp.message)}</p></div>` : ""}
             ${r.invite_notes ? `<div><span class="label">Internal notes</span><p>${esc(r.invite_notes)}</p></div>` : ""}
@@ -1389,13 +1400,13 @@ function GuestEditor({
               <PhoneInput
                 value={phone}
                 onChange={setPhone}
-                placeholder="Phone (required)"
-                required
+                placeholder="Phone (optional)"
                 className="w-full border border-input bg-background px-3 py-2 text-sm"
               />
               <p className="mt-1 text-[10px] text-muted-foreground">
-                Required — the last 4 digits verify a household before their RSVP is shown. US or
-                Mexico, 10 digits.
+                Optional. If set, the last 4 digits verify this household. If blank, they verify
+                with their ZIP code instead — so one of the two is required. US or Mexico, 10
+                digits.
               </p>
             </div>
             <input
@@ -1777,8 +1788,11 @@ function CsvImporter({
               matches an existing household for an update — omit it to always insert new.
             </p>
             <p className="mt-2 text-xs text-muted-foreground">
-              <span className="text-foreground">Phone is required for new households</span> — it's
-              how they verify themselves before their RSVP is shown. On an update (matched by slug,
+              <span className="text-foreground">
+                New households need either a phone or a postal_code
+              </span>{" "}
+              — that's how they verify themselves before their RSVP is shown (last 4 of the phone
+              if we have one, otherwise the ZIP we mailed to). On an update (matched by slug,
               phone, or email), a{" "}
               <span className="text-foreground">blank cell leaves that field unchanged</span> — it's
               never treated as "clear this."
