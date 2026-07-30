@@ -218,7 +218,7 @@ function RsvpsPanel() {
       if (partySize === "1" && size !== 1) return false;
       if (partySize === "2" && size !== 2) return false;
       if (partySize === "3plus" && size < 3) return false;
-      if (addrOnly && r.rsvp?.address_confirmed) return false;
+      if (noFactorOnly && r.rsvp?.address_confirmed) return false;
       if (songOnly && !(r.rsvp?.song_request ?? "").trim()) return false;
       if (filter === "all") return true;
       if (filter === "no_response") return !r.rsvp;
@@ -255,7 +255,7 @@ function RsvpsPanel() {
       return 0;
     });
     return list;
-  }, [rows, search, cityFilter, partySize, addrOnly, songOnly, filter, sortKey, sortDir]);
+  }, [rows, search, cityFilter, partySize, noFactorOnly, songOnly, filter, sortKey, sortDir]);
 
   // Drop selection entries no longer visible
   useEffect(() => {
@@ -491,7 +491,7 @@ function RsvpsPanel() {
     filter !== "all",
     partySize !== "any",
     cityFilter.trim() !== "",
-    addrOnly,
+    noFactorOnly,
     songOnly,
   ].filter(Boolean).length;
 
@@ -500,7 +500,7 @@ function RsvpsPanel() {
     setFilter("all");
     setPartySize("any");
     setCityFilter("");
-    setAddrOnly(false);
+    setNoFactorOnly(false);
     setSongOnly(false);
   }
 
@@ -561,8 +561,8 @@ function RsvpsPanel() {
         <label className="text-xs text-muted-foreground flex items-center gap-1">
           <input
             type="checkbox"
-            checked={addrOnly}
-            onChange={(e) => setAddrOnly(e.target.checked)}
+            checked={noFactorOnly}
+            onChange={(e) => setNoFactorOnly(e.target.checked)}
           />
           Address unconfirmed
         </label>
