@@ -1,6 +1,6 @@
 # Handoff — Moreno Wedding 2026 Website
 
-**Last verified against the live codebase + database: 2026-07-30.** Bump this line whenever you re-verify. Read `ONBOARDING.md` first — it's the current-state reference; this file is the narrative behind decisions.
+**Last verified against the live codebase + database: 2026-07-30 (end of session).** Bump this line whenever you re-verify. Read `ONBOARDING.md` first — it's the current-state reference; this file is the narrative behind decisions.
 
 Originally written at the end of a development session that took this project from "RSVP disabled, no feature flags, generic wedding-party avatars" to "RSVP + photo uploads live behind a real feature-flag system, a from-scratch collectible-card wedding party section, and a full pre-launch QA pass." This document is for whichever AI picks the project up next. If `ONBOARDING.md` and this file disagree on current state, trust `ONBOARDING.md`; use this one for reasoning. If a paragraph here starts to feel stale, fold what's still true into `ONBOARDING.md` and remove or revise it here rather than let two sources of truth drift.
 
@@ -197,3 +197,16 @@ The couple finalized the story copy and cut it from nine entries to six, so the 
 - **Named photo slots.** `photos` holds keys (`fav`, `eng74`, …) that `StoryTimeline.tsx` maps to assets via `PHOTO_SRC`. Every image today is a placeholder engagement shot, so keys repeat across entries; that's intentional and disappears as real per-entry photos are dropped in one key at a time. Do not "fix" the repeats by re-shuffling — replace the key.
 - **Layout.** Entries 01–05 alternate text/photo-cluster around the hairline gutter (promotes at `md`, single column below with text above photos). Each cluster is one tall main photo plus a 2- or 3-up side column, giving 3–4 photos per entry. Entry 06 is a `finale`: centered eyebrow/title/copy with a three-across photo row, so the section closes on a different beat instead of a sixth identical row.
 - Verified with `bun run build:dev` plus Playwright screenshots at 440 / 768 / 1024 / 1440 — six entries render, no horizontal overflow.
+
+---
+
+## One database, and the test-data guardrails (2026-07-30)
+
+The couple asked, before loading a batch of test households, whether Lovable and the live site share a database and whether publishing could clobber real guest data. Verified rather than assumed: `.env`, `supabase/config.toml`, and the pg_cron dispatch URL in `email_queue_dispatch()` all name the same Cloud project, there is no `supabase/seed.sql`, no seed script in `package.json`, and no automated data loading anywhere. So:
+
+- **There is one database, shared by the preview and the published domain.** Publishing deploys the built bundle and nothing else; it cannot insert, delete, or overwrite rows. Migrations are the only path that mutates the DB, and they run on approval. The feared failure mode — a test DB overwriting production at publish time — has no mechanism to occur here.
+- **The actual risk is the inverse:** because the preview writes to the live DB, a test household is publicly searchable on `morenowedding2026.com` the moment it's created. That's what needed a guardrail, not publishing.
+- **Guardrail chosen: a naming convention plus a purge button**, not a second environment. A second Cloud project would have to be kept in sync by hand (schema, flags, secrets, email domain) for a site with one admin and a few dozen households — the sync drift would be a bigger hazard than the thing it prevents. Test rows get the `ZZTEST` prefix on `primary_name`; `src/lib/test-data.ts` owns the prefix and the predicate so the dashboard filter, the banner count, and the purge all agree. Do not inline the string anywhere else.
+- **The banner is unconditional on the filter.** It counts test rows in the whole dataset, not the visible page, precisely so switching to "Real households only" can't hide the fact that test data is live. Purge deletes all of them regardless of what's on screen.
+- **Cleanup is complete where it matters and deliberately incomplete elsewhere.** `rsvps.guest_id` cascades, and RSVP tokens are HMAC-derived rather than stored, so nothing orphans. `email_send_log`, `analytics_events`, `suppressed_emails`, and `email_unsubscribe_tokens` are append-only audit tables with no FK to `guests` and survive a purge on purpose. The one with teeth is `suppressed_emails`: a test address that bounces or unsubscribes will silently block later mail to it, so test with addresses you control and check that table if a real send later goes missing.
+- Verified end to end: created a `ZZTEST` household, saw the banner and the count, purged it, and confirmed `guests` and `rsvps` are both back to 0 rows.
