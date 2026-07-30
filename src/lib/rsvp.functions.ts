@@ -861,26 +861,42 @@ export const resendRsvpConfirmation = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-const guestUpsertSchema = z.object({
-  id: z.string().uuid().optional(),
-  slug: z.string().trim().max(20).optional().or(z.literal("")),
-  primary_name: z.string().trim().min(1).max(200),
-  party_members: z.array(partyMemberSchema).max(20),
-  phone: z
-    .string()
-    .trim()
-    .min(1, "Phone number is required")
-    .max(40)
-    .refine(isValidPhone, "Enter a valid 10-digit US or Mexico phone number"),
-  email: z.string().trim().email().max(200).optional().or(z.literal("")),
-  address_line1: z.string().trim().max(200).optional().or(z.literal("")),
-  address_line2: z.string().trim().max(200).optional().or(z.literal("")),
-  city: z.string().trim().max(120).optional().or(z.literal("")),
-  state: z.string().trim().max(60).optional().or(z.literal("")),
-  postal_code: z.string().trim().max(20).optional().or(z.literal("")),
-  country: z.string().trim().max(60).optional().or(z.literal("")),
-  invite_notes: z.string().trim().max(1000).optional().or(z.literal("")),
-});
+const guestUpsertSchema = z
+  .object({
+    id: z.string().uuid().optional(),
+    slug: z.string().trim().max(20).optional().or(z.literal("")),
+    primary_name: z.string().trim().min(1).max(200),
+    party_members: z.array(partyMemberSchema).max(20),
+    // Optional: we don't have a phone number for every household. A blank
+    // phone means this household verifies by ZIP instead.
+    phone: z
+      .string()
+      .trim()
+      .max(40)
+      .optional()
+      .or(z.literal(""))
+      .refine(
+        (v) => !v || isValidPhone(v),
+        "Enter a valid 10-digit US or Mexico phone number",
+      ),
+    email: z.string().trim().email().max(200).optional().or(z.literal("")),
+    address_line1: z.string().trim().max(200).optional().or(z.literal("")),
+    address_line2: z.string().trim().max(200).optional().or(z.literal("")),
+    city: z.string().trim().max(120).optional().or(z.literal("")),
+    state: z.string().trim().max(60).optional().or(z.literal("")),
+    postal_code: z.string().trim().max(20).optional().or(z.literal("")),
+    country: z.string().trim().max(60).optional().or(z.literal("")),
+    invite_notes: z.string().trim().max(1000).optional().or(z.literal("")),
+  })
+  // Mirrors the guests_has_verify_factor DB constraint: a household with
+  // neither a phone nor a ZIP could never pass verification.
+  .refine(
+    (d) => !!d.phone?.trim() || !!d.postal_code?.trim(),
+    {
+      message: "Add either a phone number or a ZIP code so this household can verify.",
+      path: ["phone"],
+    },
+  );
 
 export const upsertGuest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -891,7 +907,7 @@ export const upsertGuest = createServerFn({ method: "POST" })
     const payload = {
       primary_name: data.primary_name,
       party_members: data.party_members as unknown as import("@/integrations/supabase/types").Json,
-      phone: normalizePhone(data.phone),
+      phone: data.phone?.trim() ? normalizePhone(data.phone) : null,
       email: data.email ? normalizeEmail(data.email) : null,
       address_line1: data.address_line1 || null,
       address_line2: data.address_line2 || null,
