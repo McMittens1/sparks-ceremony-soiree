@@ -477,8 +477,8 @@ function RsvpPage() {
                     className="font-sans"
                     style={{ fontSize: 13, color: SOFT, lineHeight: 1.6, margin: "8px 0 0" }}
                   >
-                    You can still look over your invitation and confirm your address below — RSVP
-                    itself will open closer to the date.
+                    You can still look over your invitation — RSVP itself will open closer to
+                    the date.
                   </p>
                 </div>
               )}
