@@ -29,19 +29,32 @@ export interface GuestAddress {
   country?: string;
 }
 
+// What the guest-facing RSVP flow is allowed to see about its own
+// household after verifying. Deliberately narrow: no slug (the invite code
+// authorizes nothing on its own, but there's no reason to hand it out), no
+// phone, and no mailing address — we already hold the addresses and guests
+// no longer confirm or edit them, so shipping one to the browser would put
+// a full street address in devtools for no benefit. Email stays because the
+// guest types it themselves to receive a confirmation.
 export interface PublicGuest {
   id: string;
-  slug: string;
   primary_name: string;
   party_members: PartyMember[];
   email: string | null;
-  phone: string;
-  address: GuestAddress;
 }
+
+// Which single question a household is challenged with. Chosen server-side
+// from what's on file — the guest never picks, and never sees the other
+// option. Phone last-4 is the stronger secret, so it wins when we have one;
+// ZIP is the fallback for households we only have a mailing address for.
+// "none" can only happen if the DB check constraint were dropped.
+export type VerifyFactor = "phone_last4" | "zip" | "none";
 
 export interface PublicRsvp {
   status: "attending" | "not_attending" | "partial";
   attendees: AttendeeChoice[];
+  // Retained for historical rows submitted while the guest-facing address
+  // confirm step still existed; the current flow never writes them.
   address_confirmed: boolean;
   address: GuestAddress | null;
   song_request: string | null;
@@ -55,7 +68,7 @@ export interface AdminGuestRow {
   slug: string;
   primary_name: string;
   party_members: PartyMember[];
-  phone: string;
+  phone: string | null;
   email: string | null;
   address_line1: string | null;
   address_line2: string | null;
@@ -69,12 +82,18 @@ export interface AdminGuestRow {
   rsvp: PublicRsvp | null;
   edit_token: string;
   verify_token: string;
+  // Which challenge this household will be asked at verification time, so
+  // gaps are visible in the dashboard before invitations go out.
+  verify_factor: VerifyFactor;
   address_confirmed_at: string | null;
   address_updated_at: string | null;
+  // Named phone_* for historical reasons; these count *verification*
+  // attempts regardless of which factor was asked.
   phone_verify_locked_until: string | null;
   phone_verify_failed_attempts: number;
   phone_verify_last_success_at: string | null;
 }
+
 
 // ---------- Helpers ----------
 
