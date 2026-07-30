@@ -172,9 +172,9 @@ This is the living sprint plan. Pick up the next uncompleted sprint rather than 
 
 ### Sprint 2 — RSVP Launch Readiness — ⚠️ Code done, blocked on guest re-import
 
-**Status:** The RSVP flow is fully built, feature-flag-gated, and works end-to-end in code (lookup, submit, confirmation email, token-based edit, admin dashboard). `rsvp_open` is on. **But `guests` is empty (0 rows) as of 2026-07-24** — the real household list is not present in this environment, so lookup will fail for every real guest until re-imported. See §2.
+**Status:** The RSVP flow is fully built, feature-flag-gated, and works end-to-end in code (lookup, per-household verify, submit, confirmation email, token-based edit, admin dashboard). `rsvp_open` is on. **But `guests` is empty (0 rows) as of 2026-07-30** — the real household list is not present in this environment, so lookup will fail for every real guest until imported. See §2.
 
-**Remaining scope:** re-import the household list (admin dashboard's CSV importer). No code work.
+**Remaining scope:** import the household list (admin dashboard's CSV importer). No code work.
 
 **Key files:** `src/routes/rsvp.tsx`, `src/routes/rsvp/edit.$token.tsx`, `src/lib/rsvp.functions.ts`, `src/lib/rsvp-token.server.ts`, `src/lib/email-templates/rsvp-confirmation.tsx`, `src/routes/_authenticated/portal-ga-2026/dashboard.tsx`
 
