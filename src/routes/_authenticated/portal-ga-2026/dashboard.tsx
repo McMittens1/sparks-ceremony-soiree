@@ -351,6 +351,7 @@ function RsvpsPanel() {
       "postal_code",
       "country",
       "invite_notes",
+      "verify_factor",
       "rsvp_status",
       "rsvp_attendees",
       "address_confirmed",
@@ -379,6 +380,7 @@ function RsvpsPanel() {
         r.postal_code,
         r.country,
         r.invite_notes,
+        r.verify_factor,
         r.rsvp?.status ?? "no_response",
         attendeesField(r.rsvp),
         r.rsvp?.address_confirmed ? "yes" : "no",
@@ -768,6 +770,15 @@ function RsvpsPanel() {
                         {r.phone ? formatPhoneDisplay(r.phone) : ""}
                         {r.phone && r.email ? " · " : ""}
                         {r.email ? r.email : ""}
+                      </div>
+                      {/* How this household proves who they are. "None" means
+                      they can't get in at all — needs a phone or a ZIP. */}
+                      <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground/80">
+                        {r.verify_factor === "phone_last4"
+                          ? "Verifies: phone"
+                          : r.verify_factor === "zip"
+                            ? "Verifies: ZIP"
+                            : "⚠ No verify factor"}
                       </div>
                     </td>
                     <td className="py-3 pr-4">
