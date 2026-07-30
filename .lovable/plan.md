@@ -1,57 +1,42 @@
-## Context
+# Roadmap
 
-Lovable and the live site share one database. Publishing ships code only; it never adds, deletes, or overwrites rows. There are no seed scripts and no data sync, so there is no path by which "test data gets published into production." The only real exposure is that test households are visible on the live domain for as long as they exist, and that deleting them leaves a few append-only audit rows behind.
+Last updated: 2026-07-30.
 
-## Recommended safeguards (before you load test data)
+## Recently shipped
 
-**1. Mark test data so it's trivially identifiable and removable**
+### Test-data guardrails + environment audit (2026-07-30) — DONE
 
-Prefix every test household's `primary_name` with `ZZTEST — ` and use `invite_notes = 'test'`. Nothing in the schema needs to change. Then cleanup is one query, and a stray survivor is obvious in the admin list rather than looking like a real guest.
+Verified — not assumed — that the Lovable preview and the live domain share exactly one database, that publishing deploys code only and never touches rows, and that no seed script or automated data loading exists anywhere in the repo. Current-state details live in `ONBOARDING.md` §2 ("Environments and test data"); the reasoning, including why a second environment was rejected, is in `HANDOFF.md`.
 
-**2. Use non-deliverable test emails**
+- `src/lib/test-data.ts` owns `TEST_HOUSEHOLD_PREFIX = "ZZTEST"` and `isTestHousehold()` — the single source of truth. Don't inline the prefix elsewhere.
+- Admin RSVPs tab: a **Real + test / Real households only / Test households only** filter, plus a red banner counted across the whole dataset (not the filtered view) with a one-click **Purge test data (n)** action behind a confirmation dialog.
+- Verified end to end: created a `ZZTEST` household, confirmed the banner and count, purged it, re-queried the DB — `guests` 0 rows, `rsvps` 0 rows.
+- Known-and-intentional leftovers after a purge: `email_send_log`, `analytics_events`, `suppressed_emails`, `email_unsubscribe_tokens`. Only `suppressed_emails` has teeth — a suppressed test address blocks later mail to it.
 
-Use `something+test@yourdomain` style addresses you control, or leave email blank. This keeps real inboxes clean and prevents a test address from landing in `suppressed_emails` (which would block mail to it later).
+### Per-household RSVP verification + guest-facing address removal (2026-07-30) — DONE
 
-**3. Keep the RSVP feature flag off while testing, or accept live visibility**
+Shipped exactly as planned. See `ONBOARDING.md` §2 for current-state behavior and `HANDOFF.md` for the reasoning.
 
-Verify the `rsvp_open` flag's real value before you start. With it off, guests can see the page but can't submit — that's the current server-side gate. Any test household you create is still findable by name on the live site while it exists.
+- Migration: `guests.phone` dropped `NOT NULL`; check constraint `guests_has_verify_factor` requires phone **or** postal_code.
+- `verifyFactorFor()` in `src/lib/rsvp.functions.ts` returns `"phone_last4" | "zip" | "none"`; `getVerifyTargetLabel` reports it and `verifyHouseholdAccess` branches on it. ZIP compares the first 5 digits only. Lockout and session-token minting untouched.
+- `PublicGuest` no longer carries `slug`, `phone`, or `address`.
+- `updateGuestAddress` and the guest-facing address confirm/edit block are gone. Addresses are admin-only.
+- Verify copy lives in `src/i18n/dictionaries.ts` (`verifyHintZip`, `verifyPlaceholderZip`).
+- Admin dashboard: "Verifies with" column + CSV field, and a **Can't verify (no phone/ZIP)** filter to catch unreachable households before invitations go out. The old "Address unconfirmed" filter was removed — guests can no longer confirm an address, so it could never match.
+- Verified: `bun run build:dev`, plus Playwright at 440 and 1280 through both a phone-factor and a ZIP-factor household (ZIP stored as `68522-1234` accepted `68522`; no street address rendered on the page in either case).
 
-**4. Add an admin "test data" filter + purge action**
+## Next up
 
-Small addition to the dashboard: a filter for households matching the test prefix, and a bulk-delete that clears them plus their cascaded RSVPs in one action. This is the safeguard that actually prevents leftovers, because it removes the "did I get them all?" question.
+1. **Import the real household list.** `guests` is currently empty (0 rows, re-verified 2026-07-30). This is the last hard blocker before RSVP is meaningfully live. Every CSV row needs a phone or a postal code; run the import, then use the **Can't verify** filter to confirm zero rows come back, and the test filter to confirm no `ZZTEST` rows survived.
+2. **Verify the email pipeline end to end after the import** from the admin Emails tab — check the send log, don't assume. (See `ONBOARDING.md` §5 for the history of this one silently failing for two days.)
+3. **Wedding-party personalization copy** — still placeholder text for several members.
+4. **Post-launch:** guest photo uploads (`guest_photo_uploads` flag is off by the couple's choice), and a day-of "what's happening now" view if wanted.
 
-**5. One pre-launch cleanup checklist item**
+## Pre-launch cleanup checklist
 
-Before invitations go out: confirm `guests` contains only real households, `rsvps` count is zero, `guest_photos` and the storage bucket are empty, and no real address sits in `suppressed_emails`. Run it as queries, not from memory.
+Run as queries, not from memory, before invitations go out:
 
-**6. Delete the current test row**
-
-`Test Invitation - The Big Cock Guy & Family` is live in the database right now. It should go before or during this work.
-
-## Ongoing safe workflow
-
-- Schema changes go through migrations, which are additive and reviewed — they never wipe rows. Avoid `DROP COLUMN`/`TRUNCATE` on `guests` or `rsvps` once real data is in.
-- Real guest import happens once, through the admin CSV importer, after test data is purged.
-- Publishing after that point is always safe: it moves code, not records.
-
-## On the project-knowledge text
-
-Don't paste that block into Lovable project knowledge. It already exists nearly verbatim in `AGENTS.md` and in project memory, and a third copy means three things to keep in sync — which is exactly the drift the rule is trying to prevent.
-
-Better: keep project knowledge to a short pointer that can't go stale, and let `AGENTS.md` stay the single source:
-
-```text
-Read AGENTS.md before any work on this repo and follow it exactly.
-It defines the docs-are-code rule, the verify-before-asserting rule,
-the single-admin invariant, and the definition of done.
-```
-
-If a rule changes, it changes in one file.
-
-## Technical notes
-
-- `rsvps.guest_id` is `UNIQUE ... ON DELETE CASCADE`, so household deletion removes the RSVP automatically. No orphans there.
-- `guest_photos` has no FK to `guests`; photo deletes already remove the storage object.
-- `email_send_log`, `analytics_events`, `suppressed_emails`, and `email_unsubscribe_tokens` have no FK to `guests` and are append-only by policy. They survive household deletion by design. Only `suppressed_emails` has behavioral consequences.
-- RSVP edit/verify tokens are HMAC-derived from `RSVP_EDIT_SECRET`, not stored — deleted households leave no token rows.
-- Docs (`ONBOARDING.md`, `HANDOFF.md`, `.lovable/plan.md`) get updated in the same turn if the dashboard filter/purge ships.
+- `guests` contains only real households (no `ZZTEST` prefix, test filter shows 0).
+- `rsvps` is empty.
+- `guest_photos` and the `guest-photos` storage bucket are empty.
+- No real guest address sits in `suppressed_emails`.
