@@ -778,6 +778,7 @@ export const listGuestsWithRsvps = createServerFn({ method: "POST" })
       rsvp: rsvpByGuest.get(g.id) ?? null,
       edit_token: editTokens[i],
       verify_token: verifyTokens[i],
+      verify_factor: verifyFactorFor(g),
       address_confirmed_at: g.address_confirmed_at,
       address_updated_at: g.address_updated_at,
       phone_verify_locked_until: g.phone_verify_locked_until,
