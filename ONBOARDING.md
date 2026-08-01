@@ -1,6 +1,6 @@
 # Moreno Wedding 2026 — Onboarding Package
 
-**Last verified against the live codebase + database: 2026-07-30.** Update this line every time you re-verify. If it's stale by more than a session or two, re-verify before trusting any specific claim below — this doc is only useful if it mirrors reality.
+**Last verified against the live codebase + database: 2026-08-01.** Update this line every time you re-verify. If it's stale by more than a session or two, re-verify before trusting any specific claim below — this doc is only useful if it mirrors reality.
 
 A single source of truth for continuing this project with any AI assistant (Claude Code, Cursor, etc.). Read this file in full before making changes. A companion document, `HANDOFF.md`, captures narrative context, judgment calls, and lessons learned from the most recent development session — read that too if it exists.
 
@@ -60,7 +60,7 @@ A single source of truth for continuing this project with any AI assistant (Clau
 - `show_ushers` → **false** — the Ushers section of the Wedding Party page is built but hidden.
 
 All three are toggled from the Features tab in `/portal-ga-2026/dashboard` — no code change needed to flip them. **Check the live value before assuming a feature is "on" or "off"; this file only reflects a snapshot.**
-**Guest data (live, 2026-07-30, re-verified end of session):** `guests` is **empty (0 rows)** — the last remaining test household was purged through the new admin purge action, `rsvps` is **empty (0 rows)**, `guest_photos` is empty and the `guest-photos` storage bucket holds 0 objects. The real 52-household import that ran earlier in the project's life is not present in this environment. Practically: `rsvp_open` is **true**, but a real guest hitting `/rsvp` right now will fail lookup. Importing the household list via the admin dashboard's CSV importer is the last hard blocker before RSVP is meaningfully live — and the importer requires each row to have a phone **or** a postal code. `email_send_log` has 39 historical rows (audit trail); `email_send_state` has 1 row; `suppressed_emails` is empty; `analytics_events` has 1 row.
+**Guest data (live, 2026-08-01, re-verified this session):** `guests` holds **4 `ZZTEST`-prefixed test households** seeded to exercise RSVP verification and submission before the real import. `rsvps` has **1 attending response** from the `ZZTEST Phone Only` flow. The real household CSV import is still pending; a real guest hitting `/rsvp` right now will only find the test households. `guest_photos` is empty and the `guest-photos` storage bucket holds 0 objects. Importing the household list via the admin dashboard's CSV importer is the last hard blocker before RSVP is meaningfully live — and the importer requires each row to have a phone **or** a postal code. `email_send_log` has 39 historical rows (audit trail); `email_send_state` has 1 row; `suppressed_emails` is empty; `analytics_events` has 1 row.
 
 **Environments and test data (verified 2026-07-30).** There is exactly **one** database. `.env`, `supabase/config.toml`, and the pg_cron email dispatch URL all point at the same Cloud project, and the Lovable preview and the published domain share it — schema, rows, storage, auth users, secrets, and feature flags alike. Consequences worth internalizing:
 
