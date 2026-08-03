@@ -48,7 +48,12 @@ export interface PublicGuest {
   primary_name: string;
   party_members: PartyMember[];
   email: string | null;
+  // Total people this household may bring, named or not. Not sensitive —
+  // the form needs it to show an honest "you may add N more" counter and to
+  // hide the add button at the cap.
+  party_limit: number;
 }
+
 
 // Which single question a household is challenged with. Chosen server-side
 // from what's on file — the guest never picks, and never sees the other
