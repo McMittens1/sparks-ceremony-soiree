@@ -1191,6 +1191,8 @@ interface GuestWritePayload {
   postal_code?: string | null;
   country?: string | null;
   invite_notes?: string | null;
+  max_party_size?: number | null;
+
 }
 
 interface PlannedRow extends ImportRowResult {
