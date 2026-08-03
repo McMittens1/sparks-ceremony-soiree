@@ -662,47 +662,80 @@ function RsvpPage() {
                       {verifyLabel}
                     </p>
                   )}
-                  <label
-                    htmlFor="rsvp-verify-answer"
-                    className="block text-center font-sans"
-                    style={{ fontSize: 14, color: SOFT, margin: "0 0 30px" }}
-                  >
-                    {verifyHint}
-                  </label>
-                  <input
-                    id="rsvp-verify-answer"
-                    autoFocus
-                    value={answer}
-                    onChange={(e) =>
-                      setAnswer(e.target.value.replace(/\D/g, "").slice(0, answerLength))
-                    }
-                    placeholder={
-                      verifyFactor === "zip" ? t.rsvp.verifyPlaceholderZip : t.rsvp.verifyPlaceholder
-                    }
-                    aria-label={verifyHint}
-                    inputMode="numeric"
-                    autoComplete="off"
-                    maxLength={answerLength}
-                    className="text-center"
-                    style={{ ...inputStyle, letterSpacing: "0.5em" }}
-                  />
-                  <button
-                    type="submit"
-                    disabled={verifying || !answerComplete}
-                    className="mt-8 block w-full uppercase font-sans"
-                    style={{
-                      background: INK,
-                      color: IVORY,
-                      padding: "16px 0",
-                      fontSize: 11,
-                      letterSpacing: "0.26em",
-                      border: `1px solid ${INK}`,
-                      opacity: verifying || !answerComplete ? 0.5 : 1,
-                      cursor: verifying || !answerComplete ? "not-allowed" : "pointer",
-                    }}
-                  >
-                    {verifying ? t.rsvp.verifying : t.rsvp.verifyCta}
-                  </button>
+                  {!verifyFactor ? (
+                    <div className="text-center font-sans" style={{ fontSize: 14, color: SOFT }}>
+                      {factorFailed ? (
+                        <>
+                          <p style={{ margin: "0 0 16px" }}>{t.rsvp.verifyFactorFailed}</p>
+                          <button
+                            type="button"
+                            onClick={() => pendingTarget && void beginVerify(pendingTarget, verifyLabel ?? undefined)}
+                            className="uppercase font-sans"
+                            style={{
+                              background: INK,
+                              color: IVORY,
+                              padding: "14px 32px",
+                              fontSize: 11,
+                              letterSpacing: "0.26em",
+                              border: `1px solid ${INK}`,
+                              cursor: "pointer",
+                            }}
+                          >
+                            {t.rsvp.verifyRetry}
+                          </button>
+                        </>
+                      ) : (
+                        <p style={{ margin: 0 }}>{factorLoading ? t.rsvp.verifyLoading : ""}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <>
+                      <label
+                        htmlFor="rsvp-verify-answer"
+                        className="block text-center font-sans"
+                        style={{ fontSize: 14, color: SOFT, margin: "0 0 30px" }}
+                      >
+                        {verifyHint}
+                      </label>
+                      <input
+                        id="rsvp-verify-answer"
+                        autoFocus
+                        value={answer}
+                        onChange={(e) =>
+                          setAnswer(e.target.value.replace(/\D/g, "").slice(0, answerLength))
+                        }
+                        placeholder={
+                          verifyFactor === "zip"
+                            ? t.rsvp.verifyPlaceholderZip
+                            : t.rsvp.verifyPlaceholder
+                        }
+                        aria-label={verifyHint}
+                        inputMode="numeric"
+                        autoComplete="off"
+                        maxLength={answerLength}
+                        className="text-center"
+                        style={{ ...inputStyle, letterSpacing: "0.5em" }}
+                      />
+                      <button
+                        type="submit"
+                        disabled={verifying || !answerComplete}
+                        className="mt-8 block w-full uppercase font-sans"
+                        style={{
+                          background: INK,
+                          color: IVORY,
+                          padding: "16px 0",
+                          fontSize: 11,
+                          letterSpacing: "0.26em",
+                          border: `1px solid ${INK}`,
+                          opacity: verifying || !answerComplete ? 0.5 : 1,
+                          cursor: verifying || !answerComplete ? "not-allowed" : "pointer",
+                        }}
+                      >
+                        {verifying ? t.rsvp.verifying : t.rsvp.verifyCta}
+                      </button>
+                    </>
+                  )}
+
 
                   <div role="alert" aria-live="polite">
                     {verifyErr && (
