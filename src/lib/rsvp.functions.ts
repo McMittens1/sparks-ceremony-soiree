@@ -18,7 +18,14 @@ export interface AttendeeChoice {
   name: string;
   is_child: boolean;
   attending: boolean;
+  // Both flags are stamped server-side in writeRsvp — whatever the browser
+  // sends for them is ignored. `added_by_guest` is true for anyone who
+  // isn't on the household's invited party_members list; `name_pending`
+  // marks an added guest whose real name the household doesn't know yet.
+  added_by_guest?: boolean;
+  name_pending?: boolean;
 }
+
 
 export interface GuestAddress {
   line1?: string;
@@ -41,7 +48,12 @@ export interface PublicGuest {
   primary_name: string;
   party_members: PartyMember[];
   email: string | null;
+  // Total people this household may bring, named or not. Not sensitive —
+  // the form needs it to show an honest "you may add N more" counter and to
+  // hide the add button at the cap.
+  party_limit: number;
 }
+
 
 // Which single question a household is challenged with. Chosen server-side
 // from what's on file — the guest never picks, and never sees the other
@@ -68,6 +80,12 @@ export interface AdminGuestRow {
   slug: string;
   primary_name: string;
   party_members: PartyMember[];
+  // Explicit cap as set in the admin editor (null = not set yet), plus the
+  // limit actually enforced, so the dashboard can show both the real number
+  // and which invitations still rely on the fallback.
+  max_party_size: number | null;
+  party_limit: number;
+
   phone: string | null;
   email: string | null;
   address_line1: string | null;
@@ -133,11 +151,24 @@ const partyMemberSchema = z.object({
   is_child: z.boolean(),
 });
 
-const attendeeSchema = z.object({
-  name: z.string().trim().min(1).max(120),
-  is_child: z.boolean(),
-  attending: z.boolean(),
-});
+const attendeeSchema = z
+  .object({
+    // May be blank only when the household explicitly marked the row
+    // "name to come" — writeRsvp fills in a placeholder in that case.
+    name: z.string().trim().max(120),
+    is_child: z.boolean(),
+    attending: z.boolean(),
+    // Accepted so an edit round-trip can send back what it was given, but
+    // never trusted: writeRsvp recomputes added_by_guest and keeps
+    // name_pending only for rows that really have no name.
+    added_by_guest: z.boolean().optional(),
+    name_pending: z.boolean().optional(),
+  })
+  .refine((a) => a.name.length > 0 || a.name_pending === true, {
+    message: "Enter a name, or mark this guest's name as still to come.",
+    path: ["name"],
+  });
+
 
 const addressSchema = z.object({
   line1: z.string().trim().max(200).optional().or(z.literal("")),
@@ -148,11 +179,26 @@ const addressSchema = z.object({
   country: z.string().trim().max(60).optional().or(z.literal("")),
 });
 
+// The single source of truth for how many people a household may bring.
+// An explicit max_party_size wins; otherwise we fall back to the historical
+// behavior — everyone named on the invitation, plus one open slot — so
+// households imported before this column existed keep working unchanged.
+export function effectivePartyLimit(
+  namedCount: number,
+  maxPartySize: number | null | undefined,
+): number {
+  if (typeof maxPartySize === "number" && maxPartySize > 0) {
+    return Math.max(maxPartySize, namedCount, 1);
+  }
+  return Math.max(1, namedCount + 1);
+}
+
 function mapGuestRow(row: {
   id: string;
   primary_name: string;
   party_members: unknown;
   email: string | null;
+  max_party_size?: number | null;
 }): PublicGuest {
   const party = Array.isArray(row.party_members)
     ? (row.party_members as PartyMember[]).filter((p) => p && typeof p.name === "string")
@@ -162,8 +208,10 @@ function mapGuestRow(row: {
     primary_name: row.primary_name,
     party_members: party,
     email: row.email,
+    party_limit: effectivePartyLimit(party.length, row.max_party_size ?? null),
   };
 }
+
 
 // US ZIPs are compared on their first 5 digits only, so "92078-1234",
 // " 92078 " and "92078" all match the same household.
@@ -210,7 +258,7 @@ function mapRsvpRow(
 
 // Only what the guest-facing flow renders. Verification reads phone /
 // postal_code separately so those never ride along into a PublicGuest.
-const GUEST_SELECT_COLUMNS = "id, primary_name, party_members, email";
+const GUEST_SELECT_COLUMNS = "id, primary_name, party_members, email, max_party_size";
 const RSVP_SELECT_COLUMNS =
   "status, attendees, address_confirmed, address, song_request, message, submitted_at, updated_at";
 
@@ -539,16 +587,39 @@ async function writeRsvp(
 
   const { data: g, error: gErr } = await supabaseAdmin
     .from("guests")
-    .select("id, primary_name, party_members")
+    .select("id, primary_name, party_members, max_party_size")
     .eq("id", guestId)
     .maybeSingle();
   if (gErr || !g) throw new Error("household_not_found");
 
-  const maxAllowed = Math.max(
-    1,
-    (Array.isArray(g.party_members) ? (g.party_members as unknown[]).length : 1) + 1,
-  );
+  const invited: PartyMember[] = Array.isArray(g.party_members)
+    ? (g.party_members as unknown as PartyMember[])
+    : [];
+  const maxAllowed = effectivePartyLimit(invited.length, g.max_party_size);
   if (data.attendees.length > maxAllowed) throw new Error("too_many_guests");
+  // A household may say an invited person isn't coming, but may not delete
+  // their row — that would let them quietly swap someone we invited for
+  // someone we didn't. The form enforces the same rule; this is the check
+  // that actually holds.
+  if (data.attendees.length < invited.length) throw new Error("missing_invited_guests");
+
+  // Anyone whose name isn't on the invitation is an added guest. Stamped
+  // here, never taken from the browser.
+  const normName = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+  const invitedNames = new Set(invited.map((m) => normName(m.name)));
+  const attendees: AttendeeChoice[] = data.attendees.map((a) => {
+    const pending = !a.name.trim();
+    const name = pending ? `Guest of ${g.primary_name}` : a.name.trim();
+    return {
+      name,
+      is_child: a.is_child,
+      attending: a.attending,
+      added_by_guest: pending || !invitedNames.has(normName(name)),
+      name_pending: pending,
+    };
+  });
+  data = { ...data, attendees };
+
 
   const anyYes = data.attendees.some((a) => a.attending);
   const anyNo = data.attendees.some((a) => !a.attending);
@@ -617,9 +688,23 @@ async function writeRsvp(
         { label: "Party size", value: `${data.attendees.length} (${yesCount} attending)` },
         {
           label: "Attendees",
-          value: data.attendees.map((a) => `${a.name}${a.attending ? "" : " (no)"}`).join(", "),
+          value: attendees
+            .map(
+              (a) =>
+                `${a.name}${a.attending ? "" : " (no)"}${a.added_by_guest ? " [added]" : ""}`,
+            )
+            .join(", "),
         },
       ];
+      const addedCount = attendees.filter((a) => a.added_by_guest).length;
+      const pendingCount = attendees.filter((a) => a.name_pending).length;
+      if (addedCount > 0) {
+        details.push({
+          label: "Added by household",
+          value: `${addedCount}${pendingCount > 0 ? ` (${pendingCount} name still to come)` : ""}`,
+        });
+      }
+
       if (data.song_request?.trim())
         details.push({ label: "Song request", value: data.song_request.trim() });
       if (data.message?.trim()) details.push({ label: "Message", value: data.message.trim() });
@@ -779,6 +864,12 @@ export const listGuestsWithRsvps = createServerFn({ method: "POST" })
       edit_token: editTokens[i],
       verify_token: verifyTokens[i],
       verify_factor: verifyFactorFor(g),
+      max_party_size: g.max_party_size,
+      party_limit: effectivePartyLimit(
+        Array.isArray(g.party_members) ? (g.party_members as unknown[]).length : 0,
+        g.max_party_size,
+      ),
+
       address_confirmed_at: g.address_confirmed_at,
       address_updated_at: g.address_updated_at,
       phone_verify_locked_until: g.phone_verify_locked_until,
@@ -887,6 +978,9 @@ const guestUpsertSchema = z
     postal_code: z.string().trim().max(20).optional().or(z.literal("")),
     country: z.string().trim().max(60).optional().or(z.literal("")),
     invite_notes: z.string().trim().max(1000).optional().or(z.literal("")),
+    // Total people this invitation covers, named or not. Null/blank leaves
+    // the household on the fallback (everyone named, plus one).
+    max_party_size: z.number().int().min(1).max(30).nullable().optional(),
   })
   // Mirrors the guests_has_verify_factor DB constraint: a household with
   // neither a phone nor a ZIP could never pass verification.
@@ -896,7 +990,16 @@ const guestUpsertSchema = z
       message: "Add either a phone number or a ZIP code so this household can verify.",
       path: ["phone"],
     },
+  )
+  // Mirrors the validate_guest_max_party_size DB trigger.
+  .refine(
+    (d) => d.max_party_size == null || d.max_party_size >= d.party_members.length,
+    {
+      message: "The party limit can't be smaller than the number of people listed.",
+      path: ["max_party_size"],
+    },
   );
+
 
 export const upsertGuest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -916,6 +1019,8 @@ export const upsertGuest = createServerFn({ method: "POST" })
       postal_code: data.postal_code || null,
       country: data.country || null,
       invite_notes: data.invite_notes || null,
+      max_party_size: data.max_party_size ?? null,
+
     };
 
     if (data.id) {
@@ -950,7 +1055,65 @@ export const upsertGuest = createServerFn({ method: "POST" })
     throw new Error("Could not generate a unique invite code, please try again.");
   });
 
+// Pulls the people a household added during RSVP into the invitation's own
+// party_members list, so the master guest list converges on reality. Raises
+// max_party_size when it was set below the new named count, so the trigger
+// (and the guest-facing counter) stay consistent.
+export const promoteAddedGuests = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }): Promise<{ ok: true; added: number }> => {
+    const sb = await ensureAdmin(context.supabase, context.userId);
+    const { data: g } = await sb
+      .from("guests")
+      .select("id, party_members, max_party_size")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!g) throw new Error("household_not_found");
+    const { data: r } = await sb
+      .from("rsvps")
+      .select("attendees")
+      .eq("guest_id", data.id)
+      .maybeSingle();
+    if (!r) throw new Error("no_rsvp_yet");
+
+    const invited: PartyMember[] = Array.isArray(g.party_members)
+      ? (g.party_members as unknown as PartyMember[])
+      : [];
+    const attendees: AttendeeChoice[] = Array.isArray(r.attendees)
+      ? (r.attendees as unknown as AttendeeChoice[])
+      : [];
+    const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+    const known = new Set(invited.map((m) => norm(m.name)));
+    const promoted: PartyMember[] = [];
+    for (const a of attendees) {
+      if (!a.added_by_guest || a.name_pending) continue;
+      if (known.has(norm(a.name))) continue;
+      known.add(norm(a.name));
+      promoted.push({ name: a.name, is_child: !!a.is_child });
+    }
+    if (promoted.length === 0) return { ok: true, added: 0 };
+
+    const members = [...invited, ...promoted];
+    const { error } = await sb
+      .from("guests")
+      .update({
+        party_members: members as unknown as import("@/integrations/supabase/types").Json,
+        max_party_size:
+          typeof g.max_party_size === "number"
+            ? Math.max(g.max_party_size, members.length)
+            : null,
+      })
+      .eq("id", data.id);
+    if (error) {
+      console.error("promoteAddedGuests failed", error);
+      throw new Error("Couldn't update this invitation. Please try again.");
+    }
+    return { ok: true, added: promoted.length };
+  });
+
 export const deleteGuest = createServerFn({ method: "POST" })
+
   .middleware([requireSupabaseAuth])
   .validator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
@@ -1028,6 +1191,8 @@ interface GuestWritePayload {
   postal_code?: string | null;
   country?: string | null;
   invite_notes?: string | null;
+  max_party_size?: number | null;
+
 }
 
 interface PlannedRow extends ImportRowResult {
@@ -1260,6 +1425,29 @@ function planImportRows(
     if (rec.invite_notes?.trim()) payload.invite_notes = rec.invite_notes.trim();
     else if (!isUpdate) payload.invite_notes = null;
 
+    // Optional party cap. Ignored (with a warning) when it's not a sane
+    // number or is smaller than the people listed on the same row — the DB
+    // trigger would reject it anyway.
+    const capRaw = rec.max_party_size?.trim();
+    if (capRaw) {
+      const cap = Number.parseInt(capRaw, 10);
+      const namedCount = Array.isArray(payload.party_members)
+        ? (payload.party_members as unknown[]).length
+        : 0;
+      if (!Number.isFinite(cap) || cap < 1 || cap > 30) {
+        warnings.push(`Ignored max_party_size "${capRaw}" — expected a number from 1 to 30.`);
+      } else if (namedCount && cap < namedCount) {
+        warnings.push(
+          `Ignored max_party_size ${cap} — it's below the ${namedCount} people listed for this household.`,
+        );
+      } else {
+        payload.max_party_size = cap;
+      }
+    } else if (!isUpdate) {
+      payload.max_party_size = null;
+    }
+
+
     if (matched) claimedGuestIds.add(matched.id);
     if (slugRaw) claimedSlugs.add(slugRaw);
     if (!isUpdate) {
@@ -1319,6 +1507,7 @@ export const importGuestsCsv = createServerFn({ method: "POST" })
           "postal_code",
           "country",
           "invite_notes",
+          "max_party_size",
         ];
         body = rows;
       }
