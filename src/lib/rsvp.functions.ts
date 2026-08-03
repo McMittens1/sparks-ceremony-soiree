@@ -1507,6 +1507,7 @@ export const importGuestsCsv = createServerFn({ method: "POST" })
           "postal_code",
           "country",
           "invite_notes",
+          "max_party_size",
         ];
         body = rows;
       }
