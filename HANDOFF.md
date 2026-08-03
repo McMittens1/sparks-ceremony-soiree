@@ -1,10 +1,25 @@
 # Handoff — Moreno Wedding 2026 Website
 
-**Last verified against the live codebase + database: 2026-08-03 (end of session).** Bump this line whenever you re-verify. Read `ONBOARDING.md` first — it's the current-state reference; this file is the narrative behind decisions.
+**Last verified against the live codebase + database: 2026-08-04 (end of session).** Bump this line whenever you re-verify. Read `ONBOARDING.md` first — it's the current-state reference; this file is the narrative behind decisions.
 
 Originally written at the end of a development session that took this project from "RSVP disabled, no feature flags, generic wedding-party avatars" to "RSVP + photo uploads live behind a real feature-flag system, a from-scratch collectible-card wedding party section, and a full pre-launch QA pass." This document is for whichever AI picks the project up next. If `ONBOARDING.md` and this file disagree on current state, trust `ONBOARDING.md`; use this one for reasoning. If a paragraph here starts to feel stale, fold what's still true into `ONBOARDING.md` and remove or revise it here rather than let two sources of truth drift.
 
 **You will be doing all work directly on the `main` branch.** No feature branches, no PRs — every session on this project, including this one, commits and pushes straight to `main`. See `ONBOARDING.md` §8 for the full policy and why it matters here specifically.
+
+---
+
+## 0. Latest session — guest-added party members (2026-08-04)
+
+The couple has households on the list whose full rosters aren't known yet: plus-ones without a name, families whose children weren't itemized, someone who simply wasn't listed. The ask was to let households fill those in during RSVP without opening the door to unlimited uninvited guests.
+
+Decisions worth knowing:
+
+- **The cap is per invitation, with a fallback, not a global number.** `guests.max_party_size` is nullable on purpose. Setting it on all 86 households before invitations go out would have been busywork; leaving it null keeps the pre-existing behavior ("everyone named, plus one"), which is already the right answer for most rows. `effectivePartyLimit()` is the only place that decision lives — client and server both call it.
+- **Invited people are non-removable, not non-editable.** Households can fix a spelling and mark someone not attending, but they can't delete a row. Deletion was the actual attack: remove the invited aunt, add a friend, headcount unchanged. `missing_invited_guests` on the server is what enforces it; the missing Remove button is only UX.
+- **`added_by_guest` / `name_pending` are computed server-side from the invited roster** by normalized name comparison. The browser sends them back on an edit round-trip and they're discarded. That's why a household editing their RSVP can't relabel a guest-added person as invited.
+- **Placeholders are a first-class state, not an empty string.** A blank name with `name_pending` becomes `Guest of <household>` in the DB, so the admin list and the notification email read sensibly, while the RSVP form shows the field empty again on a later edit rather than making the guest delete our placeholder text.
+- **Promotion into the invite list is manual.** `promoteAddedGuests` exists as a one-click "fold everything they added into the real roster," but nothing does it automatically — the master list stays the couple's, not the guests'.
+- Verified end to end against a temporary `ZZTEST` household with a cap of 4: the counter, the hidden add buttons at the cap, the pending placeholder stored as `Guest of …`, and the admin badges/promote action. The test household was purged afterward (`guests` and `rsvps` re-queried at 86 / 0).
 
 ---
 
