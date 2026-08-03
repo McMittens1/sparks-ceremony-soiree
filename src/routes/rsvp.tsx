@@ -17,6 +17,14 @@ import {
   type AttendeeChoice,
   type VerifyFactor,
 } from "@/lib/rsvp.functions";
+import {
+  initialAttendees,
+  isRemovable,
+  remainingSlots,
+  partyCounterText,
+  newAttendee,
+  cleanAttendees,
+} from "@/lib/rsvp-party";
 
 type SubmitRecap = {
   status: PublicRsvp["status"];
@@ -320,8 +328,10 @@ function RsvpPage() {
   function updateAttendee(i: number, patch: Partial<AttendeeChoice>) {
     setAttendees((prev) => prev.map((a, idx) => (idx === i ? { ...a, ...patch } : a)));
   }
-  function addAttendee() {
-    setAttendees((prev) => [...prev, { name: "", is_child: false, attending: true }]);
+  function addAttendee(namePending: boolean) {
+    setAttendees((prev) =>
+      remainingSlots(prev, partyLimit) > 0 ? [...prev, newAttendee(namePending)] : prev,
+    );
   }
   function removeAttendee(i: number) {
     setAttendees((prev) => prev.filter((_, idx) => idx !== i));
@@ -330,7 +340,7 @@ function RsvpPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!guest || !sessionToken) return;
-    const cleaned = attendees.filter((a) => a.name.trim().length > 0);
+    const cleaned = cleanAttendees(attendees);
     if (cleaned.length === 0) {
       setErr(t.rsvp.errNoName);
       return;
