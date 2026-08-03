@@ -80,6 +80,12 @@ export interface AdminGuestRow {
   slug: string;
   primary_name: string;
   party_members: PartyMember[];
+  // Explicit cap as set in the admin editor (null = not set yet), plus the
+  // limit actually enforced, so the dashboard can show both the real number
+  // and which invitations still rely on the fallback.
+  max_party_size: number | null;
+  party_limit: number;
+
   phone: string | null;
   email: string | null;
   address_line1: string | null;
