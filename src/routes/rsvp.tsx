@@ -821,6 +821,17 @@ function RsvpPage() {
                       >
                         {t.rsvp.partySubtitle}
                       </p>
+                      <p
+                        className="font-sans"
+                        style={{ fontSize: 13, color: TAN_DEEP, margin: "0 0 20px" }}
+                        aria-live="polite"
+                      >
+                        {partyCounterText(
+                          slotsLeft > 0 ? t.rsvp.partyCounter : t.rsvp.partyCounterFull,
+                          attendees,
+                          partyLimit,
+                        )}
+                      </p>
                       <div className="space-y-5">
                         {attendees.map((a, i) => (
                           <div
@@ -830,13 +841,25 @@ function RsvpPage() {
                           >
                             <input
                               value={a.name}
-                              onChange={(e) => updateAttendee(i, { name: e.target.value })}
-                              placeholder={t.rsvp.fullName}
+                              onChange={(e) =>
+                                updateAttendee(i, { name: e.target.value, name_pending: false })
+                              }
+                              placeholder={
+                                a.name_pending ? t.rsvp.namePendingLabel : t.rsvp.fullName
+                              }
                               aria-label={`${t.rsvp.fullName} — guest ${i + 1}`}
                               autoComplete="name"
                               maxLength={120}
                               style={inputStyle}
                             />
+                            {a.name_pending && (
+                              <p
+                                className="font-sans"
+                                style={{ fontSize: 12, color: SOFT, margin: "8px 0 0" }}
+                              >
+                                {t.rsvp.namePendingHint}
+                              </p>
+                            )}
                             <div className="flex items-center justify-between flex-wrap gap-3 mt-4">
                               <div className="flex gap-2">
                                 <PillToggle
@@ -862,36 +885,63 @@ function RsvpPage() {
                                   label={t.rsvp.notAttending}
                                 />
                               </div>
-                              <button
-                                type="button"
-                                onClick={() => removeAttendee(i)}
-                                className="uppercase font-sans"
-                                style={{
-                                  fontSize: 10,
-                                  letterSpacing: "0.2em",
-                                  color: TAN_DEEP,
-                                }}
-                              >
-                                {t.rsvp.remove}
-                              </button>
+                              {isRemovable(a) ? (
+                                <button
+                                  type="button"
+                                  onClick={() => removeAttendee(i)}
+                                  className="uppercase font-sans"
+                                  style={{
+                                    fontSize: 10,
+                                    letterSpacing: "0.2em",
+                                    color: TAN_DEEP,
+                                  }}
+                                >
+                                  {t.rsvp.remove}
+                                </button>
+                              ) : (
+                                <span
+                                  className="font-sans"
+                                  style={{ fontSize: 11, color: SOFT, maxWidth: 260 }}
+                                >
+                                  {t.rsvp.invitedLockedNote}
+                                </span>
+                              )}
                             </div>
                           </div>
                         ))}
                       </div>
-                      <button
-                        type="button"
-                        onClick={addAttendee}
-                        className="mt-4 uppercase font-sans"
-                        style={{
-                          fontSize: 10,
-                          letterSpacing: "0.2em",
-                          color: LAV_DEEP,
-                          borderBottom: `1px solid ${LAV_DEEP}`,
-                          paddingBottom: 3,
-                        }}
-                      >
-                        {t.rsvp.addGuest}
-                      </button>
+                      {slotsLeft > 0 && (
+                        <div className="mt-4 flex flex-wrap gap-5">
+                          <button
+                            type="button"
+                            onClick={() => addAttendee(false)}
+                            className="uppercase font-sans"
+                            style={{
+                              fontSize: 10,
+                              letterSpacing: "0.2em",
+                              color: LAV_DEEP,
+                              borderBottom: `1px solid ${LAV_DEEP}`,
+                              paddingBottom: 3,
+                            }}
+                          >
+                            {t.rsvp.addGuest}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => addAttendee(true)}
+                            className="uppercase font-sans"
+                            style={{
+                              fontSize: 10,
+                              letterSpacing: "0.2em",
+                              color: TAN_DEEP,
+                              borderBottom: `1px solid ${TAN_DEEP}`,
+                              paddingBottom: 3,
+                            }}
+                          >
+                            {t.rsvp.addGuestPending}
+                          </button>
+                        </div>
+                      )}
                     </section>
                   </fieldset>
 
