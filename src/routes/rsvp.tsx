@@ -154,13 +154,19 @@ function RsvpPage() {
   // Which question this household gets asked. Decided by the server from
   // the row itself (phone if we have one, else the mailed-to ZIP) — the
   // client only renders it, and the server re-derives it when grading.
-  const [verifyFactor, setVerifyFactor] = useState<VerifyFactor>("phone_last4");
+  // `null` means "not known yet": we deliberately render nothing to answer
+  // until the server tells us, so a ZIP household never sees the phone
+  // question flash first on a slow connection.
+  const [verifyFactor, setVerifyFactor] = useState<VerifyFactor | null>(null);
+  const [factorLoading, setFactorLoading] = useState(false);
+  const [factorFailed, setFactorFailed] = useState(false);
   const [answer, setAnswer] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [verifyErr, setVerifyErr] = useState<string | null>(null);
   const answerLength = verifyFactor === "zip" ? 5 : 4;
-  const answerComplete = answer.length === answerLength;
+  const answerComplete = !!verifyFactor && answer.length === answerLength;
   const verifyHint = verifyFactor === "zip" ? t.rsvp.verifyHintZip : t.rsvp.verifyHint;
+
 
   const [guest, setGuest] = useState<PublicGuest | null>(null);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
