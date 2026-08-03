@@ -1019,6 +1019,8 @@ export const upsertGuest = createServerFn({ method: "POST" })
       postal_code: data.postal_code || null,
       country: data.country || null,
       invite_notes: data.invite_notes || null,
+      max_party_size: data.max_party_size ?? null,
+
     };
 
     if (data.id) {
