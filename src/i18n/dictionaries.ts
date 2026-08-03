@@ -392,6 +392,12 @@ const es: Dict = {
     verifyPlaceholder: "••••",
     verifyHintZip: "Escribe el código postal de 5 dígitos al que enviamos tu invitación.",
     verifyPlaceholderZip: "•••••",
+    verifyLoading: "Un momento — estamos buscando tu hogar…",
+    verifyFactorFailed: "No pudimos cargar tu hogar en este momento.",
+    verifyRetry: "Intentar de nuevo",
+    emailOptionalLabel: "Correo (opcional)",
+    emailOptionalHelp:
+      "Agrégalo solo si quieres recibir una confirmación y avisos. Si lo dejas en blanco, no te escribiremos.",
     verifyCta: "Continuar",
     verifying: "Verificando…",
     verifyInvalid: "Eso no coincide con lo que tenemos registrado. Intenta de nuevo.",
