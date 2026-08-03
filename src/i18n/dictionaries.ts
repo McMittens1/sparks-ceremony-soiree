@@ -69,6 +69,12 @@ export interface Dict {
     // with the ZIP code their invitation was mailed to instead.
     verifyHintZip: string;
     verifyPlaceholderZip: string;
+    // Shown while the server decides which question this household gets.
+    verifyLoading: string;
+    verifyFactorFailed: string;
+    verifyRetry: string;
+    emailOptionalLabel: string;
+    emailOptionalHelp: string;
     verifyCta: string;
     verifying: string;
     verifyInvalid: string;
