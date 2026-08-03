@@ -325,6 +325,11 @@ function RsvpPage() {
     }
   }
 
+  // How many people this household may bring in total, named or not.
+  // Server-supplied; the counter and the add buttons both read it.
+  const partyLimit = guest?.party_limit ?? attendees.length;
+  const slotsLeft = remainingSlots(attendees, partyLimit);
+
   function updateAttendee(i: number, patch: Partial<AttendeeChoice>) {
     setAttendees((prev) => prev.map((a, idx) => (idx === i ? { ...a, ...patch } : a)));
   }
