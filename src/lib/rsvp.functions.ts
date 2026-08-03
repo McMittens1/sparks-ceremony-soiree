@@ -1425,6 +1425,29 @@ function planImportRows(
     if (rec.invite_notes?.trim()) payload.invite_notes = rec.invite_notes.trim();
     else if (!isUpdate) payload.invite_notes = null;
 
+    // Optional party cap. Ignored (with a warning) when it's not a sane
+    // number or is smaller than the people listed on the same row — the DB
+    // trigger would reject it anyway.
+    const capRaw = rec.max_party_size?.trim();
+    if (capRaw) {
+      const cap = Number.parseInt(capRaw, 10);
+      const namedCount = Array.isArray(payload.party_members)
+        ? (payload.party_members as unknown[]).length
+        : 0;
+      if (!Number.isFinite(cap) || cap < 1 || cap > 30) {
+        warnings.push(`Ignored max_party_size "${capRaw}" — expected a number from 1 to 30.`);
+      } else if (namedCount && cap < namedCount) {
+        warnings.push(
+          `Ignored max_party_size ${cap} — it's below the ${namedCount} people listed for this household.`,
+        );
+      } else {
+        payload.max_party_size = cap;
+      }
+    } else if (!isUpdate) {
+      payload.max_party_size = null;
+    }
+
+
     if (matched) claimedGuestIds.add(matched.id);
     if (slugRaw) claimedSlugs.add(slugRaw);
     if (!isUpdate) {
