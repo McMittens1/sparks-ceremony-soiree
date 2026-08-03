@@ -230,6 +230,12 @@ const en: Dict = {
     verifyPlaceholder: "••••",
     verifyHintZip: "Enter the 5-digit ZIP code your invitation was mailed to.",
     verifyPlaceholderZip: "•••••",
+    verifyLoading: "One moment — pulling up your household…",
+    verifyFactorFailed: "We couldn't load your household just now.",
+    verifyRetry: "Try again",
+    emailOptionalLabel: "Email (optional)",
+    emailOptionalHelp:
+      "Add it only if you'd like a confirmation and any updates. Leave it blank and we'll leave you alone.",
     verifyCta: "Continue",
     verifying: "Checking…",
     verifyInvalid: "That doesn't match what we have on file. Please try again.",
