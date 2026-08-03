@@ -18,7 +18,14 @@ export interface AttendeeChoice {
   name: string;
   is_child: boolean;
   attending: boolean;
+  // Both flags are stamped server-side in writeRsvp — whatever the browser
+  // sends for them is ignored. `added_by_guest` is true for anyone who
+  // isn't on the household's invited party_members list; `name_pending`
+  // marks an added guest whose real name the household doesn't know yet.
+  added_by_guest?: boolean;
+  name_pending?: boolean;
 }
+
 
 export interface GuestAddress {
   line1?: string;
