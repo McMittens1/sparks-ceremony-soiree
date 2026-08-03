@@ -102,6 +102,7 @@ const RSVP_ERROR_MESSAGES: Partial<Record<string, keyof Dict["rsvp"]>> = {
   not_verified: "errNotVerified",
   rsvp_closed: "errRsvpClosed",
   too_many_guests: "errTooManyGuests",
+  missing_invited_guests: "errMissingInvited",
   link_expired: "errLinkExpired",
   link_invalid: "errLinkInvalid",
   save_failed: "errSaveFailed",
