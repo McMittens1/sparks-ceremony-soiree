@@ -682,9 +682,23 @@ async function writeRsvp(
         { label: "Party size", value: `${data.attendees.length} (${yesCount} attending)` },
         {
           label: "Attendees",
-          value: data.attendees.map((a) => `${a.name}${a.attending ? "" : " (no)"}`).join(", "),
+          value: attendees
+            .map(
+              (a) =>
+                `${a.name}${a.attending ? "" : " (no)"}${a.added_by_guest ? " [added]" : ""}`,
+            )
+            .join(", "),
         },
       ];
+      const addedCount = attendees.filter((a) => a.added_by_guest).length;
+      const pendingCount = attendees.filter((a) => a.name_pending).length;
+      if (addedCount > 0) {
+        details.push({
+          label: "Added by household",
+          value: `${addedCount}${pendingCount > 0 ? ` (${pendingCount} name still to come)` : ""}`,
+        });
+      }
+
       if (data.song_request?.trim())
         details.push({ label: "Song request", value: data.song_request.trim() });
       if (data.message?.trim()) details.push({ label: "Message", value: data.message.trim() });
