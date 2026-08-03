@@ -145,11 +145,24 @@ const partyMemberSchema = z.object({
   is_child: z.boolean(),
 });
 
-const attendeeSchema = z.object({
-  name: z.string().trim().min(1).max(120),
-  is_child: z.boolean(),
-  attending: z.boolean(),
-});
+const attendeeSchema = z
+  .object({
+    // May be blank only when the household explicitly marked the row
+    // "name to come" — writeRsvp fills in a placeholder in that case.
+    name: z.string().trim().max(120),
+    is_child: z.boolean(),
+    attending: z.boolean(),
+    // Accepted so an edit round-trip can send back what it was given, but
+    // never trusted: writeRsvp recomputes added_by_guest and keeps
+    // name_pending only for rows that really have no name.
+    added_by_guest: z.boolean().optional(),
+    name_pending: z.boolean().optional(),
+  })
+  .refine((a) => a.name.length > 0 || a.name_pending === true, {
+    message: "Enter a name, or mark this guest's name as still to come.",
+    path: ["name"],
+  });
+
 
 const addressSchema = z.object({
   line1: z.string().trim().max(200).optional().or(z.literal("")),
