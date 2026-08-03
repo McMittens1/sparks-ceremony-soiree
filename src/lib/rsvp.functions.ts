@@ -160,11 +160,26 @@ const addressSchema = z.object({
   country: z.string().trim().max(60).optional().or(z.literal("")),
 });
 
+// The single source of truth for how many people a household may bring.
+// An explicit max_party_size wins; otherwise we fall back to the historical
+// behavior — everyone named on the invitation, plus one open slot — so
+// households imported before this column existed keep working unchanged.
+export function effectivePartyLimit(
+  namedCount: number,
+  maxPartySize: number | null | undefined,
+): number {
+  if (typeof maxPartySize === "number" && maxPartySize > 0) {
+    return Math.max(maxPartySize, namedCount, 1);
+  }
+  return Math.max(1, namedCount + 1);
+}
+
 function mapGuestRow(row: {
   id: string;
   primary_name: string;
   party_members: unknown;
   email: string | null;
+  max_party_size?: number | null;
 }): PublicGuest {
   const party = Array.isArray(row.party_members)
     ? (row.party_members as PartyMember[]).filter((p) => p && typeof p.name === "string")
@@ -174,8 +189,10 @@ function mapGuestRow(row: {
     primary_name: row.primary_name,
     party_members: party,
     email: row.email,
+    party_limit: effectivePartyLimit(party.length, row.max_party_size ?? null),
   };
 }
+
 
 // US ZIPs are compared on their first 5 digits only, so "92078-1234",
 // " 92078 " and "92078" all match the same household.
