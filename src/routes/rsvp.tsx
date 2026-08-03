@@ -154,13 +154,19 @@ function RsvpPage() {
   // Which question this household gets asked. Decided by the server from
   // the row itself (phone if we have one, else the mailed-to ZIP) — the
   // client only renders it, and the server re-derives it when grading.
-  const [verifyFactor, setVerifyFactor] = useState<VerifyFactor>("phone_last4");
+  // `null` means "not known yet": we deliberately render nothing to answer
+  // until the server tells us, so a ZIP household never sees the phone
+  // question flash first on a slow connection.
+  const [verifyFactor, setVerifyFactor] = useState<VerifyFactor | null>(null);
+  const [factorLoading, setFactorLoading] = useState(false);
+  const [factorFailed, setFactorFailed] = useState(false);
   const [answer, setAnswer] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [verifyErr, setVerifyErr] = useState<string | null>(null);
   const answerLength = verifyFactor === "zip" ? 5 : 4;
-  const answerComplete = answer.length === answerLength;
+  const answerComplete = !!verifyFactor && answer.length === answerLength;
   const verifyHint = verifyFactor === "zip" ? t.rsvp.verifyHintZip : t.rsvp.verifyHint;
+
 
   const [guest, setGuest] = useState<PublicGuest | null>(null);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
@@ -184,18 +190,30 @@ function RsvpPage() {
     setVerifyErr(null);
     setAnswer("");
     setVerifyLabel(knownLabel ?? null);
+    // Reset per household: a previously resolved factor must never leak
+    // into the next household's question.
+    setVerifyFactor(null);
+    setFactorFailed(false);
+    setFactorLoading(true);
     // Always fetch, even when the name came from the lookup list: the
     // factor is the part we can't guess, and it decides the prompt.
     try {
       const res = await runGetLabel({ data: target });
       if (res.ok) {
         setVerifyLabel(res.primary_name);
-        setVerifyFactor(res.factor);
+        setVerifyFactor(res.factor === "none" ? "phone_last4" : res.factor);
+        setAnswer("");
+      } else {
+        setFactorFailed(true);
       }
     } catch {
-      // Non-fatal — the verify screen still works with the phone default.
+      // We won't guess a question — the guest gets an explicit retry.
+      setFactorFailed(true);
+    } finally {
+      setFactorLoading(false);
     }
   }
+
 
   function hydrateFromGuest(g: PublicGuest, r: PublicRsvp | null, token: string) {
     setGuest(g);
@@ -644,47 +662,80 @@ function RsvpPage() {
                       {verifyLabel}
                     </p>
                   )}
-                  <label
-                    htmlFor="rsvp-verify-answer"
-                    className="block text-center font-sans"
-                    style={{ fontSize: 14, color: SOFT, margin: "0 0 30px" }}
-                  >
-                    {verifyHint}
-                  </label>
-                  <input
-                    id="rsvp-verify-answer"
-                    autoFocus
-                    value={answer}
-                    onChange={(e) =>
-                      setAnswer(e.target.value.replace(/\D/g, "").slice(0, answerLength))
-                    }
-                    placeholder={
-                      verifyFactor === "zip" ? t.rsvp.verifyPlaceholderZip : t.rsvp.verifyPlaceholder
-                    }
-                    aria-label={verifyHint}
-                    inputMode="numeric"
-                    autoComplete="off"
-                    maxLength={answerLength}
-                    className="text-center"
-                    style={{ ...inputStyle, letterSpacing: "0.5em" }}
-                  />
-                  <button
-                    type="submit"
-                    disabled={verifying || !answerComplete}
-                    className="mt-8 block w-full uppercase font-sans"
-                    style={{
-                      background: INK,
-                      color: IVORY,
-                      padding: "16px 0",
-                      fontSize: 11,
-                      letterSpacing: "0.26em",
-                      border: `1px solid ${INK}`,
-                      opacity: verifying || !answerComplete ? 0.5 : 1,
-                      cursor: verifying || !answerComplete ? "not-allowed" : "pointer",
-                    }}
-                  >
-                    {verifying ? t.rsvp.verifying : t.rsvp.verifyCta}
-                  </button>
+                  {!verifyFactor ? (
+                    <div className="text-center font-sans" style={{ fontSize: 14, color: SOFT }}>
+                      {factorFailed ? (
+                        <>
+                          <p style={{ margin: "0 0 16px" }}>{t.rsvp.verifyFactorFailed}</p>
+                          <button
+                            type="button"
+                            onClick={() => pendingTarget && void beginVerify(pendingTarget, verifyLabel ?? undefined)}
+                            className="uppercase font-sans"
+                            style={{
+                              background: INK,
+                              color: IVORY,
+                              padding: "14px 32px",
+                              fontSize: 11,
+                              letterSpacing: "0.26em",
+                              border: `1px solid ${INK}`,
+                              cursor: "pointer",
+                            }}
+                          >
+                            {t.rsvp.verifyRetry}
+                          </button>
+                        </>
+                      ) : (
+                        <p style={{ margin: 0 }}>{factorLoading ? t.rsvp.verifyLoading : ""}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <>
+                      <label
+                        htmlFor="rsvp-verify-answer"
+                        className="block text-center font-sans"
+                        style={{ fontSize: 14, color: SOFT, margin: "0 0 30px" }}
+                      >
+                        {verifyHint}
+                      </label>
+                      <input
+                        id="rsvp-verify-answer"
+                        autoFocus
+                        value={answer}
+                        onChange={(e) =>
+                          setAnswer(e.target.value.replace(/\D/g, "").slice(0, answerLength))
+                        }
+                        placeholder={
+                          verifyFactor === "zip"
+                            ? t.rsvp.verifyPlaceholderZip
+                            : t.rsvp.verifyPlaceholder
+                        }
+                        aria-label={verifyHint}
+                        inputMode="numeric"
+                        autoComplete="off"
+                        maxLength={answerLength}
+                        className="text-center"
+                        style={{ ...inputStyle, letterSpacing: "0.5em" }}
+                      />
+                      <button
+                        type="submit"
+                        disabled={verifying || !answerComplete}
+                        className="mt-8 block w-full uppercase font-sans"
+                        style={{
+                          background: INK,
+                          color: IVORY,
+                          padding: "16px 0",
+                          fontSize: 11,
+                          letterSpacing: "0.26em",
+                          border: `1px solid ${INK}`,
+                          opacity: verifying || !answerComplete ? 0.5 : 1,
+                          cursor: verifying || !answerComplete ? "not-allowed" : "pointer",
+                        }}
+                      >
+                        {verifying ? t.rsvp.verifying : t.rsvp.verifyCta}
+                      </button>
+                    </>
+                  )}
+
 
                   <div role="alert" aria-live="polite">
                     {verifyErr && (
@@ -855,8 +906,14 @@ function RsvpPage() {
                             margin: "0 0 6px",
                           }}
                         >
-                          Email — for your RSVP confirmation
+                          {t.rsvp.emailOptionalLabel}
                         </label>
+                        <p
+                          className="font-serif"
+                          style={{ fontSize: 13, color: SOFT, margin: "0 0 10px" }}
+                        >
+                          {t.rsvp.emailOptionalHelp}
+                        </p>
                         <input
                           id="rsvp-email"
                           type="email"
@@ -867,6 +924,7 @@ function RsvpPage() {
                           maxLength={200}
                           style={inputStyle}
                         />
+
                       </div>
                       <div>
                         <label

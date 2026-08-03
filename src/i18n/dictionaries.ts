@@ -69,6 +69,12 @@ export interface Dict {
     // with the ZIP code their invitation was mailed to instead.
     verifyHintZip: string;
     verifyPlaceholderZip: string;
+    // Shown while the server decides which question this household gets.
+    verifyLoading: string;
+    verifyFactorFailed: string;
+    verifyRetry: string;
+    emailOptionalLabel: string;
+    emailOptionalHelp: string;
     verifyCta: string;
     verifying: string;
     verifyInvalid: string;
@@ -224,6 +230,12 @@ const en: Dict = {
     verifyPlaceholder: "••••",
     verifyHintZip: "Enter the 5-digit ZIP code your invitation was mailed to.",
     verifyPlaceholderZip: "•••••",
+    verifyLoading: "One moment — pulling up your household…",
+    verifyFactorFailed: "We couldn't load your household just now.",
+    verifyRetry: "Try again",
+    emailOptionalLabel: "Email (optional)",
+    emailOptionalHelp:
+      "Add it only if you'd like a confirmation and any updates. Leave it blank and we'll leave you alone.",
     verifyCta: "Continue",
     verifying: "Checking…",
     verifyInvalid: "That doesn't match what we have on file. Please try again.",
@@ -380,6 +392,12 @@ const es: Dict = {
     verifyPlaceholder: "••••",
     verifyHintZip: "Escribe el código postal de 5 dígitos al que enviamos tu invitación.",
     verifyPlaceholderZip: "•••••",
+    verifyLoading: "Un momento — estamos buscando tu hogar…",
+    verifyFactorFailed: "No pudimos cargar tu hogar en este momento.",
+    verifyRetry: "Intentar de nuevo",
+    emailOptionalLabel: "Correo (opcional)",
+    emailOptionalHelp:
+      "Agrégalo solo si quieres recibir una confirmación y avisos. Si lo dejas en blanco, no te escribiremos.",
     verifyCta: "Continuar",
     verifying: "Verificando…",
     verifyInvalid: "Eso no coincide con lo que tenemos registrado. Intenta de nuevo.",
