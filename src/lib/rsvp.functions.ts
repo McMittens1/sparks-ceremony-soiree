@@ -581,16 +581,39 @@ async function writeRsvp(
 
   const { data: g, error: gErr } = await supabaseAdmin
     .from("guests")
-    .select("id, primary_name, party_members")
+    .select("id, primary_name, party_members, max_party_size")
     .eq("id", guestId)
     .maybeSingle();
   if (gErr || !g) throw new Error("household_not_found");
 
-  const maxAllowed = Math.max(
-    1,
-    (Array.isArray(g.party_members) ? (g.party_members as unknown[]).length : 1) + 1,
-  );
+  const invited: PartyMember[] = Array.isArray(g.party_members)
+    ? (g.party_members as unknown as PartyMember[])
+    : [];
+  const maxAllowed = effectivePartyLimit(invited.length, g.max_party_size);
   if (data.attendees.length > maxAllowed) throw new Error("too_many_guests");
+  // A household may say an invited person isn't coming, but may not delete
+  // their row — that would let them quietly swap someone we invited for
+  // someone we didn't. The form enforces the same rule; this is the check
+  // that actually holds.
+  if (data.attendees.length < invited.length) throw new Error("missing_invited_guests");
+
+  // Anyone whose name isn't on the invitation is an added guest. Stamped
+  // here, never taken from the browser.
+  const normName = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+  const invitedNames = new Set(invited.map((m) => normName(m.name)));
+  const attendees: AttendeeChoice[] = data.attendees.map((a) => {
+    const pending = !a.name.trim();
+    const name = pending ? `Guest of ${g.primary_name}` : a.name.trim();
+    return {
+      name,
+      is_child: a.is_child,
+      attending: a.attending,
+      added_by_guest: pending || !invitedNames.has(normName(name)),
+      name_pending: pending,
+    };
+  });
+  data = { ...data, attendees };
+
 
   const anyYes = data.attendees.some((a) => a.attending);
   const anyNo = data.attendees.some((a) => !a.attending);
