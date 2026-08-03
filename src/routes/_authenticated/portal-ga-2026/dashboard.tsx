@@ -21,6 +21,8 @@ import {
   deleteGuest,
   bulkDeleteGuests,
   importGuestsCsv,
+  promoteAddedGuests,
+  effectivePartyLimit,
   unlockGuestPhoneVerify,
   resendRsvpConfirmation,
   type AdminGuestRow,
@@ -375,7 +377,7 @@ function RsvpsPanel() {
     URL.revokeObjectURL(url);
   }
 
-  // Complete Master CSV — the full, round-trippable backup. The first 12
+  // Complete Master CSV — the full, round-trippable backup. The first 13
   // columns exactly match Master Import's columns (same names, same
   // shapes), so this file can be re-imported as-is; everything after
   // is read-only RSVP/audit data, never re-imported.
@@ -393,6 +395,8 @@ function RsvpsPanel() {
       "postal_code",
       "country",
       "invite_notes",
+      "max_party_size",
+      "party_limit",
       "verify_factor",
       "rsvp_status",
       "rsvp_attendees",
@@ -422,6 +426,8 @@ function RsvpsPanel() {
         r.postal_code,
         r.country,
         r.invite_notes,
+        r.max_party_size ?? "",
+        r.party_limit,
         r.verify_factor,
         r.rsvp?.status ?? "no_response",
         attendeesField(r.rsvp),
@@ -1286,6 +1292,7 @@ function GuestEditor({
   const runUpsert = useServerFn(upsertGuest);
   const runDelete = useServerFn(deleteGuest);
   const runResend = useServerFn(resendRsvpConfirmation);
+  const runPromote = useServerFn(promoteAddedGuests);
   const [primaryName, setPrimaryName] = useState(row?.primary_name ?? "");
   const [members, setMembers] = useState<PartyMember[]>(
     row?.party_members.length
@@ -1301,6 +1308,12 @@ function GuestEditor({
   const [postal, setPostal] = useState(row?.postal_code ?? "");
   const [country, setCountry] = useState(row?.country ?? "");
   const [notes, setNotes] = useState(row?.invite_notes ?? "");
+  // Blank = no explicit cap; the invitation keeps the historical
+  // "everyone named, plus one" fallback.
+  const [maxPartySize, setMaxPartySize] = useState(
+    row?.max_party_size != null ? String(row.max_party_size) : "",
+  );
+  const [promoting, setPromoting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -1349,6 +1362,7 @@ function GuestEditor({
           postal_code: postal,
           country,
           invite_notes: notes,
+          max_party_size: maxPartySize.trim() === "" ? null : Number(maxPartySize),
         },
       });
       await onSaved();
@@ -1478,6 +1492,24 @@ function GuestEditor({
             </div>
           </div>
 
+          <div>
+            <label className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              Max party size
+            </label>
+            <input
+              value={maxPartySize}
+              onChange={(e) => setMaxPartySize(e.target.value.replace(/[^0-9]/g, ""))}
+              inputMode="numeric"
+              placeholder={`Default: ${effectivePartyLimit(members.filter((m) => m.name.trim()).length, null)}`}
+              className="mt-1 w-32 border border-input bg-background px-3 py-2 text-sm"
+            />
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              Total people this household may bring, named or not — this is the cap the RSVP form
+              enforces. Leave blank to use the default (everyone named above, plus one open slot).
+              Can&apos;t be lower than the number of named guests.
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <PhoneInput
@@ -1595,6 +1627,16 @@ function GuestEditor({
                       <span>
                         {a.name}
                         {a.is_child ? " (child)" : ""}
+                        {a.added_by_guest && (
+                          <span className="ml-2 text-[9px] uppercase tracking-[0.15em] border border-accent text-accent px-1 py-[1px]">
+                            added by guest
+                          </span>
+                        )}
+                        {a.name_pending && (
+                          <span className="ml-2 text-[9px] uppercase tracking-[0.15em] border border-muted-foreground text-muted-foreground px-1 py-[1px]">
+                            name pending
+                          </span>
+                        )}
                       </span>
                       <span className="flex items-center gap-2">
                         <span
@@ -1602,7 +1644,7 @@ function GuestEditor({
                         >
                           {a.attending ? "attending" : "not attending"}
                         </span>
-                        {!alreadyListed && (
+                        {!alreadyListed && !a.name_pending && (
                           <button
                             type="button"
                             onClick={() => promoteToInviteList(a.name, a.is_child)}
@@ -1616,6 +1658,34 @@ function GuestEditor({
                   );
                 })}
               </div>
+
+              {row.rsvp.attendees.some(
+                (a) => a.added_by_guest && !a.name_pending && !isInMembers(a.name),
+              ) && (
+                <button
+                  type="button"
+                  disabled={promoting}
+                  onClick={async () => {
+                    setPromoting(true);
+                    try {
+                      const res = await runPromote({ data: { id: row.id } });
+                      await onSaved();
+                      toast.success(
+                        res.added === 0
+                          ? "Nothing new to add."
+                          : `Added ${res.added} guest${res.added === 1 ? "" : "s"} to the invite list.`,
+                      );
+                    } catch (e) {
+                      toast.error(e instanceof Error ? e.message : "Couldn't update the invite list.");
+                    } finally {
+                      setPromoting(false);
+                    }
+                  }}
+                  className="mt-2 text-[10px] uppercase tracking-[0.2em] text-primary link-underline disabled:opacity-50"
+                >
+                  {promoting ? "Adding…" : "Add all guest-added names to the invite list"}
+                </button>
+              )}
 
               {row.rsvp.address_confirmed && (
                 <div className="text-sm mt-2 text-muted-foreground">✓ Address confirmed</div>
