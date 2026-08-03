@@ -906,8 +906,14 @@ function RsvpPage() {
                             margin: "0 0 6px",
                           }}
                         >
-                          Email — for your RSVP confirmation
+                          {t.rsvp.emailOptionalLabel}
                         </label>
+                        <p
+                          className="font-serif"
+                          style={{ fontSize: 13, color: SOFT, margin: "0 0 10px" }}
+                        >
+                          {t.rsvp.emailOptionalHelp}
+                        </p>
                         <input
                           id="rsvp-email"
                           type="email"
@@ -918,6 +924,7 @@ function RsvpPage() {
                           maxLength={200}
                           style={inputStyle}
                         />
+
                       </div>
                       <div>
                         <label
