@@ -91,6 +91,13 @@ export interface Dict {
     partySubtitle: string;
     maxGuestsHint: string;
     tooManyGuests: string;
+    partyCounter: string;
+    partyCounterFull: string;
+    addGuestPending: string;
+    namePendingLabel: string;
+    namePendingHint: string;
+    addedByYouLabel: string;
+    invitedLockedNote: string;
     addGuest: string;
     remove: string;
     fullName: string;
@@ -119,6 +126,7 @@ export interface Dict {
     errNotVerified: string;
     errRsvpClosed: string;
     errTooManyGuests: string;
+    errMissingInvited: string;
     errLinkExpired: string;
     errLinkInvalid: string;
     errSaveFailed: string;
@@ -253,6 +261,13 @@ const en: Dict = {
       "Update each person, add anyone missing (kids or plus-ones), and let us know who's coming.",
     maxGuestsHint: "You can RSVP for up to {n} people.",
     tooManyGuests: "This invite is for at most {n} guest(s). Please remove someone.",
+    partyCounter: "{count} of {max} guests — you can add {remaining} more.",
+    partyCounterFull: "{count} of {max} guests — that's everyone your invitation includes.",
+    addGuestPending: "+ Add guest (name to come)",
+    namePendingLabel: "Name to come",
+    namePendingHint: "We'll save a placeholder — send us the name when you know it.",
+    addedByYouLabel: "Added by you",
+    invitedLockedNote: "Not coming? Mark them \u201cNot attending\u201d rather than removing them.",
     addGuest: "+ Add guest",
     remove: "Remove",
     fullName: "Full name",
@@ -282,6 +297,8 @@ const en: Dict = {
     errNotVerified: "Please verify your household again before continuing.",
     errRsvpClosed: "RSVP submissions aren't open yet.",
     errTooManyGuests: "That's more guests than your invitation allows.",
+    errMissingInvited:
+      "Please keep everyone from your invitation listed \u2014 mark them as not attending instead of removing them.",
     errLinkExpired: "This edit link has expired. Please contact us for a new one.",
     errLinkInvalid: "This edit link isn't valid. Please double-check it.",
     errSaveFailed: "We couldn't save that. Please try again in a moment.",
@@ -416,6 +433,13 @@ const es: Dict = {
       "Actualiza a cada persona, agrega a quien falte (niños o acompañantes) y dinos quién asistirá.",
     maxGuestsHint: "Puedes confirmar hasta {n} personas.",
     tooManyGuests: "Esta invitación permite máximo {n} invitado(s). Elimina a alguien.",
+    partyCounter: "{count} de {max} invitados — puedes agregar {remaining} más.",
+    partyCounterFull: "{count} de {max} invitados — es el total que incluye tu invitación.",
+    addGuestPending: "+ Agregar invitado (nombre pendiente)",
+    namePendingLabel: "Nombre pendiente",
+    namePendingHint: "Guardaremos un marcador — mándanos el nombre cuando lo sepas.",
+    addedByYouLabel: "Agregado por ti",
+    invitedLockedNote: "¿No asistirá? Marca \u201cNo asistirá\u201d en vez de quitarlo.",
     addGuest: "+ Agregar invitado",
     remove: "Quitar",
     fullName: "Nombre completo",
@@ -444,6 +468,8 @@ const es: Dict = {
     errNotVerified: "Por favor verifica tu grupo familiar de nuevo antes de continuar.",
     errRsvpClosed: "El período para confirmar asistencia aún no ha abierto.",
     errTooManyGuests: "Son más invitados de los que permite tu invitación.",
+    errMissingInvited:
+      "Mantén a todos los de tu invitación en la lista \u2014 marca \u201cNo asistirá\u201d en vez de quitarlos.",
     errLinkExpired: "Este enlace de edición venció. Contáctanos para uno nuevo.",
     errLinkInvalid: "Este enlace de edición no es válido. Verifícalo de nuevo.",
     errSaveFailed: "No pudimos guardar eso. Intenta de nuevo en un momento.",
