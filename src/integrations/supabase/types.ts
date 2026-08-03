@@ -197,6 +197,7 @@ export type Database = {
           email: string | null
           id: string
           invite_notes: string | null
+          max_party_size: number | null
           party_members: Json
           phone: string | null
           phone_verify_failed_attempts: number
@@ -219,6 +220,7 @@ export type Database = {
           email?: string | null
           id?: string
           invite_notes?: string | null
+          max_party_size?: number | null
           party_members?: Json
           phone?: string | null
           phone_verify_failed_attempts?: number
@@ -241,6 +243,7 @@ export type Database = {
           email?: string | null
           id?: string
           invite_notes?: string | null
+          max_party_size?: number | null
           party_members?: Json
           phone?: string | null
           phone_verify_failed_attempts?: number
