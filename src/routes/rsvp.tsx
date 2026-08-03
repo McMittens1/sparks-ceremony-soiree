@@ -190,18 +190,30 @@ function RsvpPage() {
     setVerifyErr(null);
     setAnswer("");
     setVerifyLabel(knownLabel ?? null);
+    // Reset per household: a previously resolved factor must never leak
+    // into the next household's question.
+    setVerifyFactor(null);
+    setFactorFailed(false);
+    setFactorLoading(true);
     // Always fetch, even when the name came from the lookup list: the
     // factor is the part we can't guess, and it decides the prompt.
     try {
       const res = await runGetLabel({ data: target });
       if (res.ok) {
         setVerifyLabel(res.primary_name);
-        setVerifyFactor(res.factor);
+        setVerifyFactor(res.factor === "none" ? "phone_last4" : res.factor);
+        setAnswer("");
+      } else {
+        setFactorFailed(true);
       }
     } catch {
-      // Non-fatal — the verify screen still works with the phone default.
+      // We won't guess a question — the guest gets an explicit retry.
+      setFactorFailed(true);
+    } finally {
+      setFactorLoading(false);
     }
   }
+
 
   function hydrateFromGuest(g: PublicGuest, r: PublicRsvp | null, token: string) {
     setGuest(g);
