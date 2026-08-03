@@ -1055,7 +1055,65 @@ export const upsertGuest = createServerFn({ method: "POST" })
     throw new Error("Could not generate a unique invite code, please try again.");
   });
 
+// Pulls the people a household added during RSVP into the invitation's own
+// party_members list, so the master guest list converges on reality. Raises
+// max_party_size when it was set below the new named count, so the trigger
+// (and the guest-facing counter) stay consistent.
+export const promoteAddedGuests = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }): Promise<{ ok: true; added: number }> => {
+    const sb = await ensureAdmin(context.supabase, context.userId);
+    const { data: g } = await sb
+      .from("guests")
+      .select("id, party_members, max_party_size")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!g) throw new Error("household_not_found");
+    const { data: r } = await sb
+      .from("rsvps")
+      .select("attendees")
+      .eq("guest_id", data.id)
+      .maybeSingle();
+    if (!r) throw new Error("no_rsvp_yet");
+
+    const invited: PartyMember[] = Array.isArray(g.party_members)
+      ? (g.party_members as unknown as PartyMember[])
+      : [];
+    const attendees: AttendeeChoice[] = Array.isArray(r.attendees)
+      ? (r.attendees as unknown as AttendeeChoice[])
+      : [];
+    const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+    const known = new Set(invited.map((m) => norm(m.name)));
+    const promoted: PartyMember[] = [];
+    for (const a of attendees) {
+      if (!a.added_by_guest || a.name_pending) continue;
+      if (known.has(norm(a.name))) continue;
+      known.add(norm(a.name));
+      promoted.push({ name: a.name, is_child: !!a.is_child });
+    }
+    if (promoted.length === 0) return { ok: true, added: 0 };
+
+    const members = [...invited, ...promoted];
+    const { error } = await sb
+      .from("guests")
+      .update({
+        party_members: members as unknown as import("@/integrations/supabase/types").Json,
+        max_party_size:
+          typeof g.max_party_size === "number"
+            ? Math.max(g.max_party_size, members.length)
+            : null,
+      })
+      .eq("id", data.id);
+    if (error) {
+      console.error("promoteAddedGuests failed", error);
+      throw new Error("Couldn't update this invitation. Please try again.");
+    }
+    return { ok: true, added: promoted.length };
+  });
+
 export const deleteGuest = createServerFn({ method: "POST" })
+
   .middleware([requireSupabaseAuth])
   .validator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
