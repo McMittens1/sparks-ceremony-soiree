@@ -1136,7 +1136,7 @@ function RsvpPage() {
                           style={{ fontSize: 14, color: INK }}
                         >
                           <span>
-                            {a.name}
+                            {a.name.trim() || t.rsvp.namePendingLabel}
                             {a.is_child ? (
                               <span style={{ color: SOFT }}> ({t.rsvp.child})</span>
                             ) : null}
