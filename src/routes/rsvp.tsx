@@ -221,16 +221,15 @@ function RsvpPage() {
     setExistingRsvp(r);
     setEmail(g.email ?? "");
     if (r) {
-      setAttendees(
-        r.attendees.length ? r.attendees : g.party_members.map((m) => ({ ...m, attending: false })),
-      );
+      setAttendees(initialAttendees(g.party_members, r.attendees, false));
       setSongRequest(r.song_request ?? "");
       setMessage(r.message ?? "");
     } else {
-      setAttendees(g.party_members.map((m) => ({ ...m, attending: true })));
+      setAttendees(initialAttendees(g.party_members, null, true));
       setSongRequest("");
       setMessage("");
     }
+
     setStage("form");
   }
 
