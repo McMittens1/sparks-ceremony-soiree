@@ -1,6 +1,6 @@
 # Handoff — Moreno Wedding 2026 Website
 
-**Last verified against the live codebase + database: 2026-08-01 (end of session).** Bump this line whenever you re-verify. Read `ONBOARDING.md` first — it's the current-state reference; this file is the narrative behind decisions.
+**Last verified against the live codebase + database: 2026-08-03 (end of session).** Bump this line whenever you re-verify. Read `ONBOARDING.md` first — it's the current-state reference; this file is the narrative behind decisions.
 
 Originally written at the end of a development session that took this project from "RSVP disabled, no feature flags, generic wedding-party avatars" to "RSVP + photo uploads live behind a real feature-flag system, a from-scratch collectible-card wedding party section, and a full pre-launch QA pass." This document is for whichever AI picks the project up next. If `ONBOARDING.md` and this file disagree on current state, trust `ONBOARDING.md`; use this one for reasoning. If a paragraph here starts to feel stale, fold what's still true into `ONBOARDING.md` and remove or revise it here rather than let two sources of truth drift.
 
@@ -210,3 +210,13 @@ The couple asked, before loading a batch of test households, whether Lovable and
 - **The banner is unconditional on the filter.** It counts test rows in the whole dataset, not the visible page, precisely so switching to "Real households only" can't hide the fact that test data is live. Purge deletes all of them regardless of what's on screen.
 - **Cleanup is complete where it matters and deliberately incomplete elsewhere.** `rsvps.guest_id` cascades, and RSVP tokens are HMAC-derived rather than stored, so nothing orphans. `email_send_log`, `analytics_events`, `suppressed_emails`, and `email_unsubscribe_tokens` are append-only audit tables with no FK to `guests` and survive a purge on purpose. The one with teeth is `suppressed_emails`: a test address that bounces or unsubscribes will silently block later mail to it, so test with addresses you control and check that table if a real send later goes missing.
 - Verified end to end: created a `ZZTEST` household, saw the banner and the count, purged it, and confirmed `guests` and `rsvps` are both back to 0 rows.
+
+---
+
+## RSVP verify prompt + optional email (2026-08-03)
+
+Two guest-facing corrections, both found by looking at the real thing rather than the code's intent.
+
+**The ZIP household saw the phone question.** `verifyFactor` was initialized to `"phone_last4"` and only corrected once `getVerifyTargetLabel` returned. On a fast connection you'd never notice; on a phone on cell data, a ZIP-only household got a "last 4 digits of your phone" box for a beat — long enough to start typing a phone number the server would then reject. Fixed by making "unknown" a real state instead of a default: `verifyFactor` is `null` until the server answers and is reset to `null` on every new household. The alternative — keeping a default and just hiding it briefly — was rejected because the wrong default is still wrong once the request fails; now a failed lookup shows a retry button instead of a guessed question.
+
+**Email was presented as required.** It never was in the data path (`writeRsvp` has always written the address conditionally), but the label read "Email — for your RSVP confirmation" with no hint it could be left blank, which is functionally a requirement for most people. Now labeled optional with a line explaining exactly what giving it buys them. Verified by submitting a real RSVP with the field empty: the row saved, `guests.email` stayed null, and the send log shows the admin notification only — no confirmation attempt, no bounce.
