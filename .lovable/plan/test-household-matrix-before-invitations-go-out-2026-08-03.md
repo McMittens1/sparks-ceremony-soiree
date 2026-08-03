@@ -14,18 +14,20 @@ So the party-cap feature has never been exercised against real-shaped data, and 
 
 Ten test households, all prefixed `ZZTEST` so they stay identifiable in the admin list and purgeable in one action. Each one isolates a single situation.
 
-| # | Household | Named | Cap | Factor | What it proves |
-|---|---|---|---|---|---|
-| 1 | ZZTEST Phone Plus One | 1 | none | phone | Fallback cap of named+1; the common real shape |
-| 2 | ZZTEST Zip Plus One | 1 | none | ZIP | Same, on the ZIP prompt path |
-| 3 | ZZTEST Named Family | 4 | none | ZIP | Multi-member card list, no adds needed |
-| 4 | ZZTEST Cap Exact | 2 | 2 | phone | Cap equals named count: add button never appears |
-| 5 | ZZTEST Cap Two Open | 2 | 4 | ZIP | Two open slots, counter counts down correctly |
-| 6 | ZZTEST Unknown Kids | 2 | 5 | ZIP | Family with unnamed children; multiple "name to come" rows |
-| 7 | ZZTEST Solo No Cap | 1 | 1 | phone | Single guest who may bring no one |
-| 8 | ZZTEST With Email | 1 | 2 | ZIP + email | Confirmation email actually sends and logs |
-| 9 | ZZTEST No Email | 1 | 2 | phone | Blank email skips confirmation, admin notice still fires |
-| 10 | ZZTEST Decline | 3 | 4 | ZIP | Full-household decline path and its recap/email |
+
+| #   | Household             | Named | Cap  | Factor      | What it proves                                             |
+| --- | --------------------- | ----- | ---- | ----------- | ---------------------------------------------------------- |
+| 1   | ZZTEST Phone Plus One | 1     | none | phone       | Fallback cap of named+1; the common real shape             |
+| 2   | ZZTEST Zip Plus One   | 1     | none | ZIP         | Same, on the ZIP prompt path                               |
+| 3   | ZZTEST Named Family   | 4     | none | ZIP         | Multi-member card list, no adds needed                     |
+| 4   | ZZTEST Cap Exact      | 2     | 2    | phone       | Cap equals named count: add button never appears           |
+| 5   | ZZTEST Cap Two Open   | 2     | 4    | ZIP         | Two open slots, counter counts down correctly              |
+| 6   | ZZTEST Unknown Kids   | 2     | 5    | ZIP         | Family with unnamed children; multiple "name to come" rows |
+| 7   | ZZTEST Solo No Cap    | 1     | 1    | phone       | Single guest who may bring no one                          |
+| 8   | ZZTEST With Email     | 1     | 2    | ZIP + email | Confirmation email actually sends and logs                 |
+| 9   | ZZTEST No Email       | 1     | 2    | phone       | Blank email skips confirmation, admin notice still fires   |
+| 10  | ZZTEST Decline        | 3     | 4    | ZIP         | Full-household decline path and its recap/email            |
+
 
 ## Scenarios run against them
 
@@ -55,4 +57,6 @@ For each household, through the browser at 440 and 1280:
 
 ## Question for you
 
-Should the 84 single-name households keep the implicit `named + 1` allowance, or should I add an explicit cap of 1 (no plus-ones) as the default and let you raise it per invitation? That decision changes what "correct" means for tests 1 and 2.
+Should the 84 single-name households keep the implicit `named + 1` allowance, or should I add an explicit cap of 1 (no plus-ones) as the default and let you raise it per invitation? That decision changes what "correct" means for tests 1 and 2.  
+  
+Keep the implicit `named + 1` allowance
