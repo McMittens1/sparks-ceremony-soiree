@@ -978,6 +978,9 @@ const guestUpsertSchema = z
     postal_code: z.string().trim().max(20).optional().or(z.literal("")),
     country: z.string().trim().max(60).optional().or(z.literal("")),
     invite_notes: z.string().trim().max(1000).optional().or(z.literal("")),
+    // Total people this invitation covers, named or not. Null/blank leaves
+    // the household on the fallback (everyone named, plus one).
+    max_party_size: z.number().int().min(1).max(30).nullable().optional(),
   })
   // Mirrors the guests_has_verify_factor DB constraint: a household with
   // neither a phone nor a ZIP could never pass verification.
@@ -987,7 +990,16 @@ const guestUpsertSchema = z
       message: "Add either a phone number or a ZIP code so this household can verify.",
       path: ["phone"],
     },
+  )
+  // Mirrors the validate_guest_max_party_size DB trigger.
+  .refine(
+    (d) => d.max_party_size == null || d.max_party_size >= d.party_members.length,
+    {
+      message: "The party limit can't be smaller than the number of people listed.",
+      path: ["max_party_size"],
+    },
   );
+
 
 export const upsertGuest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
