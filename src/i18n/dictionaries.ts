@@ -144,6 +144,7 @@ export interface Dict {
     totalsPending: string;
     totalsAdults: string;
     totalsChildren: string;
+    totalsFallbackLimit: string;
     exportCsv: string;
     partyCol: string;
     guestsCol: string;
@@ -156,6 +157,9 @@ export interface Dict {
     approve: string;
     reject: string;
     noPhotos: string;
+    fallbackLimitBadge: string;
+    fallbackLimitFilter: string;
+    fallbackLimitSummary: string;
   };
   auth: {
     title: string;
