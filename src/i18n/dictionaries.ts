@@ -320,6 +320,7 @@ const en: Dict = {
     totalsPending: "Pending",
     totalsAdults: "Adults",
     totalsChildren: "Children",
+    totalsFallbackLimit: "Default limit",
     exportCsv: "Export CSV",
     partyCol: "Invitation",
     guestsCol: "Guests",
@@ -332,6 +333,10 @@ const en: Dict = {
     approve: "Approve",
     reject: "Reject",
     noPhotos: "No photos in this tab.",
+    fallbackLimitBadge: "Default limit",
+    fallbackLimitFilter: "Uses default limit",
+    fallbackLimitSummary:
+      "{n} household{s} still use the default \u201cnamed + 1\u201d limit. Set an explicit cap where you know the real total.",
   },
   auth: {
     title: "Admin sign-in",
