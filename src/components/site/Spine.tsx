@@ -1,4 +1,5 @@
-import { useActiveSection, SPINE_SECTIONS } from "@/hooks/use-active-section";
+import { useActiveSection } from "@/hooks/use-active-section";
+import { useSectionOrder } from "@/hooks/use-section-order";
 
 /**
  * Persistent 52px-wide decorative rail along the left edge of the home page.
@@ -6,6 +7,7 @@ import { useActiveSection, SPINE_SECTIONS } from "@/hooks/use-active-section";
  */
 export function Spine() {
   const active = useActiveSection();
+  const { ids, numeral } = useSectionOrder();
 
   return (
     <aside
@@ -25,11 +27,11 @@ export function Spine() {
         Geovanni &amp; Addison · 10.10.26
       </div>
       <div className="flex flex-col items-center gap-[9px]">
-        {SPINE_SECTIONS.map((s) => {
-          const isActive = active === s.id;
+        {ids.map((id) => {
+          const isActive = active === id;
           return (
             <span
-              key={s.id}
+              key={id}
               className="font-serif italic"
               style={{
                 fontSize: 12,
@@ -38,7 +40,7 @@ export function Spine() {
                 transition: "color 400ms ease, font-weight 400ms ease",
               }}
             >
-              {s.numeral}
+              {numeral(id)}
             </span>
           );
         })}

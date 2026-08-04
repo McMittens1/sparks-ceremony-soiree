@@ -12,6 +12,7 @@ import { TravelSection } from "@/components/site/sections/TravelSection";
 import { PhotosSection } from "@/components/site/sections/PhotosSection";
 import { RegistrySection } from "@/components/site/sections/RegistrySection";
 import { FaqSection } from "@/components/site/sections/FaqSection";
+import { useSectionOrder } from "@/hooks/use-section-order";
 
 export const Route = createFileRoute("/")({
   head: () => {
@@ -69,14 +70,14 @@ function Home() {
   return (
     <div>
       <HeroSection />
-      <CountdownSection />
-      <StorySection />
-      <DaySection />
-      <PartySection />
-      <TravelSection />
-      <PhotosSection />
-      <RegistrySection />
-      <FaqSection />
+      <CountdownSection numeral={numeral("countdown")} />
+      <StorySection numeral={numeral("story")} />
+      <DaySection numeral={numeral("day")} />
+      {showParty && <PartySection numeral={numeral("party")} />}
+      <TravelSection numeral={numeral("travel")} />
+      <PhotosSection numeral={numeral("photos")} />
+      <RegistrySection numeral={numeral("registry")} />
+      <FaqSection numeral={numeral("faq")} />
     </div>
   );
 }

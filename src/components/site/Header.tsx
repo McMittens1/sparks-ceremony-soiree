@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useLang, useT } from "@/i18n/context";
 import { useActiveSection } from "@/hooks/use-active-section";
+import { useSectionOrder } from "@/hooks/use-section-order";
 
 const NAV = [
   { id: "story", key: "story" as const },
@@ -19,6 +20,9 @@ export function Header() {
   const location = useLocation();
   const nav = useNavigate();
   const active = useActiveSection();
+  // Hides the Wedding Party link while the section is unpublished.
+  const { showParty } = useSectionOrder();
+  const navItems = NAV.filter((n) => n.id !== "party" || showParty);
   const onHome = location.pathname === "/";
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -73,7 +77,7 @@ export function Header() {
           className="hidden md:flex items-center gap-[18px] uppercase whitespace-nowrap"
           style={{ fontSize: 10, letterSpacing: "0.18em" }}
         >
-          {NAV.map((n) => {
+          {navItems.map((n) => {
             const isActive = onHome && active === n.id;
             return (
               <button
@@ -164,7 +168,7 @@ export function Header() {
           </button>
         </div>
         <nav aria-label="Primary" className="flex flex-col gap-5">
-          {NAV.map((n) => (
+          {navItems.map((n) => (
             <button
               key={n.id}
               onClick={() => goToSection(n.id)}
