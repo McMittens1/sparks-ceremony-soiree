@@ -161,6 +161,7 @@ function RsvpsPanel() {
   const [cityFilter, setCityFilter] = useState("");
   const [noFactorOnly, setNoFactorOnly] = useState(false);
   const [songOnly, setSongOnly] = useState(false);
+  const [fallbackOnly, setFallbackOnly] = useState(false);
   const [testFilter, setTestFilter] = useState<"any" | "only" | "hide">("any");
   const [sortKey, setSortKey] = useState<SortKey>("submitted");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -248,6 +249,7 @@ function RsvpsPanel() {
       if (partySize === "3plus" && size < 3) return false;
       if (noFactorOnly && r.verify_factor !== "none") return false;
       if (songOnly && !(r.rsvp?.song_request ?? "").trim()) return false;
+      if (fallbackOnly && r.max_party_size != null) return false;
       if (testFilter !== "any") {
         const isTest = isTestHousehold(r.primary_name);
         if (testFilter === "only" && !isTest) return false;
@@ -295,6 +297,7 @@ function RsvpsPanel() {
     partySize,
     noFactorOnly,
     songOnly,
+    fallbackOnly,
     testFilter,
     filter,
     sortKey,
@@ -311,13 +314,23 @@ function RsvpsPanel() {
   }, [filtered, selected]);
 
   const totals = useMemo(() => {
-    if (!rows) return { attending: 0, declined: 0, pending: 0, adults: 0, children: 0 };
+    if (!rows)
+      return {
+        attending: 0,
+        declined: 0,
+        pending: 0,
+        adults: 0,
+        children: 0,
+        fallbackLimit: 0,
+      };
     let attending = 0,
       declined = 0,
       pending = 0,
       adults = 0,
-      children = 0;
+      children = 0,
+      fallbackLimit = 0;
     for (const r of rows) {
+      if (r.max_party_size == null) fallbackLimit++;
       if (!r.rsvp) {
         pending++;
         continue;
@@ -333,7 +346,7 @@ function RsvpsPanel() {
         else adults++;
       }
     }
-    return { attending, declined, pending, adults, children };
+    return { attending, declined, pending, adults, children, fallbackLimit };
   }, [rows]);
 
   const buildRsvpUrl = useCallback((row: AdminGuestRow) => {
@@ -541,6 +554,7 @@ function RsvpsPanel() {
     cityFilter.trim() !== "",
     noFactorOnly,
     songOnly,
+    fallbackOnly,
     testFilter !== "any",
   ].filter(Boolean).length;
 
@@ -551,19 +565,21 @@ function RsvpsPanel() {
     setCityFilter("");
     setNoFactorOnly(false);
     setSongOnly(false);
+    setFallbackOnly(false);
     setTestFilter("any");
   }
 
   return (
     <div className="mt-8">
       {/* Totals */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
         {[
           [t.admin.totalsAttending, totals.attending],
           [t.admin.totalsDeclined, totals.declined],
           [t.admin.totalsPending, totals.pending],
           [t.admin.totalsAdults, totals.adults],
           [t.admin.totalsChildren, totals.children],
+          [t.admin.totalsFallbackLimit, totals.fallbackLimit],
         ].map(([label, n]) => (
           <div key={label as string} className="border border-border/40 p-4 text-center">
             <div className="text-2xl font-serif text-primary">{n}</div>
@@ -623,6 +639,14 @@ function RsvpsPanel() {
             onChange={(e) => setSongOnly(e.target.checked)}
           />
           Has song request
+        </label>
+        <label className="text-xs text-muted-foreground flex items-center gap-1">
+          <input
+            type="checkbox"
+            checked={fallbackOnly}
+            onChange={(e) => setFallbackOnly(e.target.checked)}
+          />
+          {t.admin.fallbackLimitFilter}
         </label>
         <select
           value={testFilter}
@@ -722,7 +746,15 @@ function RsvpsPanel() {
         </div>
       )}
 
-
+      {totals.fallbackLimit > 0 && (
+        <div className="mt-3 flex flex-wrap items-center gap-3 border border-accent/50 bg-accent/10 px-4 py-2 text-xs">
+          <span className="text-foreground">
+            {t.admin.fallbackLimitSummary
+              .replace("{n}", String(totals.fallbackLimit))
+              .replace("{s}", totals.fallbackLimit === 1 ? "" : "s")}
+          </span>
+        </div>
+      )}
 
       {selected.size > 0 && (
         <div className="mt-4 flex flex-wrap items-center gap-3 border border-primary/40 bg-primary/5 px-4 py-2 text-xs">
@@ -878,11 +910,17 @@ function RsvpsPanel() {
                         </span>
                       )}
                     </td>
-                    <td className="py-3 pr-4 text-xs" title="Invited · actually attending">
+                    <td className="py-3 pr-4 text-xs" title="Invited · limit · actually attending">
                       {r.party_members.length || 1}
+                      <span className="text-muted-foreground"> / {r.party_limit}</span>
                       {r.rsvp ? (
                         <span className="text-muted-foreground"> · {attending.length}✓</span>
                       ) : null}
+                      {r.max_party_size == null && (
+                        <span className="ml-2 inline-block border border-accent text-accent px-1.5 py-0.5 text-[9px] uppercase tracking-[0.15em]">
+                          {t.admin.fallbackLimitBadge}
+                        </span>
+                      )}
                     </td>
                     <td className="py-3 pr-4 text-xs">
                       {attending.length === 0

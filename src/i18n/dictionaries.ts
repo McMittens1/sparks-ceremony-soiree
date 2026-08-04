@@ -144,6 +144,7 @@ export interface Dict {
     totalsPending: string;
     totalsAdults: string;
     totalsChildren: string;
+    totalsFallbackLimit: string;
     exportCsv: string;
     partyCol: string;
     guestsCol: string;
@@ -156,6 +157,9 @@ export interface Dict {
     approve: string;
     reject: string;
     noPhotos: string;
+    fallbackLimitBadge: string;
+    fallbackLimitFilter: string;
+    fallbackLimitSummary: string;
   };
   auth: {
     title: string;
@@ -316,6 +320,7 @@ const en: Dict = {
     totalsPending: "Pending",
     totalsAdults: "Adults",
     totalsChildren: "Children",
+    totalsFallbackLimit: "Default limit",
     exportCsv: "Export CSV",
     partyCol: "Invitation",
     guestsCol: "Guests",
@@ -328,6 +333,10 @@ const en: Dict = {
     approve: "Approve",
     reject: "Reject",
     noPhotos: "No photos in this tab.",
+    fallbackLimitBadge: "Default limit",
+    fallbackLimitFilter: "Uses default limit",
+    fallbackLimitSummary:
+      "{n} household{s} still use the default \u201cnamed + 1\u201d limit. Set an explicit cap where you know the real total.",
   },
   auth: {
     title: "Admin sign-in",
@@ -487,6 +496,7 @@ const es: Dict = {
     totalsPending: "Pendientes",
     totalsAdults: "Adultos",
     totalsChildren: "Niños",
+    totalsFallbackLimit: "Límite predeterminado",
     exportCsv: "Exportar CSV",
     partyCol: "Grupo",
     guestsCol: "Invitados",
@@ -499,6 +509,10 @@ const es: Dict = {
     approve: "Aprobar",
     reject: "Rechazar",
     noPhotos: "No hay fotos en esta pestaña.",
+    fallbackLimitBadge: "Límite predeterminado",
+    fallbackLimitFilter: "Usa límite predeterminado",
+    fallbackLimitSummary:
+      "{n} grupo{s} aún usa el límite predeterminado \u201cnombrados + 1\u201d. Establece un límite explícito donde conozcas el total real.",
   },
   auth: {
     title: "Acceso admin",
