@@ -314,13 +314,23 @@ function RsvpsPanel() {
   }, [filtered, selected]);
 
   const totals = useMemo(() => {
-    if (!rows) return { attending: 0, declined: 0, pending: 0, adults: 0, children: 0 };
+    if (!rows)
+      return {
+        attending: 0,
+        declined: 0,
+        pending: 0,
+        adults: 0,
+        children: 0,
+        fallbackLimit: 0,
+      };
     let attending = 0,
       declined = 0,
       pending = 0,
       adults = 0,
-      children = 0;
+      children = 0,
+      fallbackLimit = 0;
     for (const r of rows) {
+      if (r.max_party_size == null) fallbackLimit++;
       if (!r.rsvp) {
         pending++;
         continue;
@@ -336,7 +346,7 @@ function RsvpsPanel() {
         else adults++;
       }
     }
-    return { attending, declined, pending, adults, children };
+    return { attending, declined, pending, adults, children, fallbackLimit };
   }, [rows]);
 
   const buildRsvpUrl = useCallback((row: AdminGuestRow) => {
