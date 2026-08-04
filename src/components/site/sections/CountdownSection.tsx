@@ -2,7 +2,7 @@ import { Countdown, COUNTDOWN_SECTION_VISIBLE } from "@/components/site/Countdow
 import { DiamondDivider } from "@/components/site/DiamondDivider";
 import { Eyebrow } from "@/components/site/typography";
 
-export function CountdownSection() {
+export function CountdownSection({ numeral = "I" }: { numeral?: string }) {
   return (
     <section
       id="countdown"
@@ -13,7 +13,7 @@ export function CountdownSection() {
       }}
     >
       <Eyebrow color="tan" size="lg" style={{ marginBottom: 40 }}>
-        I · Counting Down
+        {numeral} · Counting Down
       </Eyebrow>
       <Countdown />
       <div className="max-w-[600px] mx-auto" style={{ marginTop: 48 }}>

@@ -11,13 +11,13 @@ import { PHOTO_MAX_FILES, PHOTO_MAX_FILE_BYTES } from "@/lib/photo-config";
 const MAX_FILE_MB = PHOTO_MAX_FILE_BYTES / (1024 * 1024);
 const UPLOAD_HINT = `Up to ${PHOTO_MAX_FILES} images, JPG or PNG, ${MAX_FILE_MB} MB each. Nothing goes public until we approve it.`;
 
-export function PhotosSection() {
+export function PhotosSection({ numeral = "VI" }: { numeral?: string }) {
   const { enabled: uploadsOpen } = useFeatureFlag("guest_photo_uploads");
 
   return (
     <section id="photos" className="border-t border-hairline rs-section">
       <SectionHeader
-        eyebrow="VI · Photos"
+        eyebrow={`${numeral} · Photos`}
         title="Photos"
         subhead={
           uploadsOpen

@@ -2,11 +2,11 @@ import { DiamondDivider } from "@/components/site/DiamondDivider";
 import { SectionHeader } from "@/components/site/SectionHeader";
 import { WeddingParty } from "@/components/site/WeddingParty";
 
-export function PartySection() {
+export function PartySection({ numeral = "IV" }: { numeral?: string }) {
   return (
     <section id="party" className="border-t border-hairline rs-section">
       <SectionHeader
-        eyebrow="IV · Wedding Party"
+        eyebrow={`${numeral} · Wedding Party`}
         title="Wedding Party"
         subhead="The friends and family standing with us that night."
       />

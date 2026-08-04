@@ -35,7 +35,7 @@ const pillStyle: CSSProperties = {
   padding: "10px 16px",
 };
 
-export function DaySection() {
+export function DaySection({ numeral = "III" }: { numeral?: string }) {
   const track = useAnalytics();
   const [copied, setCopied] = useState(false);
   async function copyAddress() {
@@ -78,7 +78,7 @@ export function DaySection() {
       <div className="mx-auto" style={{ maxWidth: 1400 }}>
         <Reveal variant="blur">
           <Eyebrow color="gold" size="lg" style={{ marginBottom: 18 }}>
-            III · The Day
+            {numeral} · The Day
           </Eyebrow>
           <DisplayHeading color="ivory">The Day</DisplayHeading>
           <p
