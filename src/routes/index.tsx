@@ -42,6 +42,10 @@ export const Route = createFileRoute("/")({
 function Home() {
   const location = useLocation();
   const hasMountedRef = useRef(false);
+  // Wedding Party is published via the `show_wedding_party` flag (admin
+  // Features tab). While it's off the section is omitted entirely and the
+  // remaining numerals close the gap.
+  const { showParty, numeral } = useSectionOrder();
 
   useEffect(() => {
     // On first mount, always land at the top of the hero. Ignore any hash the
