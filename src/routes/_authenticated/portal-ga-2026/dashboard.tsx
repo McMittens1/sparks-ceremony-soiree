@@ -910,11 +910,17 @@ function RsvpsPanel() {
                         </span>
                       )}
                     </td>
-                    <td className="py-3 pr-4 text-xs" title="Invited · actually attending">
+                    <td className="py-3 pr-4 text-xs" title="Invited · limit · actually attending">
                       {r.party_members.length || 1}
+                      <span className="text-muted-foreground"> / {r.party_limit}</span>
                       {r.rsvp ? (
                         <span className="text-muted-foreground"> · {attending.length}✓</span>
                       ) : null}
+                      {r.max_party_size == null && (
+                        <span className="ml-2 inline-block border border-accent text-accent px-1.5 py-0.5 text-[9px] uppercase tracking-[0.15em]">
+                          {t.admin.fallbackLimitBadge}
+                        </span>
+                      )}
                     </td>
                     <td className="py-3 pr-4 text-xs">
                       {attending.length === 0
