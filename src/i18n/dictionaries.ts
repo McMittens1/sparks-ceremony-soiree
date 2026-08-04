@@ -496,6 +496,7 @@ const es: Dict = {
     totalsPending: "Pendientes",
     totalsAdults: "Adultos",
     totalsChildren: "Niños",
+    totalsFallbackLimit: "Límite predeterminado",
     exportCsv: "Exportar CSV",
     partyCol: "Grupo",
     guestsCol: "Invitados",
@@ -508,6 +509,10 @@ const es: Dict = {
     approve: "Aprobar",
     reject: "Rechazar",
     noPhotos: "No hay fotos en esta pestaña.",
+    fallbackLimitBadge: "Límite predeterminado",
+    fallbackLimitFilter: "Usa límite predeterminado",
+    fallbackLimitSummary:
+      "{n} grupo{s} aún usa el límite predeterminado \u201cnombrados + 1\u201d. Establece un límite explícito donde conozcas el total real.",
   },
   auth: {
     title: "Acceso admin",
