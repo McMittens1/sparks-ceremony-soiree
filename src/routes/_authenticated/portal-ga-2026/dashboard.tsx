@@ -640,6 +640,14 @@ function RsvpsPanel() {
           />
           Has song request
         </label>
+        <label className="text-xs text-muted-foreground flex items-center gap-1">
+          <input
+            type="checkbox"
+            checked={fallbackOnly}
+            onChange={(e) => setFallbackOnly(e.target.checked)}
+          />
+          {t.admin.fallbackLimitFilter}
+        </label>
         <select
           value={testFilter}
           onChange={(e) => setTestFilter(e.target.value as typeof testFilter)}
