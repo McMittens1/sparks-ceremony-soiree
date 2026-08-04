@@ -161,6 +161,7 @@ function RsvpsPanel() {
   const [cityFilter, setCityFilter] = useState("");
   const [noFactorOnly, setNoFactorOnly] = useState(false);
   const [songOnly, setSongOnly] = useState(false);
+  const [fallbackOnly, setFallbackOnly] = useState(false);
   const [testFilter, setTestFilter] = useState<"any" | "only" | "hide">("any");
   const [sortKey, setSortKey] = useState<SortKey>("submitted");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
