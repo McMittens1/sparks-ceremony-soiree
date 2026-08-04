@@ -554,6 +554,7 @@ function RsvpsPanel() {
     cityFilter.trim() !== "",
     noFactorOnly,
     songOnly,
+    fallbackOnly,
     testFilter !== "any",
   ].filter(Boolean).length;
 
@@ -564,6 +565,7 @@ function RsvpsPanel() {
     setCityFilter("");
     setNoFactorOnly(false);
     setSongOnly(false);
+    setFallbackOnly(false);
     setTestFilter("any");
   }
 
