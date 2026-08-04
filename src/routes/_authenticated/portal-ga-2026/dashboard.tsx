@@ -572,13 +572,14 @@ function RsvpsPanel() {
   return (
     <div className="mt-8">
       {/* Totals */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
         {[
           [t.admin.totalsAttending, totals.attending],
           [t.admin.totalsDeclined, totals.declined],
           [t.admin.totalsPending, totals.pending],
           [t.admin.totalsAdults, totals.adults],
           [t.admin.totalsChildren, totals.children],
+          [t.admin.totalsFallbackLimit, totals.fallbackLimit],
         ].map(([label, n]) => (
           <div key={label as string} className="border border-border/40 p-4 text-center">
             <div className="text-2xl font-serif text-primary">{n}</div>
