@@ -3,12 +3,12 @@ import { SectionHeader } from "@/components/site/SectionHeader";
 import { REGISTRY } from "@/lib/wedding-data";
 import { useAnalytics } from "@/lib/analytics";
 
-export function RegistrySection() {
+export function RegistrySection({ numeral = "VII" }: { numeral?: string }) {
   const track = useAnalytics();
   return (
     <section id="registry" className="border-t border-hairline rs-section">
       <SectionHeader
-        eyebrow="VII · Registry"
+        eyebrow={`${numeral} · Registry`}
         title="Registry"
         subhead="Your presence is the gift. If you'd like to do more, these are the places we've registered."
       />

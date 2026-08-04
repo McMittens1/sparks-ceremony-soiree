@@ -40,14 +40,3 @@ export function useActiveSection(ids: string[] = DEFAULT_IDS): string {
 
   return active;
 }
-
-export const SPINE_SECTIONS: { id: string; numeral: string }[] = [
-  { id: "countdown", numeral: "I" },
-  { id: "story", numeral: "II" },
-  { id: "day", numeral: "III" },
-  { id: "party", numeral: "IV" },
-  { id: "travel", numeral: "V" },
-  { id: "photos", numeral: "VI" },
-  { id: "registry", numeral: "VII" },
-  { id: "faq", numeral: "VIII" },
-];

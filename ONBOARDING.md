@@ -1,6 +1,6 @@
 # Moreno Wedding 2026 — Onboarding Package
 
-**Last verified against the live codebase + database: 2026-08-04.** Update this line every time you re-verify. If it's stale by more than a session or two, re-verify before trusting any specific claim below — this doc is only useful if it mirrors reality.
+**Last verified against the live codebase + database: 2026-08-04 (launch-readiness pass).** Update this line every time you re-verify. If it's stale by more than a session or two, re-verify before trusting any specific claim below — this doc is only useful if it mirrors reality.
 
 A single source of truth for continuing this project with any AI assistant (Claude Code, Cursor, etc.). Read this file in full before making changes. A companion document, `HANDOFF.md`, captures narrative context, judgment calls, and lessons learned from the most recent development session — read that too if it exists.
 
@@ -54,12 +54,13 @@ A single source of truth for continuing this project with any AI assistant (Clau
 
 ## 2. Current state
 
-**As of 2026-07-24, verified live via direct DB query, production feature-flag values:**
-- `rsvp_open` → **true** — the flag is on, so the form accepts submissions in principle.
+**As of 2026-08-04, verified live via direct DB query, production feature-flag values:**
+- `rsvp_open` → **false** — submissions are blocked and the RSVP page shows its "opens soon" state. **Flip this on at launch.** Lookup and verification still work while it's off.
 - `guest_photo_uploads` → **false** — photo upload is built and fully functional, but not open yet.
 - `show_ushers` → **false** — the Ushers section of the Wedding Party page is built but hidden.
+- `show_wedding_party` → **false** — added 2026-08-04. Hides the whole Wedding Party section, its header/mobile nav link, its spine numeral, and the MCP `get_wedding_party` tool, because the party cards and covers are still on placeholder copy. Section numerals renumber automatically (`src/hooks/use-section-order.ts`), so the homepage reads I–VII with no gap at IV. No data or component was removed — flipping the flag on restores the section as built.
 
-All three are toggled from the Features tab in `/portal-ga-2026/dashboard` — no code change needed to flip them. **Check the live value before assuming a feature is "on" or "off"; this file only reflects a snapshot.**
+All four are toggled from the Features tab in `/portal-ga-2026/dashboard` — no code change needed to flip them. **Check the live value before assuming a feature is "on" or "off"; this file only reflects a snapshot.**
 **Guest data (live, 2026-08-04, re-verified this session by direct query):** `guests` holds **86 real households**, **0** `ZZTEST` test rows, and **0** households that can't verify (every row has a phone or a postal code). `max_party_size` is set on **0** of them, so every invitation currently uses the fallback limit (everyone named, plus one open slot). `rsvps` has **0** responses. `guest_photos` is empty and the `guest-photos` storage bucket holds 0 objects. `email_send_log` has 69 rows (audit trail); `email_send_state` has 1 row; `suppressed_emails` has 2 rows; `analytics_events` has 5 rows. A 10-household `ZZTEST` matrix (`ZZT001`–`ZZT010`) was seeded, driven end-to-end through the RSVP flow at 1280px and 440px, and purged the same session — see `HANDOFF.md` §0 for what it covered. Remaining pre-launch work on the list itself: filling in the individual names inside households where they're known, setting `max_party_size` for households whose real headcount differs from the default. `ADMIN_NOTIFICATION_EMAILS` was repointed to `geoddison@gmail.com` on 2026-08-04 (previously `noreply@notify.morenowedding2026.com` — verified from `email_send_log`, where every prior `admin-notification` row was addressed to the sending mailbox). The guest-facing From address is unchanged: `Geovanni & Addison <noreply@notify.morenowedding2026.com>` (`src/lib/email/sender.ts`). The new value takes effect on the next deploy.
 
 **Environments and test data (verified 2026-07-30).** There is exactly **one** database. `.env`, `supabase/config.toml`, and the pg_cron email dispatch URL all point at the same Cloud project, and the Lovable preview and the published domain share it — schema, rows, storage, auth users, secrets, and feature flags alike. Consequences worth internalizing:
@@ -89,6 +90,7 @@ All three are toggled from the Features tab in `/portal-ga-2026/dashboard` — n
 - **Personalization content is almost entirely outstanding.** Only the Best Man has a real field set (`cardRarity: "Legendary"`). Every other party member — all 6 bridesmaids, the Maid of Honor, all 8 groomsmen — is rendering on component-level placeholder fallback text for `cardAttributes`/`cardAbility`/`coverHeadline`/`coverSubline`. This is real, visible-to-guests unfinished content, not a code gap.
 - Photo spec for the magazine covers (once the user provides photos): 232×388px cover ratio, background-removed transparent PNG, waist-up to 3/4-length framing, soft even lighting. Full spec detail was given to the user in-conversation; not yet re-stated in this file since it's a one-time creative brief, not an evolving architectural fact.
 - Down the aisle first: Flower Girl (Ivy Smith), Ring Bearer (Alan Meza).
+- **The entire section is currently unpublished** behind the `show_wedding_party` flag (see §2), precisely because of the placeholder copy above. `src/hooks/use-section-order.ts` is the single source of truth for which homepage sections render, their order, and their roman numerals; `index.tsx`, `Header.tsx`, and `Spine.tsx` all read it, and each section takes its numeral as a prop.
 - Ushers (9) exist in `wedding-data.ts`; rendering is gated by the `show_ushers` feature flag in `WeddingParty.tsx` (`const { enabled: showUshers } = useFeatureFlag("show_ushers")`), currently **off** (see §2). This used to be a hardcoded `{false && ...}` conditional — replaced by the flag on 2026-07-16 (`supabase/migrations/20260716020000_show_ushers_flag.sql`) so the couple can turn it on themselves without a code change.
 
 ### RSVP flow
@@ -410,7 +412,7 @@ Before writing or changing code:
 2. Read `AGENTS.md` for Lovable-specific git guardrails.
 3. Read `src/lib/site.ts` and `src/lib/wedding-data.ts` to understand the data model.
 4. Read `src/styles.css` to internalize the color/type tokens.
-5. Check the **live** feature-flag values before assuming `rsvp_open`/`guest_photo_uploads`/`show_ushers` are on or off — query the `feature_flags` table or check the admin Features tab; this file's §2 is a snapshot, not a live source.
+5. Check the **live** feature-flag values before assuming `rsvp_open`/`guest_photo_uploads`/`show_ushers`/`show_wedding_party` are on or off — query the `feature_flags` table or check the admin Features tab; this file's §2 is a snapshot, not a live source.
 6. Try `bun install` / `bun run build` to verify the project compiles — if it fails on missing packages, see §8's sandbox note before concluding the codebase is broken.
 7. If you touch RSVP, admin, or email logic, test the affected flow in the browser or via the existing server functions.
 
@@ -430,7 +432,7 @@ BEFORE you make any code changes, do the following:
 2. Read AGENTS.md for git guardrails.
 3. Read src/lib/site.ts and src/lib/wedding-data.ts.
 4. Read src/styles.css to understand the color/type tokens.
-5. Check the LIVE feature_flags table (or admin Features tab) for rsvp_open / guest_photo_uploads / show_ushers — don't assume from this prompt.
+5. Check the LIVE feature_flags table (or admin Features tab) for rsvp_open / guest_photo_uploads / show_ushers / show_wedding_party — don't assume from this prompt.
 6. Read §3 of ONBOARDING.md (Remaining work / roadmap) and pick up the next uncompleted sprint rather than inventing new work.
 
 PROJECT ESSENTIALS:
@@ -441,7 +443,7 @@ PROJECT ESSENTIALS:
 - Admin sign-in is at /portal-ga-2026. There is intentionally only ONE admin account. The route guard checks the admin role itself, not just sign-in.
 - Admin dashboard is at /portal-ga-2026/dashboard (RSVPs / Photos / Features / Emails tabs).
 - RSVP is at /rsvp; edit links use signed HMAC tokens at /rsvp/edit/$token (which intentionally bypasses the rsvp_open flag).
-- rsvp_open, guest_photo_uploads, and show_ushers are DB-backed feature flags (feature_flags table, src/lib/feature-flags.functions.ts, src/hooks/use-feature-flags.ts) with a draft/confirm/save admin UI — not hardcoded booleans. Every flag-gated server function re-checks its flag server-side too.
+- rsvp_open, guest_photo_uploads, show_ushers, and show_wedding_party are DB-backed feature flags (feature_flags table, src/lib/feature-flags.functions.ts, src/hooks/use-feature-flags.ts) with a draft/confirm/save admin UI — not hardcoded booleans. Every flag-gated server function re-checks its flag server-side too.
 - SEO metadata goes through buildMeta() in src/lib/seo.ts, sourcing the absolute URL from SITE.siteUrl (src/lib/site.ts) — never hardcode a domain.
 - All app-internal server logic uses createServerFn from @tanstack/react-start.
 - Public HTTP endpoints live under src/routes/api/public/.

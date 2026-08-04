@@ -12,6 +12,7 @@ import { TravelSection } from "@/components/site/sections/TravelSection";
 import { PhotosSection } from "@/components/site/sections/PhotosSection";
 import { RegistrySection } from "@/components/site/sections/RegistrySection";
 import { FaqSection } from "@/components/site/sections/FaqSection";
+import { useSectionOrder } from "@/hooks/use-section-order";
 
 export const Route = createFileRoute("/")({
   head: () => {
@@ -42,6 +43,10 @@ export const Route = createFileRoute("/")({
 function Home() {
   const location = useLocation();
   const hasMountedRef = useRef(false);
+  // Wedding Party is published via the `show_wedding_party` flag (admin
+  // Features tab). While it's off the section is omitted entirely and the
+  // remaining numerals close the gap.
+  const { showParty, numeral } = useSectionOrder();
 
   useEffect(() => {
     // On first mount, always land at the top of the hero. Ignore any hash the
@@ -65,14 +70,14 @@ function Home() {
   return (
     <div>
       <HeroSection />
-      <CountdownSection />
-      <StorySection />
-      <DaySection />
-      <PartySection />
-      <TravelSection />
-      <PhotosSection />
-      <RegistrySection />
-      <FaqSection />
+      <CountdownSection numeral={numeral("countdown")} />
+      <StorySection numeral={numeral("story")} />
+      <DaySection numeral={numeral("day")} />
+      {showParty && <PartySection numeral={numeral("party")} />}
+      <TravelSection numeral={numeral("travel")} />
+      <PhotosSection numeral={numeral("photos")} />
+      <RegistrySection numeral={numeral("registry")} />
+      <FaqSection numeral={numeral("faq")} />
     </div>
   );
 }

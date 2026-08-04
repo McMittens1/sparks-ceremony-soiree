@@ -5,12 +5,12 @@ import { BodyProse, Eyebrow } from "@/components/site/typography";
 import { FAQ_LOGISTICS, FAQ_GUESTS } from "@/lib/wedding-data";
 import { SITE } from "@/lib/site";
 
-export function FaqSection() {
+export function FaqSection({ numeral = "VIII" }: { numeral?: string }) {
   return (
     <section id="faq" className="border-t border-hairline">
       <div className="rs-section">
         <SectionHeader
-          eyebrow="VIII · FAQ"
+          eyebrow={`${numeral} · FAQ`}
           title="FAQ"
           subhead="The questions we've been getting most."
         />

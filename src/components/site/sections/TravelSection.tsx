@@ -12,7 +12,7 @@ interface WeatherData {
   isForecast: boolean;
 }
 
-export function TravelSection() {
+export function TravelSection({ numeral = "V" }: { numeral?: string }) {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   useEffect(() => {
     let cancelled = false;
@@ -31,7 +31,7 @@ export function TravelSection() {
   return (
     <section id="travel" className="border-t border-hairline rs-section">
       <SectionHeader
-        eyebrow="V · Travel"
+        eyebrow={`${numeral} · Travel`}
         title="Travel"
         subhead="Sparks' Barn is in Louisville, Nebraska, about 25 minutes south of Omaha and 40 minutes east of Lincoln. Here's what to know if you're coming from out of town."
       />
