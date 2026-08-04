@@ -297,6 +297,7 @@ function RsvpsPanel() {
     partySize,
     noFactorOnly,
     songOnly,
+    fallbackOnly,
     testFilter,
     filter,
     sortKey,
