@@ -249,6 +249,7 @@ function RsvpsPanel() {
       if (partySize === "3plus" && size < 3) return false;
       if (noFactorOnly && r.verify_factor !== "none") return false;
       if (songOnly && !(r.rsvp?.song_request ?? "").trim()) return false;
+      if (fallbackOnly && r.max_party_size != null) return false;
       if (testFilter !== "any") {
         const isTest = isTestHousehold(r.primary_name);
         if (testFilter === "only" && !isTest) return false;
