@@ -833,6 +833,14 @@ function RsvpPage() {
                           partyLimit,
                         )}
                       </p>
+                      {slotsLeft > 0 && (
+                        <p
+                          className="font-sans"
+                          style={{ fontSize: 13, color: SOFT, margin: "-12px 0 20px", lineHeight: 1.6 }}
+                        >
+                          {t.rsvp.partyCounterHint}
+                        </p>
+                      )}
                       <div className="space-y-5">
                         {attendees.map((a, i) => (
                           <div

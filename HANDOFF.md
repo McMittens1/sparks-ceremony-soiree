@@ -1,6 +1,6 @@
 # Handoff — Moreno Wedding 2026 Website
 
-**Last verified against the live codebase + database: 2026-08-06 (accessibility pass: mobile-drawer focus management, 44px tap targets).** Bump this line whenever you re-verify. Read `ONBOARDING.md` first — it's the current-state reference; this file is the narrative behind decisions.
+**Last verified against the live codebase + database: 2026-08-06 (instructional placeholders removed from `party_members`).** Bump this line whenever you re-verify. Read `ONBOARDING.md` first — it's the current-state reference; this file is the narrative behind decisions.
 
 Originally written at the end of a development session that took this project from "RSVP disabled, no feature flags, generic wedding-party avatars" to "RSVP + photo uploads live behind a real feature-flag system, a from-scratch collectible-card wedding party section, and a full pre-launch QA pass." This document is for whichever AI picks the project up next. If `ONBOARDING.md` and this file disagree on current state, trust `ONBOARDING.md`; use this one for reasoning. If a paragraph here starts to feel stale, fold what's still true into `ONBOARDING.md` and remove or revise it here rather than let two sources of truth drift.
 
@@ -8,7 +8,13 @@ Originally written at the end of a development session that took this project fr
 
 ---
 
-## 0. Latest session — guest-added party members (2026-08-04)
+## 0. Latest session — instructional placeholders removed (2026-08-06)
+
+Instructions had been typed into `guests.party_members` ("Enter name if bringing a plus one", "Enter all party names") as a way of telling households they could add people. The system has no notion of a non-person member, so those rows counted as invited guests: they raised the fallback party limit, inflated the named headcount and exports, and — because invited rows can't be deleted by a household — would have appeared in the RSVP form as an undeletable "person" the guest had to rename or mark not attending.
+
+Fix: strip the text, encode the intent structurally. 38 entries across 37 households were removed and each household got an explicit `max_party_size` (plus-one shapes: named + placeholders removed; "& Family" shapes: 6, adjustable in the dashboard). Zero RSVPs existed, so nothing downstream needed reconciling. Guardrails were added at both write paths so the pattern can't come back — the admin editor rejects instructional names, the importer skips them with a per-row warning. The guidance now lives where guests actually read it: a hint line under the party counter, in English and Spanish, shown only when the invitation still has open slots.
+
+## 0b. Previous session — guest-added party members (2026-08-04)
 
 The couple has households on the list whose full rosters aren't known yet: plus-ones without a name, families whose children weren't itemized, someone who simply wasn't listed. The ask was to let households fill those in during RSVP without opening the door to unlimited uninvited guests.
 
