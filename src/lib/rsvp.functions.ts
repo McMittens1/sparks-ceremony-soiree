@@ -146,8 +146,25 @@ function isValidPhone(v: string): boolean {
   return /^\d{10}$/.test(normalizePhone(v));
 }
 
+// Instructions ("Enter name if bringing a plus one") were once typed into the
+// member list to tell households they could add someone. They behave as real
+// invited people everywhere — inflating the party limit and the headcount, and
+// unremovable in the guest form — so they're rejected at every write path. The
+// party limit plus the form's own copy carries that message instead.
+export function isInstructionalName(name: string): boolean {
+  return /^enter\b|plus[-\s]?one|all party names|tbd|unknown/i.test(name.trim());
+}
+
 const partyMemberSchema = z.object({
-  name: z.string().trim().min(1).max(120),
+  name: z
+    .string()
+    .trim()
+    .min(1)
+    .max(120)
+    .refine(
+      (n) => !isInstructionalName(n),
+      "Use real names only. To let this household add someone, raise the party limit instead.",
+    ),
   is_child: z.boolean(),
 });
 
