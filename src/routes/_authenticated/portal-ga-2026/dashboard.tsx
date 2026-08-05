@@ -1971,12 +1971,19 @@ function CsvImporter({
               Columns (header row optional):{" "}
               <span className="font-mono">
                 household_name, phone, members, email, address_line1, address_line2, city, state,
-                postal_code, country, invite_notes, slug
+                postal_code, country, invite_notes, max_party_size, slug
               </span>
               . Separate party members with <span className="font-mono">;</span> and append{" "}
               <span className="font-mono">(child)</span> for kids. A{" "}
               <span className="font-mono">slug</span> column requires an explicit header row and
-              matches an existing household for an update — omit it to always insert new.
+              matches an existing household for an update — omit it to always insert new.{" "}
+              <span className="font-mono">max_party_size</span> is the total people the household
+              may bring; leave it blank to fall back to "everyone named, plus one open slot."
+            </p>
+            <p className="mt-2 text-xs text-foreground bg-accent/10 p-2 border border-accent/30">
+              <strong>Before importing, export the current Master CSV.</strong> Once real RSVPs
+              exist, a bad import is the fastest way to lose responses or break edit links. This
+              importer only updates household fields; it never touches existing RSVPs.
             </p>
             <p className="mt-2 text-xs text-muted-foreground">
               <span className="text-foreground">
