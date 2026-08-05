@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLang, useT } from "@/i18n/context";
 import { useActiveSection } from "@/hooks/use-active-section";
 import { useSectionOrder } from "@/hooks/use-section-order";
@@ -14,6 +14,9 @@ const NAV = [
   { id: "faq", key: "faq" as const },
 ];
 
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 export function Header() {
   const t = useT();
   const { lang, setLang } = useLang();
@@ -25,12 +28,58 @@ export function Header() {
   const navItems = NAV.filter((n) => n.id !== "party" || showParty);
   const onHome = location.pathname === "/";
   const [menuOpen, setMenuOpen] = useState(false);
+  const panelRef = useRef<HTMLElement | null>(null);
+  const closeBtnRef = useRef<HTMLButtonElement | null>(null);
+  const hamburgerRef = useRef<HTMLButtonElement | null>(null);
+  // Only restore focus to the hamburger for a close that happened while the
+  // drawer was actually open — not on first render.
+  const wasOpenRef = useRef(false);
 
   // Close on route change / on escape
   useEffect(() => { setMenuOpen(false); }, [location.pathname]);
   useEffect(() => {
-    if (!menuOpen) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setMenuOpen(false); };
+    if (!menuOpen) {
+      if (wasOpenRef.current) {
+        wasOpenRef.current = false;
+        hamburgerRef.current?.focus();
+      }
+      return;
+    }
+    wasOpenRef.current = true;
+
+    // Move focus into the drawer, then keep Tab cycling inside it so the page
+    // behind the backdrop is never reachable by keyboard.
+    closeBtnRef.current?.focus();
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMenuOpen(false);
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const panel = panelRef.current;
+      if (!panel) return;
+      const items = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+        (el) => el.offsetParent !== null || el === document.activeElement,
+      );
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      const current = document.activeElement as HTMLElement | null;
+      if (!current || !panel.contains(current)) {
+        e.preventDefault();
+        first.focus();
+        return;
+      }
+      if (e.shiftKey && current === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && current === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
     window.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
     return () => {
@@ -38,6 +87,7 @@ export function Header() {
       document.body.style.overflow = "";
     };
   }, [menuOpen]);
+
 
   function goToSection(id: string) {
     setMenuOpen(false);
