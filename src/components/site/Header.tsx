@@ -200,7 +200,13 @@ export function Header() {
       />
       <aside
         id="mobile-menu"
+        ref={panelRef}
         aria-label="Site navigation"
+        // While closed the panel is only translated off-screen, so without
+        // inert/aria-hidden its links stay in the tab order and in the
+        // accessibility tree on mobile.
+        inert={!menuOpen}
+        aria-hidden={!menuOpen}
         className={`mobile-menu-panel md:hidden ${menuOpen ? "is-open" : ""}`}
       >
         <div className="flex items-center justify-between mb-8">
@@ -211,9 +217,11 @@ export function Header() {
           </div>
           <button
             type="button"
+            ref={closeBtnRef}
             onClick={() => setMenuOpen(false)}
             aria-label="Close menu"
-            className="w-10 h-10 flex items-center justify-center text-ink"
+            className="w-11 h-11 flex items-center justify-center text-ink"
+
           >
             <span aria-hidden style={{ fontSize: 24, lineHeight: 1 }}>×</span>
           </button>
