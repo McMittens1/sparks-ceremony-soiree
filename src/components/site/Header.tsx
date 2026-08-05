@@ -176,11 +176,12 @@ export function Header() {
           </Link>
           <button
             type="button"
+            ref={hamburgerRef}
             onClick={() => setMenuOpen((v) => !v)}
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             aria-expanded={menuOpen}
             aria-controls="mobile-menu"
-            className="w-10 h-10 flex flex-col items-center justify-center gap-[5px]"
+            className="w-11 h-11 flex flex-col items-center justify-center gap-[5px]"
           >
             <span aria-hidden className="bg-ink" style={{ width: 22, height: 1, transition: "transform 220ms ease, opacity 220ms ease", transform: menuOpen ? "translateY(6px) rotate(45deg)" : "none" }} />
             <span aria-hidden className="bg-ink" style={{ width: 22, height: 1, transition: "opacity 220ms ease", opacity: menuOpen ? 0 : 1 }} />
