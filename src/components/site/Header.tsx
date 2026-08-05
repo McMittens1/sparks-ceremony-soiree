@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLang, useT } from "@/i18n/context";
 import { useActiveSection } from "@/hooks/use-active-section";
 import { useSectionOrder } from "@/hooks/use-section-order";
@@ -14,6 +14,9 @@ const NAV = [
   { id: "faq", key: "faq" as const },
 ];
 
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 export function Header() {
   const t = useT();
   const { lang, setLang } = useLang();
@@ -25,12 +28,58 @@ export function Header() {
   const navItems = NAV.filter((n) => n.id !== "party" || showParty);
   const onHome = location.pathname === "/";
   const [menuOpen, setMenuOpen] = useState(false);
+  const panelRef = useRef<HTMLElement | null>(null);
+  const closeBtnRef = useRef<HTMLButtonElement | null>(null);
+  const hamburgerRef = useRef<HTMLButtonElement | null>(null);
+  // Only restore focus to the hamburger for a close that happened while the
+  // drawer was actually open — not on first render.
+  const wasOpenRef = useRef(false);
 
   // Close on route change / on escape
   useEffect(() => { setMenuOpen(false); }, [location.pathname]);
   useEffect(() => {
-    if (!menuOpen) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setMenuOpen(false); };
+    if (!menuOpen) {
+      if (wasOpenRef.current) {
+        wasOpenRef.current = false;
+        hamburgerRef.current?.focus();
+      }
+      return;
+    }
+    wasOpenRef.current = true;
+
+    // Move focus into the drawer, then keep Tab cycling inside it so the page
+    // behind the backdrop is never reachable by keyboard.
+    closeBtnRef.current?.focus();
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMenuOpen(false);
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const panel = panelRef.current;
+      if (!panel) return;
+      const items = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+        (el) => el.offsetParent !== null || el === document.activeElement,
+      );
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      const current = document.activeElement as HTMLElement | null;
+      if (!current || !panel.contains(current)) {
+        e.preventDefault();
+        first.focus();
+        return;
+      }
+      if (e.shiftKey && current === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && current === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
     window.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
     return () => {
@@ -38,6 +87,7 @@ export function Header() {
       document.body.style.overflow = "";
     };
   }, [menuOpen]);
+
 
   function goToSection(id: string) {
     setMenuOpen(false);
@@ -126,11 +176,12 @@ export function Header() {
           </Link>
           <button
             type="button"
+            ref={hamburgerRef}
             onClick={() => setMenuOpen((v) => !v)}
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             aria-expanded={menuOpen}
             aria-controls="mobile-menu"
-            className="w-10 h-10 flex flex-col items-center justify-center gap-[5px]"
+            className="w-11 h-11 flex flex-col items-center justify-center gap-[5px]"
           >
             <span aria-hidden className="bg-ink" style={{ width: 22, height: 1, transition: "transform 220ms ease, opacity 220ms ease", transform: menuOpen ? "translateY(6px) rotate(45deg)" : "none" }} />
             <span aria-hidden className="bg-ink" style={{ width: 22, height: 1, transition: "opacity 220ms ease", opacity: menuOpen ? 0 : 1 }} />
@@ -149,7 +200,13 @@ export function Header() {
       />
       <aside
         id="mobile-menu"
+        ref={panelRef}
         aria-label="Site navigation"
+        // While closed the panel is only translated off-screen, so without
+        // inert/aria-hidden its links stay in the tab order and in the
+        // accessibility tree on mobile.
+        inert={!menuOpen}
+        aria-hidden={!menuOpen}
         className={`mobile-menu-panel md:hidden ${menuOpen ? "is-open" : ""}`}
       >
         <div className="flex items-center justify-between mb-8">
@@ -160,9 +217,11 @@ export function Header() {
           </div>
           <button
             type="button"
+            ref={closeBtnRef}
             onClick={() => setMenuOpen(false)}
             aria-label="Close menu"
-            className="w-10 h-10 flex items-center justify-center text-ink"
+            className="w-11 h-11 flex items-center justify-center text-ink"
+
           >
             <span aria-hidden style={{ fontSize: 24, lineHeight: 1 }}>×</span>
           </button>

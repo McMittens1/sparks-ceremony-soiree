@@ -1,6 +1,6 @@
 # Moreno Wedding 2026 — Onboarding Package
 
-**Last verified against the live codebase + database: 2026-08-05 (full live RSVP smoke test; is_child hydration fix).** Update this line every time you re-verify. If it's stale by more than a session or two, re-verify before trusting any specific claim below — this doc is only useful if it mirrors reality.
+**Last verified against the live codebase + database: 2026-08-06 (accessibility pass: mobile-drawer focus management, 44px tap targets).** Update this line every time you re-verify. If it's stale by more than a session or two, re-verify before trusting any specific claim below — this doc is only useful if it mirrors reality.
 
 A single source of truth for continuing this project with any AI assistant (Claude Code, Cursor, etc.). Read this file in full before making changes. A companion document, `HANDOFF.md`, captures narrative context, judgment calls, and lessons learned from the most recent development session — read that too if it exists.
 
@@ -144,6 +144,8 @@ All four are toggled from the Features tab in `/portal-ga-2026/dashboard` — no
 - Contrast-failing tan/lavender text and borders on real (non-decorative) content bumped to the palette's own `-deep` tokens across ~8 files. Purely decorative flourish text (eyebrow kickers, punctuation separators) was deliberately left in the lighter tone — that distinction is intentional, not inconsistent.
 - Real alt text added to wedding-party card/cover photos and the admin photo lightbox.
 - A few heading-styled `<p>` tags promoted to real `<h3>` for screen-reader heading navigation.
+- **Mobile drawer (2026-08-06, `src/components/site/Header.tsx`):** the closed panel carries `inert` + `aria-hidden`, so its links are out of the tab order when hidden. When open, focus moves to the close button, Tab/Shift+Tab are trapped inside `#mobile-menu`, Escape closes, and focus returns to the hamburger. Verified with Playwright at 440px. Don't remove `inert` — CSS translation alone leaves the links keyboard-reachable.
+- **Tap targets (2026-08-06):** RSVP pill toggles, Remove, and "Add guest" controls on both `/rsvp` and `/rsvp/edit/$token` carry `minHeight: 44` so they clear the 44px touch minimum without changing the visual pill padding.
 - **Not done:** live cross-device visual QA (440px/1280px) — the sandbox this was built in couldn't boot a browser; see `HANDOFF.md` for whether that's still true for you.
 
 ### Email

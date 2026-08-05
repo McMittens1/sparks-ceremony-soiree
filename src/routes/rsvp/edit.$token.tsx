@@ -444,8 +444,14 @@ function EditRsvpPage() {
                           <button
                             type="button"
                             onClick={() => removeAttendee(i)}
-                            className="uppercase font-sans"
-                            style={{ fontSize: 10, letterSpacing: "0.2em", color: TAN_DEEP }}
+                            className="uppercase font-sans inline-flex items-center"
+                            style={{
+                              fontSize: 10,
+                              letterSpacing: "0.2em",
+                              color: TAN_DEEP,
+                              minHeight: 44,
+                              padding: "0 4px",
+                            }}
                           >
                             {t.rsvp.remove}
                           </button>
@@ -466,21 +472,22 @@ function EditRsvpPage() {
                     <button
                       type="button"
                       onClick={() => addAttendee(false)}
-                      className="uppercase font-sans"
-                      style={{ fontSize: 10, letterSpacing: "0.2em", color: LAV_DEEP }}
+                      className="uppercase font-sans inline-flex items-center"
+                      style={{ fontSize: 10, letterSpacing: "0.2em", color: LAV_DEEP, minHeight: 44 }}
                     >
                       {t.rsvp.addGuest}
                     </button>
                     <button
                       type="button"
                       onClick={() => addAttendee(true)}
-                      className="uppercase font-sans"
-                      style={{ fontSize: 10, letterSpacing: "0.2em", color: TAN_DEEP }}
+                      className="uppercase font-sans inline-flex items-center"
+                      style={{ fontSize: 10, letterSpacing: "0.2em", color: TAN_DEEP, minHeight: 44 }}
                     >
                       {t.rsvp.addGuestPending}
                     </button>
                   </div>
                 )}
+
               </section>
 
               <section className="space-y-3">
@@ -600,9 +607,11 @@ function Pill({ active, onClick, label }: { active: boolean; onClick: () => void
     <button
       type="button"
       onClick={onClick}
-      className="uppercase font-sans"
+      aria-pressed={active}
+      className="uppercase font-sans inline-flex items-center justify-center"
       style={{
         padding: "8px 14px",
+        minHeight: 44,
         fontSize: 10,
         letterSpacing: "0.2em",
         border: `1px solid ${active ? INK : HAIRLINE}`,
