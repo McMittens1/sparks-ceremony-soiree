@@ -24,7 +24,9 @@ export function initialAttendees(
     const prev = byName.get(norm(m.name));
     return {
       name: m.name,
-      is_child: prev?.is_child ?? m.is_child,
+      // Older/imported rows may omit is_child entirely; the server schema
+      // requires a boolean, so never let undefined reach the submit payload.
+      is_child: prev?.is_child ?? m.is_child ?? false,
       attending: prev?.attending ?? defaultAttending,
       added_by_guest: false,
       name_pending: false,
@@ -35,7 +37,7 @@ export function initialAttendees(
     if (!a.added_by_guest) continue;
     rows.push({
       name: a.name_pending ? "" : a.name,
-      is_child: a.is_child,
+      is_child: a.is_child ?? false,
       attending: a.attending,
       added_by_guest: true,
       name_pending: !!a.name_pending,
