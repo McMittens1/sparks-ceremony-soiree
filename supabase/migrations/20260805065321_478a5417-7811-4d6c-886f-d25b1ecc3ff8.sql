@@ -1,0 +1,1 @@
+update public.guests set slug = 'ZZTSMOKE' where slug = 'zzt-smoke-launch';

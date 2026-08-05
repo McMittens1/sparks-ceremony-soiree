@@ -1,6 +1,6 @@
 # Handoff — Moreno Wedding 2026 Website
 
-**Last verified against the live codebase + database: 2026-08-05 (post-launch household-addition workflow).** Bump this line whenever you re-verify. Read `ONBOARDING.md` first — it's the current-state reference; this file is the narrative behind decisions.
+**Last verified against the live codebase + database: 2026-08-05 (full live RSVP smoke test; is_child hydration fix).** Bump this line whenever you re-verify. Read `ONBOARDING.md` first — it's the current-state reference; this file is the narrative behind decisions.
 
 Originally written at the end of a development session that took this project from "RSVP disabled, no feature flags, generic wedding-party avatars" to "RSVP + photo uploads live behind a real feature-flag system, a from-scratch collectible-card wedding party section, and a full pre-launch QA pass." This document is for whichever AI picks the project up next. If `ONBOARDING.md` and this file disagree on current state, trust `ONBOARDING.md`; use this one for reasoning. If a paragraph here starts to feel stale, fold what's still true into `ONBOARDING.md` and remove or revise it here rather than let two sources of truth drift.
 
@@ -238,3 +238,13 @@ Two guest-facing corrections, both found by looking at the real thing rather tha
 **The ZIP household saw the phone question.** `verifyFactor` was initialized to `"phone_last4"` and only corrected once `getVerifyTargetLabel` returned. On a fast connection you'd never notice; on a phone on cell data, a ZIP-only household got a "last 4 digits of your phone" box for a beat — long enough to start typing a phone number the server would then reject. Fixed by making "unknown" a real state instead of a default: `verifyFactor` is `null` until the server answers and is reset to `null` on every new household. The alternative — keeping a default and just hiding it briefly — was rejected because the wrong default is still wrong once the request fails; now a failed lookup shows a retry button instead of a guessed question.
 
 **Email was presented as required.** It never was in the data path (`writeRsvp` has always written the address conditionally), but the label read "Email — for your RSVP confirmation" with no hint it could be left blank, which is functionally a requirement for most people. Now labeled optional with a line explaining exactly what giving it buys them. Verified by submitting a real RSVP with the field empty: the row saved, `guests.email` stayed null, and the send log shows the admin notification only — no confirmation attempt, no bounce.
+
+## RSVP submit: `is_child` must always be a boolean
+
+The submit schema requires `attendees[].is_child: boolean`. Party members stored
+without that key (hand-written JSON, older imports) made `initialAttendees` emit
+`undefined` and the whole submission failed with a generic "Something went wrong."
+`src/lib/rsvp-party.ts` now defaults it to `false` on both the invited and
+guest-added paths. Verified 2026-08-05 by a full end-to-end smoke test
+(slug link → phone last-4 verify → submit → row in `rsvps` → admin email
+`sent` to geoddison@gmail.com).
