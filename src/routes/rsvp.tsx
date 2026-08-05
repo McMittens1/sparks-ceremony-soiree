@@ -890,11 +890,13 @@ function RsvpPage() {
                                 <button
                                   type="button"
                                   onClick={() => removeAttendee(i)}
-                                  className="uppercase font-sans"
+                                  className="uppercase font-sans inline-flex items-center"
                                   style={{
                                     fontSize: 10,
                                     letterSpacing: "0.2em",
                                     color: TAN_DEEP,
+                                    minHeight: 44,
+                                    padding: "0 4px",
                                   }}
                                 >
                                   {t.rsvp.remove}
@@ -916,33 +918,38 @@ function RsvpPage() {
                           <button
                             type="button"
                             onClick={() => addAttendee(false)}
-                            className="uppercase font-sans"
+                            className="uppercase font-sans inline-flex items-end"
                             style={{
                               fontSize: 10,
                               letterSpacing: "0.2em",
                               color: LAV_DEEP,
-                              borderBottom: `1px solid ${LAV_DEEP}`,
+                              minHeight: 44,
                               paddingBottom: 3,
                             }}
                           >
-                            {t.rsvp.addGuest}
+                            <span style={{ borderBottom: `1px solid ${LAV_DEEP}`, paddingBottom: 3 }}>
+                              {t.rsvp.addGuest}
+                            </span>
                           </button>
                           <button
                             type="button"
                             onClick={() => addAttendee(true)}
-                            className="uppercase font-sans"
+                            className="uppercase font-sans inline-flex items-end"
                             style={{
                               fontSize: 10,
                               letterSpacing: "0.2em",
                               color: TAN_DEEP,
-                              borderBottom: `1px solid ${TAN_DEEP}`,
+                              minHeight: 44,
                               paddingBottom: 3,
                             }}
                           >
-                            {t.rsvp.addGuestPending}
+                            <span style={{ borderBottom: `1px solid ${TAN_DEEP}`, paddingBottom: 3 }}>
+                              {t.rsvp.addGuestPending}
+                            </span>
                           </button>
                         </div>
                       )}
+
                     </section>
                   </fieldset>
 
@@ -1202,9 +1209,10 @@ function PillToggle({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className="uppercase font-sans transition-colors"
+      className="uppercase font-sans transition-colors inline-flex items-center justify-center"
       style={{
         padding: "8px 14px",
+        minHeight: 44,
         fontSize: 10,
         letterSpacing: "0.2em",
         border: `1px solid ${active ? INK : HAIRLINE}`,
