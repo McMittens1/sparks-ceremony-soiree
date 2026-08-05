@@ -182,7 +182,7 @@ Implementation:
   - `photo_upload` — successful guest photo upload.
   - `calendar_click` — "Add to Calendar" / `.ics` interaction.
   - `registry_click` — any registry link click, with `name` and `lead` in `event_data`.
-- Verified end-to-end by driving a Playwright session, clicking the Zola registry link, then querying `analytics_events` and finding a `registry_click` row with `{"lead": true, "name": "Zola"}`.
+- Verified end-to-end by driving a Playwright session, clicking the lead registry link, then querying `analytics_events` and finding a `registry_click` row with the expected `name`/`lead` payload.
 
 ### Image optimization
 
