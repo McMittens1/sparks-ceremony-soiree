@@ -7,23 +7,23 @@ export type RegistryItem = {
   /** External URL, or null when the item has no link yet. */
   href: string | null;
   note: string;
-  /** True for the lead (Zola) card — gets the lavender-wash treatment. */
+  /** True for the lead registry card — gets the lavender-wash treatment. */
   lead?: boolean;
   cta?: string;
 };
 
 export const REGISTRY: RegistryItem[] = [
   {
-    name: "Zola",
-    href: "https://www.zola.com/registry/addisonandgeovanni",
-    note: "Our main registry, most up to date, and where the honeymoon fund lives too.",
+    name: "The Knot",
+    href: "https://www.theknot.com/addisonandgeovanni/registry",
+    note: "Our main registry and the most up to date. Start here if you're not sure where to look.",
     lead: true,
     cta: "Visit registry",
   },
   {
-    name: "The Knot",
-    href: "https://www.theknot.com/addisonandgeovanni/registry",
-    note: "Used for the wedding shower. Still active, but Zola is more current.",
+    name: "Amazon",
+    href: "https://www.amazon.com/wedding/guest-view/1YLU6E2G4SSFK",
+    note: "A few everyday things, easy to ship straight to us.",
     cta: "Visit registry",
   },
   {
