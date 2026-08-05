@@ -93,6 +93,7 @@ export interface Dict {
     tooManyGuests: string;
     partyCounter: string;
     partyCounterFull: string;
+    partyCounterHint: string;
     addGuestPending: string;
     namePendingLabel: string;
     namePendingHint: string;
@@ -267,6 +268,8 @@ const en: Dict = {
     tooManyGuests: "This invite is for at most {n} guest(s). Please remove someone.",
     partyCounter: "{count} of {max} guests — you can add {remaining} more.",
     partyCounterFull: "{count} of {max} guests — that's everyone your invitation includes.",
+    partyCounterHint:
+      "Bringing someone we haven't listed? Add them below — including children. If you don't know their name yet, use \u201cAdd guest (name to come).\u201d",
     addGuestPending: "+ Add guest (name to come)",
     namePendingLabel: "Name to come",
     namePendingHint: "We'll save a placeholder — send us the name when you know it.",
@@ -444,6 +447,8 @@ const es: Dict = {
     tooManyGuests: "Esta invitación permite máximo {n} invitado(s). Elimina a alguien.",
     partyCounter: "{count} de {max} invitados — puedes agregar {remaining} más.",
     partyCounterFull: "{count} de {max} invitados — es el total que incluye tu invitación.",
+    partyCounterHint:
+      "¿Viene alguien que no aparece en la lista? Agrégalo abajo, incluidos los niños. Si aún no sabes su nombre, usa \u201cAgregar invitado (nombre pendiente)\u201d.",
     addGuestPending: "+ Agregar invitado (nombre pendiente)",
     namePendingLabel: "Nombre pendiente",
     namePendingHint: "Guardaremos un marcador — mándanos el nombre cuando lo sepas.",
