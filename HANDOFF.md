@@ -1,6 +1,6 @@
 # Handoff — Moreno Wedding 2026 Website
 
-**Last verified against the live codebase + database: 2026-08-04 (launch-readiness pass).** Bump this line whenever you re-verify. Read `ONBOARDING.md` first — it's the current-state reference; this file is the narrative behind decisions.
+**Last verified against the live codebase + database: 2026-08-05 (registry update).** Bump this line whenever you re-verify. Read `ONBOARDING.md` first — it's the current-state reference; this file is the narrative behind decisions.
 
 Originally written at the end of a development session that took this project from "RSVP disabled, no feature flags, generic wedding-party avatars" to "RSVP + photo uploads live behind a real feature-flag system, a from-scratch collectible-card wedding party section, and a full pre-launch QA pass." This document is for whichever AI picks the project up next. If `ONBOARDING.md` and this file disagree on current state, trust `ONBOARDING.md`; use this one for reasoning. If a paragraph here starts to feel stale, fold what's still true into `ONBOARDING.md` and remove or revise it here rather than let two sources of truth drift.
 
@@ -182,7 +182,7 @@ Implementation:
   - `photo_upload` — successful guest photo upload.
   - `calendar_click` — "Add to Calendar" / `.ics` interaction.
   - `registry_click` — any registry link click, with `name` and `lead` in `event_data`.
-- Verified end-to-end by driving a Playwright session, clicking the Zola registry link, then querying `analytics_events` and finding a `registry_click` row with `{"lead": true, "name": "Zola"}`.
+- Verified end-to-end by driving a Playwright session, clicking the lead registry link, then querying `analytics_events` and finding a `registry_click` row with the expected `name`/`lead` payload.
 
 ### Image optimization
 
