@@ -1419,10 +1419,21 @@ function planImportRows(
 
     const membersRaw = rec.members ?? rec.party_members ?? "";
     if (membersRaw.trim()) {
-      payload.party_members = parseMembers(
-        membersRaw,
-        household_name,
-      ) as unknown as import("@/integrations/supabase/types").Json;
+      const parsed = parseMembers(membersRaw, household_name);
+      const real = parsed.filter((m) => !isInstructionalName(m.name));
+      const dropped = parsed.length - real.length;
+      if (dropped > 0) {
+        warnings.push(
+          `Skipped ${dropped} instructional entr${dropped === 1 ? "y" : "ies"} in members (e.g. "Enter name if bringing a plus one"). Use max_party_size to allow extra guests.`,
+        );
+      }
+      if (real.length > 0) {
+        payload.party_members = real as unknown as import("@/integrations/supabase/types").Json;
+      } else if (!isUpdate) {
+        payload.party_members = [
+          { name: household_name, is_child: false },
+        ] as unknown as import("@/integrations/supabase/types").Json;
+      }
     } else if (!isUpdate) {
       payload.party_members = [
         { name: household_name, is_child: false },
