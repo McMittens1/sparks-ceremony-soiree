@@ -607,9 +607,11 @@ function Pill({ active, onClick, label }: { active: boolean; onClick: () => void
     <button
       type="button"
       onClick={onClick}
-      className="uppercase font-sans"
+      aria-pressed={active}
+      className="uppercase font-sans inline-flex items-center justify-center"
       style={{
         padding: "8px 14px",
+        minHeight: 44,
         fontSize: 10,
         letterSpacing: "0.2em",
         border: `1px solid ${active ? INK : HAIRLINE}`,
