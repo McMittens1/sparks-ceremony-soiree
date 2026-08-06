@@ -88,7 +88,7 @@ const eyebrow: React.CSSProperties = {
   margin: "0 0 8px",
 };
 
-const LOOKUP_MIN_CHARS = 2;
+const LOOKUP_MIN_CHARS = 3;
 const LOOKUP_DEBOUNCE_MS = 300;
 
 // submitRsvp throws a short error code (see
