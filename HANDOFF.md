@@ -30,6 +30,10 @@ Decisions worth knowing:
 
 The secret is now `geoddison@gmail.com`. Guest-facing From address unchanged.
 
+## 0c. Launch finalization (2026-08-06)
+
+The site was published and `rsvp_open` was flipped on 2026-08-05. A final end-to-end smoke test ran through the full public flow: name lookup → phone last-4 verification → "SEND RSVP" submission. The RSVP row wrote correctly, the `admin-notification` email was logged as sent to `geoddison@gmail.com`, and the temporary test household was purged. The master guest list was exported from `/portal-ga-2026/dashboard` → **Export Master CSV (all)** and saved to `/mnt/documents/morenowedding2026-master-guest-list-2026-08-05.csv` (78 households, 28 columns, round-trippable). This is the backup to use before any future imports.
+
 ---
 
 ## 1. Project summary
