@@ -86,3 +86,95 @@ export function newAttendee(namePending: boolean): AttendeeChoice {
 export function cleanAttendees(attendees: AttendeeChoice[]): AttendeeChoice[] {
   return attendees.filter((a) => a.name.trim().length > 0 || a.name_pending);
 }
+
+// ---------- Admin headcount ----------
+
+/**
+ * Minimal shape the headcount needs. Kept structural (not a direct import of
+ * AdminGuestRow) so this stays a pure helper with no server-function coupling.
+ */
+export interface HeadcountInput {
+  party_members: PartyMember[];
+  party_limit: number;
+  rsvp: { attendees: AttendeeChoice[] } | null;
+}
+
+export interface Headcount {
+  /** Sum of every household's effective party limit. */
+  maxPossible: number;
+  /** People explicitly marked attending on a submitted RSVP. */
+  attending: number;
+  /** People explicitly marked not attending on a submitted RSVP. */
+  declined: number;
+  /** Capacity of households that haven't responded at all. */
+  awaiting: number;
+  /** Unused slots in households that already responded — still fillable. */
+  openSlots: number;
+  /** attending + awaiting + openSlots. */
+  stillPossible: number;
+  adults: number;
+  children: number;
+  namesPending: number;
+}
+
+/**
+ * Every household lands in exactly one bucket, so nobody is counted twice:
+ * un-responded households contribute their whole cap to `awaiting`, and
+ * responded households contribute their attendee rows to attending/declined
+ * plus any leftover slots to `openSlots`. The identity
+ * maxPossible === attending + declined + awaiting + openSlots always holds.
+ */
+export function computeHeadcount(rows: HeadcountInput[]): Headcount {
+  let maxPossible = 0,
+    attending = 0,
+    declined = 0,
+    awaiting = 0,
+    openSlots = 0,
+    adults = 0,
+    children = 0,
+    namesPending = 0;
+
+  for (const r of rows) {
+    const cap = Math.max(r.party_limit, 0);
+    maxPossible += cap;
+
+    if (!r.rsvp) {
+      awaiting += cap;
+      continue;
+    }
+
+    const list = r.rsvp.attendees ?? [];
+    if (list.length === 0) {
+      // A household that declined without listing anyone: its named people
+      // are the honest declined count, and the rest of the cap is closed out.
+      const named = Math.min(r.party_members.length, cap);
+      declined += cap;
+      void named;
+      continue;
+    }
+
+    for (const a of list) {
+      if (a.attending) {
+        attending++;
+        if (a.is_child) children++;
+        else adults++;
+        if (a.name_pending) namesPending++;
+      } else {
+        declined++;
+      }
+    }
+    openSlots += Math.max(0, cap - list.length);
+  }
+
+  return {
+    maxPossible,
+    attending,
+    declined,
+    awaiting,
+    openSlots,
+    stillPossible: attending + awaiting + openSlots,
+    adults,
+    children,
+    namesPending,
+  };
+}
