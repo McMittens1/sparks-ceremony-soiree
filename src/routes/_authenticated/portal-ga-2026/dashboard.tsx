@@ -34,6 +34,7 @@ import {
 } from "@/lib/rsvp.functions";
 import { getFeatureFlags, setFeatureFlags, type FeatureFlag } from "@/lib/feature-flags.functions";
 import { TEST_HOUSEHOLD_PREFIX, isTestHousehold } from "@/lib/test-data";
+import { computeHeadcount } from "@/lib/rsvp-party";
 import {
   getEmailSendLog,
   getSuppressedEmails,
@@ -316,6 +317,17 @@ function RsvpsPanel() {
     if (next.size !== selected.size) setSelected(next);
   }, [filtered, selected]);
 
+  // People-level headcount. Respects only the test-household filter, so the
+  // number never silently changes because a search or status filter is set.
+  const headcount = useMemo(() => {
+    const list = (rows ?? []).filter((r) => {
+      if (testFilter === "any") return true;
+      const isTest = isTestHousehold(r.primary_name);
+      return testFilter === "only" ? isTest : !isTest;
+    });
+    return computeHeadcount(list);
+  }, [rows, testFilter]);
+
   const totals = useMemo(() => {
     if (!rows)
       return {
@@ -583,14 +595,79 @@ function RsvpsPanel() {
 
   return (
     <div className="mt-8">
-      {/* Totals */}
+      {/* Headcount — counts people, derived from the same rows the table uses */}
+      <section className="border border-border/40 p-5">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h3 className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+            {t.admin.headcountTitle}
+          </h3>
+          <p className="text-[11px] text-muted-foreground">{t.admin.headcountNote}</p>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-baseline gap-3">
+          <span className="text-4xl font-serif text-primary">{headcount.attending}</span>
+          <span className="text-sm text-muted-foreground">
+            {t.admin.headcountAttending.toLowerCase()} ·{" "}
+            {t.admin.headcountOfPossible.replace("{n}", String(headcount.maxPossible))}
+          </span>
+        </div>
+
+        <div
+          className="mt-3 flex h-2.5 w-full overflow-hidden bg-muted"
+          role="img"
+          aria-label={`${headcount.attending} ${t.admin.headcountAttending}, ${headcount.declined} ${t.admin.headcountDeclined}, ${headcount.awaiting} ${t.admin.headcountAwaiting}, ${headcount.openSlots} ${t.admin.headcountOpenSlots}`}
+        >
+          {(
+            [
+              ["bg-primary", headcount.attending],
+              ["bg-destructive/60", headcount.declined],
+              ["bg-secondary", headcount.awaiting],
+              ["bg-border", headcount.openSlots],
+            ] as const
+          ).map(([cls, n], i) =>
+            n > 0 ? (
+              <div
+                key={i}
+                className={cls}
+                style={{ width: `${(n / Math.max(headcount.maxPossible, 1)) * 100}%` }}
+              />
+            ) : null,
+          )}
+        </div>
+
+        <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {(
+            [
+              [t.admin.headcountAttending, headcount.attending],
+              [t.admin.headcountDeclined, headcount.declined],
+              [t.admin.headcountAwaiting, headcount.awaiting],
+              [t.admin.headcountOpenSlots, headcount.openSlots],
+              [t.admin.headcountStillPossible, headcount.stillPossible],
+              [t.admin.headcountMaxPossible, headcount.maxPossible],
+              [t.admin.totalsAdults, headcount.adults],
+              [t.admin.totalsChildren, headcount.children],
+              [t.admin.headcountNamesPending, headcount.namesPending],
+            ] as const
+          ).map(([label, n]) => (
+            <div key={label} className="border border-border/40 p-3 text-center">
+              <div className="text-xl font-serif text-primary">{n}</div>
+              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mt-1">
+                {label}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Household-level totals */}
+      <h3 className="mt-6 mb-3 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+        {t.admin.householdsHeading}
+      </h3>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         {[
           [t.admin.totalsAttending, totals.attending],
           [t.admin.totalsDeclined, totals.declined],
           [t.admin.totalsPending, totals.pending],
-          [t.admin.totalsAdults, totals.adults],
-          [t.admin.totalsChildren, totals.children],
           [t.admin.totalsFallbackLimit, totals.fallbackLimit],
           ["Can't verify (no phone/ZIP)", totals.noFactor],
           ["Have an email (optional)", totals.withEmail],
