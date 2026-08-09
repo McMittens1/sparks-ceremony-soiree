@@ -6,6 +6,7 @@ import { buildMeta } from "@/lib/seo";
 import { HeroSection } from "@/components/site/sections/HeroSection";
 import { CountdownSection } from "@/components/site/sections/CountdownSection";
 import { StorySection } from "@/components/site/sections/StorySection";
+import { PortraitsSection } from "@/components/site/sections/PortraitsSection";
 import { DaySection } from "@/components/site/sections/DaySection";
 import { PartySection } from "@/components/site/sections/PartySection";
 import { TravelSection } from "@/components/site/sections/TravelSection";
@@ -46,7 +47,7 @@ function Home() {
   // Wedding Party is published via the `show_wedding_party` flag (admin
   // Features tab). While it's off the section is omitted entirely and the
   // remaining numerals close the gap.
-  const { showParty, numeral } = useSectionOrder();
+  const { showParty, showPortraits, numeral } = useSectionOrder();
 
   useEffect(() => {
     // On first mount, always land at the top of the hero. Ignore any hash the
@@ -72,6 +73,7 @@ function Home() {
       <HeroSection />
       <CountdownSection numeral={numeral("countdown")} />
       <StorySection numeral={numeral("story")} />
+      {showPortraits && <PortraitsSection numeral={numeral("portraits")} />}
       <DaySection numeral={numeral("day")} />
       {showParty && <PartySection numeral={numeral("party")} />}
       <TravelSection numeral={numeral("travel")} />

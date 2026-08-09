@@ -6,6 +6,7 @@ import { useSectionOrder } from "@/hooks/use-section-order";
 
 const NAV = [
   { id: "story", key: "story" as const },
+  { id: "portraits", key: "portraits" as const },
   { id: "day", key: "details" as const },
   { id: "party", key: "party" as const },
   { id: "travel", key: "travel" as const },
@@ -24,8 +25,10 @@ export function Header() {
   const nav = useNavigate();
   const active = useActiveSection();
   // Hides the Wedding Party link while the section is unpublished.
-  const { showParty } = useSectionOrder();
-  const navItems = NAV.filter((n) => n.id !== "party" || showParty);
+  const { showParty, showPortraits } = useSectionOrder();
+  const navItems = NAV.filter(
+    (n) => (n.id !== "party" || showParty) && (n.id !== "portraits" || showPortraits),
+  );
   const onHome = location.pathname === "/";
   const [menuOpen, setMenuOpen] = useState(false);
   const panelRef = useRef<HTMLElement | null>(null);
