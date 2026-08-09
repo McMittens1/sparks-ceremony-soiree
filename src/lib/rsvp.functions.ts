@@ -1185,6 +1185,26 @@ interface ExistingGuestRef {
   slug: string;
   phone: string | null;
   email: string | null;
+  primary_name?: string;
+  party_members?: unknown;
+  max_party_size?: number | null;
+  address_line1?: string | null;
+  address_line2?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postal_code?: string | null;
+  country?: string | null;
+  invite_notes?: string | null;
+  // True when this household has already submitted an RSVP. Never blocks an
+  // import — it only makes "this row edits someone who already responded"
+  // impossible to miss in the dry-run preview.
+  hasRsvp?: boolean;
+}
+
+export interface ImportFieldChange {
+  field: string;
+  from: string;
+  to: string;
 }
 
 export interface ImportRowResult {
@@ -1194,7 +1214,13 @@ export interface ImportRowResult {
   matchedBy?: "slug" | "phone" | "email";
   warnings: string[];
   error?: string;
+  slug?: string;
+  // Field-level diff for update rows: empty means the row would write the
+  // same values it already has.
+  changes?: ImportFieldChange[];
+  touchesRsvp?: boolean;
 }
+
 
 interface GuestWritePayload {
   primary_name?: string;
