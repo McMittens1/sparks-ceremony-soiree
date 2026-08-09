@@ -21,6 +21,8 @@ import {
   deleteGuest,
   bulkDeleteGuests,
   importGuestsCsv,
+  listImportSnapshots,
+  restoreImportSnapshot,
   promoteAddedGuests,
   effectivePartyLimit,
   unlockGuestPhoneVerify,
@@ -28,6 +30,7 @@ import {
   type AdminGuestRow,
   type PartyMember,
   type ImportRowResult,
+  type ImportSnapshotRow,
 } from "@/lib/rsvp.functions";
 import { getFeatureFlags, setFeatureFlags, type FeatureFlag } from "@/lib/feature-flags.functions";
 import { TEST_HOUSEHOLD_PREFIX, isTestHousehold } from "@/lib/test-data";
@@ -1785,8 +1788,40 @@ function GuestEditor({
 
 interface ImportSummary {
   dryRun: boolean;
-  totals: { inserted: number; updated: number; errors: number };
+  totals: { inserted: number; updated: number; errors: number; unchanged: number };
   rows: ImportRowResult[];
+  snapshotId?: string;
+}
+
+// Pasting straight out of Google Sheets or Excel yields tab-separated text.
+// Converted here rather than in the importer so the server only ever sees
+// one format.
+function tsvToCsv(text: string): string {
+  const firstLine = text.split(/\r?\n/)[0] ?? "";
+  if (!firstLine.includes("\t")) return text;
+  return text
+    .split(/\r?\n/)
+    .map((line) =>
+      line
+        .split("\t")
+        .map((cell) => (/[",\n]/.test(cell) ? `"${cell.replace(/"/g, '""')}"` : cell))
+        .join(","),
+    )
+    .join("\n");
+}
+
+function ChangeList({ changes }: { changes: { field: string; from: string; to: string }[] }) {
+  return (
+    <div className="space-y-0.5">
+      {changes.map((c, i) => (
+        <div key={i} className="text-muted-foreground">
+          <span className="text-foreground">{c.field}:</span>{" "}
+          <span className="line-through opacity-70">{c.from || "(blank)"}</span>{" "}
+          <span aria-hidden="true">→</span> <span className="text-foreground">{c.to || "(blank)"}</span>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function actionBadge(action: ImportRowResult["action"]) {
@@ -1824,6 +1859,12 @@ function CsvImporter({
   onDone: () => void | Promise<void>;
 }) {
   const runImport = useServerFn(importGuestsCsv);
+  const loadSnapshots = useServerFn(listImportSnapshots);
+  const runRestore = useServerFn(restoreImportSnapshot);
+  const [snapshots, setSnapshots] = useState<ImportSnapshotRow[]>([]);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
+  const [confirmRestoreId, setConfirmRestoreId] = useState<string | null>(null);
+  const [onlyChanges, setOnlyChanges] = useState(true);
   const [csv, setCsv] = useState("");
   const [fileName, setFileName] = useState<string | null>(null);
   const [sheetCount, setSheetCount] = useState(1);
@@ -1835,10 +1876,42 @@ function CsvImporter({
   const [err, setErr] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const busy = checking || parsing || phase === "importing";
+  const busy = checking || parsing || phase === "importing" || restoringId !== null;
+
+  const refreshSnapshots = useCallback(async () => {
+    try {
+      setSnapshots(await loadSnapshots());
+    } catch {
+      // History is a convenience; never block the importer on it.
+    }
+  }, [loadSnapshots]);
+
+  useEffect(() => {
+    void refreshSnapshots();
+  }, [refreshSnapshots]);
+
+  async function doRestore(id: string) {
+    setRestoringId(id);
+    setErr(null);
+    try {
+      const r = await runRestore({ data: { id } });
+      await onDone();
+      await refreshSnapshots();
+      toast.success(
+        `Restored ${r.restored} household${r.restored === 1 ? "" : "s"}` +
+          (r.removed ? `, removed ${r.removed} added by that import` : "") +
+          ".",
+      );
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Restore failed");
+    } finally {
+      setRestoringId(null);
+      setConfirmRestoreId(null);
+    }
+  }
 
   function editCsv(v: string) {
-    setCsv(v);
+    setCsv(tsvToCsv(v));
     // A stale preview against edited text could be committed by mistake —
     // drop back to phase 1 the moment the source text changes.
     setPhase("input");
@@ -1928,6 +2001,7 @@ function CsvImporter({
     try {
       const r = await runImport({ data: { csv, dryRun: false } });
       await onDone(); // refresh the admin table before declaring success
+      void refreshSnapshots();
       setResult(r);
       setPhase("done");
       toast.success(
