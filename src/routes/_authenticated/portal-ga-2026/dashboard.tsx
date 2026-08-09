@@ -2139,12 +2139,32 @@ function CsvImporter({
 
         {(phase === "preview" || phase === "importing") && result && (
           <div className="mt-4">
-            <div className="flex flex-wrap gap-3 text-xs">
+            <div className="flex flex-wrap items-center gap-3 text-xs">
               <span className="uppercase tracking-[0.2em] text-primary">
-                Preview: {result.totals.inserted} new, {result.totals.updated} updated,{" "}
-                {result.totals.errors} error{result.totals.errors === 1 ? "" : "s"}
+                Preview: {result.totals.inserted} new,{" "}
+                {result.totals.updated - result.totals.unchanged} changed,{" "}
+                {result.totals.unchanged} unchanged, {result.totals.errors} error
+                {result.totals.errors === 1 ? "" : "s"}
               </span>
+              {result.rows.some((r) => r.touchesRsvp && r.changes?.length) && (
+                <span className="border border-destructive text-destructive px-2 py-0.5 uppercase tracking-[0.15em] text-[10px]">
+                  {result.rows.filter((r) => r.touchesRsvp && r.changes?.length).length} touch an
+                  existing RSVP
+                </span>
+              )}
+              <label className="ml-auto flex items-center gap-2 text-muted-foreground">
+                <input
+                  type="checkbox"
+                  checked={onlyChanges}
+                  onChange={(e) => setOnlyChanges(e.target.checked)}
+                />
+                Only rows that change something
+              </label>
             </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              A full backup of the guest list is saved automatically before the import runs, so this
+              can be undone. Existing RSVP responses are never modified.
+            </p>
             <div className="mt-3 max-h-[400px] overflow-y-auto border border-border/40">
               <table className="w-full text-xs">
                 <thead className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground sticky top-0 bg-card">
@@ -2156,26 +2176,48 @@ function CsvImporter({
                   </tr>
                 </thead>
                 <tbody>
-                  {result.rows.map((r) => (
-                    <tr key={r.row} className="border-b border-border/20 align-top">
-                      <td className="py-2 px-3 text-muted-foreground">{r.row}</td>
-                      <td className="py-2 px-3">{r.household_name ?? "—"}</td>
-                      <td className="py-2 px-3">
-                        {actionBadge(r.action)}
-                        {r.matchedBy && (
-                          <span className="ml-2 text-muted-foreground">by {r.matchedBy}</span>
-                        )}
-                      </td>
-                      <td className="py-2 px-3">
-                        {r.error && <span className="text-destructive">{r.error}</span>}
-                        {r.warnings.map((w, i) => (
-                          <div key={i} className="text-muted-foreground">
-                            {w}
-                          </div>
-                        ))}
-                      </td>
-                    </tr>
-                  ))}
+                  {result.rows
+                    .filter(
+                      (r) =>
+                        !onlyChanges ||
+                        r.action !== "update" ||
+                        !r.changes ||
+                        r.changes.length > 0 ||
+                        r.warnings.length > 0,
+                    )
+                    .map((r) => (
+                      <tr key={r.row} className="border-b border-border/20 align-top">
+                        <td className="py-2 px-3 text-muted-foreground">{r.row}</td>
+                        <td className="py-2 px-3">
+                          {r.household_name ?? "—"}
+                          {r.touchesRsvp && (
+                            <span className="ml-2 text-[10px] uppercase tracking-[0.15em] border border-destructive text-destructive px-1.5 py-0.5">
+                              RSVP'd
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2 px-3">
+                          {actionBadge(r.action)}
+                          {r.matchedBy && (
+                            <span className="ml-2 text-muted-foreground">by {r.matchedBy}</span>
+                          )}
+                        </td>
+                        <td className="py-2 px-3">
+                          {r.error && <span className="text-destructive">{r.error}</span>}
+                          {r.changes && r.changes.length > 0 && (
+                            <ChangeList changes={r.changes} />
+                          )}
+                          {r.action === "update" && r.changes && r.changes.length === 0 && (
+                            <span className="text-muted-foreground">No change</span>
+                          )}
+                          {r.warnings.map((w, i) => (
+                            <div key={i} className="text-accent">
+                              {w}
+                            </div>
+                          ))}
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>
