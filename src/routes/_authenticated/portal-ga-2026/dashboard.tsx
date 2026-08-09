@@ -668,8 +668,6 @@ function RsvpsPanel() {
           [t.admin.totalsAttending, totals.attending],
           [t.admin.totalsDeclined, totals.declined],
           [t.admin.totalsPending, totals.pending],
-          [t.admin.totalsAdults, totals.adults],
-          [t.admin.totalsChildren, totals.children],
           [t.admin.totalsFallbackLimit, totals.fallbackLimit],
           ["Can't verify (no phone/ZIP)", totals.noFactor],
           ["Have an email (optional)", totals.withEmail],
