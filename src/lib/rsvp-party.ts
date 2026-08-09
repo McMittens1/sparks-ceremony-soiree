@@ -94,7 +94,6 @@ export function cleanAttendees(attendees: AttendeeChoice[]): AttendeeChoice[] {
  * AdminGuestRow) so this stays a pure helper with no server-function coupling.
  */
 export interface HeadcountInput {
-  party_members: PartyMember[];
   party_limit: number;
   rsvp: { attendees: AttendeeChoice[] } | null;
 }
