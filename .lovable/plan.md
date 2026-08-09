@@ -1,28 +1,50 @@
-# Photo Manager decision
+# Wedding Party preview + toggle verification
 
-## Recommendation: do not build it before launch
+## Problem
 
-For a curated wedding site launching within 24 hours, **hardcoded photos are the right call**. Most small-to-medium brochure sites ship this way, and it is not unprofessional — it is simple, fast, and version-controlled. The Photo Manager is a convenience feature, not a launch blocker.
+The Wedding Party section is currently hidden behind the `show_wedding_party` feature flag (`false` in production). There is no way to view or edit it without flipping the flag live, which would expose an unfinished section to guests who are already RSVPing.
 
-Building it now introduces real risk:
+## What gets built
 
-- New storage bucket, new table, new RLS policies, new admin UI, and refactors of `StoryTimeline.tsx` and `PortraitsSection.tsx` right before guests start RSVPing.
-- Any bug in the DB-overrides-code fallback could break the Our Story or Portraits sections on the live site.
-- The current hardcoded assets are already optimized, CDN-hosted, and working.
+### 1. Safe preview mode (no DB change required)
 
-## What to do instead
+Add a URL query-parameter override so the couple can preview the Wedding Party section privately without changing the production flag.
 
-1. **Ship as-is.** Keep the current hardcoded photo architecture for launch.
-2. **If you want flexibility later** (e.g., swapping a few photos after seeing them live), build the smaller "replace-only" version post-launch: keep the existing slots and order fixed in code, and let the admin portal swap the image behind any single slot. This is roughly one-third of the work and covers the most likely real need.
-3. **Only consider the full reorder/add/remove Photo Manager** if you find yourself wanting to change photos frequently after the wedding — and even then, evaluate whether a simple code edit is faster than maintaining a CMS.
+- `/?preview_party=1` forces `showParty` to `true` for that browser tab only.
+- The override also reveals the "Party" nav link and the correct roman numeral (IV when Portraits is on, V when Portraits is off).
+- Other visitors loading `/` normally still see the section hidden.
+- The override is read from `URLSearchParams` in `useSectionOrder` and is never persisted to the DB.
 
-## Launch-day photo checklist (if you accept this recommendation)
+Implementation touches:
+- `src/hooks/use-section-order.ts`: accept an optional `previewParty` boolean; return `showParty || previewParty`.
+- `src/routes/index.tsx`: pass `previewParty` from `location.search` into `useSectionOrder`.
+- `src/components/site/Header.tsx`: same — derive `previewParty` from the URL so the nav link appears.
 
-- [ ] Verify Our Story photos render correctly at 440px and 1280px.
-- [ ] Verify Portraits gallery grid and lightbox at 440px and 1280px.
-- [ ] Confirm Section 05 (Proposal) photos are untouched.
-- [ ] No code changes needed for photos before launch.
+### 2. Verify the section before it goes live
 
-## If you still want the full Photo Manager
+Run a full visual + functional check with the preview flag forced on:
 
-The implementation plan from the previous turn is preserved in the conversation history. It can be executed, but I recommend scheduling it for after the wedding or a quiet post-launch window, not the next 24 hours.
+- Screenshot the homepage at 440px and 1280px with `?preview_party=1`.
+- Confirm the Wedding Party section renders as Section IV (since Portraits is currently on → III is Portraits, IV is Party).
+- Confirm the desktop nav and mobile drawer show the "Party" link.
+- Confirm the mobile drawer closes when Party is tapped and scrolls to `#party`.
+- Confirm Groomsman cards flip on tap/click and show placeholder copy where fields are empty.
+- Confirm Magazine covers render for Maid of Honor and Bridesmaids.
+- Confirm Flower Girl / Ring Bearer avatars expand when tapped.
+- Confirm `show_ushers` flag still gates the Ushers block independently.
+- Confirm no console errors and no hydration mismatch.
+- Confirm that without the query param the section is still hidden.
+
+### 3. Optional: same preview for `show_ushers`
+
+Add `?preview_ushers=1` alongside `?preview_party=1` so the Ushers block can also be reviewed before the flag is enabled.
+
+## Out of scope
+
+- No changes to the actual Wedding Party data in `wedding-data.ts`.
+- No changes to card/cover components unless a bug is found during verification.
+- No change to the default feature-flag value.
+
+## Docs
+
+Update `ONBOARDING.md` and `HANDOFF.md` with the preview query params and the verification checklist result.
