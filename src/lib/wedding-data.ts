@@ -161,10 +161,16 @@ export type StoryPhotoKey =
   | "eng15"
   | "eng19"
   | "eng27"
+  | "eng66"
   | "eng74"
   | "eng75"
   | "eng82"
+  | "eng91"
   | "eng94"
+  | "mor90"
+  | "mor115"
+  | "mor129"
+  | "mor147"
   | "propKneel"
   | "propMarquee"
   | "propRing"
@@ -216,7 +222,7 @@ export const STORY_ENTRIES: StoryEntry[] = [
     place: "Moved in together",
     title: "One roof, four of us",
     body: "By fall 2024, we were surrounded by moving boxes again, only this time the boxes belonged to both of us. The first time we sat together surrounded by boxes was our first date, when Addi\u2019s glasses had broken in half and Odin barked through most of the movie. This time, we were unpacking a home together. Addi\u2019s glasses survived the move, and Odin still barks during movies, mostly because Copper is always stealing his spot on the couch. Most days are pretty normal, but getting to share those normal days has been one of the best parts.",
-    photos: ["eng06", "eng94", "eng82"],
+    photos: ["mor147", "eng66", "eng91"],
     layout: "split",
   },
   {
@@ -240,7 +246,7 @@ export const STORY_ENTRIES: StoryEntry[] = [
     place: "Sparks\u2019 Barn",
     title: "See you at the barn",
     body: "On October 10, we get to bring everyone we love together at Sparks\u2019 Barn to eat, drink, dance, and celebrate everything that brought us here. It is not the end of our story, obviously, but the website has to stop scrolling eventually. We cannot wait to celebrate with you.",
-    photos: ["eng13", "eng10", "fav"],
+    photos: ["mor115", "mor129", "mor90"],
     layout: "finale",
   },
 ];

@@ -13,6 +13,7 @@ import { useFeatureFlag } from "@/hooks/use-feature-flags";
 export const SECTION_ORDER = [
   "countdown",
   "story",
+  "portraits",
   "day",
   "party",
   "travel",
@@ -23,11 +24,13 @@ export const SECTION_ORDER = [
 
 export type SectionId = (typeof SECTION_ORDER)[number];
 
-const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
+const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"];
 
 export interface SectionOrder {
   /** Whether the Wedding Party section is currently published. */
   showParty: boolean;
+  /** Whether the Portraits gallery section is currently published. */
+  showPortraits: boolean;
   /** Visible section ids, in order. */
   ids: SectionId[];
   /** Roman numeral for a visible section; empty string if hidden. */
@@ -36,10 +39,13 @@ export interface SectionOrder {
 
 export function useSectionOrder(): SectionOrder {
   const { enabled: showParty } = useFeatureFlag("show_wedding_party");
-  const ids = SECTION_ORDER.filter((id) => id !== "party" || showParty);
+  const { enabled: showPortraits } = useFeatureFlag("show_portraits");
+  const ids = SECTION_ORDER.filter(
+    (id) => (id !== "party" || showParty) && (id !== "portraits" || showPortraits),
+  );
   const numeral = (id: SectionId) => {
     const i = ids.indexOf(id);
     return i === -1 ? "" : (ROMAN[i] ?? "");
   };
-  return { showParty, ids, numeral };
+  return { showParty, showPortraits, ids, numeral };
 }
