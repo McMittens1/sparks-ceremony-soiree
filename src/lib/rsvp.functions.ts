@@ -1590,7 +1590,7 @@ function planImportRows(
       changes,
       touchesRsvp: matched?.hasRsvp ?? false,
       guestId: matched?.id,
-      slug: insertSlug,
+      slug: insertSlug ?? matched?.slug,
 
       payload,
     });
