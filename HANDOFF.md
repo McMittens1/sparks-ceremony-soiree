@@ -8,7 +8,20 @@ Originally written at the end of a development session that took this project fr
 
 ---
 
-## 0. Latest session — instructional placeholders removed (2026-08-06)
+## 0. Latest session — Wedding Party preview overrides (2026-08-11)
+
+The Wedding Party section and its Ushers block are hidden by production feature flags (`show_wedding_party=false`, `show_ushers=false`) because the cards and covers still carry placeholder copy. Since the site is live and guests are actively RSVPing, flipping those flags in the database just to review copy would expose an unfinished section. Added URL-only preview overrides so the couple can review privately:
+
+- `/?preview_party=1` forces the Wedding Party section visible for that browser tab only. The desktop nav, mobile drawer, and left Spine all update to match: the section appears as **IV** when Portraits is enabled (current production default) and renumbers automatically if Portraits is ever turned off.
+- `/?preview_ushers=1` forces the Ushers block visible inside the Wedding Party section for that tab only.
+- The override is read from `URLSearchParams` inside `useSectionOrder` and is never written to the DB, so a normal visitor loading `/` still sees the section hidden.
+- Verified via Playwright: party hidden by default; visible with `?preview_party=1` at 440px and 1280px; nav link and Spine numerals update from I–VIII to I–IX; Ushers block appears with `?preview_party=1&preview_ushers=1`; build passes.
+
+Implementation notes:
+- `src/hooks/use-section-order.ts` now imports `useLocation` and returns `showUshers` in addition to `showParty`/`showPortraits`, so any component that needs the ushers gate goes through the same source of truth.
+- `src/components/site/WeddingParty.tsx` now reads `showUshers` from `useSectionOrder()` instead of calling `useFeatureFlag("show_ushers")` directly.
+
+## 0a. Previous session — instructional placeholders removed (2026-08-06)
 
 Instructions had been typed into `guests.party_members` ("Enter name if bringing a plus one", "Enter all party names") as a way of telling households they could add people. The system has no notion of a non-person member, so those rows counted as invited guests: they raised the fallback party limit, inflated the named headcount and exports, and — because invited rows can't be deleted by a household — would have appeared in the RSVP form as an undeletable "person" the guest had to rename or mark not attending.
 
