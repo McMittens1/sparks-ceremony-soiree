@@ -13,6 +13,12 @@ import eng19 from "@/assets/engagement/Geo_AddiEngagement-19.jpg.asset.json";
 import eng15 from "@/assets/engagement/Geo_AddiEngagement-15.jpg.asset.json";
 import eng13 from "@/assets/engagement/Geo_AddiEngagement-13.jpg.asset.json";
 import eng10 from "@/assets/engagement/Geo_AddiEngagement-10.jpg.asset.json";
+import eng66 from "@/assets/engagement/Geo_AddiEngagement-66.jpg.asset.json";
+import eng91 from "@/assets/engagement/Geo_AddiEngagement-91.jpg.asset.json";
+import mor90 from "@/assets/engagement/MorenoEngagement-90.jpg.asset.json";
+import mor115 from "@/assets/engagement/MorenoEngagement-115.jpg.asset.json";
+import mor129 from "@/assets/engagement/MorenoEngagement-129.jpg.asset.json";
+import mor147 from "@/assets/engagement/MorenoEngagement-147.jpg.asset.json";
 import propKneel from "@/assets/proposal/proposal-kneel.jpg.asset.json";
 import propMarquee from "@/assets/proposal/proposal-marquee.jpg.asset.json";
 import propRing from "@/assets/proposal/proposal-ring.jpg.asset.json";
@@ -29,10 +35,16 @@ const PHOTO_SRC: Record<StoryPhotoKey, string> = {
   eng15: eng15.url,
   eng19: eng19.url,
   eng27: eng27.url,
+  eng66: eng66.url,
   eng74: eng74.url,
   eng75: eng75.url,
   eng82: eng82.url,
+  eng91: eng91.url,
   eng94: eng94.url,
+  mor90: mor90.url,
+  mor115: mor115.url,
+  mor129: mor129.url,
+  mor147: mor147.url,
   propKneel: propKneel.url,
   propMarquee: propMarquee.url,
   propRing: propRing.url,
