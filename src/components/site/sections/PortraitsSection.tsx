@@ -44,9 +44,7 @@ export function PortraitsSection({ numeral = "III" }: { numeral?: string }) {
                 height={photo.height}
                 loading={i < 3 ? "eager" : "lazy"}
                 decoding="async"
-                className={`w-full h-full object-cover ${
-                  photo.orientation === "landscape" ? "aspect-[4/3]" : "aspect-[4/5]"
-                }`}
+                className="w-full h-full object-cover aspect-[4/5]"
               />
             </button>
           </Reveal>
