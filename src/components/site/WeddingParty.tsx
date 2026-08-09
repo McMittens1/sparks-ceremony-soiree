@@ -136,8 +136,9 @@ export function WeddingParty() {
         maxWidth={280}
       />
 
-      {/* Gated by the show_ushers feature flag (admin Features tab) — data
-          is always preserved in wedding-data.ts regardless of the flag. */}
+      {/* Gated by the show_ushers feature flag (admin Features tab) and the
+          `?preview_ushers=1` query param — data is always preserved in
+          wedding-data.ts regardless of the flag. */}
       {showUshers && ushers.length > 0 && (
         <div className="mt-14 pt-11 border-t border-hairline">
           <p
