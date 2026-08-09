@@ -1185,6 +1185,26 @@ interface ExistingGuestRef {
   slug: string;
   phone: string | null;
   email: string | null;
+  primary_name?: string;
+  party_members?: unknown;
+  max_party_size?: number | null;
+  address_line1?: string | null;
+  address_line2?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postal_code?: string | null;
+  country?: string | null;
+  invite_notes?: string | null;
+  // True when this household has already submitted an RSVP. Never blocks an
+  // import — it only makes "this row edits someone who already responded"
+  // impossible to miss in the dry-run preview.
+  hasRsvp?: boolean;
+}
+
+export interface ImportFieldChange {
+  field: string;
+  from: string;
+  to: string;
 }
 
 export interface ImportRowResult {
@@ -1194,7 +1214,13 @@ export interface ImportRowResult {
   matchedBy?: "slug" | "phone" | "email";
   warnings: string[];
   error?: string;
+  slug?: string;
+  // Field-level diff for update rows: empty means the row would write the
+  // same values it already has.
+  changes?: ImportFieldChange[];
+  touchesRsvp?: boolean;
 }
+
 
 interface GuestWritePayload {
   primary_name?: string;
@@ -1230,6 +1256,53 @@ function parseMembers(raw: string, fallbackName: string): PartyMember[] {
       return { name: n.replace(/\s*\(child\)\s*/i, "").trim(), is_child: isChild };
     });
 }
+
+function formatMembersForDiff(v: unknown): string {
+  if (!Array.isArray(v)) return "";
+  return (v as PartyMember[])
+    .map((m) => `${m?.name ?? ""}${m?.is_child ? " (child)" : ""}`)
+    .join("; ");
+}
+
+// Field-level diff between what's stored and what this row would write.
+// Only keys present in the payload are compared, so a blank cell (omitted
+// on an update) can never show up as a change.
+function diffPayload(existing: ExistingGuestRef, payload: GuestWritePayload): ImportFieldChange[] {
+  const changes: ImportFieldChange[] = [];
+  const push = (field: string, from: unknown, to: unknown) => {
+    const a = from == null ? "" : String(from);
+    const b = to == null ? "" : String(to);
+    if (a !== b) changes.push({ field, from: a, to: b });
+  };
+
+  if (payload.primary_name !== undefined) push("name", existing.primary_name, payload.primary_name);
+  if (payload.party_members !== undefined) {
+    push(
+      "members",
+      formatMembersForDiff(existing.party_members),
+      formatMembersForDiff(payload.party_members),
+    );
+  }
+  if (payload.max_party_size !== undefined) {
+    push("party limit", existing.max_party_size, payload.max_party_size);
+  }
+  if (payload.phone !== undefined) push("phone", existing.phone, payload.phone);
+  if (payload.email !== undefined) push("email", existing.email, payload.email);
+  for (const f of [
+    "address_line1",
+    "address_line2",
+    "city",
+    "state",
+    "postal_code",
+    "country",
+    "invite_notes",
+  ] as const) {
+    if (payload[f] !== undefined) push(f, existing[f], payload[f]);
+  }
+  return changes;
+}
+
+
 
 // No writes — resolves match/insert-vs-update for every row and builds the
 // exact payload that would be written, so dry-run and commit share one
@@ -1483,14 +1556,42 @@ function planImportRows(
       if (emailNorm) claimedNewEmails.add(emailNorm);
     }
 
+    // Diff + RSVP-safety warnings. Warnings only — an admin editing a
+    // household that already responded is legitimate; it just has to be
+    // visible before the commit.
+    const changes = matched ? diffPayload(matched, payload) : undefined;
+    if (matched && changes) {
+      const capChange = changes.find((c) => c.field === "party limit");
+      if (capChange && capChange.to && capChange.from) {
+        const from = Number(capChange.from);
+        const to = Number(capChange.to);
+        if (Number.isFinite(from) && Number.isFinite(to) && to < from) {
+          warnings.push(`Party limit drops from ${from} to ${to} for this household.`);
+        }
+      }
+      if (matched.hasRsvp && changes.length) {
+        warnings.push(
+          "This household has already submitted an RSVP — their response is untouched, but this row changes their invitation.",
+        );
+        if (changes.some((c) => c.field === "members")) {
+          warnings.push(
+            "Their invited names change after they responded — check their RSVP still lines up.",
+          );
+        }
+      }
+    }
+
     results.push({
       row: rowNumber,
       action: isUpdate ? "update" : "insert",
       household_name,
       matchedBy,
       warnings,
+      changes,
+      touchesRsvp: matched?.hasRsvp ?? false,
       guestId: matched?.id,
-      slug: insertSlug,
+      slug: insertSlug ?? matched?.slug,
+
       payload,
     });
   });
@@ -1509,13 +1610,15 @@ export const importGuestsCsv = createServerFn({ method: "POST" })
       context,
     }): Promise<{
       dryRun: boolean;
-      totals: { inserted: number; updated: number; errors: number };
+      totals: { inserted: number; updated: number; errors: number; unchanged: number };
       rows: ImportRowResult[];
+      snapshotId?: string;
     }> => {
       const sb = await ensureAdmin(context.supabase, context.userId);
       const dryRun = data.dryRun ?? false;
       const rows = parseCsv(data.csv);
-      if (!rows.length) return { dryRun, totals: { inserted: 0, updated: 0, errors: 0 }, rows: [] };
+      if (!rows.length)
+        return { dryRun, totals: { inserted: 0, updated: 0, errors: 0, unchanged: 0 }, rows: [] };
 
       let header: string[];
       let body: string[][];
@@ -1540,10 +1643,42 @@ export const importGuestsCsv = createServerFn({ method: "POST" })
         body = rows;
       }
 
-      const { data: existing } = await sb.from("guests").select("id, slug, phone, email");
-      const planned = planImportRows(header, body, existing ?? []);
+      // Full rows (not just match keys) so the plan can diff field by field,
+      // plus which households already responded so those rows are flagged.
+      const { data: existingRows } = await sb
+        .from("guests")
+        .select(
+          "id, slug, primary_name, phone, email, party_members, max_party_size, address_line1, address_line2, city, state, postal_code, country, invite_notes",
+        );
+      const { data: rsvpRows } = await sb.from("rsvps").select("guest_id");
+      const rsvpIds = new Set((rsvpRows ?? []).map((r) => r.guest_id));
+      const existing: ExistingGuestRef[] = (existingRows ?? []).map((g) => ({
+        ...g,
+        hasRsvp: rsvpIds.has(g.id),
+      }));
 
+      const planned = planImportRows(header, body, existing);
+
+      let snapshotId: string | undefined;
       if (!dryRun) {
+        // Snapshot first: a full copy of the guest list as it stands right
+        // now, so a bad import is one click away from being undone. A
+        // failed snapshot aborts the import rather than running unprotected.
+        const { data: snap, error: snapErr } = await sb
+          .from("guest_import_snapshots")
+          .insert({
+            created_by: context.userId,
+            guest_count: existingRows?.length ?? 0,
+            snapshot: (existingRows ?? []) as unknown as import("@/integrations/supabase/types").Json,
+          })
+          .select("id")
+          .single();
+        if (snapErr || !snap) {
+          console.error("import snapshot failed", snapErr);
+          throw new Error("Couldn't save a backup before importing — nothing was changed.");
+        }
+        snapshotId = snap.id;
+
         for (const p of planned) {
           if (p.action === "insert" && p.payload) {
             // primary_name is always set on an insert-planned row (see
@@ -1574,27 +1709,179 @@ export const importGuestsCsv = createServerFn({ method: "POST" })
         }
       }
 
-      const totals = { inserted: 0, updated: 0, errors: 0 };
+      const totals = { inserted: 0, updated: 0, errors: 0, unchanged: 0 };
       for (const p of planned) {
         if (p.action === "insert") totals.inserted++;
-        else if (p.action === "update") totals.updated++;
-        else totals.errors++;
+        else if (p.action === "update") {
+          totals.updated++;
+          if (p.changes && p.changes.length === 0) totals.unchanged++;
+        } else totals.errors++;
+      }
+
+      if (!dryRun && snapshotId) {
+        await sb
+          .from("guest_import_snapshots")
+          .update({
+            inserted_count: totals.inserted,
+            updated_count: totals.updated,
+            error_count: totals.errors,
+          })
+          .eq("id", snapshotId);
+
+        // Paper trail for a late-night change: never blocks the import.
+        try {
+          const { enqueueAppEmail, getAdminNotificationEmails } =
+            await import("@/lib/email/enqueue.server");
+          const admins = getAdminNotificationEmails();
+          const changed = planned.filter(
+            (p) => p.action === "insert" || (p.changes && p.changes.length > 0),
+          );
+          const details = [
+            { label: "New households", value: String(totals.inserted) },
+            {
+              label: "Updated",
+              value: `${totals.updated - totals.unchanged} changed, ${totals.unchanged} unchanged`,
+            },
+            { label: "Errors", value: String(totals.errors) },
+            {
+              label: "Touched an existing RSVP",
+              value: String(planned.filter((p) => p.touchesRsvp && p.changes?.length).length),
+            },
+            {
+              label: "Households changed",
+              value:
+                changed
+                  .slice(0, 25)
+                  .map((p) => p.household_name)
+                  .join(", ") + (changed.length > 25 ? `, +${changed.length - 25} more` : ""),
+            },
+          ];
+          await Promise.all(
+            admins.map((to) =>
+              enqueueAppEmail({
+                templateName: "admin-notification",
+                to,
+                idempotencyKey: `import-${snapshotId}-${to}`,
+                data: {
+                  kind: "import",
+                  headline: `Guest list import: ${totals.inserted} new, ${totals.updated} updated`,
+                  summary:
+                    "A guest list import just ran. A full backup was saved first and can be restored from the dashboard.",
+                  details,
+                  adminUrl: `${SITE.siteUrl}${SITE.adminUrl}`,
+                },
+              }),
+            ),
+          );
+        } catch (e) {
+          console.error("import summary email failed", e);
+        }
       }
 
       return {
         dryRun,
         totals,
-        rows: planned.map(({ row, action, household_name, matchedBy, warnings, error }) => ({
-          row,
-          action,
-          household_name,
-          matchedBy,
-          warnings,
-          error,
-        })),
+        snapshotId,
+        rows: planned.map(
+          ({ row, action, household_name, matchedBy, warnings, error, changes, touchesRsvp, slug }) => ({
+            row,
+            action,
+            household_name,
+            matchedBy,
+            warnings,
+            error,
+            changes,
+            touchesRsvp,
+            slug,
+          }),
+        ),
       };
     },
   );
+
+export interface ImportSnapshotRow {
+  id: string;
+  created_at: string;
+  inserted_count: number;
+  updated_count: number;
+  error_count: number;
+  guest_count: number;
+  restored_at: string | null;
+}
+
+export const listImportSnapshots = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<ImportSnapshotRow[]> => {
+    const sb = await ensureAdmin(context.supabase, context.userId);
+    const { data, error } = await sb
+      .from("guest_import_snapshots")
+      .select("id, created_at, inserted_count, updated_count, error_count, guest_count, restored_at")
+      .order("created_at", { ascending: false })
+      .limit(10);
+    if (error) {
+      console.error("listImportSnapshots failed", error);
+      throw new Error("Couldn't load import history.");
+    }
+    return data ?? [];
+  });
+
+// Puts the guests table back exactly as the snapshot recorded it: rows added
+// after the snapshot are deleted, changed rows are restored, and deleted rows
+// are re-inserted with their original ids. RSVPs are never written here — but
+// a household deleted by this restore takes its RSVP with it via the existing
+// ON DELETE CASCADE, so the UI warns before calling this.
+export const restoreImportSnapshot = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(
+    async ({
+      data,
+      context,
+    }): Promise<{ ok: boolean; restored: number; removed: number }> => {
+      const sb = await ensureAdmin(context.supabase, context.userId);
+      const { data: snap, error } = await sb
+        .from("guest_import_snapshots")
+        .select("id, snapshot")
+        .eq("id", data.id)
+        .single();
+      if (error || !snap) throw new Error("Couldn't find that backup.");
+
+      const rows = (Array.isArray(snap.snapshot) ? snap.snapshot : []) as Record<
+        string,
+        unknown
+      >[];
+      if (!rows.length) throw new Error("That backup is empty — refusing to wipe the guest list.");
+
+      const keepIds = rows.map((r) => String(r.id));
+      const { data: current } = await sb.from("guests").select("id");
+      const toRemove = (current ?? []).map((g) => g.id).filter((id) => !keepIds.includes(id));
+
+      const { error: upErr } = await sb
+        .from("guests")
+        .upsert(rows as never, { onConflict: "id" });
+      if (upErr) {
+        console.error("restoreImportSnapshot upsert failed", upErr);
+        throw new Error("Couldn't restore that backup. Nothing else was changed.");
+      }
+      if (toRemove.length) {
+        const { error: delErr } = await sb.from("guests").delete().in("id", toRemove);
+        if (delErr) {
+          console.error("restoreImportSnapshot delete failed", delErr);
+          throw new Error(
+            "Restored the previous households, but couldn't remove the ones added by the import.",
+          );
+        }
+      }
+
+      await sb
+        .from("guest_import_snapshots")
+        .update({ restored_at: new Date().toISOString() })
+        .eq("id", data.id);
+
+      return { ok: true, restored: rows.length, removed: toRemove.length };
+    },
+  );
+
 
 // Minimal CSV parser: handles quoted fields, commas, newlines, and doubled quotes.
 function parseCsv(input: string): string[][] {

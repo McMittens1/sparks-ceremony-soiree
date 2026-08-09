@@ -149,6 +149,45 @@ export type Database = {
         }
         Relationships: []
       }
+      guest_import_snapshots: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          error_count: number
+          guest_count: number
+          id: string
+          inserted_count: number
+          restored_at: string | null
+          snapshot: Json
+          source: string
+          updated_count: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          error_count?: number
+          guest_count?: number
+          id?: string
+          inserted_count?: number
+          restored_at?: string | null
+          snapshot?: Json
+          source?: string
+          updated_count?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          error_count?: number
+          guest_count?: number
+          id?: string
+          inserted_count?: number
+          restored_at?: string | null
+          snapshot?: Json
+          source?: string
+          updated_count?: number
+        }
+        Relationships: []
+      }
       guest_photos: {
         Row: {
           caption: string | null

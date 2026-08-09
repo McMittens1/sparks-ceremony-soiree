@@ -16,7 +16,7 @@ import { EmailMasthead } from "./masthead";
 import { SITE } from "@/lib/site";
 
 interface AdminNotificationProps {
-  kind?: "rsvp" | "photo";
+  kind?: "rsvp" | "photo" | "import";
   headline?: string;
   summary?: string;
   details?: { label: string; value: string }[];
@@ -35,7 +35,7 @@ const AdminNotificationEmail = ({
     <Preview>{headline}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <EmailMasthead eyebrow={`Wedding site · ${kind === "photo" ? "Photo upload" : "RSVP"}`} />
+        <EmailMasthead eyebrow={`Wedding site · ${kind === "photo" ? "Photo upload" : kind === "import" ? "Guest list import" : "RSVP"}`} />
         <Heading style={h1}>{headline}</Heading>
         {summary && <Text style={text}>{summary}</Text>}
         {details.length > 0 && (

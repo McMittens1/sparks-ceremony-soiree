@@ -21,6 +21,8 @@ import {
   deleteGuest,
   bulkDeleteGuests,
   importGuestsCsv,
+  listImportSnapshots,
+  restoreImportSnapshot,
   promoteAddedGuests,
   effectivePartyLimit,
   unlockGuestPhoneVerify,
@@ -28,6 +30,7 @@ import {
   type AdminGuestRow,
   type PartyMember,
   type ImportRowResult,
+  type ImportSnapshotRow,
 } from "@/lib/rsvp.functions";
 import { getFeatureFlags, setFeatureFlags, type FeatureFlag } from "@/lib/feature-flags.functions";
 import { TEST_HOUSEHOLD_PREFIX, isTestHousehold } from "@/lib/test-data";
@@ -322,15 +325,24 @@ function RsvpsPanel() {
         adults: 0,
         children: 0,
         fallbackLimit: 0,
+        noFactor: 0,
+        withEmail: 0,
       };
     let attending = 0,
       declined = 0,
       pending = 0,
       adults = 0,
       children = 0,
-      fallbackLimit = 0;
+      fallbackLimit = 0,
+      noFactor = 0,
+      withEmail = 0;
     for (const r of rows) {
       if (r.max_party_size == null) fallbackLimit++;
+      // Can't verify: no phone and no ZIP means this household has no way in.
+      if (r.verify_factor === "none") noFactor++;
+      // Informational only — email is optional by design, used solely when a
+      // household wants a confirmation sent to them.
+      if (r.email) withEmail++;
       if (!r.rsvp) {
         pending++;
         continue;
@@ -346,7 +358,7 @@ function RsvpsPanel() {
         else adults++;
       }
     }
-    return { attending, declined, pending, adults, children, fallbackLimit };
+    return { attending, declined, pending, adults, children, fallbackLimit, noFactor, withEmail };
   }, [rows]);
 
   const buildRsvpUrl = useCallback((row: AdminGuestRow) => {
@@ -572,7 +584,7 @@ function RsvpsPanel() {
   return (
     <div className="mt-8">
       {/* Totals */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         {[
           [t.admin.totalsAttending, totals.attending],
           [t.admin.totalsDeclined, totals.declined],
@@ -580,9 +592,19 @@ function RsvpsPanel() {
           [t.admin.totalsAdults, totals.adults],
           [t.admin.totalsChildren, totals.children],
           [t.admin.totalsFallbackLimit, totals.fallbackLimit],
+          ["Can't verify (no phone/ZIP)", totals.noFactor],
+          ["Have an email (optional)", totals.withEmail],
         ].map(([label, n]) => (
           <div key={label as string} className="border border-border/40 p-4 text-center">
-            <div className="text-2xl font-serif text-primary">{n}</div>
+            <div
+              className={`text-2xl font-serif ${
+                label === "Can't verify (no phone/ZIP)" && (n as number) > 0
+                  ? "text-destructive"
+                  : "text-primary"
+              }`}
+            >
+              {n}
+            </div>
             <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mt-1">
               {label}
             </div>
@@ -1785,8 +1807,40 @@ function GuestEditor({
 
 interface ImportSummary {
   dryRun: boolean;
-  totals: { inserted: number; updated: number; errors: number };
+  totals: { inserted: number; updated: number; errors: number; unchanged: number };
   rows: ImportRowResult[];
+  snapshotId?: string;
+}
+
+// Pasting straight out of Google Sheets or Excel yields tab-separated text.
+// Converted here rather than in the importer so the server only ever sees
+// one format.
+function tsvToCsv(text: string): string {
+  const firstLine = text.split(/\r?\n/)[0] ?? "";
+  if (!firstLine.includes("\t")) return text;
+  return text
+    .split(/\r?\n/)
+    .map((line) =>
+      line
+        .split("\t")
+        .map((cell) => (/[",\n]/.test(cell) ? `"${cell.replace(/"/g, '""')}"` : cell))
+        .join(","),
+    )
+    .join("\n");
+}
+
+function ChangeList({ changes }: { changes: { field: string; from: string; to: string }[] }) {
+  return (
+    <div className="space-y-0.5">
+      {changes.map((c, i) => (
+        <div key={i} className="text-muted-foreground">
+          <span className="text-foreground">{c.field}:</span>{" "}
+          <span className="line-through opacity-70">{c.from || "(blank)"}</span>{" "}
+          <span aria-hidden="true">→</span> <span className="text-foreground">{c.to || "(blank)"}</span>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function actionBadge(action: ImportRowResult["action"]) {
@@ -1824,6 +1878,12 @@ function CsvImporter({
   onDone: () => void | Promise<void>;
 }) {
   const runImport = useServerFn(importGuestsCsv);
+  const loadSnapshots = useServerFn(listImportSnapshots);
+  const runRestore = useServerFn(restoreImportSnapshot);
+  const [snapshots, setSnapshots] = useState<ImportSnapshotRow[]>([]);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
+  const [confirmRestoreId, setConfirmRestoreId] = useState<string | null>(null);
+  const [onlyChanges, setOnlyChanges] = useState(true);
   const [csv, setCsv] = useState("");
   const [fileName, setFileName] = useState<string | null>(null);
   const [sheetCount, setSheetCount] = useState(1);
@@ -1835,10 +1895,42 @@ function CsvImporter({
   const [err, setErr] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const busy = checking || parsing || phase === "importing";
+  const busy = checking || parsing || phase === "importing" || restoringId !== null;
+
+  const refreshSnapshots = useCallback(async () => {
+    try {
+      setSnapshots(await loadSnapshots());
+    } catch {
+      // History is a convenience; never block the importer on it.
+    }
+  }, [loadSnapshots]);
+
+  useEffect(() => {
+    void refreshSnapshots();
+  }, [refreshSnapshots]);
+
+  async function doRestore(id: string) {
+    setRestoringId(id);
+    setErr(null);
+    try {
+      const r = await runRestore({ data: { id } });
+      await onDone();
+      await refreshSnapshots();
+      toast.success(
+        `Restored ${r.restored} household${r.restored === 1 ? "" : "s"}` +
+          (r.removed ? `, removed ${r.removed} added by that import` : "") +
+          ".",
+      );
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Restore failed");
+    } finally {
+      setRestoringId(null);
+      setConfirmRestoreId(null);
+    }
+  }
 
   function editCsv(v: string) {
-    setCsv(v);
+    setCsv(tsvToCsv(v));
     // A stale preview against edited text could be committed by mistake —
     // drop back to phase 1 the moment the source text changes.
     setPhase("input");
@@ -1928,6 +2020,7 @@ function CsvImporter({
     try {
       const r = await runImport({ data: { csv, dryRun: false } });
       await onDone(); // refresh the admin table before declaring success
+      void refreshSnapshots();
       setResult(r);
       setPhase("done");
       toast.success(
@@ -2065,12 +2158,32 @@ function CsvImporter({
 
         {(phase === "preview" || phase === "importing") && result && (
           <div className="mt-4">
-            <div className="flex flex-wrap gap-3 text-xs">
+            <div className="flex flex-wrap items-center gap-3 text-xs">
               <span className="uppercase tracking-[0.2em] text-primary">
-                Preview: {result.totals.inserted} new, {result.totals.updated} updated,{" "}
-                {result.totals.errors} error{result.totals.errors === 1 ? "" : "s"}
+                Preview: {result.totals.inserted} new,{" "}
+                {result.totals.updated - result.totals.unchanged} changed,{" "}
+                {result.totals.unchanged} unchanged, {result.totals.errors} error
+                {result.totals.errors === 1 ? "" : "s"}
               </span>
+              {result.rows.some((r) => r.touchesRsvp && r.changes?.length) && (
+                <span className="border border-destructive text-destructive px-2 py-0.5 uppercase tracking-[0.15em] text-[10px]">
+                  {result.rows.filter((r) => r.touchesRsvp && r.changes?.length).length} touch an
+                  existing RSVP
+                </span>
+              )}
+              <label className="ml-auto flex items-center gap-2 text-muted-foreground">
+                <input
+                  type="checkbox"
+                  checked={onlyChanges}
+                  onChange={(e) => setOnlyChanges(e.target.checked)}
+                />
+                Only rows that change something
+              </label>
             </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              A full backup of the guest list is saved automatically before the import runs, so this
+              can be undone. Existing RSVP responses are never modified.
+            </p>
             <div className="mt-3 max-h-[400px] overflow-y-auto border border-border/40">
               <table className="w-full text-xs">
                 <thead className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground sticky top-0 bg-card">
@@ -2082,26 +2195,48 @@ function CsvImporter({
                   </tr>
                 </thead>
                 <tbody>
-                  {result.rows.map((r) => (
-                    <tr key={r.row} className="border-b border-border/20 align-top">
-                      <td className="py-2 px-3 text-muted-foreground">{r.row}</td>
-                      <td className="py-2 px-3">{r.household_name ?? "—"}</td>
-                      <td className="py-2 px-3">
-                        {actionBadge(r.action)}
-                        {r.matchedBy && (
-                          <span className="ml-2 text-muted-foreground">by {r.matchedBy}</span>
-                        )}
-                      </td>
-                      <td className="py-2 px-3">
-                        {r.error && <span className="text-destructive">{r.error}</span>}
-                        {r.warnings.map((w, i) => (
-                          <div key={i} className="text-muted-foreground">
-                            {w}
-                          </div>
-                        ))}
-                      </td>
-                    </tr>
-                  ))}
+                  {result.rows
+                    .filter(
+                      (r) =>
+                        !onlyChanges ||
+                        r.action !== "update" ||
+                        !r.changes ||
+                        r.changes.length > 0 ||
+                        r.warnings.length > 0,
+                    )
+                    .map((r) => (
+                      <tr key={r.row} className="border-b border-border/20 align-top">
+                        <td className="py-2 px-3 text-muted-foreground">{r.row}</td>
+                        <td className="py-2 px-3">
+                          {r.household_name ?? "—"}
+                          {r.touchesRsvp && (
+                            <span className="ml-2 text-[10px] uppercase tracking-[0.15em] border border-destructive text-destructive px-1.5 py-0.5">
+                              RSVP'd
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2 px-3">
+                          {actionBadge(r.action)}
+                          {r.matchedBy && (
+                            <span className="ml-2 text-muted-foreground">by {r.matchedBy}</span>
+                          )}
+                        </td>
+                        <td className="py-2 px-3">
+                          {r.error && <span className="text-destructive">{r.error}</span>}
+                          {r.changes && r.changes.length > 0 && (
+                            <ChangeList changes={r.changes} />
+                          )}
+                          {r.action === "update" && r.changes && r.changes.length === 0 && (
+                            <span className="text-muted-foreground">No change</span>
+                          )}
+                          {r.warnings.map((w, i) => (
+                            <div key={i} className="text-accent">
+                              {w}
+                            </div>
+                          ))}
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>
@@ -2218,6 +2353,64 @@ function CsvImporter({
             </div>
           </div>
         )}
+
+        {(phase === "input" || phase === "done") && snapshots.length > 0 && (
+          <div className="mt-6 border-t border-border/40 pt-4">
+            <h4 className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              Import history &amp; backups
+            </h4>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Each import saves the whole guest list first. Restoring puts it back exactly as it
+              was — households added by that import are removed (with their RSVPs), and everyone
+              else's RSVP is untouched.
+            </p>
+            <ul className="mt-3 space-y-2">
+              {snapshots.map((s) => (
+                <li
+                  key={s.id}
+                  className="flex flex-wrap items-center gap-x-3 gap-y-1 border border-border/40 px-3 py-2 text-xs"
+                >
+                  <span className="text-foreground">
+                    {new Date(s.created_at).toLocaleString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                  <span className="text-muted-foreground">
+                    {s.inserted_count} new · {s.updated_count} updated
+                    {s.error_count ? ` · ${s.error_count} errors` : ""} · backup of {s.guest_count}{" "}
+                    households
+                  </span>
+                  {s.restored_at ? (
+                    <span className="ml-auto text-muted-foreground italic">Restored</span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmRestoreId(s.id)}
+                      disabled={busy}
+                      className="ml-auto min-h-[36px] border border-border px-3 text-[10px] uppercase tracking-[0.2em] text-foreground disabled:opacity-50"
+                    >
+                      {restoringId === s.id ? "Restoring…" : "Restore"}
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {confirmRestoreId && (
+          <ConfirmDialog
+            title="Restore this backup?"
+            description="The guest list goes back to exactly how it was before that import. Households created by the import are deleted, along with any RSVP they submitted since. This cannot be undone."
+            busy={restoringId !== null}
+            onConfirm={() => void doRestore(confirmRestoreId)}
+            onCancel={() => setConfirmRestoreId(null)}
+          />
+        )}
+
 
         <p className="mt-4 text-[10px] text-muted-foreground">
           Fallback contact shown to guests who can't find their name:{" "}
