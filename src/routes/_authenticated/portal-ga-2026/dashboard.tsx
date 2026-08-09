@@ -325,15 +325,24 @@ function RsvpsPanel() {
         adults: 0,
         children: 0,
         fallbackLimit: 0,
+        noFactor: 0,
+        withEmail: 0,
       };
     let attending = 0,
       declined = 0,
       pending = 0,
       adults = 0,
       children = 0,
-      fallbackLimit = 0;
+      fallbackLimit = 0,
+      noFactor = 0,
+      withEmail = 0;
     for (const r of rows) {
       if (r.max_party_size == null) fallbackLimit++;
+      // Can't verify: no phone and no ZIP means this household has no way in.
+      if (r.verify_factor === "none") noFactor++;
+      // Informational only — email is optional by design, used solely when a
+      // household wants a confirmation sent to them.
+      if (r.email) withEmail++;
       if (!r.rsvp) {
         pending++;
         continue;
@@ -349,7 +358,7 @@ function RsvpsPanel() {
         else adults++;
       }
     }
-    return { attending, declined, pending, adults, children, fallbackLimit };
+    return { attending, declined, pending, adults, children, fallbackLimit, noFactor, withEmail };
   }, [rows]);
 
   const buildRsvpUrl = useCallback((row: AdminGuestRow) => {
@@ -575,7 +584,7 @@ function RsvpsPanel() {
   return (
     <div className="mt-8">
       {/* Totals */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         {[
           [t.admin.totalsAttending, totals.attending],
           [t.admin.totalsDeclined, totals.declined],
@@ -583,9 +592,19 @@ function RsvpsPanel() {
           [t.admin.totalsAdults, totals.adults],
           [t.admin.totalsChildren, totals.children],
           [t.admin.totalsFallbackLimit, totals.fallbackLimit],
+          ["Can't verify (no phone/ZIP)", totals.noFactor],
+          ["Have an email (optional)", totals.withEmail],
         ].map(([label, n]) => (
           <div key={label as string} className="border border-border/40 p-4 text-center">
-            <div className="text-2xl font-serif text-primary">{n}</div>
+            <div
+              className={`text-2xl font-serif ${
+                label === "Can't verify (no phone/ZIP)" && (n as number) > 0
+                  ? "text-destructive"
+                  : "text-primary"
+              }`}
+            >
+              {n}
+            </div>
             <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mt-1">
               {label}
             </div>
