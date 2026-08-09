@@ -1556,14 +1556,42 @@ function planImportRows(
       if (emailNorm) claimedNewEmails.add(emailNorm);
     }
 
+    // Diff + RSVP-safety warnings. Warnings only — an admin editing a
+    // household that already responded is legitimate; it just has to be
+    // visible before the commit.
+    const changes = matched ? diffPayload(matched, payload) : undefined;
+    if (matched && changes) {
+      const capChange = changes.find((c) => c.field === "party limit");
+      if (capChange && capChange.to && capChange.from) {
+        const from = Number(capChange.from);
+        const to = Number(capChange.to);
+        if (Number.isFinite(from) && Number.isFinite(to) && to < from) {
+          warnings.push(`Party limit drops from ${from} to ${to} for this household.`);
+        }
+      }
+      if (matched.hasRsvp && changes.length) {
+        warnings.push(
+          "This household has already submitted an RSVP — their response is untouched, but this row changes their invitation.",
+        );
+        if (changes.some((c) => c.field === "members")) {
+          warnings.push(
+            "Their invited names change after they responded — check their RSVP still lines up.",
+          );
+        }
+      }
+    }
+
     results.push({
       row: rowNumber,
       action: isUpdate ? "update" : "insert",
       household_name,
       matchedBy,
       warnings,
+      changes,
+      touchesRsvp: matched?.hasRsvp ?? false,
       guestId: matched?.id,
       slug: insertSlug,
+
       payload,
     });
   });
