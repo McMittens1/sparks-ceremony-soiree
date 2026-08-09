@@ -246,7 +246,7 @@ export const STORY_ENTRIES: StoryEntry[] = [
     place: "Sparks\u2019 Barn",
     title: "See you at the barn",
     body: "On October 10, we get to bring everyone we love together at Sparks\u2019 Barn to eat, drink, dance, and celebrate everything that brought us here. It is not the end of our story, obviously, but the website has to stop scrolling eventually. We cannot wait to celebrate with you.",
-    photos: ["eng13", "eng10", "fav"],
+    photos: ["mor115", "mor129", "mor90"],
     layout: "finale",
   },
 ];
