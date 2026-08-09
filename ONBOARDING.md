@@ -1,6 +1,6 @@
 # Moreno Wedding 2026 — Onboarding Package
 
-**Last verified against the live codebase + database: 2026-08-10 (new Portraits gallery section — `src/lib/portrait-gallery.ts`, `PortraitsSection.tsx`, `Lightbox.tsx` — gated by the new `show_portraits` flag, currently true; Our Story entries 01-04/06 re-pointed at unique new engagement photos, Section 05 untouched; build passes)** Update this line every time you re-verify. If it's stale by more than a session or two, re-verify before trusting any specific claim below — this doc is only useful if it mirrors reality.
+**Last verified against the live codebase + database: 2026-08-11 (added safe preview query params `?preview_party=1` and `?preview_ushers=1`; Wedding Party section stays hidden by `show_wedding_party=false` for normal visitors but renders privately with the override; spine numerals renumber correctly I–VIII normally and I–IX in preview; build passes)** Update this line every time you re-verify. If it's stale by more than a session or two, re-verify before trusting any specific claim below — this doc is only useful if it mirrors reality.
 
 A single source of truth for continuing this project with any AI assistant (Claude Code, Cursor, etc.). Read this file in full before making changes. A companion document, `HANDOFF.md`, captures narrative context, judgment calls, and lessons learned from the most recent development session — read that too if it exists.
 
