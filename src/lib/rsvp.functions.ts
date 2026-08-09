@@ -1610,13 +1610,15 @@ export const importGuestsCsv = createServerFn({ method: "POST" })
       context,
     }): Promise<{
       dryRun: boolean;
-      totals: { inserted: number; updated: number; errors: number };
+      totals: { inserted: number; updated: number; errors: number; unchanged: number };
       rows: ImportRowResult[];
+      snapshotId?: string;
     }> => {
       const sb = await ensureAdmin(context.supabase, context.userId);
       const dryRun = data.dryRun ?? false;
       const rows = parseCsv(data.csv);
-      if (!rows.length) return { dryRun, totals: { inserted: 0, updated: 0, errors: 0 }, rows: [] };
+      if (!rows.length)
+        return { dryRun, totals: { inserted: 0, updated: 0, errors: 0, unchanged: 0 }, rows: [] };
 
       let header: string[];
       let body: string[][];
@@ -1641,10 +1643,42 @@ export const importGuestsCsv = createServerFn({ method: "POST" })
         body = rows;
       }
 
-      const { data: existing } = await sb.from("guests").select("id, slug, phone, email");
-      const planned = planImportRows(header, body, existing ?? []);
+      // Full rows (not just match keys) so the plan can diff field by field,
+      // plus which households already responded so those rows are flagged.
+      const { data: existingRows } = await sb
+        .from("guests")
+        .select(
+          "id, slug, primary_name, phone, email, party_members, max_party_size, address_line1, address_line2, city, state, postal_code, country, invite_notes",
+        );
+      const { data: rsvpRows } = await sb.from("rsvps").select("guest_id");
+      const rsvpIds = new Set((rsvpRows ?? []).map((r) => r.guest_id));
+      const existing: ExistingGuestRef[] = (existingRows ?? []).map((g) => ({
+        ...g,
+        hasRsvp: rsvpIds.has(g.id),
+      }));
 
+      const planned = planImportRows(header, body, existing);
+
+      let snapshotId: string | undefined;
       if (!dryRun) {
+        // Snapshot first: a full copy of the guest list as it stands right
+        // now, so a bad import is one click away from being undone. A
+        // failed snapshot aborts the import rather than running unprotected.
+        const { data: snap, error: snapErr } = await sb
+          .from("guest_import_snapshots")
+          .insert({
+            created_by: context.userId,
+            guest_count: existingRows?.length ?? 0,
+            snapshot: (existingRows ?? []) as unknown as import("@/integrations/supabase/types").Json,
+          })
+          .select("id")
+          .single();
+        if (snapErr || !snap) {
+          console.error("import snapshot failed", snapErr);
+          throw new Error("Couldn't save a backup before importing — nothing was changed.");
+        }
+        snapshotId = snap.id;
+
         for (const p of planned) {
           if (p.action === "insert" && p.payload) {
             // primary_name is always set on an insert-planned row (see
@@ -1675,27 +1709,179 @@ export const importGuestsCsv = createServerFn({ method: "POST" })
         }
       }
 
-      const totals = { inserted: 0, updated: 0, errors: 0 };
+      const totals = { inserted: 0, updated: 0, errors: 0, unchanged: 0 };
       for (const p of planned) {
         if (p.action === "insert") totals.inserted++;
-        else if (p.action === "update") totals.updated++;
-        else totals.errors++;
+        else if (p.action === "update") {
+          totals.updated++;
+          if (p.changes && p.changes.length === 0) totals.unchanged++;
+        } else totals.errors++;
+      }
+
+      if (!dryRun && snapshotId) {
+        await sb
+          .from("guest_import_snapshots")
+          .update({
+            inserted_count: totals.inserted,
+            updated_count: totals.updated,
+            error_count: totals.errors,
+          })
+          .eq("id", snapshotId);
+
+        // Paper trail for a late-night change: never blocks the import.
+        try {
+          const { enqueueAppEmail, getAdminNotificationEmails } =
+            await import("@/lib/email/enqueue.server");
+          const admins = getAdminNotificationEmails();
+          const changed = planned.filter(
+            (p) => p.action === "insert" || (p.changes && p.changes.length > 0),
+          );
+          const details = [
+            { label: "New households", value: String(totals.inserted) },
+            {
+              label: "Updated",
+              value: `${totals.updated - totals.unchanged} changed, ${totals.unchanged} unchanged`,
+            },
+            { label: "Errors", value: String(totals.errors) },
+            {
+              label: "Touched an existing RSVP",
+              value: String(planned.filter((p) => p.touchesRsvp && p.changes?.length).length),
+            },
+            {
+              label: "Households changed",
+              value:
+                changed
+                  .slice(0, 25)
+                  .map((p) => p.household_name)
+                  .join(", ") + (changed.length > 25 ? `, +${changed.length - 25} more` : ""),
+            },
+          ];
+          await Promise.all(
+            admins.map((to) =>
+              enqueueAppEmail({
+                templateName: "admin-notification",
+                to,
+                idempotencyKey: `import-${snapshotId}-${to}`,
+                data: {
+                  kind: "import",
+                  headline: `Guest list import: ${totals.inserted} new, ${totals.updated} updated`,
+                  summary:
+                    "A guest list import just ran. A full backup was saved first and can be restored from the dashboard.",
+                  details,
+                  adminUrl: `${SITE.siteUrl}${SITE.adminUrl}`,
+                },
+              }),
+            ),
+          );
+        } catch (e) {
+          console.error("import summary email failed", e);
+        }
       }
 
       return {
         dryRun,
         totals,
-        rows: planned.map(({ row, action, household_name, matchedBy, warnings, error }) => ({
-          row,
-          action,
-          household_name,
-          matchedBy,
-          warnings,
-          error,
-        })),
+        snapshotId,
+        rows: planned.map(
+          ({ row, action, household_name, matchedBy, warnings, error, changes, touchesRsvp, slug }) => ({
+            row,
+            action,
+            household_name,
+            matchedBy,
+            warnings,
+            error,
+            changes,
+            touchesRsvp,
+            slug,
+          }),
+        ),
       };
     },
   );
+
+export interface ImportSnapshotRow {
+  id: string;
+  created_at: string;
+  inserted_count: number;
+  updated_count: number;
+  error_count: number;
+  guest_count: number;
+  restored_at: string | null;
+}
+
+export const listImportSnapshots = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<ImportSnapshotRow[]> => {
+    const sb = await ensureAdmin(context.supabase, context.userId);
+    const { data, error } = await sb
+      .from("guest_import_snapshots")
+      .select("id, created_at, inserted_count, updated_count, error_count, guest_count, restored_at")
+      .order("created_at", { ascending: false })
+      .limit(10);
+    if (error) {
+      console.error("listImportSnapshots failed", error);
+      throw new Error("Couldn't load import history.");
+    }
+    return data ?? [];
+  });
+
+// Puts the guests table back exactly as the snapshot recorded it: rows added
+// after the snapshot are deleted, changed rows are restored, and deleted rows
+// are re-inserted with their original ids. RSVPs are never written here — but
+// a household deleted by this restore takes its RSVP with it via the existing
+// ON DELETE CASCADE, so the UI warns before calling this.
+export const restoreImportSnapshot = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(
+    async ({
+      data,
+      context,
+    }): Promise<{ ok: boolean; restored: number; removed: number }> => {
+      const sb = await ensureAdmin(context.supabase, context.userId);
+      const { data: snap, error } = await sb
+        .from("guest_import_snapshots")
+        .select("id, snapshot")
+        .eq("id", data.id)
+        .single();
+      if (error || !snap) throw new Error("Couldn't find that backup.");
+
+      const rows = (Array.isArray(snap.snapshot) ? snap.snapshot : []) as Record<
+        string,
+        unknown
+      >[];
+      if (!rows.length) throw new Error("That backup is empty — refusing to wipe the guest list.");
+
+      const keepIds = rows.map((r) => String(r.id));
+      const { data: current } = await sb.from("guests").select("id");
+      const toRemove = (current ?? []).map((g) => g.id).filter((id) => !keepIds.includes(id));
+
+      const { error: upErr } = await sb
+        .from("guests")
+        .upsert(rows as never, { onConflict: "id" });
+      if (upErr) {
+        console.error("restoreImportSnapshot upsert failed", upErr);
+        throw new Error("Couldn't restore that backup. Nothing else was changed.");
+      }
+      if (toRemove.length) {
+        const { error: delErr } = await sb.from("guests").delete().in("id", toRemove);
+        if (delErr) {
+          console.error("restoreImportSnapshot delete failed", delErr);
+          throw new Error(
+            "Restored the previous households, but couldn't remove the ones added by the import.",
+          );
+        }
+      }
+
+      await sb
+        .from("guest_import_snapshots")
+        .update({ restored_at: new Date().toISOString() })
+        .eq("id", data.id);
+
+      return { ok: true, restored: rows.length, removed: toRemove.length };
+    },
+  );
+
 
 // Minimal CSV parser: handles quoted fields, commas, newlines, and doubled quotes.
 function parseCsv(input: string): string[][] {
