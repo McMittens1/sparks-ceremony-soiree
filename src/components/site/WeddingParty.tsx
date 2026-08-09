@@ -2,14 +2,14 @@ import { useState } from "react";
 import { PARTY, type PartyMember } from "@/lib/wedding-data";
 import { GroomsmanCard, BASE_WIDTH } from "@/components/site/GroomsmanCard";
 import { MagazineCover } from "@/components/site/MagazineCover";
-import { useFeatureFlag } from "@/hooks/use-feature-flags";
+import { useSectionOrder } from "@/hooks/use-section-order";
 
 const CARD_GRID_COLUMNS = `repeat(auto-fit, minmax(${BASE_WIDTH}px, ${BASE_WIDTH}px))`;
 
 export function WeddingParty() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const toggle = (id: string) => setExpanded((prev) => (prev === id ? null : id));
-  const { enabled: showUshers } = useFeatureFlag("show_ushers");
+  const { showUshers } = useSectionOrder();
 
   const moh = PARTY.find((p) => p.role === "Maid of Honor");
   const bridesmaids = PARTY.filter((p) => p.role === "Bridesmaid");
@@ -136,8 +136,9 @@ export function WeddingParty() {
         maxWidth={280}
       />
 
-      {/* Gated by the show_ushers feature flag (admin Features tab) — data
-          is always preserved in wedding-data.ts regardless of the flag. */}
+      {/* Gated by the show_ushers feature flag (admin Features tab) and the
+          `?preview_ushers=1` query param — data is always preserved in
+          wedding-data.ts regardless of the flag. */}
       {showUshers && ushers.length > 0 && (
         <div className="mt-14 pt-11 border-t border-hairline">
           <p

@@ -1,6 +1,6 @@
 # Handoff — Moreno Wedding 2026 Website
 
-**Last verified against the live codebase + database: 2026-08-10 (added the Portraits engagement gallery as its own homepage section behind a `show_portraits` flag, and refreshed the Our Story photos outside the untouched Proposal entry; build passes)** Bump this line whenever you re-verify. Read `ONBOARDING.md` first — it's the current-state reference; this file is the narrative behind decisions.
+**Last verified against the live codebase + database: 2026-08-11 (added safe preview query params `?preview_party=1` and `?preview_ushers=1` so the Wedding Party section and its Ushers block can be reviewed privately while `show_wedding_party` stays off for guests; spine/nav renumber correctly in preview; build passes)** Bump this line whenever you re-verify. Read `ONBOARDING.md` first — it's the current-state reference; this file is the narrative behind decisions.
 
 Originally written at the end of a development session that took this project from "RSVP disabled, no feature flags, generic wedding-party avatars" to "RSVP + photo uploads live behind a real feature-flag system, a from-scratch collectible-card wedding party section, and a full pre-launch QA pass." This document is for whichever AI picks the project up next. If `ONBOARDING.md` and this file disagree on current state, trust `ONBOARDING.md`; use this one for reasoning. If a paragraph here starts to feel stale, fold what's still true into `ONBOARDING.md` and remove or revise it here rather than let two sources of truth drift.
 
@@ -8,7 +8,20 @@ Originally written at the end of a development session that took this project fr
 
 ---
 
-## 0. Latest session — instructional placeholders removed (2026-08-06)
+## 0. Latest session — Wedding Party preview overrides (2026-08-11)
+
+The Wedding Party section and its Ushers block are hidden by production feature flags (`show_wedding_party=false`, `show_ushers=false`) because the cards and covers still carry placeholder copy. Since the site is live and guests are actively RSVPing, flipping those flags in the database just to review copy would expose an unfinished section. Added URL-only preview overrides so the couple can review privately:
+
+- `/?preview_party=1` forces the Wedding Party section visible for that browser tab only. The desktop nav, mobile drawer, and left Spine all update to match: the section appears as **IV** when Portraits is enabled (current production default) and renumbers automatically if Portraits is ever turned off.
+- `/?preview_ushers=1` forces the Ushers block visible inside the Wedding Party section for that tab only.
+- The override is read from `URLSearchParams` inside `useSectionOrder` and is never written to the DB, so a normal visitor loading `/` still sees the section hidden.
+- Verified via Playwright: party hidden by default; visible with `?preview_party=1` at 440px and 1280px; nav link and Spine numerals update from I–VIII to I–IX; Ushers block appears with `?preview_party=1&preview_ushers=1`; build passes.
+
+Implementation notes:
+- `src/hooks/use-section-order.ts` now imports `useLocation` and returns `showUshers` in addition to `showParty`/`showPortraits`, so any component that needs the ushers gate goes through the same source of truth.
+- `src/components/site/WeddingParty.tsx` now reads `showUshers` from `useSectionOrder()` instead of calling `useFeatureFlag("show_ushers")` directly.
+
+## 0a. Previous session — instructional placeholders removed (2026-08-06)
 
 Instructions had been typed into `guests.party_members` ("Enter name if bringing a plus one", "Enter all party names") as a way of telling households they could add people. The system has no notion of a non-person member, so those rows counted as invited guests: they raised the fallback party limit, inflated the named headcount and exports, and — because invited rows can't be deleted by a household — would have appeared in the RSVP form as an undeletable "person" the guest had to rename or mark not attending.
 
