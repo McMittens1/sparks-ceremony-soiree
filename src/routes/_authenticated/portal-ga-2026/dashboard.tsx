@@ -2335,6 +2335,64 @@ function CsvImporter({
           </div>
         )}
 
+        {(phase === "input" || phase === "done") && snapshots.length > 0 && (
+          <div className="mt-6 border-t border-border/40 pt-4">
+            <h4 className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              Import history &amp; backups
+            </h4>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Each import saves the whole guest list first. Restoring puts it back exactly as it
+              was — households added by that import are removed (with their RSVPs), and everyone
+              else's RSVP is untouched.
+            </p>
+            <ul className="mt-3 space-y-2">
+              {snapshots.map((s) => (
+                <li
+                  key={s.id}
+                  className="flex flex-wrap items-center gap-x-3 gap-y-1 border border-border/40 px-3 py-2 text-xs"
+                >
+                  <span className="text-foreground">
+                    {new Date(s.created_at).toLocaleString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                  <span className="text-muted-foreground">
+                    {s.inserted_count} new · {s.updated_count} updated
+                    {s.error_count ? ` · ${s.error_count} errors` : ""} · backup of {s.guest_count}{" "}
+                    households
+                  </span>
+                  {s.restored_at ? (
+                    <span className="ml-auto text-muted-foreground italic">Restored</span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmRestoreId(s.id)}
+                      disabled={busy}
+                      className="ml-auto min-h-[36px] border border-border px-3 text-[10px] uppercase tracking-[0.2em] text-foreground disabled:opacity-50"
+                    >
+                      {restoringId === s.id ? "Restoring…" : "Restore"}
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {confirmRestoreId && (
+          <ConfirmDialog
+            title="Restore this backup?"
+            description="The guest list goes back to exactly how it was before that import. Households created by the import are deleted, along with any RSVP they submitted since. This cannot be undone."
+            busy={restoringId !== null}
+            onConfirm={() => void doRestore(confirmRestoreId)}
+            onCancel={() => setConfirmRestoreId(null)}
+          />
+        )}
+
+
         <p className="mt-4 text-[10px] text-muted-foreground">
           Fallback contact shown to guests who can't find their name:{" "}
           <span className="italic">{SITE.rsvpFallbackContact}</span> (edit in{" "}
