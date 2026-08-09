@@ -26,6 +26,7 @@ Run a full visual + functional check with the preview flag forced on:
 
 - Screenshot the homepage at 440px and 1280px with `?preview_party=1`.
 - Confirm the Wedding Party section renders as Section IV (since Portraits is currently on → III is Portraits, IV is Party).
+- Confirm the left Spine updates in sync: it shows the same visible section IDs and roman numerals as the page body, and the active numeral highlights lavender on scroll.
 - Confirm the desktop nav and mobile drawer show the "Party" link.
 - Confirm the mobile drawer closes when Party is tapped and scrolls to `#party`.
 - Confirm Groomsman cards flip on tap/click and show placeholder copy where fields are empty.
@@ -34,6 +35,7 @@ Run a full visual + functional check with the preview flag forced on:
 - Confirm `show_ushers` flag still gates the Ushers block independently.
 - Confirm no console errors and no hydration mismatch.
 - Confirm that without the query param the section is still hidden.
+- Confirm that toggling `show_portraits` off and `show_wedding_party` on renumbers correctly (Wedding Party becomes Section III, Portraits disappears, spine and nav stay in sync).
 
 ### 3. Optional: same preview for `show_ushers`
 
