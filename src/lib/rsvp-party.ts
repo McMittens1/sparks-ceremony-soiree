@@ -145,11 +145,9 @@ export function computeHeadcount(rows: HeadcountInput[]): Headcount {
 
     const list = r.rsvp.attendees ?? [];
     if (list.length === 0) {
-      // A household that declined without listing anyone: its named people
-      // are the honest declined count, and the rest of the cap is closed out.
-      const named = Math.min(r.party_members.length, cap);
+      // Declined without listing anyone: the whole invitation is closed out,
+      // which keeps the maxPossible identity intact.
       declined += cap;
-      void named;
       continue;
     }
 
