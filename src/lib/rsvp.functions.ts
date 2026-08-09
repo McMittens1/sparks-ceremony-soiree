@@ -1257,6 +1257,53 @@ function parseMembers(raw: string, fallbackName: string): PartyMember[] {
     });
 }
 
+function formatMembersForDiff(v: unknown): string {
+  if (!Array.isArray(v)) return "";
+  return (v as PartyMember[])
+    .map((m) => `${m?.name ?? ""}${m?.is_child ? " (child)" : ""}`)
+    .join("; ");
+}
+
+// Field-level diff between what's stored and what this row would write.
+// Only keys present in the payload are compared, so a blank cell (omitted
+// on an update) can never show up as a change.
+function diffPayload(existing: ExistingGuestRef, payload: GuestWritePayload): ImportFieldChange[] {
+  const changes: ImportFieldChange[] = [];
+  const push = (field: string, from: unknown, to: unknown) => {
+    const a = from == null ? "" : String(from);
+    const b = to == null ? "" : String(to);
+    if (a !== b) changes.push({ field, from: a, to: b });
+  };
+
+  if (payload.primary_name !== undefined) push("name", existing.primary_name, payload.primary_name);
+  if (payload.party_members !== undefined) {
+    push(
+      "members",
+      formatMembersForDiff(existing.party_members),
+      formatMembersForDiff(payload.party_members),
+    );
+  }
+  if (payload.max_party_size !== undefined) {
+    push("party limit", existing.max_party_size, payload.max_party_size);
+  }
+  if (payload.phone !== undefined) push("phone", existing.phone, payload.phone);
+  if (payload.email !== undefined) push("email", existing.email, payload.email);
+  for (const f of [
+    "address_line1",
+    "address_line2",
+    "city",
+    "state",
+    "postal_code",
+    "country",
+    "invite_notes",
+  ] as const) {
+    if (payload[f] !== undefined) push(f, existing[f], payload[f]);
+  }
+  return changes;
+}
+
+
+
 // No writes — resolves match/insert-vs-update for every row and builds the
 // exact payload that would be written, so dry-run and commit share one
 // source of truth. `existing` should already reflect the live guests table.
