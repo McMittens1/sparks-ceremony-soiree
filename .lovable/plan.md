@@ -1,35 +1,36 @@
-# Our Story photo refresh — all 18 new photos
+# Engagement Gallery (recommended) instead of redistributing photos
 
-## What's there now
+## Recommendation
 
-Six entries in `STORY_ENTRIES` (`src/lib/wedding-data.ts`) name photo keys; `StoryTimeline.tsx` maps keys to CDN asset pointers. There are 21 slots but only 15 distinct images today, so six photos repeat: `fav` (01, 06), `eng06` (01, 04), `eng94` (01, 04), `eng82` (02, 04), `eng13` (03, 06), `eng10` (03, 06). Entry 05 uses the four real proposal photos. Nothing else on the site uses these engagement images (the hero uses a separate cutout), so any of them can be reassigned or retired.
+Go with **Option 2 — a dedicated Engagement Gallery section**, and leave every existing Our Story photo (including all of Section 05) exactly as it is.
 
-Layout contract: split rows render one large 60% photo plus a row/column of smaller ones (grid of 2 or 3 on mobile); the finale renders a 1/3-up grid.
+Why:
+- **Least work now, most flexibility later.** The gallery is additive: one new section, zero edits to `STORY_ENTRIES`. Later, when you want a story photo swapped for something narratively relevant, you change one key in one entry — the gallery keeps standing on its own.
+- **Better UI/UX.** Our Story photo clusters are supporting evidence for the text. Stuffing 18 more images into six entries would force 5–6 photo grids, break the current visual rhythm, and make each entry a scroll marathon on mobile. A gallery is the right container for "lots of beautiful photos with no caption duty."
+- **No repeat problem.** Redistribution forces awkward reuse/retirement decisions across 33 images. A gallery consumes the new set cleanly.
+- **It fills a real gap.** The current Photos section is the guest-upload gallery and stays empty until after the wedding. An engagement gallery gives the site real photography today.
 
-## New inventory
+## What gets built
 
-18 new photos across two batches: the courthouse/garden set (pink + white outfits), the downtown rooftop set, the stairs black-and-white, and the green-door close-ups. Combined with the 15 existing images that's 33 photos for a section that currently holds 21.
+A new section, **"Engagement"**, placed immediately after Our Story (so it reads as the visual companion to the story) and before The Day.
 
-## What I'll do
+- Roman numerals shift automatically; the guest Photos section stays where it is and keeps its own identity.
+- Nav gets an "Engagement" link (EN + ES).
+- Layout: an editorial masonry-ish grid matching the existing stationery aesthetic — hairline borders, tan/lavender accents, `rs-section` spacing, `Reveal` on scroll. Portrait/landscape aware so nothing is badly cropped.
+- Click a photo to open a simple lightbox (keyboard: arrows + Esc, focus trapped, `aria-modal`). Tap targets ≥44px.
+- Images lazy-loaded below the first row, explicit width/height to avoid layout shift, descriptive alt text per photo.
+- Optional but included: gate the section behind a `show_engagement_gallery` feature flag, same pattern as `show_wedding_party`, so you can publish it when you're ready and hide it without a code change.
 
-1. Upload all 18 as CDN asset pointers via `lovable-assets` — no binaries land in the repo.
-2. Extend `StoryPhotoKey` and `PHOTO_SRC` with the new keys.
-3. Widen the clusters slightly so more of the strong images fit without crowding, keeping the existing grid rules:
-   - 01 The first date — 5 (1 lead + 4-up)
-   - 02 When the boys met — 4 (1 lead + 3-up)
-   - 03 Trips, holidays, random Tuesdays — 6 (1 lead + 5)
-   - 04 One roof, four of us — 5
-   - 05 The proposal — 4, unchanged
-   - 06 See you at the barn — 4 (4-up finale grid)
-   Total 28 slots, every photo unique. The ~5 weakest/most redundant existing engagement frames get retired from the section rather than padding an entry.
-4. Cast photos by content, not by order: intimate close-ups lead 01; playful/candid frames in 02; the widest travel-and-city variety (rooftop, stairs, colonnade) in 03; settled, at-home-feeling frames in 04; three-plus forward-looking full-length frames in the finale.
-5. Write real alt text for every photo (only entry 05 has alts today), so the whole section is described for screen readers.
-6. Keep the existing style and performance practices exactly: `loading="lazy"`, `object-cover` crop rules, 4:5 / square aspect ratios, md-breakpoint two-column promotion, `photo-zoom`, hairline borders.
-7. Verify with `bun run build:dev` and Playwright screenshots at 440 / 768 / 1280.
+## Photos used
 
-## Technical detail
+The 18 newly uploaded engagement images only. Nothing currently used in Our Story is moved, removed, or duplicated into the gallery — including all four Section 05 proposal photos, which are untouched.
 
-- `src/assets/engagement/*.asset.json` — 18 new pointer files.
-- `src/lib/wedding-data.ts` — extend `StoryPhotoKey`; rewrite `photos` + `photoAlts` for entries 01–04 and 06.
-- `src/components/site/StoryTimeline.tsx` — new imports and `PHOTO_SRC` entries; small tweak to the small-photo grid so a 4- and 5-photo cluster wraps cleanly on mobile (2 cols) and tablet (grid) without changing the desktop row.
-- `ONBOARDING.md` / `HANDOFF.md` — bump "Last verified", note the new story photo inventory.
+## Technical details
+
+- Upload the 18 files via `lovable-assets create` into `src/assets/engagement/`, one `.asset.json` pointer each.
+- New `src/lib/engagement-gallery.ts`: ordered list of `{ key, alt, orientation }`; new `src/components/site/sections/EngagementSection.tsx` + a small `Lightbox.tsx`.
+- Add `"engagement"` to `SECTION_ORDER` in `src/hooks/use-section-order.ts` (extend the `ROMAN` array to 9), add the flag to `use-feature-flags`, add the nav entry in `Header.tsx`, and render it in `src/routes/index.tsx`.
+- Migration to insert the `show_engagement_gallery` flag row (default off) alongside the existing flags.
+- `src/i18n/dictionaries.ts`: EN/ES labels for the nav item, section eyebrow, title, subhead, and lightbox controls.
+- No changes to `src/lib/wedding-data.ts` or `StoryTimeline.tsx`.
+- Verify with `bun run build:dev` plus Playwright screenshots at 440 and 1280; bump "Last verified" in `ONBOARDING.md` and `HANDOFF.md` and document the new flag.
