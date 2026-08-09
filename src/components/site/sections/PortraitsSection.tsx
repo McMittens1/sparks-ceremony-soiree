@@ -34,7 +34,7 @@ export function PortraitsSection({ numeral = "III" }: { numeral?: string }) {
               type="button"
               onClick={() => setOpen(i)}
               aria-label={t.portraits.openPhoto.replace("{n}", String(i + 1))}
-              className="group relative block w-full photo-zoom border border-hairline"
+              className="group relative block w-full aspect-[4/5] overflow-hidden photo-zoom border border-hairline"
               style={{ padding: 0, lineHeight: 0, minHeight: 44 }}
             >
               <img
@@ -44,7 +44,7 @@ export function PortraitsSection({ numeral = "III" }: { numeral?: string }) {
                 height={photo.height}
                 loading={i < 3 ? "eager" : "lazy"}
                 decoding="async"
-                className="w-full h-full object-cover aspect-[4/5]"
+                className="absolute inset-0 w-full h-full object-cover"
               />
             </button>
           </Reveal>
