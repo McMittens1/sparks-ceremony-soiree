@@ -146,6 +146,17 @@ export interface Dict {
     totalsAdults: string;
     totalsChildren: string;
     totalsFallbackLimit: string;
+    headcountTitle: string;
+    headcountNote: string;
+    headcountOfPossible: string;
+    headcountAttending: string;
+    headcountDeclined: string;
+    headcountAwaiting: string;
+    headcountOpenSlots: string;
+    headcountStillPossible: string;
+    headcountMaxPossible: string;
+    headcountNamesPending: string;
+    householdsHeading: string;
     exportCsv: string;
     partyCol: string;
     guestsCol: string;
@@ -324,6 +335,18 @@ const en: Dict = {
     totalsAdults: "Adults",
     totalsChildren: "Children",
     totalsFallbackLimit: "Default limit",
+    headcountTitle: "Headcount",
+    headcountNote:
+      "Counts people, not invitations. Always the full list \u2014 search and status filters don\u2019t change it.",
+    headcountOfPossible: "of {n} possible",
+    headcountAttending: "Confirmed attending",
+    headcountDeclined: "Confirmed not attending",
+    headcountAwaiting: "Awaiting response",
+    headcountOpenSlots: "Remaining open slots",
+    headcountStillPossible: "Still possible to attend",
+    headcountMaxPossible: "Maximum possible",
+    headcountNamesPending: "Names pending",
+    householdsHeading: "Households",
     exportCsv: "Export CSV",
     partyCol: "Invitation",
     guestsCol: "Guests",
@@ -502,6 +525,18 @@ const es: Dict = {
     totalsAdults: "Adultos",
     totalsChildren: "Niños",
     totalsFallbackLimit: "Límite predeterminado",
+    headcountTitle: "Conteo de personas",
+    headcountNote:
+      "Cuenta personas, no invitaciones. Siempre la lista completa \u2014 los filtros de b\u00fasqueda y estado no la cambian.",
+    headcountOfPossible: "de {n} posibles",
+    headcountAttending: "Asistencia confirmada",
+    headcountDeclined: "No asistirán (confirmado)",
+    headcountAwaiting: "Sin responder",
+    headcountOpenSlots: "Lugares disponibles",
+    headcountStillPossible: "Aún podrían asistir",
+    headcountMaxPossible: "Máximo posible",
+    headcountNamesPending: "Nombres pendientes",
+    householdsHeading: "Grupos",
     exportCsv: "Exportar CSV",
     partyCol: "Grupo",
     guestsCol: "Invitados",
