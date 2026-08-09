@@ -82,7 +82,7 @@ export function Lightbox({
       aria-modal="true"
       aria-label={labels.counter(index + 1, photos.length)}
       className="fixed inset-0 z-[80] flex items-center justify-center"
-      style={{ background: "rgba(31,29,27,0.92)" }}
+      style={{ background: "color-mix(in oklab, var(--color-ink) 94%, transparent)" }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -92,7 +92,7 @@ export function Lightbox({
         ref={closeRef}
         onClick={onClose}
         aria-label={labels.close}
-        className="absolute font-sans text-paper border border-hairline-invert"
+        className="absolute font-sans text-ivory border border-hairline"
         style={{ top: 16, right: 16, minWidth: 44, minHeight: 44, fontSize: 20, lineHeight: 1 }}
       >
         ×
@@ -102,7 +102,7 @@ export function Lightbox({
         type="button"
         onClick={() => step(-1)}
         aria-label={labels.prev}
-        className="absolute font-sans text-paper border border-hairline-invert"
+        className="absolute font-sans text-ivory border border-hairline"
         style={{ left: 12, minWidth: 44, minHeight: 44, fontSize: 20, lineHeight: 1 }}
       >
         ‹
@@ -114,11 +114,11 @@ export function Lightbox({
           alt={photo.alt}
           width={photo.width}
           height={photo.height}
-          className="border border-hairline-invert"
+          className="border border-hairline"
           style={{ maxHeight: "78vh", maxWidth: "min(92vw, 1100px)", width: "auto", height: "auto", objectFit: "contain" }}
         />
         <figcaption
-          className="font-sans text-paper"
+          className="font-sans text-ivory"
           style={{ marginTop: 14, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", opacity: 0.75 }}
         >
           {labels.counter(index + 1, photos.length)}
@@ -129,7 +129,7 @@ export function Lightbox({
         type="button"
         onClick={() => step(1)}
         aria-label={labels.next}
-        className="absolute font-sans text-paper border border-hairline-invert"
+        className="absolute font-sans text-ivory border border-hairline"
         style={{ right: 12, minWidth: 44, minHeight: 44, fontSize: 20, lineHeight: 1 }}
       >
         ›
