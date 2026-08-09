@@ -6,11 +6,20 @@ export interface Dict {
     story: string;
     details: string;
     party: string;
+    portraits: string;
     travel: string;
     photos: string;
     registry: string;
     faq: string;
     rsvp: string;
+  };
+  portraits: {
+    title: string;
+    subhead: string;
+    openPhoto: string;
+    prev: string;
+    next: string;
+    counter: string;
   };
   common: {
     language: string;
@@ -190,11 +199,20 @@ const en: Dict = {
     story: "Our Story",
     details: "Details",
     party: "Wedding Party",
+    portraits: "Portraits",
     travel: "Travel",
     photos: "Photos",
     registry: "Registry",
     faq: "FAQ",
     rsvp: "RSVP",
+  },
+  portraits: {
+    title: "Portraits",
+    subhead: "Our engagement portraits, taken the spring before the wedding.",
+    openPhoto: "Open portrait {n} full size",
+    prev: "Previous portrait",
+    next: "Next portrait",
+    counter: "{a} of {b}",
   },
   common: {
     language: "Language",
@@ -381,11 +399,20 @@ const es: Dict = {
     story: "Nuestra historia",
     details: "Detalles",
     party: "Cortejo",
+    portraits: "Retratos",
     travel: "Cómo llegar",
     photos: "Fotos",
     registry: "Regalos",
     faq: "Preguntas",
     rsvp: "Confirmar",
+  },
+  portraits: {
+    title: "Retratos",
+    subhead: "Nuestros retratos de compromiso, tomados la primavera antes de la boda.",
+    openPhoto: "Ver el retrato {n} en tamaño completo",
+    prev: "Retrato anterior",
+    next: "Retrato siguiente",
+    counter: "{a} de {b}",
   },
   common: {
     language: "Idioma",
