@@ -27,13 +27,13 @@ export const SITE = {
   adminSignInUrl: "/portal-ga-2026",
   adminUrl: "/portal-ga-2026/dashboard",
   // Deadline for the RSVP soft cutoff (still accepts after, but shows a late notice).
-  rsvpDeadline: "2026-09-15T23:59:59-05:00",
+  rsvpDeadline: "2026-09-20T23:59:59-05:00",
   // Hand-maintained pretty-print pair for rsvpDeadline, mirroring the
   // eventDatePretty pattern above — every place that displays the deadline
   // as prose (site copy, confirmation email, SEO description) should read
   // from here instead of re-typing the date, so there's one place to
   // update if the deadline ever changes.
-  rsvpDeadlinePretty: { en: "September 15, 2026", es: "15 de septiembre de 2026" },
+  rsvpDeadlinePretty: { en: "September 20, 2026", es: "20 de septiembre de 2026" },
   // Shown when a guest can't find their name in the lookup. Update to your preferred contact.
   rsvpFallbackContact: "Text Addi or Geo directly — we'll get you sorted.",
 } as const;

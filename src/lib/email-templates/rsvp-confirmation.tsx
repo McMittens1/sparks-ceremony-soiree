@@ -41,7 +41,7 @@ const RsvpConfirmationEmail = ({
   eventDate = "October 10, 2026",
   venue = "Sparks' Barn",
   address = "13817 108th St, Louisville, NE 68037",
-  rsvpDeadline = "September 15, 2026",
+  rsvpDeadline = "September 20, 2026",
 }: RsvpConfirmationProps) => {
   const attendingList = attendees.filter((a) => a.attending);
   const declinedList = attendees.filter((a) => !a.attending);
@@ -128,7 +128,7 @@ export const template = {
     eventDate: "October 10, 2026",
     venue: "Sparks' Barn",
     address: "13817 108th St, Louisville, NE 68037",
-    rsvpDeadline: "September 15, 2026",
+    rsvpDeadline: "September 20, 2026",
   },
 } satisfies TemplateEntry;
 
