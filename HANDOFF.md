@@ -1,6 +1,6 @@
 # Handoff — Moreno Wedding 2026 Website
 
-**Last verified against the live codebase + database: 2026-08-11 (added safe preview query params `?preview_party=1` and `?preview_ushers=1` so the Wedding Party section and its Ushers block can be reviewed privately while `show_wedding_party` stays off for guests; spine/nav renumber correctly in preview; build passes)** Bump this line whenever you re-verify. Read `ONBOARDING.md` first — it's the current-state reference; this file is the narrative behind decisions.
+**Last verified against the live codebase + database: 2026-08-14 (RSVP deadline pushed back to September 20, 2026 at the couple's request; single source of truth remains `SITE.rsvpDeadline` / `SITE.rsvpDeadlinePretty`)** Bump this line whenever you re-verify. Read `ONBOARDING.md` first — it's the current-state reference; this file is the narrative behind decisions.
 
 Originally written at the end of a development session that took this project from "RSVP disabled, no feature flags, generic wedding-party avatars" to "RSVP + photo uploads live behind a real feature-flag system, a from-scratch collectible-card wedding party section, and a full pre-launch QA pass." This document is for whichever AI picks the project up next. If `ONBOARDING.md` and this file disagree on current state, trust `ONBOARDING.md`; use this one for reasoning. If a paragraph here starts to feel stale, fold what's still true into `ONBOARDING.md` and remove or revise it here rather than let two sources of truth drift.
 
