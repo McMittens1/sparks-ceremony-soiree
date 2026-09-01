@@ -1,48 +1,55 @@
-# Verify every household ZIP against its street address
+# Site health check — September 1, 2026
 
-## Why this matters right now
+Everything I checked is live-verified today. Short version: **nothing is broken.** The site builds clean, RSVPs are flowing, email delivery is healthy. The real issues are timing and content, not bugs.
 
-Verified live this session: 157 households, 136 with a street address, 21 with no ZIP at all, and **107 households that verify by ZIP** (no phone on file). For those 107, a wrong ZIP in the database is not a cosmetic data issue — it is a locked door. The guest types the ZIP they actually live at, the server compares it to the stored value, and after 5 mismatches the household is locked out for 15 minutes. So a bad ZIP is worth catching before those guests try.
+## What I verified today
 
-12 RSVPs are already in. Nothing in this plan touches RSVPs.
+- 157 households, **29 RSVPs in** (28 attending, 1 declined). Most recent: this morning.
+- Steady trickle since Aug 7 — 1 to 3 per day, no gaps, no stall.
+- Every household can be verified (0 with neither phone nor ZIP). 0 households currently locked out, 0 with failed verification attempts on record.
+- Email pipeline is healthy: every send in the last two weeks went `pending` → `sent`. The 25 `failed`/`dlq` rows are all from mid-July, before the queue fix, and nothing has failed since. The 2 suppressed addresses are old `example.com` test accounts.
+- `bun run build:dev` passes.
+- Flags: `rsvp_open` on, `show_portraits` on; `show_wedding_party`, `show_ushers`, `guest_photo_uploads` off.
 
-## Approach: batch-validate addresses, review, then correct
+## Issue 1 — 128 households haven't RSVP'd and you can't email any of them
 
-No typing addresses in one at a time. Every address gets checked by a geocoder, and you only look at the rows that disagree.
+This is the one that actually matters. The deadline is **September 20 — 19 days away**, and 82% of the guest list hasn't responded.
 
-**Step 1 — Export and validate (no key needed)**
-Pull every household's `address_line1`, `city`, `state`, `postal_code` and run them through the **US Census Bureau batch geocoder**, which is free, needs no API key, and accepts up to 10,000 addresses per request. It returns the canonical matched address including the official ZIP.
+The problem: **not one of those 128 non-responders has an email address on file.** Only 11 households in the entire database have an email at all, and all 11 have already RSVP'd. So an email reminder campaign has literally zero possible recipients. Of the 128, 43 have a phone number; the other 85 are address-only.
 
-**Step 2 — Classify each row**
-- **Match** — geocoder ZIP equals stored ZIP. Nothing to do.
-- **Mismatch** — geocoder found the address but returned a different ZIP. This is the pile you care about.
-- **No ZIP on file** — the 21 rows with a blank ZIP; the geocoder can fill these in.
-- **Not found / ambiguous** — bad or incomplete street line, PO boxes, apartment-only lines, the 1 Mexico address. These get flagged for you to eyeball, not auto-corrected.
+What I'd build:
 
-For anything the Census geocoder can't resolve, fall back to Google's Geocoding API for a second opinion — that step needs a Google Maps API key, so I'd only wire it in if you want it and can supply one.
+- A **"Hasn't responded" view** in the admin dashboard: filterable list of the 128, showing name, phone (or "no phone"), and their personal RSVP link, with a one-click copy and a CSV export. That turns "who do I chase?" into a list you can work from your phone.
+- **Copy-ready reminder text** for the 43 with phones — a short message with their direct link, in English and Spanish, so you can paste and send.
+- For the 85 address-only households, the list doubles as a call/paper checklist.
 
-**Step 3 — You review before anything is written**
-The result is a report you read, not a silent update:
-- a CSV saved for you with one row per household: name, stored address, stored ZIP, suggested ZIP, and why it was flagged
-- a chat summary of the counts (how many match, how many differ, how many unresolvable)
+Optional but worth deciding: whether the Sept 20 deadline is real or soft. The site already shows a late notice rather than closing, so nothing breaks if people trickle in after — but the caterer number is a different question.
 
-**Step 4 — Apply only the corrections you approve**
-Once you say which suggestions to accept, the ZIPs are updated. Two safeguards:
-- a snapshot of the affected rows is written to `guest_import_snapshots` first, so any change is reversible
-- only `postal_code` changes; street, city, state, phone, party sizes, and RSVPs are untouched
+## Issue 2 — Wedding Party is still hidden and still on placeholder copy
 
-Also worth flagging in the same pass: households whose ZIP correction would change what an already-RSVP'd guest was asked. Harmless (they're already through), but you should see the list.
+The 27 real names are in the data, but no card stats, abilities, or magazine-cover headlines are written, which is why the section is still flagged off. Ushers likewise. It's the only visibly unfinished part of the site. With 5 weeks to the wedding, this is the natural next content push — you can review it privately at `/?preview_party=1&preview_ushers=1` without flipping anything live.
+
+## Issue 3 — Guest photo uploads are built but never turned on
+
+Fully functional, zero photos in the system, flag off. Probably deliberate (you'd flip it the week of the wedding), but if you want guests uploading engagement-party or getting-ready photos beforehand, it's a one-toggle change plus a QA pass on the moderation queue.
+
+## Issue 4 — Docs are 18 days stale
+
+`ONBOARDING.md` and `HANDOFF.md` were last verified Aug 14, when there were 12 RSVPs and the headcount picture was different. Whichever of the above we do, both get updated and re-dated in the same turn.
+
+## Nothing to do here
+
+- No security issues found; RLS, admin gating, and verification lockout all behave as documented.
+- No runtime errors, no failed sends, no locked-out guests.
+- The ZIP-audit idea from the last session is now lower value: with 0 unverifiable households and 0 recorded failed verification attempts, no guest has actually hit a wrong-ZIP wall. Worth doing only if you hear from someone who can't get in.
 
 ## What I need from you
 
-1. Confirm you want the free Census geocoder as the primary check (yes = I can start immediately, no key needed).
-2. Say whether you want the Google Geocoding fallback for hard cases — if yes, I'll need a Google Maps API key stored as a secret.
-3. Confirm the review-before-write flow, or tell me to auto-apply high-confidence exact matches and only surface the ambiguous ones.
+Tell me which to start with. My recommendation, in order: **Issue 1 (chase the 128)**, then **Issue 2 (finish the Wedding Party)**. Issue 3 whenever you want it live, Issue 4 rides along automatically.
 
 ## Technical notes
 
-- Validation runs as a one-off script in the sandbox against the live `guests` table (read-only), not as new app code. No new routes, server functions, or UI unless you want this to become a recurring admin tool later.
-- ZIPs are compared on the first 5 digits, matching `normalizeZip()` in `src/lib/rsvp.functions.ts`, so `68522-1234` and `68522` are treated as equal and will not appear as mismatches.
-- Corrections are applied as a migration (updates require one), preceded by a snapshot insert.
-- The 1 Mexico address is excluded from the US geocoder and reviewed manually.
-- Docs: `ONBOARDING.md` and `HANDOFF.md` get a short note about the ZIP audit and its date, per the docs-are-code rule.
+- Issue 1 adds a filter and export to the existing dashboard guest list plus a reminder-link column; it reuses `listGuestsWithRsvps` and the existing signed-token helpers, so no new tables, no new public routes, and no change to the RSVP flow itself.
+- Reminder text lives in `src/i18n/dictionaries.ts` alongside the other EN/ES copy — no hardcoded strings.
+- Issue 2 is data-only edits to `PARTY` in `src/lib/wedding-data.ts` (`cardRarity`, `cardAttributes`, `cardAbility`, `coverHeadline`, `coverSubline`); the card and cover components already fall back to placeholders and need no changes.
+- Verification for either: `bun run build:dev`, plus Playwright screenshots at 440 and 1280.
