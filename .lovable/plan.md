@@ -4,6 +4,8 @@
 
 - **Chase the non-responders (Issue 1).** Admin RSVPs tab now has a reachable-by filter, a "Still to chase" panel (124 pending / 41 phone / 83 address-only / 19 days left), one-click Text and Mail-call list presets, EN/ES copy-ready reminder text per row and in bulk, and a chase CSV export. Verified live at 1280 and 440.
 - **Docs refresh (Issue 4).** `ONBOARDING.md` and `HANDOFF.md` re-verified against the live database and re-dated 2026-09-02.
+- **Image delivery (perf recs 1–3).** Build-time WebP derivatives (480/800/1200/1600) for every asset photo, `ResponsiveImg` srcset/sizes in Story, Portraits and Lightbox, `fetchPriority` preload fix. Homepage images: ~259 KB at 440px, ~424 KB at 1280px, no console errors. Lazy-loading behavior left as-is (correct).
+
 
 ## Open
 
