@@ -382,6 +382,22 @@ function RsvpsPanel() {
     return { attending, declined, pending, adults, children, fallbackLimit, noFactor, withEmail };
   }, [rows]);
 
+  // Chase view — everyone who hasn't responded, split by how they can be
+  // reached. Deliberately computed off every real household, not the filtered
+  // view, so the numbers don't move as you narrow the table below it.
+  const chase = useMemo(() => {
+    const list = (rows ?? []).filter((r) => !isTestHousehold(r.primary_name) && !r.rsvp);
+    const withPhone = list.filter((r) => !!r.phone?.trim()).length;
+    const deadline = new Date(SITE.rsvpDeadline).getTime();
+    const daysLeft = Math.ceil((deadline - Date.now()) / (24 * 60 * 60 * 1000));
+    return {
+      total: list.length,
+      withPhone,
+      addressOnly: list.length - withPhone,
+      daysLeft,
+    };
+  }, [rows]);
+
   const buildRsvpUrl = useCallback((row: AdminGuestRow) => {
     const path = `/rsvp/edit/${row.edit_token}`;
     if (typeof window === "undefined") return path;
