@@ -1,0 +1,224 @@
+{
+  "Favorite.jpg": {
+    "fallback": "/images/derived/favorite-1600.webp",
+    "height": 1280,
+    "srcset": "/images/derived/favorite-480.webp 480w, /images/derived/favorite-800.webp 800w, /images/derived/favorite-1200.webp 1200w, /images/derived/favorite-1600.webp 1600w",
+    "width": 1920
+  },
+  "Geo_AddiEngagement-06.jpg": {
+    "fallback": "/images/derived/geo-addiengagement-06-1200.webp",
+    "height": 1824,
+    "srcset": "/images/derived/geo-addiengagement-06-480.webp 480w, /images/derived/geo-addiengagement-06-800.webp 800w, /images/derived/geo-addiengagement-06-1200.webp 1200w",
+    "width": 1216
+  },
+  "Geo_AddiEngagement-10.jpg": {
+    "fallback": "/images/derived/geo-addiengagement-10-1200.webp",
+    "height": 1824,
+    "srcset": "/images/derived/geo-addiengagement-10-480.webp 480w, /images/derived/geo-addiengagement-10-800.webp 800w, /images/derived/geo-addiengagement-10-1200.webp 1200w",
+    "width": 1216
+  },
+  "Geo_AddiEngagement-13.jpg": {
+    "fallback": "/images/derived/geo-addiengagement-13-1600.webp",
+    "height": 1216,
+    "srcset": "/images/derived/geo-addiengagement-13-480.webp 480w, /images/derived/geo-addiengagement-13-800.webp 800w, /images/derived/geo-addiengagement-13-1200.webp 1200w, /images/derived/geo-addiengagement-13-1600.webp 1600w",
+    "width": 1824
+  },
+  "Geo_AddiEngagement-15.jpg": {
+    "fallback": "/images/derived/geo-addiengagement-15-1200.webp",
+    "height": 1824,
+    "srcset": "/images/derived/geo-addiengagement-15-480.webp 480w, /images/derived/geo-addiengagement-15-800.webp 800w, /images/derived/geo-addiengagement-15-1200.webp 1200w",
+    "width": 1216
+  },
+  "Geo_AddiEngagement-19.jpg": {
+    "fallback": "/images/derived/geo-addiengagement-19-1200.webp",
+    "height": 1824,
+    "srcset": "/images/derived/geo-addiengagement-19-480.webp 480w, /images/derived/geo-addiengagement-19-800.webp 800w, /images/derived/geo-addiengagement-19-1200.webp 1200w",
+    "width": 1216
+  },
+  "Geo_AddiEngagement-26.jpg": {
+    "fallback": "/images/derived/geo-addiengagement-26-1200.webp",
+    "height": 1920,
+    "srcset": "/images/derived/geo-addiengagement-26-480.webp 480w, /images/derived/geo-addiengagement-26-800.webp 800w, /images/derived/geo-addiengagement-26-1200.webp 1200w",
+    "width": 1280
+  },
+  "Geo_AddiEngagement-27.jpg": {
+    "fallback": "/images/derived/geo-addiengagement-27-1200.webp",
+    "height": 1824,
+    "srcset": "/images/derived/geo-addiengagement-27-480.webp 480w, /images/derived/geo-addiengagement-27-800.webp 800w, /images/derived/geo-addiengagement-27-1200.webp 1200w",
+    "width": 1216
+  },
+  "Geo_AddiEngagement-42.jpg": {
+    "fallback": "/images/derived/geo-addiengagement-42-1200.webp",
+    "height": 1920,
+    "srcset": "/images/derived/geo-addiengagement-42-480.webp 480w, /images/derived/geo-addiengagement-42-800.webp 800w, /images/derived/geo-addiengagement-42-1200.webp 1200w",
+    "width": 1280
+  },
+  "Geo_AddiEngagement-46.jpg": {
+    "fallback": "/images/derived/geo-addiengagement-46-1200.webp",
+    "height": 1920,
+    "srcset": "/images/derived/geo-addiengagement-46-480.webp 480w, /images/derived/geo-addiengagement-46-800.webp 800w, /images/derived/geo-addiengagement-46-1200.webp 1200w",
+    "width": 1280
+  },
+  "Geo_AddiEngagement-50.jpg": {
+    "fallback": "/images/derived/geo-addiengagement-50-1200.webp",
+    "height": 1920,
+    "srcset": "/images/derived/geo-addiengagement-50-480.webp 480w, /images/derived/geo-addiengagement-50-800.webp 800w, /images/derived/geo-addiengagement-50-1200.webp 1200w",
+    "width": 1280
+  },
+  "Geo_AddiEngagement-66.jpg": {
+    "fallback": "/images/derived/geo-addiengagement-66-1200.webp",
+    "height": 1920,
+    "srcset": "/images/derived/geo-addiengagement-66-480.webp 480w, /images/derived/geo-addiengagement-66-800.webp 800w, /images/derived/geo-addiengagement-66-1200.webp 1200w",
+    "width": 1280
+  },
+  "Geo_AddiEngagement-68.jpg": {
+    "fallback": "/images/derived/geo-addiengagement-68-1200.webp",
+    "height": 1920,
+    "srcset": "/images/derived/geo-addiengagement-68-480.webp 480w, /images/derived/geo-addiengagement-68-800.webp 800w, /images/derived/geo-addiengagement-68-1200.webp 1200w",
+    "width": 1280
+  },
+  "Geo_AddiEngagement-74.jpg": {
+    "fallback": "/images/derived/geo-addiengagement-74-1200.webp",
+    "height": 1824,
+    "srcset": "/images/derived/geo-addiengagement-74-480.webp 480w, /images/derived/geo-addiengagement-74-800.webp 800w, /images/derived/geo-addiengagement-74-1200.webp 1200w",
+    "width": 1216
+  },
+  "Geo_AddiEngagement-75.jpg": {
+    "fallback": "/images/derived/geo-addiengagement-75-1600.webp",
+    "height": 1216,
+    "srcset": "/images/derived/geo-addiengagement-75-480.webp 480w, /images/derived/geo-addiengagement-75-800.webp 800w, /images/derived/geo-addiengagement-75-1200.webp 1200w, /images/derived/geo-addiengagement-75-1600.webp 1600w",
+    "width": 1824
+  },
+  "Geo_AddiEngagement-82.jpg": {
+    "fallback": "/images/derived/geo-addiengagement-82-1200.webp",
+    "height": 1824,
+    "srcset": "/images/derived/geo-addiengagement-82-480.webp 480w, /images/derived/geo-addiengagement-82-800.webp 800w, /images/derived/geo-addiengagement-82-1200.webp 1200w",
+    "width": 1216
+  },
+  "Geo_AddiEngagement-85.jpg": {
+    "fallback": "/images/derived/geo-addiengagement-85-1600.webp",
+    "height": 1280,
+    "srcset": "/images/derived/geo-addiengagement-85-480.webp 480w, /images/derived/geo-addiengagement-85-800.webp 800w, /images/derived/geo-addiengagement-85-1200.webp 1200w, /images/derived/geo-addiengagement-85-1600.webp 1600w",
+    "width": 1920
+  },
+  "Geo_AddiEngagement-91.jpg": {
+    "fallback": "/images/derived/geo-addiengagement-91-1200.webp",
+    "height": 1920,
+    "srcset": "/images/derived/geo-addiengagement-91-480.webp 480w, /images/derived/geo-addiengagement-91-800.webp 800w, /images/derived/geo-addiengagement-91-1200.webp 1200w",
+    "width": 1536
+  },
+  "Geo_AddiEngagement-94.jpg": {
+    "fallback": "/images/derived/geo-addiengagement-94-1200.webp",
+    "height": 1824,
+    "srcset": "/images/derived/geo-addiengagement-94-480.webp 480w, /images/derived/geo-addiengagement-94-800.webp 800w, /images/derived/geo-addiengagement-94-1200.webp 1200w",
+    "width": 1216
+  },
+  "Geo_AddiEngagement-95.jpg": {
+    "fallback": "/images/derived/geo-addiengagement-95-1600.webp",
+    "height": 1440,
+    "srcset": "/images/derived/geo-addiengagement-95-480.webp 480w, /images/derived/geo-addiengagement-95-800.webp 800w, /images/derived/geo-addiengagement-95-1200.webp 1200w, /images/derived/geo-addiengagement-95-1600.webp 1600w",
+    "width": 1920
+  },
+  "MorenoEngagement-115.jpg": {
+    "fallback": "/images/derived/morenoengagement-115-1200.webp",
+    "height": 1920,
+    "srcset": "/images/derived/morenoengagement-115-480.webp 480w, /images/derived/morenoengagement-115-800.webp 800w, /images/derived/morenoengagement-115-1200.webp 1200w",
+    "width": 1280
+  },
+  "MorenoEngagement-129.jpg": {
+    "fallback": "/images/derived/morenoengagement-129-1200.webp",
+    "height": 1920,
+    "srcset": "/images/derived/morenoengagement-129-480.webp 480w, /images/derived/morenoengagement-129-800.webp 800w, /images/derived/morenoengagement-129-1200.webp 1200w",
+    "width": 1280
+  },
+  "MorenoEngagement-147.jpg": {
+    "fallback": "/images/derived/morenoengagement-147-1600.webp",
+    "height": 1280,
+    "srcset": "/images/derived/morenoengagement-147-480.webp 480w, /images/derived/morenoengagement-147-800.webp 800w, /images/derived/morenoengagement-147-1200.webp 1200w, /images/derived/morenoengagement-147-1600.webp 1600w",
+    "width": 1920
+  },
+  "MorenoEngagement-15.jpg": {
+    "fallback": "/images/derived/morenoengagement-15-1600.webp",
+    "height": 1920,
+    "srcset": "/images/derived/morenoengagement-15-480.webp 480w, /images/derived/morenoengagement-15-800.webp 800w, /images/derived/morenoengagement-15-1200.webp 1200w, /images/derived/morenoengagement-15-1600.webp 1600w",
+    "width": 1920
+  },
+  "MorenoEngagement-2.jpg": {
+    "fallback": "/images/derived/morenoengagement-2-1200.webp",
+    "height": 1920,
+    "srcset": "/images/derived/morenoengagement-2-480.webp 480w, /images/derived/morenoengagement-2-800.webp 800w, /images/derived/morenoengagement-2-1200.webp 1200w",
+    "width": 1280
+  },
+  "MorenoEngagement-23.jpg": {
+    "fallback": "/images/derived/morenoengagement-23-1200.webp",
+    "height": 1920,
+    "srcset": "/images/derived/morenoengagement-23-480.webp 480w, /images/derived/morenoengagement-23-800.webp 800w, /images/derived/morenoengagement-23-1200.webp 1200w",
+    "width": 1280
+  },
+  "MorenoEngagement-77.jpg": {
+    "fallback": "/images/derived/morenoengagement-77-1200.webp",
+    "height": 1920,
+    "srcset": "/images/derived/morenoengagement-77-480.webp 480w, /images/derived/morenoengagement-77-800.webp 800w, /images/derived/morenoengagement-77-1200.webp 1200w",
+    "width": 1280
+  },
+  "MorenoEngagement-80.jpg": {
+    "fallback": "/images/derived/morenoengagement-80-1200.webp",
+    "height": 1920,
+    "srcset": "/images/derived/morenoengagement-80-480.webp 480w, /images/derived/morenoengagement-80-800.webp 800w, /images/derived/morenoengagement-80-1200.webp 1200w",
+    "width": 1280
+  },
+  "MorenoEngagement-90.jpg": {
+    "fallback": "/images/derived/morenoengagement-90-1200.webp",
+    "height": 1920,
+    "srcset": "/images/derived/morenoengagement-90-480.webp 480w, /images/derived/morenoengagement-90-800.webp 800w, /images/derived/morenoengagement-90-1200.webp 1200w",
+    "width": 1280
+  },
+  "hero-portrait.png": {
+    "fallback": "/images/derived/hero-portrait-1200.webp",
+    "height": 1024,
+    "srcset": "/images/derived/hero-portrait-480.webp 480w, /images/derived/hero-portrait-800.webp 800w, /images/derived/hero-portrait-1200.webp 1200w",
+    "width": 1256
+  },
+  "proposal-couple.jpg": {
+    "fallback": "/images/derived/proposal-couple-1200.webp",
+    "height": 1920,
+    "srcset": "/images/derived/proposal-couple-480.webp 480w, /images/derived/proposal-couple-800.webp 800w, /images/derived/proposal-couple-1200.webp 1200w",
+    "width": 1280
+  },
+  "proposal-kneel.jpg": {
+    "fallback": "/images/derived/proposal-kneel-1200.webp",
+    "height": 1920,
+    "srcset": "/images/derived/proposal-kneel-480.webp 480w, /images/derived/proposal-kneel-800.webp 800w, /images/derived/proposal-kneel-1200.webp 1200w",
+    "width": 1280
+  },
+  "proposal-marquee.jpg": {
+    "fallback": "/images/derived/proposal-marquee-1200.webp",
+    "height": 1920,
+    "srcset": "/images/derived/proposal-marquee-480.webp 480w, /images/derived/proposal-marquee-800.webp 800w, /images/derived/proposal-marquee-1200.webp 1200w",
+    "width": 1280
+  },
+  "proposal-ring.jpg": {
+    "fallback": "/images/derived/proposal-ring-1600.webp",
+    "height": 1280,
+    "srcset": "/images/derived/proposal-ring-480.webp 480w, /images/derived/proposal-ring-800.webp 800w, /images/derived/proposal-ring-1200.webp 1200w, /images/derived/proposal-ring-1600.webp 1600w",
+    "width": 1920
+  },
+  "sparks-barn-aerial.jpg": {
+    "fallback": "/images/derived/sparks-barn-aerial-1600.webp",
+    "height": 1078,
+    "srcset": "/images/derived/sparks-barn-aerial-480.webp 480w, /images/derived/sparks-barn-aerial-800.webp 800w, /images/derived/sparks-barn-aerial-1200.webp 1200w, /images/derived/sparks-barn-aerial-1600.webp 1600w",
+    "width": 1920
+  },
+  "sparks-barn-fireworks.jpg": {
+    "fallback": "/images/derived/sparks-barn-fireworks-1600.webp",
+    "height": 1280,
+    "srcset": "/images/derived/sparks-barn-fireworks-480.webp 480w, /images/derived/sparks-barn-fireworks-800.webp 800w, /images/derived/sparks-barn-fireworks-1200.webp 1200w, /images/derived/sparks-barn-fireworks-1600.webp 1600w",
+    "width": 1920
+  },
+  "sparks-barn-sunset.jpg": {
+    "fallback": "/images/derived/sparks-barn-sunset-1600.webp",
+    "height": 1280,
+    "srcset": "/images/derived/sparks-barn-sunset-480.webp 480w, /images/derived/sparks-barn-sunset-800.webp 800w, /images/derived/sparks-barn-sunset-1200.webp 1200w, /images/derived/sparks-barn-sunset-1600.webp 1600w",
+    "width": 1920
+  }
+}
