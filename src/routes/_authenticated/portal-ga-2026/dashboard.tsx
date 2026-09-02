@@ -3,7 +3,8 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useT } from "@/i18n/context";
+import { useT, fmt } from "@/i18n/context";
+import { dictionaries } from "@/i18n/dictionaries";
 import {
   getAdminPhotos,
   setPhotoStatus,
