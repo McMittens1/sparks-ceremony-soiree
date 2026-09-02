@@ -181,6 +181,9 @@ export interface Dict {
     fallbackLimitBadge: string;
     fallbackLimitFilter: string;
     fallbackLimitSummary: string;
+    // Guest-facing reminder message an admin copies and sends by text.
+    // {name} household name, {link} personal RSVP link, {deadline} pretty date.
+    reminderMessage: string;
   };
   auth: {
     title: string;
@@ -381,6 +384,8 @@ const en: Dict = {
     fallbackLimitFilter: "Uses default limit",
     fallbackLimitSummary:
       "{n} household{s} still use the default \u201cnamed + 1\u201d limit. Set an explicit cap where you know the real total.",
+    reminderMessage:
+      "Hi {name} — Geo & Addison here! We haven't gotten your RSVP yet. You can reply here: {link} (by {deadline}). Thank you!",
   },
   auth: {
     title: "Admin sign-in",
@@ -580,6 +585,8 @@ const es: Dict = {
     fallbackLimitFilter: "Usa límite predeterminado",
     fallbackLimitSummary:
       "{n} grupo{s} aún usa el límite predeterminado \u201cnombrados + 1\u201d. Establece un límite explícito donde conozcas el total real.",
+    reminderMessage:
+      "Hola {name} — ¡nos casamos pronto! Aún no tenemos su respuesta. Pueden confirmar aquí: {link} (antes del {deadline}). ¡Gracias! — Geo y Addison",
   },
   auth: {
     title: "Acceso admin",

@@ -3,7 +3,8 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useT } from "@/i18n/context";
+import { useT, fmt } from "@/i18n/context";
+import { dictionaries } from "@/i18n/dictionaries";
 import {
   getAdminPhotos,
   setPhotoStatus,
@@ -166,6 +167,12 @@ function RsvpsPanel() {
   const [noFactorOnly, setNoFactorOnly] = useState(false);
   const [songOnly, setSongOnly] = useState(false);
   const [fallbackOnly, setFallbackOnly] = useState(false);
+  // How a household can actually be chased: a phone number means a text,
+  // no phone means a call/paper follow-up from the mailing address.
+  const [reachable, setReachable] = useState<"any" | "phone" | "nophone">("any");
+  // Language of the *guest-facing* reminder text, independent of the admin UI
+  // language — an English-speaking admin often texts Spanish-speaking family.
+  const [reminderLang, setReminderLang] = useState<"en" | "es">("en");
   const [testFilter, setTestFilter] = useState<"any" | "only" | "hide">("any");
   const [sortKey, setSortKey] = useState<SortKey>("submitted");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -254,6 +261,8 @@ function RsvpsPanel() {
       if (noFactorOnly && r.verify_factor !== "none") return false;
       if (songOnly && !(r.rsvp?.song_request ?? "").trim()) return false;
       if (fallbackOnly && r.max_party_size != null) return false;
+      if (reachable === "phone" && !r.phone?.trim()) return false;
+      if (reachable === "nophone" && !!r.phone?.trim()) return false;
       if (testFilter !== "any") {
         const isTest = isTestHousehold(r.primary_name);
         if (testFilter === "only" && !isTest) return false;
@@ -302,6 +311,7 @@ function RsvpsPanel() {
     noFactorOnly,
     songOnly,
     fallbackOnly,
+    reachable,
     testFilter,
     filter,
     sortKey,
@@ -371,6 +381,22 @@ function RsvpsPanel() {
       }
     }
     return { attending, declined, pending, adults, children, fallbackLimit, noFactor, withEmail };
+  }, [rows]);
+
+  // Chase view — everyone who hasn't responded, split by how they can be
+  // reached. Deliberately computed off every real household, not the filtered
+  // view, so the numbers don't move as you narrow the table below it.
+  const chase = useMemo(() => {
+    const list = (rows ?? []).filter((r) => !isTestHousehold(r.primary_name) && !r.rsvp);
+    const withPhone = list.filter((r) => !!r.phone?.trim()).length;
+    const deadline = new Date(SITE.rsvpDeadline).getTime();
+    const daysLeft = Math.ceil((deadline - Date.now()) / (24 * 60 * 60 * 1000));
+    return {
+      total: list.length,
+      withPhone,
+      addressOnly: list.length - withPhone,
+      daysLeft,
+    };
   }, [rows]);
 
   const buildRsvpUrl = useCallback((row: AdminGuestRow) => {
@@ -544,6 +570,76 @@ function RsvpsPanel() {
     }
   }
 
+  // Guest-facing reminder text. Always built from SITE.siteUrl (never
+  // window.location.origin) because this string gets pasted into a text
+  // message and must resolve to production wherever it was copied from.
+  function buildReminder(row: AdminGuestRow) {
+    return fmt(dictionaries[reminderLang].admin.reminderMessage, {
+      name: row.primary_name,
+      link: `${SITE.siteUrl}/rsvp?t=${row.verify_token}`,
+      deadline: SITE.rsvpDeadlinePretty[reminderLang],
+    });
+  }
+
+  async function copyReminder(row: AdminGuestRow) {
+    try {
+      await navigator.clipboard.writeText(buildReminder(row));
+      toast.success(`Copied ${row.primary_name}'s reminder (${reminderLang.toUpperCase()}).`);
+    } catch {
+      toast.error("Couldn't copy to clipboard.");
+    }
+  }
+
+  async function copySelectedReminders() {
+    const text = selectedRows.map(buildReminder).join("\n\n");
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(`Copied ${selectedRows.length} reminder${selectedRows.length === 1 ? "" : "s"}.`);
+    } catch {
+      toast.error("Couldn't copy to clipboard.");
+    }
+  }
+
+  // Chase CSV — a working call/text sheet, not a backup. Kept separate from
+  // the Master export so the two can never be confused at import time.
+  function toChaseCsv(list: AdminGuestRow[]) {
+    const header = [
+      "household_name",
+      "party_limit",
+      "phone",
+      "reachable_by",
+      "city",
+      "state",
+      "rsvp_link",
+      "reminder_en",
+      "reminder_es",
+    ];
+    const body = list.map((r) => {
+      const link = `${SITE.siteUrl}/rsvp?t=${r.verify_token}`;
+      const msg = (lang: "en" | "es") =>
+        fmt(dictionaries[lang].admin.reminderMessage, {
+          name: r.primary_name,
+          link,
+          deadline: SITE.rsvpDeadlinePretty[lang],
+        });
+      return [
+        r.primary_name,
+        String(r.party_limit),
+        r.phone ?? "",
+        r.phone?.trim() ? "text/call" : "mail/in person",
+        r.city ?? "",
+        r.state ?? "",
+        link,
+        msg("en"),
+        msg("es"),
+      ]
+        .map((v) => escCsv(v))
+        .join(",");
+    });
+    return [header.join(","), ...body].join("\n");
+  }
+
   function exportCsv(csv: string, name: string, count: number, label: string) {
     downloadCsv(csv, name);
     toast.success(`Exported ${count} household${count === 1 ? "" : "s"} to ${label}.`);
@@ -579,6 +675,7 @@ function RsvpsPanel() {
     noFactorOnly,
     songOnly,
     fallbackOnly,
+    reachable !== "any",
     testFilter !== "any",
   ].filter(Boolean).length;
 
@@ -590,6 +687,7 @@ function RsvpsPanel() {
     setNoFactorOnly(false);
     setSongOnly(false);
     setFallbackOnly(false);
+    setReachable("any");
     setTestFilter("any");
   }
 
@@ -748,6 +846,16 @@ function RsvpsPanel() {
           {t.admin.fallbackLimitFilter}
         </label>
         <select
+          value={reachable}
+          onChange={(e) => setReachable(e.target.value as typeof reachable)}
+          className="border border-input bg-background px-3 py-2 text-sm"
+          title="How this household can be chased"
+        >
+          <option value="any">Reachable: any</option>
+          <option value="phone">Has phone (text/call)</option>
+          <option value="nophone">No phone (mail only)</option>
+        </select>
+        <select
           value={testFilter}
           onChange={(e) => setTestFilter(e.target.value as typeof testFilter)}
           className="border border-input bg-background px-3 py-2 text-sm"
@@ -829,6 +937,70 @@ function RsvpsPanel() {
         </div>
       )}
 
+      {/* Chase panel — the "who still owes us an answer, and how do I reach
+          them" view. Counts every real household, independent of the filters. */}
+      {rows && chase.total > 0 && (
+        <div className="mt-3 border border-primary/40 bg-primary/5 px-4 py-3 text-xs">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <span className="uppercase tracking-[0.2em] text-primary">Still to chase</span>
+            <span className="text-foreground">
+              <span className="font-medium text-primary">{chase.total}</span> household
+              {chase.total === 1 ? "" : "s"} haven't responded
+            </span>
+            <span className="text-muted-foreground">
+              {chase.withPhone} with a phone · {chase.addressOnly} address-only
+            </span>
+            <span className="text-muted-foreground">
+              {chase.daysLeft > 0
+                ? `${chase.daysLeft} day${chase.daysLeft === 1 ? "" : "s"} to the ${SITE.rsvpDeadlinePretty.en} deadline`
+                : `Past the ${SITE.rsvpDeadlinePretty.en} deadline`}
+            </span>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => {
+                setFilter("no_response");
+                setReachable("phone");
+                setTestFilter("hide");
+              }}
+              className="border border-primary text-primary px-3 py-1 uppercase tracking-[0.2em]"
+            >
+              Text list ({chase.withPhone})
+            </button>
+            <button
+              onClick={() => {
+                setFilter("no_response");
+                setReachable("nophone");
+                setTestFilter("hide");
+              }}
+              className="border border-border text-foreground px-3 py-1 uppercase tracking-[0.2em]"
+            >
+              Mail/call list ({chase.addressOnly})
+            </button>
+            <label className="flex items-center gap-1 text-muted-foreground">
+              Reminder language
+              <select
+                value={reminderLang}
+                onChange={(e) => setReminderLang(e.target.value as "en" | "es")}
+                className="border border-input bg-background px-2 py-1"
+              >
+                <option value="en">English</option>
+                <option value="es">Español</option>
+              </select>
+            </label>
+            <button
+              onClick={() =>
+                exportCsv(toChaseCsv(filtered), "chase-list", filtered.length, "Chase CSV")
+              }
+              className="border border-border text-foreground px-3 py-1 uppercase tracking-[0.2em]"
+              title="Working call/text sheet for the currently filtered rows — not a backup"
+            >
+              Export chase CSV ({filtered.length})
+            </button>
+          </div>
+        </div>
+      )}
+
       {testRows.length > 0 && (
         <div className="mt-3 flex flex-wrap items-center gap-3 border border-destructive/40 bg-destructive/5 px-4 py-2 text-xs">
           <span className="text-foreground">
@@ -876,6 +1048,13 @@ function RsvpsPanel() {
             className="border border-border text-foreground px-3 py-1 uppercase tracking-[0.2em]"
           >
             Copy RSVP links
+          </button>
+          <button
+            onClick={copySelectedReminders}
+            className="border border-border text-foreground px-3 py-1 uppercase tracking-[0.2em]"
+            title={`Copy a ready-to-send reminder for each selected household (${reminderLang.toUpperCase()})`}
+          >
+            Copy reminders ({reminderLang.toUpperCase()})
           </button>
           <button
             onClick={() => setConfirmBulkDelete(true)}
@@ -1048,6 +1227,17 @@ function RsvpsPanel() {
                       >
                         {r.slug}
                       </button>
+                      {!r.rsvp && (
+                        <div>
+                          <button
+                            onClick={() => copyReminder(r)}
+                            className="mt-1 font-sans text-[10px] uppercase tracking-[0.2em] text-primary link-underline"
+                            title={`Copy a ready-to-send reminder (${reminderLang.toUpperCase()})`}
+                          >
+                            Reminder
+                          </button>
+                        </div>
+                      )}
                     </td>
                     <td className="py-3 pr-4">
                       <button
