@@ -165,6 +165,47 @@ export interface Dict {
     headcountStillPossible: string;
     headcountMaxPossible: string;
     headcountNamesPending: string;
+    reportLink: string;
+    reportTitle: string;
+    reportSubtitle: string;
+    reportGeneratedOn: string;
+    reportPrint: string;
+    reportDownload: string;
+    reportBack: string;
+    reportIncludeTest: string;
+    reportScopeReal: string;
+    reportScopeAll: string;
+    sumTotalNamed: string;
+    sumMaxNamedOnly: string;
+    sumMaxPossible: string;
+    sumConfirmedAttending: string;
+    reportBreakdownNamed: string;
+    reportBreakdownUnnamed: string;
+    reportBreakdownMax: string;
+    reportNamedTitle: string;
+    reportNamedNote: string;
+    reportRsvpsTitle: string;
+    colPerson: string;
+    colSource: string;
+    colType: string;
+    colStatus: string;
+    colHousehold: string;
+    colInvitation: string;
+    colNamedGuests: string;
+    colAttendees: string;
+    colUnnamed: string;
+    srcInvitation: string;
+    srcRsvp: string;
+    typeAdult: string;
+    typeChild: string;
+    statusAttending: string;
+    statusDeclined: string;
+    statusNoResponse: string;
+    rsvpTotalsAttending: string;
+    rsvpTotalsDeclined: string;
+    rsvpTotalsPending: string;
+    reportLoading: string;
+    reportUnnamedRemaining: string;
     householdsHeading: string;
     exportCsv: string;
     partyCol: string;
@@ -367,6 +408,48 @@ const en: Dict = {
     headcountStillPossible: "Still possible to attend",
     headcountMaxPossible: "Maximum possible",
     headcountNamesPending: "Names pending",
+    reportLink: "Attendee report",
+    reportTitle: "All Possible Attendees",
+    reportSubtitle: "Everyone known by name, and the true ceiling",
+    reportGeneratedOn: "Generated {date}",
+    reportPrint: "Print / Save as PDF",
+    reportDownload: "Download CSV",
+    reportBack: "Back to dashboard",
+    reportIncludeTest: "Include test households",
+    reportScopeReal: "Real households only (test households excluded)",
+    reportScopeAll: "Includes test households",
+    sumTotalNamed: "Total Named Attendees",
+    sumMaxNamedOnly: "Maximum Attendance — Named People Only",
+    sumMaxPossible: "Maximum Possible Attendance",
+    sumConfirmedAttending: "Currently Confirmed Attending",
+    reportBreakdownNamed: "Named attendees",
+    reportBreakdownUnnamed: "Remaining possible unnamed/additional guests",
+    reportBreakdownMax: "Maximum possible attendance",
+    reportNamedTitle: "All Named Attendees",
+    reportNamedNote:
+      "Everyone on an invitation plus anyone added by name through an RSVP. Unnamed plus-ones and unused allowances are excluded.",
+    reportRsvpsTitle: "All RSVPs",
+    colPerson: "Person",
+    colSource: "Source",
+    colType: "Type",
+    colStatus: "Status",
+    colHousehold: "Household",
+    colInvitation: "Invitation",
+    colNamedGuests: "Named guests",
+    colAttendees: "Attendees",
+    colUnnamed: "Unnamed",
+    srcInvitation: "Invitation",
+    srcRsvp: "Added via RSVP",
+    typeAdult: "Adult",
+    typeChild: "Child",
+    statusAttending: "Attending",
+    statusDeclined: "Not attending",
+    statusNoResponse: "No response yet",
+    rsvpTotalsAttending: "Confirmed attending",
+    rsvpTotalsDeclined: "Declined",
+    rsvpTotalsPending: "Pending / no response",
+    reportLoading: "Loading…",
+    reportUnnamedRemaining: "Remaining unnamed slots",
     householdsHeading: "Households",
     exportCsv: "Export CSV",
     partyCol: "Invitation",
@@ -568,6 +651,48 @@ const es: Dict = {
     headcountStillPossible: "Aún podrían asistir",
     headcountMaxPossible: "Máximo posible",
     headcountNamesPending: "Nombres pendientes",
+    reportLink: "Informe de asistentes",
+    reportTitle: "Todos los asistentes posibles",
+    reportSubtitle: "Personas conocidas por nombre y el máximo posible",
+    reportGeneratedOn: "Generado el {date}",
+    reportPrint: "Imprimir / Guardar PDF",
+    reportDownload: "Descargar CSV",
+    reportBack: "Volver al panel",
+    reportIncludeTest: "Incluir grupos de prueba",
+    reportScopeReal: "Solo grupos reales (se excluyen los de prueba)",
+    reportScopeAll: "Incluye grupos de prueba",
+    sumTotalNamed: "Total de asistentes con nombre",
+    sumMaxNamedOnly: "Máximo — solo personas con nombre",
+    sumMaxPossible: "Máximo posible",
+    sumConfirmedAttending: "Asistencia confirmada",
+    reportBreakdownNamed: "Asistentes con nombre",
+    reportBreakdownUnnamed: "Acompañantes posibles sin nombre",
+    reportBreakdownMax: "Máximo posible",
+    reportNamedTitle: "Todos los asistentes con nombre",
+    reportNamedNote:
+      "Incluye a las personas de la invitación y a quienes se agregaron por nombre en un RSVP. No incluye lugares sin nombre.",
+    reportRsvpsTitle: "Todos los RSVP",
+    colPerson: "Persona",
+    colSource: "Origen",
+    colType: "Tipo",
+    colStatus: "Estado",
+    colHousehold: "Grupo",
+    colInvitation: "Invitación",
+    colNamedGuests: "Invitados con nombre",
+    colAttendees: "Asistentes",
+    colUnnamed: "Sin nombre",
+    srcInvitation: "Invitación",
+    srcRsvp: "Agregado en RSVP",
+    typeAdult: "Adulto",
+    typeChild: "Niño",
+    statusAttending: "Asistirá",
+    statusDeclined: "No asistirá",
+    statusNoResponse: "Sin respuesta",
+    rsvpTotalsAttending: "Asistencia confirmada",
+    rsvpTotalsDeclined: "No asistirán",
+    rsvpTotalsPending: "Sin responder",
+    reportLoading: "Cargando…",
+    reportUnnamedRemaining: "Lugares restantes sin nombre",
     householdsHeading: "Grupos",
     exportCsv: "Exportar CSV",
     partyCol: "Grupo",

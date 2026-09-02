@@ -1,6 +1,6 @@
 # Handoff — Moreno Wedding 2026 Website
 
-**Last verified against the live codebase + database: 2026-09-02 (responsive image pipeline shipped; chase workflow for the 124 non-responding households added to the admin RSVPs tab; live counts and flags re-queried)** Bump this line whenever you re-verify. Read `ONBOARDING.md` first — it's the current-state reference; this file is the narrative behind decisions.
+**Last verified against the live codebase + database: 2026-09-02 (all-possible-attendees report shipped at `/portal-ga-2026/attendees`; responsive image pipeline shipped; chase workflow for the 124 non-responding households added to the admin RSVPs tab; live counts and flags re-queried)** Bump this line whenever you re-verify. Read `ONBOARDING.md` first — it's the current-state reference; this file is the narrative behind decisions.
 
 Originally written at the end of a development session that took this project from "RSVP disabled, no feature flags, generic wedding-party avatars" to "RSVP + photo uploads live behind a real feature-flag system, a from-scratch collectible-card wedding party section, and a full pre-launch QA pass." This document is for whichever AI picks the project up next. If `ONBOARDING.md` and this file disagree on current state, trust `ONBOARDING.md`; use this one for reasoning. If a paragraph here starts to feel stale, fold what's still true into `ONBOARDING.md` and remove or revise it here rather than let two sources of truth drift.
 
@@ -13,6 +13,10 @@ Originally written at the end of a development session that took this project fr
 Live check first: 157 households, 33 RSVPs in (32 attending, 1 declined), 124 still pending, 69 confirmed attending of 483 possible, 19 days to the September 20 deadline. Email pipeline healthy, no locked-out or unverifiable households, no runtime errors, build passes.
 
 The real problem is not a bug: **only 14 households have an email address at all, and an email reminder campaign therefore has almost no possible recipients.** Of the 124 non-responders, 41 have a phone number and 83 are address-only. So the chase has to be a texting/calling/paper workflow driven from the admin dashboard, not an email blast.
+
+### Attendee report (2026-09-02)
+
+`/portal-ga-2026/attendees` answers the question the capacity-based headcount panel couldn't: how many actual people do we know by name? The rule that drove the design is that a plus-one slot is not a person until a name exists, so named totals and unused capacity are never mixed. `computeNamedAttendees()` dedupes names per household (invitation members plus RSVP-added names, blanks and "name to come" placeholders excluded) and reports named / unnamed-remaining / max-possible separately. It is print-styled so it can be saved as a PDF for vendors, and exports CSV. Test households are excluded unless you tick the toggle.
 
 What was added to the RSVPs tab (`src/routes/_authenticated/portal-ga-2026/dashboard.tsx`), all read-only over data the tab already loads:
 
