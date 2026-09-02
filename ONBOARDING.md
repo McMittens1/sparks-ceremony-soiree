@@ -1,6 +1,6 @@
 # Moreno Wedding 2026 — Onboarding Package
 
-**Last verified against the live codebase + database: 2026-09-02 (image delivery overhaul: build-time WebP derivatives + `ResponsiveImg` srcset for every `src/assets/**` photo, `fetchPriority` preload fix; plus the admin chase workflow for non-responders: reachable-by filter, chase summary panel, EN/ES copy-ready reminder text, chase CSV export; counts and feature flags re-queried; build passes)** Update this line every time you re-verify. If it's stale by more than a session or two, re-verify before trusting any specific claim below — this doc is only useful if it mirrors reality.
+**Last verified against the live codebase + database: 2026-09-02 (attendee report `/portal-ga-2026/attendees` added (named-vs-capacity counting, print/PDF + CSV, test-household toggle); image delivery overhaul: build-time WebP derivatives + `ResponsiveImg` srcset for every `src/assets/**` photo, `fetchPriority` preload fix; plus the admin chase workflow for non-responders: reachable-by filter, chase summary panel, EN/ES copy-ready reminder text, chase CSV export; counts and feature flags re-queried; build passes)** Update this line every time you re-verify. If it's stale by more than a session or two, re-verify before trusting any specific claim below — this doc is only useful if it mirrors reality.
 
 A single source of truth for continuing this project with any AI assistant (Claude Code, Cursor, etc.). Read this file in full before making changes. A companion document, `HANDOFF.md`, captures narrative context, judgment calls, and lessons learned from the most recent development session — read that too if it exists.
 
@@ -315,6 +315,7 @@ This is the living sprint plan. Pick up the next uncompleted sprint rather than 
 - `src/routes/portal-ga-2026.tsx` — admin sign-in page (obscure URL).
 - `src/routes/_authenticated/route.tsx` — auth gate for `/portal-ga-2026/dashboard`; checks the `admin` role, not just sign-in status.
 - `src/routes/_authenticated/portal-ga-2026/dashboard.tsx` — admin dashboard.
+- `src/routes/_authenticated/portal-ga-2026/attendees.tsx` — "All Possible Attendees" report (admin-only, linked from the dashboard headcount panel). Counts only people known by name (invitation members + names added through an RSVP, deduped per household), keeps unnamed plus-one capacity separate, and shows Total Named Attendees / Maximum Attendance — Named People Only / Maximum Possible Attendance / Currently Confirmed Attending, a household-grouped roster, and a full RSVP table. Print/Save-as-PDF hides site chrome; CSV export uses `src/lib/csv.ts`. Test households (`ZZT…`) are excluded by default, toggleable. Named-attendee math lives in `computeNamedAttendees()` in `src/lib/rsvp-party.ts` (separate from the capacity-based `computeHeadcount()`). Verified 2026-09-02 against the DB: 261 named, 222 unnamed, 483 max possible, 68 confirmed attending.
 - `src/routes/rsvp.tsx` — public RSVP lookup/submit.
 - `src/routes/rsvp/edit.$token.tsx` — signed-token RSVP edit.
 - `src/routes/api/public/` — public HTTP endpoints (weather, `.ics`).
@@ -371,6 +372,8 @@ This is the living sprint plan. Pick up the next uncompleted sprint rather than 
 | `src/routes/portal-ga-2026.tsx` | Admin sign-in page. |
 | `src/routes/_authenticated/route.tsx` | Auth + admin-role route guard for `/portal-ga-2026/dashboard`. |
 | `src/routes/_authenticated/portal-ga-2026/dashboard.tsx` | Admin dashboard (RSVPs + Photos + Features + Emails tabs). |
+| `src/routes/_authenticated/portal-ga-2026/attendees.tsx` | "All Possible Attendees" report (print/PDF + CSV). |
+| `src/lib/csv.ts` | Shared CSV escape/download helpers. |
 | `src/routes/rsvp.tsx` | Public RSVP page — reads `rsvp_open` via the feature-flag hook. |
 | `src/routes/rsvp/edit.$token.tsx` | Signed-token RSVP edit page — intentionally not flag-gated. |
 | `src/routes/api/public/wedding[.]ics.ts` | iCalendar download endpoint, RFC 5545 line-folding + escaping. |
