@@ -34,7 +34,7 @@ export const Route = createFileRoute("/")({
       ],
       links: [
         ...base.links,
-        { rel: "preload", as: "image", href: "/images/hero-portrait-1200.webp", fetchpriority: "high" },
+        { rel: "preload", as: "image", href: "/images/hero-portrait-1200.webp", fetchPriority: "high" },
       ],
     };
   },

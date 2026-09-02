@@ -1,3 +1,4 @@
+import { ResponsiveImg } from "@/components/site/ResponsiveImg";
 import { useCallback, useEffect, useRef } from "react";
 import type { Portrait } from "@/lib/portrait-gallery";
 
@@ -109,7 +110,8 @@ export function Lightbox({
       </button>
 
       <figure className="flex flex-col items-center" style={{ margin: 0, padding: "64px 64px 48px" }}>
-        <img
+        <ResponsiveImg
+          sizes="(min-width: 1100px) 1100px, 92vw"
           src={photo.src}
           alt={photo.alt}
           width={photo.width}

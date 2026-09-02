@@ -1,3 +1,4 @@
+import { ResponsiveImg } from "@/components/site/ResponsiveImg";
 import { useState } from "react";
 import { DiamondDivider } from "@/components/site/DiamondDivider";
 import { SectionHeader } from "@/components/site/SectionHeader";
@@ -37,7 +38,8 @@ export function PortraitsSection({ numeral = "III" }: { numeral?: string }) {
               className="group relative block w-full aspect-[4/5] overflow-hidden photo-zoom border border-hairline"
               style={{ padding: 0, lineHeight: 0, minHeight: 44 }}
             >
-              <img
+              <ResponsiveImg
+                sizes="(min-width: 1024px) 33vw, 50vw"
                 src={photo.src}
                 alt={photo.alt}
                 width={photo.width}
