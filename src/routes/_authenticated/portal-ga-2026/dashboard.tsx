@@ -1050,6 +1050,13 @@ function RsvpsPanel() {
             Copy RSVP links
           </button>
           <button
+            onClick={copySelectedReminders}
+            className="border border-border text-foreground px-3 py-1 uppercase tracking-[0.2em]"
+            title={`Copy a ready-to-send reminder for each selected household (${reminderLang.toUpperCase()})`}
+          >
+            Copy reminders ({reminderLang.toUpperCase()})
+          </button>
+          <button
             onClick={() => setConfirmBulkDelete(true)}
             className="border border-destructive text-destructive px-3 py-1 uppercase tracking-[0.2em]"
           >
