@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -49,6 +49,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { SITE } from "@/lib/site";
 import { PHOTO_CAPTION_MAX_LENGTH } from "@/lib/photo-config";
+import { escCsv, downloadCsv } from "@/lib/csv";
 
 export const Route = createFileRoute("/_authenticated/portal-ga-2026/dashboard")({
   head: () => ({
@@ -430,16 +431,6 @@ function RsvpsPanel() {
       })
       .join("; ");
 
-  function downloadCsv(csv: string, name: string) {
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${name}-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
   // Complete Master CSV — the full, round-trippable backup. The first 13
   // columns exactly match Master Import's columns (same names, same
   // shapes), so this file can be re-imported as-is; everything after
@@ -699,7 +690,15 @@ function RsvpsPanel() {
           <h3 className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
             {t.admin.headcountTitle}
           </h3>
-          <p className="text-[11px] text-muted-foreground">{t.admin.headcountNote}</p>
+          <div className="flex items-center gap-3">
+            <p className="text-[11px] text-muted-foreground">{t.admin.headcountNote}</p>
+            <Link
+              to="/portal-ga-2026/attendees"
+              className="whitespace-nowrap border border-border/60 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground hover:text-primary"
+            >
+              {t.admin.reportLink}
+            </Link>
+          </div>
         </div>
 
         <div className="mt-3 flex flex-wrap items-baseline gap-3">
@@ -1425,11 +1424,6 @@ function PhoneInput({
 
 function looksLikeUsZip(v: string): boolean {
   return /^\d{5}(-\d{4})?$/.test(v.trim());
-}
-
-function escCsv(s: string | null | undefined): string {
-  const v = s ?? "";
-  return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
 }
 
 // ================== Shared modal primitives ==================
