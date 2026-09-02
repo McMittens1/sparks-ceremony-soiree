@@ -175,3 +175,158 @@ export function computeHeadcount(rows: HeadcountInput[]): Headcount {
     namesPending,
   };
 }
+
+// ---------- Named-attendee report ----------
+
+/**
+ * The "All Possible Attendees" report answers a different question than
+ * `computeHeadcount`: not "how much capacity exists" but "who do we actually
+ * know by name". A person counts as named if they appear on the invitation
+ * with a real name, or were added by name during an RSVP. A "name to come"
+ * placeholder is never a named attendee — it stays in the unnamed capacity
+ * bucket until a real name arrives.
+ */
+export type NamedStatus = "attending" | "declined" | "no_response";
+
+export interface NamedPerson {
+  name: string;
+  is_child: boolean;
+  /** Where the name came from: the original invitation, or an RSVP. */
+  source: "invitation" | "rsvp";
+  status: NamedStatus;
+}
+
+export interface NamedHousehold {
+  id: string;
+  primary_name: string;
+  party_limit: number;
+  rsvp_status: string | null;
+  people: NamedPerson[];
+  /** Permitted but still unnamed slots — plus-ones, "name to come", spare capacity. */
+  unnamed_remaining: number;
+  /** Attendee rows on the RSVP whose name is still a placeholder. */
+  names_pending: number;
+}
+
+export interface NamedAttendeeReport {
+  households: NamedHousehold[];
+  /** Distinct people currently known by name. */
+  totalNamed: number;
+  /** Same number, framed as the ceiling if every named person attends. */
+  maxNamedOnly: number;
+  /** Permitted but unnamed capacity across every household. */
+  remainingUnnamed: number;
+  /** totalNamed + remainingUnnamed. */
+  maxPossible: number;
+  confirmedAttending: number;
+  declinedPeople: number;
+  pendingPeople: number;
+  householdsAttending: number;
+  householdsDeclined: number;
+  householdsPending: number;
+  adults: number;
+  children: number;
+}
+
+export interface NamedAttendeeInput {
+  id: string;
+  primary_name: string;
+  party_limit: number;
+  party_members: PartyMember[];
+  rsvp: { status: string; attendees: AttendeeChoice[] } | null;
+}
+
+const normName = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+const hasRealName = (s: string | null | undefined) => !!s && s.trim().length > 0;
+
+export function computeNamedAttendees(rows: NamedAttendeeInput[]): NamedAttendeeReport {
+  const households: NamedHousehold[] = [];
+  let totalNamed = 0,
+    remainingUnnamed = 0,
+    confirmedAttending = 0,
+    declinedPeople = 0,
+    pendingPeople = 0,
+    householdsAttending = 0,
+    householdsDeclined = 0,
+    householdsPending = 0,
+    adults = 0,
+    children = 0;
+
+  for (const r of rows) {
+    const rsvp = r.rsvp;
+    // Deduplicate per household on the normalized name so an invited person
+    // who also appears on the RSVP is counted once. RSVP data wins.
+    const byKey = new Map<string, NamedPerson>();
+
+    for (const m of r.party_members ?? []) {
+      if (!hasRealName(m?.name)) continue;
+      byKey.set(normName(m.name), {
+        name: m.name.trim(),
+        is_child: !!m.is_child,
+        source: "invitation",
+        status: rsvp ? "declined" : "no_response",
+      });
+    }
+
+    let namesPending = 0;
+    for (const a of rsvp?.attendees ?? []) {
+      if (a.name_pending || !hasRealName(a.name)) {
+        namesPending++;
+        continue;
+      }
+      const key = normName(a.name);
+      const prior = byKey.get(key);
+      byKey.set(key, {
+        name: a.name.trim(),
+        is_child: a.is_child ?? prior?.is_child ?? false,
+        source: prior ? "invitation" : "rsvp",
+        status: a.attending ? "attending" : "declined",
+      });
+    }
+
+    const people = [...byKey.values()];
+    const cap = Math.max(r.party_limit, 0);
+    const unnamed = Math.max(0, cap - people.length);
+
+    for (const p of people) {
+      totalNamed++;
+      if (p.status === "attending") {
+        confirmedAttending++;
+        if (p.is_child) children++;
+        else adults++;
+      } else if (p.status === "declined") declinedPeople++;
+      else pendingPeople++;
+    }
+    remainingUnnamed += unnamed;
+
+    if (!rsvp) householdsPending++;
+    else if (people.some((p) => p.status === "attending")) householdsAttending++;
+    else householdsDeclined++;
+
+    households.push({
+      id: r.id,
+      primary_name: r.primary_name,
+      party_limit: cap,
+      rsvp_status: rsvp?.status ?? null,
+      people,
+      unnamed_remaining: unnamed,
+      names_pending: namesPending,
+    });
+  }
+
+  return {
+    households,
+    totalNamed,
+    maxNamedOnly: totalNamed,
+    remainingUnnamed,
+    maxPossible: totalNamed + remainingUnnamed,
+    confirmedAttending,
+    declinedPeople,
+    pendingPeople,
+    householdsAttending,
+    householdsDeclined,
+    householdsPending,
+    adults,
+    children,
+  };
+}
