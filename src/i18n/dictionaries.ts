@@ -181,6 +181,9 @@ export interface Dict {
     fallbackLimitBadge: string;
     fallbackLimitFilter: string;
     fallbackLimitSummary: string;
+    // Guest-facing reminder message an admin copies and sends by text.
+    // {name} household name, {link} personal RSVP link, {deadline} pretty date.
+    reminderMessage: string;
   };
   auth: {
     title: string;
