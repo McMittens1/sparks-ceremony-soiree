@@ -50,7 +50,7 @@ function AttendeeReport() {
     setGeneratedAt(
       new Date().toLocaleString(undefined, { dateStyle: "long", timeStyle: "short" }),
     );
-    load({})
+    load(undefined as never)
       .then(setRows)
       .catch(() => toast.error("Couldn't load the guest list."));
   }, [load]);
@@ -139,7 +139,7 @@ function AttendeeReport() {
       {/* Masthead */}
       <header className="text-center">
         <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-          {SITE.coupleShort ?? "Geo & Addison"}
+          {SITE.couple}
         </p>
         <h1 className="mt-3 font-serif text-4xl sm:text-5xl text-primary">
           {t.admin.reportTitle}
