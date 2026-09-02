@@ -1,6 +1,6 @@
 # Moreno Wedding 2026 — Onboarding Package
 
-**Last verified against the live codebase + database: 2026-08-14 (RSVP deadline moved from September 15 to September 20, 2026 in `src/lib/site.ts`; all deadline copy, emails and SEO descriptions derive from it; build passes)** Update this line every time you re-verify. If it's stale by more than a session or two, re-verify before trusting any specific claim below — this doc is only useful if it mirrors reality.
+**Last verified against the live codebase + database: 2026-09-02 (live health check + new admin chase workflow for non-responders: reachable-by filter, chase summary panel, EN/ES copy-ready reminder text, chase CSV export; counts and feature flags re-queried; build passes)** Update this line every time you re-verify. If it's stale by more than a session or two, re-verify before trusting any specific claim below — this doc is only useful if it mirrors reality.
 
 A single source of truth for continuing this project with any AI assistant (Claude Code, Cursor, etc.). Read this file in full before making changes. A companion document, `HANDOFF.md`, captures narrative context, judgment calls, and lessons learned from the most recent development session — read that too if it exists.
 

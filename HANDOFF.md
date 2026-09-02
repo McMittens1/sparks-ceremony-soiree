@@ -1,10 +1,29 @@
 # Handoff — Moreno Wedding 2026 Website
 
-**Last verified against the live codebase + database: 2026-08-14 (RSVP deadline pushed back to September 20, 2026 at the couple's request; single source of truth remains `SITE.rsvpDeadline` / `SITE.rsvpDeadlinePretty`)** Bump this line whenever you re-verify. Read `ONBOARDING.md` first — it's the current-state reference; this file is the narrative behind decisions.
+**Last verified against the live codebase + database: 2026-09-02 (chase workflow for the 124 non-responding households added to the admin RSVPs tab; live counts and flags re-queried)** Bump this line whenever you re-verify. Read `ONBOARDING.md` first — it's the current-state reference; this file is the narrative behind decisions.
 
 Originally written at the end of a development session that took this project from "RSVP disabled, no feature flags, generic wedding-party avatars" to "RSVP + photo uploads live behind a real feature-flag system, a from-scratch collectible-card wedding party section, and a full pre-launch QA pass." This document is for whichever AI picks the project up next. If `ONBOARDING.md` and this file disagree on current state, trust `ONBOARDING.md`; use this one for reasoning. If a paragraph here starts to feel stale, fold what's still true into `ONBOARDING.md` and remove or revise it here rather than let two sources of truth drift.
 
 **You will be doing all work directly on the `main` branch.** No feature branches, no PRs — every session on this project, including this one, commits and pushes straight to `main`. See `ONBOARDING.md` §8 for the full policy and why it matters here specifically.
+
+---
+
+## 0. Latest session — chasing the non-responders (2026-09-02)
+
+Live check first: 157 households, 33 RSVPs in (32 attending, 1 declined), 124 still pending, 69 confirmed attending of 483 possible, 19 days to the September 20 deadline. Email pipeline healthy, no locked-out or unverifiable households, no runtime errors, build passes.
+
+The real problem is not a bug: **only 14 households have an email address at all, and an email reminder campaign therefore has almost no possible recipients.** Of the 124 non-responders, 41 have a phone number and 83 are address-only. So the chase has to be a texting/calling/paper workflow driven from the admin dashboard, not an email blast.
+
+What was added to the RSVPs tab (`src/routes/_authenticated/portal-ga-2026/dashboard.tsx`), all read-only over data the tab already loads:
+
+- **Reachable-by filter** (`any` / has phone / no phone) next to the existing filters, and reset by "Clear filters".
+- **"Still to chase" panel** — total non-responders, split by phone vs address-only, plus days remaining. It is computed from every real household, not the filtered view, so the numbers don't move while you narrow the table. Two one-click presets ("Text list", "Mail/call list") set the filter combination for you.
+- **Copy-ready reminder text**, English or Spanish, chosen independently of the admin UI language (an English-speaking admin often texts Spanish-speaking family). Copy per row, or for every selected row at once. The link is always built from `SITE.siteUrl`, never `window.location.origin`, because the string is pasted into a text message and must resolve to production.
+- **Chase CSV export** — a working call/text sheet (household, party limit, phone, reachable-by, city/state, RSVP link, EN and ES reminder text). Deliberately a different file from the Master CSV so the two can't be confused at import time.
+
+No schema change, no new route, no change to the guest-facing RSVP flow. Reminder copy lives in `src/i18n/dictionaries.ts` as `admin.reminderMessage` (EN + ES) — no hardcoded strings.
+
+Verified with `bun run build:dev` and an authenticated Playwright pass at 1280 and 440: the panel reports 124 / 41 / 83 / 19 days, "Text list" narrows to exactly 41 rows, and both the English and Spanish reminders copy to the clipboard with a working signed RSVP link.
 
 ---
 
