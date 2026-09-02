@@ -583,6 +583,8 @@ const es: Dict = {
     fallbackLimitFilter: "Usa límite predeterminado",
     fallbackLimitSummary:
       "{n} grupo{s} aún usa el límite predeterminado \u201cnombrados + 1\u201d. Establece un límite explícito donde conozcas el total real.",
+    reminderMessage:
+      "Hola {name} — ¡nos casamos pronto! Aún no tenemos su respuesta. Pueden confirmar aquí: {link} (antes del {deadline}). ¡Gracias! — Geo y Addison",
   },
   auth: {
     title: "Acceso admin",
