@@ -166,6 +166,12 @@ function RsvpsPanel() {
   const [noFactorOnly, setNoFactorOnly] = useState(false);
   const [songOnly, setSongOnly] = useState(false);
   const [fallbackOnly, setFallbackOnly] = useState(false);
+  // How a household can actually be chased: a phone number means a text,
+  // no phone means a call/paper follow-up from the mailing address.
+  const [reachable, setReachable] = useState<"any" | "phone" | "nophone">("any");
+  // Language of the *guest-facing* reminder text, independent of the admin UI
+  // language — an English-speaking admin often texts Spanish-speaking family.
+  const [reminderLang, setReminderLang] = useState<"en" | "es">("en");
   const [testFilter, setTestFilter] = useState<"any" | "only" | "hide">("any");
   const [sortKey, setSortKey] = useState<SortKey>("submitted");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
