@@ -1,55 +1,44 @@
-# Site health check — September 1, 2026
+# Chase the 128 non-responders + refresh the docs
 
-Everything I checked is live-verified today. Short version: **nothing is broken.** The site builds clean, RSVPs are flowing, email delivery is healthy. The real issues are timing and content, not bugs.
+Two items: build the "who hasn't RSVP'd and how do I reach them" workflow (Issue 1), and bring `ONBOARDING.md` / `HANDOFF.md` back to current state (Issue 4). Then I report back with UI/UX/speed findings — recommendations only, no changes made from that list without your go-ahead.
 
-## What I verified today
+## What already exists (verified in the dashboard code today)
 
-- 157 households, **29 RSVPs in** (28 attending, 1 declined). Most recent: this morning.
-- Steady trickle since Aug 7 — 1 to 3 per day, no gaps, no stall.
-- Every household can be verified (0 with neither phone nor ZIP). 0 households currently locked out, 0 with failed verification attempts on record.
-- Email pipeline is healthy: every send in the last two weeks went `pending` → `sent`. The 25 `failed`/`dlq` rows are all from mid-July, before the queue fix, and nothing has failed since. The 2 suppressed addresses are old `example.com` test accounts.
-- `bun run build:dev` passes.
-- Flags: `rsvp_open` on, `show_portraits` on; `show_wedding_party`, `show_ushers`, `guest_photo_uploads` off.
+The guest table already has a **No response** status filter, per-row copy-link, multi-select copy links, a Master CSV export and a TextMyWedding CSV export — all acting on the filtered view. So this is not a from-scratch build; it's making the chase workflow a first-class, phone-friendly path instead of something you assemble from filters each time.
 
-## Issue 1 — 128 households haven't RSVP'd and you can't email any of them
+## Item 1 — Chase list
 
-This is the one that actually matters. The deadline is **September 20 — 19 days away**, and 82% of the guest list hasn't responded.
+**A. Reachability sub-filter**
+Add a "Reachable by" control next to the existing status filter: All / Has phone / No phone (address only). Combined with No response, that gives you the 43-call list and the 85-paper list in two clicks.
 
-The problem: **not one of those 128 non-responders has an email address on file.** Only 11 households in the entire database have an email at all, and all 11 have already RSVP'd. So an email reminder campaign has literally zero possible recipients. Of the 128, 43 have a phone number; the other 85 are address-only.
+**B. Chase panel**
+When the view is narrowed to non-responders, show a compact summary strip: how many haven't responded, how many have a phone, how many are address-only, and days remaining until Sept 20.
 
-What I'd build:
+**C. Copy-ready reminder text**
+Per row (and for a multi-select batch), a "Copy reminder" action that puts a short message with that household's personal RSVP link on the clipboard, in English or Spanish. Language is a toggle on the panel, so you set it once per batch. Copy lives in `src/i18n/dictionaries.ts` with the rest of the site strings — no hardcoded text.
 
-- A **"Hasn't responded" view** in the admin dashboard: filterable list of the 128, showing name, phone (or "no phone"), and their personal RSVP link, with a one-click copy and a CSV export. That turns "who do I chase?" into a list you can work from your phone.
-- **Copy-ready reminder text** for the 43 with phones — a short message with their direct link, in English and Spanish, so you can paste and send.
-- For the 85 address-only households, the list doubles as a call/paper checklist.
+**D. Chase CSV**
+A dedicated export with the columns you actually need offline: household name, party size, phone, city/state, reachable-by, and the personal link. Distinct from the Master backup CSV so the two never get confused.
 
-Optional but worth deciding: whether the Sept 20 deadline is real or soft. The site already shows a late notice rather than closing, so nothing breaks if people trickle in after — but the caterer number is a different question.
+Nothing changes in the guest-facing RSVP flow, no new tables, no new public routes. All of it reuses `listGuestsWithRsvps` and the existing signed-link helpers.
 
-## Issue 2 — Wedding Party is still hidden and still on placeholder copy
+## Item 4 — Docs
 
-The 27 real names are in the data, but no card stats, abilities, or magazine-cover headlines are written, which is why the section is still flagged off. Ushers likewise. It's the only visibly unfinished part of the site. With 5 weeks to the wedding, this is the natural next content push — you can review it privately at `/?preview_party=1&preview_ushers=1` without flipping anything live.
+Update `ONBOARDING.md` and `HANDOFF.md` to today's live state (157 households, 29 RSVPs, current flag values, email pipeline healthy), document the new chase view and export, and bump both "Last verified" dates. Fold the completed items into the plan file.
 
-## Issue 3 — Guest photo uploads are built but never turned on
+## UI/UX/Speed review (report only)
 
-Fully functional, zero photos in the system, flag off. Probably deliberate (you'd flip it the week of the wedding), but if you want guests uploading engagement-party or getting-ready photos beforehand, it's a one-toggle change plus a QA pass on the moderation queue.
+While in the code I'll audit and report back on:
+- Admin dashboard weight — it's a single ~3,400-line route; note what could be split and whether it's worth it on a live site.
+- Public site: image delivery, font loading, hero paint, and any layout shift at 440 and 1280.
+- Guest-facing RSVP flow friction: verification step wording, error states, deadline messaging as the date approaches.
+- Accessibility spot-check on the newest surfaces.
 
-## Issue 4 — Docs are 18 days stale
-
-`ONBOARDING.md` and `HANDOFF.md` were last verified Aug 14, when there were 12 RSVPs and the headcount picture was different. Whichever of the above we do, both get updated and re-dated in the same turn.
-
-## Nothing to do here
-
-- No security issues found; RLS, admin gating, and verification lockout all behave as documented.
-- No runtime errors, no failed sends, no locked-out guests.
-- The ZIP-audit idea from the last session is now lower value: with 0 unverifiable households and 0 recorded failed verification attempts, no guest has actually hit a wrong-ZIP wall. Worth doing only if you hear from someone who can't get in.
-
-## What I need from you
-
-Tell me which to start with. My recommendation, in order: **Issue 1 (chase the 128)**, then **Issue 2 (finish the Wedding Party)**. Issue 3 whenever you want it live, Issue 4 rides along automatically.
+You get a prioritized list with effort/risk per item. I won't act on it in this pass.
 
 ## Technical notes
 
-- Issue 1 adds a filter and export to the existing dashboard guest list plus a reminder-link column; it reuses `listGuestsWithRsvps` and the existing signed-token helpers, so no new tables, no new public routes, and no change to the RSVP flow itself.
-- Reminder text lives in `src/i18n/dictionaries.ts` alongside the other EN/ES copy — no hardcoded strings.
-- Issue 2 is data-only edits to `PARTY` in `src/lib/wedding-data.ts` (`cardRarity`, `cardAttributes`, `cardAbility`, `coverHeadline`, `coverSubline`); the card and cover components already fall back to placeholders and need no changes.
-- Verification for either: `bun run build:dev`, plus Playwright screenshots at 440 and 1280.
+- Reachability + reminder-copy are client-side derivations off `AdminGuestRow` (it already carries `phone`, `verify_factor`, `verify_token`, `edit_token`) — no server function signature changes.
+- Reminder strings are added to both EN and ES dictionaries.
+- Chase CSV is a new formatter alongside `toMasterCsv` / `toTextMyWeddingCsv`, exported through the same `exportCsv` helper.
+- Verification: `bun run build:dev`, plus Playwright screenshots of the dashboard chase view at 440 and 1280.
