@@ -687,6 +687,7 @@ function RsvpsPanel() {
     setNoFactorOnly(false);
     setSongOnly(false);
     setFallbackOnly(false);
+    setReachable("any");
     setTestFilter("any");
   }
 
