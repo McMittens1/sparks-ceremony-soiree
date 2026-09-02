@@ -31,7 +31,7 @@ const PRINT_CSS = `
 @media print {
   @page { margin: 14mm; }
   html, body { background: #fff !important; }
-  .no-print { display: none !important; }
+  .no-print, body > div > header, body > div > footer, a[href="#main-content"] { display: none !important; }
   .report-section { break-inside: auto; }
   .report-section h2 { break-after: avoid; }
   tr, .report-card { break-inside: avoid; }
