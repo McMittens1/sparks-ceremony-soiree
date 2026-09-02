@@ -384,6 +384,8 @@ const en: Dict = {
     fallbackLimitFilter: "Uses default limit",
     fallbackLimitSummary:
       "{n} household{s} still use the default \u201cnamed + 1\u201d limit. Set an explicit cap where you know the real total.",
+    reminderMessage:
+      "Hi {name} — Geo & Addison here! We haven't gotten your RSVP yet. You can reply here: {link} (by {deadline}). Thank you!",
   },
   auth: {
     title: "Admin sign-in",
