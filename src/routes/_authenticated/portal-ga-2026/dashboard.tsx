@@ -937,6 +937,70 @@ function RsvpsPanel() {
         </div>
       )}
 
+      {/* Chase panel — the "who still owes us an answer, and how do I reach
+          them" view. Counts every real household, independent of the filters. */}
+      {rows && chase.total > 0 && (
+        <div className="mt-3 border border-primary/40 bg-primary/5 px-4 py-3 text-xs">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <span className="uppercase tracking-[0.2em] text-primary">Still to chase</span>
+            <span className="text-foreground">
+              <span className="font-medium text-primary">{chase.total}</span> household
+              {chase.total === 1 ? "" : "s"} haven't responded
+            </span>
+            <span className="text-muted-foreground">
+              {chase.withPhone} with a phone · {chase.addressOnly} address-only
+            </span>
+            <span className="text-muted-foreground">
+              {chase.daysLeft > 0
+                ? `${chase.daysLeft} day${chase.daysLeft === 1 ? "" : "s"} to the ${SITE.rsvpDeadlinePretty.en} deadline`
+                : `Past the ${SITE.rsvpDeadlinePretty.en} deadline`}
+            </span>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => {
+                setFilter("no_response");
+                setReachable("phone");
+                setTestFilter("hide");
+              }}
+              className="border border-primary text-primary px-3 py-1 uppercase tracking-[0.2em]"
+            >
+              Text list ({chase.withPhone})
+            </button>
+            <button
+              onClick={() => {
+                setFilter("no_response");
+                setReachable("nophone");
+                setTestFilter("hide");
+              }}
+              className="border border-border text-foreground px-3 py-1 uppercase tracking-[0.2em]"
+            >
+              Mail/call list ({chase.addressOnly})
+            </button>
+            <label className="flex items-center gap-1 text-muted-foreground">
+              Reminder language
+              <select
+                value={reminderLang}
+                onChange={(e) => setReminderLang(e.target.value as "en" | "es")}
+                className="border border-input bg-background px-2 py-1"
+              >
+                <option value="en">English</option>
+                <option value="es">Español</option>
+              </select>
+            </label>
+            <button
+              onClick={() =>
+                exportCsv(toChaseCsv(filtered), "chase-list", filtered.length, "Chase CSV")
+              }
+              className="border border-border text-foreground px-3 py-1 uppercase tracking-[0.2em]"
+              title="Working call/text sheet for the currently filtered rows — not a backup"
+            >
+              Export chase CSV ({filtered.length})
+            </button>
+          </div>
+        </div>
+      )}
+
       {testRows.length > 0 && (
         <div className="mt-3 flex flex-wrap items-center gap-3 border border-destructive/40 bg-destructive/5 px-4 py-2 text-xs">
           <span className="text-foreground">
