@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { ResponsiveImg } from "@/components/site/ResponsiveImg";
 import { Reveal } from "@/components/site/Reveal";
 import { BodyProse, DisplayHeading, Eyebrow } from "@/components/site/typography";
 import { STORY_ENTRIES, type StoryEntry, type StoryPhotoKey } from "@/lib/wedding-data";
@@ -95,10 +96,12 @@ function PhotoCluster({ photos }: { photos: Photo[] }) {
   return (
     <>
       <div className="relative photo-zoom w-full aspect-[4/5] md:aspect-auto md:h-full md:w-auto md:flex-[0_0_60%]">
-        <img
+        <ResponsiveImg
           src={main.src}
           alt={main.alt}
           loading="lazy"
+          decoding="async"
+          sizes="(min-width: 768px) 45vw, 100vw"
           className="w-full h-full object-cover object-top md:object-center border border-hairline"
         />
       </div>
@@ -113,10 +116,12 @@ function PhotoCluster({ photos }: { photos: Photo[] }) {
               key={j}
               className="aspect-square md:aspect-auto md:flex-1 md:min-h-0 photo-zoom"
             >
-              <img
+              <ResponsiveImg
                 src={photo.src}
                 alt={photo.alt}
                 loading="lazy"
+                decoding="async"
+                sizes="(min-width: 768px) 20vw, 33vw"
                 className="w-full h-full object-cover border border-hairline"
               />
             </div>
@@ -260,10 +265,12 @@ function FinaleRow({ entry, photos }: { entry: StoryEntry; photos: Photo[] }) {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 lg:gap-3.5 text-left">
           {photos.map((photo, i) => (
             <div key={i} className="photo-zoom w-full aspect-[4/5] sm:aspect-[3/4]">
-              <img
+              <ResponsiveImg
                 src={photo.src}
                 alt={photo.alt}
                 loading="lazy"
+                decoding="async"
+                sizes="(min-width: 768px) 20vw, 33vw"
                 className="w-full h-full object-cover border border-hairline"
               />
             </div>
