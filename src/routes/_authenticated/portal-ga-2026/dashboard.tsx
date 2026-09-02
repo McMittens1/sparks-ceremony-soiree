@@ -675,6 +675,7 @@ function RsvpsPanel() {
     noFactorOnly,
     songOnly,
     fallbackOnly,
+    reachable !== "any",
     testFilter !== "any",
   ].filter(Boolean).length;
 
