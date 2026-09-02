@@ -310,6 +310,7 @@ function RsvpsPanel() {
     noFactorOnly,
     songOnly,
     fallbackOnly,
+    reachable,
     testFilter,
     filter,
     sortKey,
