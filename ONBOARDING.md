@@ -54,7 +54,7 @@ A single source of truth for continuing this project with any AI assistant (Clau
 
 ## 2. Current state
 
-**As of 2026-08-06, verified live via direct DB query, production feature-flag values:**
+**As of 2026-09-02, re-verified live via direct DB query, production feature-flag values:**
 - `rsvp_open` → **true** — enabled 2026-08-05; guests can now submit RSVPs.
 - `guest_photo_uploads` → **false** — photo upload is built and fully functional, but not open yet.
 - `show_ushers` → **false** — the Ushers section of the Wedding Party page is built but hidden.
