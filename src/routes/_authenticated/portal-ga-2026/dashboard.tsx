@@ -846,6 +846,16 @@ function RsvpsPanel() {
           {t.admin.fallbackLimitFilter}
         </label>
         <select
+          value={reachable}
+          onChange={(e) => setReachable(e.target.value as typeof reachable)}
+          className="border border-input bg-background px-3 py-2 text-sm"
+          title="How this household can be chased"
+        >
+          <option value="any">Reachable: any</option>
+          <option value="phone">Has phone (text/call)</option>
+          <option value="nophone">No phone (mail only)</option>
+        </select>
+        <select
           value={testFilter}
           onChange={(e) => setTestFilter(e.target.value as typeof testFilter)}
           className="border border-input bg-background px-3 py-2 text-sm"
