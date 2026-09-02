@@ -569,6 +569,76 @@ function RsvpsPanel() {
     }
   }
 
+  // Guest-facing reminder text. Always built from SITE.siteUrl (never
+  // window.location.origin) because this string gets pasted into a text
+  // message and must resolve to production wherever it was copied from.
+  function buildReminder(row: AdminGuestRow) {
+    return fmt(dictionaries[reminderLang].admin.reminderMessage, {
+      name: row.primary_name,
+      link: `${SITE.siteUrl}/rsvp?t=${row.verify_token}`,
+      deadline: SITE.rsvpDeadlinePretty[reminderLang],
+    });
+  }
+
+  async function copyReminder(row: AdminGuestRow) {
+    try {
+      await navigator.clipboard.writeText(buildReminder(row));
+      toast.success(`Copied ${row.primary_name}'s reminder (${reminderLang.toUpperCase()}).`);
+    } catch {
+      toast.error("Couldn't copy to clipboard.");
+    }
+  }
+
+  async function copySelectedReminders() {
+    const text = selectedRows.map(buildReminder).join("\n\n");
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(`Copied ${selectedRows.length} reminder${selectedRows.length === 1 ? "" : "s"}.`);
+    } catch {
+      toast.error("Couldn't copy to clipboard.");
+    }
+  }
+
+  // Chase CSV — a working call/text sheet, not a backup. Kept separate from
+  // the Master export so the two can never be confused at import time.
+  function toChaseCsv(list: AdminGuestRow[]) {
+    const header = [
+      "household_name",
+      "party_limit",
+      "phone",
+      "reachable_by",
+      "city",
+      "state",
+      "rsvp_link",
+      "reminder_en",
+      "reminder_es",
+    ];
+    const body = list.map((r) => {
+      const link = `${SITE.siteUrl}/rsvp?t=${r.verify_token}`;
+      const msg = (lang: "en" | "es") =>
+        fmt(dictionaries[lang].admin.reminderMessage, {
+          name: r.primary_name,
+          link,
+          deadline: SITE.rsvpDeadlinePretty[lang],
+        });
+      return [
+        r.primary_name,
+        String(r.party_limit),
+        r.phone ?? "",
+        r.phone?.trim() ? "text/call" : "mail/in person",
+        r.city ?? "",
+        r.state ?? "",
+        link,
+        msg("en"),
+        msg("es"),
+      ]
+        .map((v) => escCsv(v))
+        .join(",");
+    });
+    return [header.join(","), ...body].join("\n");
+  }
+
   function exportCsv(csv: string, name: string, count: number, label: string) {
     downloadCsv(csv, name);
     toast.success(`Exported ${count} household${count === 1 ? "" : "s"} to ${label}.`);
