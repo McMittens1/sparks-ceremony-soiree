@@ -1,6 +1,6 @@
 # Handoff — Moreno Wedding 2026 Website
 
-**Last verified against the live codebase + database: 2026-09-02 (chase workflow for the 124 non-responding households added to the admin RSVPs tab; live counts and flags re-queried)** Bump this line whenever you re-verify. Read `ONBOARDING.md` first — it's the current-state reference; this file is the narrative behind decisions.
+**Last verified against the live codebase + database: 2026-09-02 (responsive image pipeline shipped; chase workflow for the 124 non-responding households added to the admin RSVPs tab; live counts and flags re-queried)** Bump this line whenever you re-verify. Read `ONBOARDING.md` first — it's the current-state reference; this file is the narrative behind decisions.
 
 Originally written at the end of a development session that took this project from "RSVP disabled, no feature flags, generic wedding-party avatars" to "RSVP + photo uploads live behind a real feature-flag system, a from-scratch collectible-card wedding party section, and a full pre-launch QA pass." This document is for whichever AI picks the project up next. If `ONBOARDING.md` and this file disagree on current state, trust `ONBOARDING.md`; use this one for reasoning. If a paragraph here starts to feel stale, fold what's still true into `ONBOARDING.md` and remove or revise it here rather than let two sources of truth drift.
 
@@ -290,3 +290,18 @@ without that key (hand-written JSON, older imports) made `initialAttendees` emit
 guest-added paths. Verified 2026-08-05 by a full end-to-end smoke test
 (slug link → phone last-4 verify → submit → row in `rsvps` → admin email
 `sent` to geoddison@gmail.com).
+
+
+## Image delivery (2026-09-02)
+
+The uploaded assets are 1200–1920px originals served straight from the asset CDN, which has no resize/format API — the homepage was shipping multiple megabytes of JPEG into 400px slots. Rather than move photos into the database (rejected earlier: live site, no upside), derivatives are generated at author time and committed:
+
+```python
+# widths 480/800/1200/1600, WebP q80; source = each src/assets/**/*.asset.json
+# output = public/images/derived/<slug>-<w>.webp
+# index  = src/lib/image-manifest.json  { "Original.jpg": { width, height, srcset, fallback } }
+```
+
+`ResponsiveImg` resolves the manifest by the filename at the end of the asset URL, so the wedding-data files keep importing `.asset.json` exactly as before and any unmapped image still renders. When new photos are added, re-run the generator and commit the new derivatives + manifest.
+
+Measured after: ~259 KB of images at 440px and ~424 KB at 1280px on the homepage, zero console errors. The `fetchpriority` → `fetchPriority` fix in `src/routes/index.tsx` cleared the only React warning on the page.
