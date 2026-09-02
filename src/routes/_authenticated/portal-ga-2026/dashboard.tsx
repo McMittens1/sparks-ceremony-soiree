@@ -1227,6 +1227,17 @@ function RsvpsPanel() {
                       >
                         {r.slug}
                       </button>
+                      {!r.rsvp && (
+                        <div>
+                          <button
+                            onClick={() => copyReminder(r)}
+                            className="mt-1 font-sans text-[10px] uppercase tracking-[0.2em] text-primary link-underline"
+                            title={`Copy a ready-to-send reminder (${reminderLang.toUpperCase()})`}
+                          >
+                            Reminder
+                          </button>
+                        </div>
+                      )}
                     </td>
                     <td className="py-3 pr-4">
                       <button
