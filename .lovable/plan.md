@@ -1,18 +1,42 @@
-# Roadmap — after the attendee report (2026-09-02)
+# Guest Notes & Song Requests page
 
-## Done recently
+A new admin-only page that shows, in one clean place, every note guests left and every song they requested — no filtering through the big guest table.
 
-- **Chase the non-responders.** Admin RSVPs tab: reachable-by filter, "Still to chase" panel, Text/Mail-call presets, EN/ES reminder copy, chase CSV export.
-- **Docs refresh.** `ONBOARDING.md` and `HANDOFF.md` re-verified and re-dated 2026-09-02.
-- **Image delivery.** Build-time WebP derivatives (480/800/1200/1600), `ResponsiveImg` srcset/sizes, `fetchPriority` preload fix. ~259 KB at 440px, ~424 KB at 1280px.
-- **All Possible Attendees report.** Admin-only `/portal-ga-2026/attendees`, linked from the dashboard headcount panel: 261 total named, 261 max named-only, 483 max possible, 68 confirmed attending, 222 unnamed slots. Household roster, full RSVP table, print/save-as-PDF, CSV export, test households excluded by default. Verified signed-in at 1280/440/print against the live database.
+## What you'll see
 
-## Open
+New page at `/portal-ga-2026/notes`, linked from the dashboard next to the attendee report link.
 
-1. **Wedding Party content** — 27 real names are in `PARTY` but card stats, abilities, and cover headlines are still placeholders, which is why `show_wedding_party` and `show_ushers` are off. Review privately at `/?preview_party=1&preview_ushers=1`.
-2. **Guest photo uploads** — built, tested, zero photos, flag off. One toggle plus a moderation-queue QA pass whenever you want it live.
-3. **UI/UX + speed recommendations** — reported in chat 2026-09-02; nothing implemented without approval.
+Three sections:
 
-## Not worth doing
+1. **Summary strip** — how many households left a note, how many requested a song, out of total responses.
+2. **Messages** — one card per household with a note: household name, RSVP status badge, date submitted, and the note itself in readable serif type.
+3. **Song requests** — a simple list: song request text, who asked for it, date. Includes a "copy all songs" button so the list can be pasted straight to the DJ.
 
-- ZIP audit against an external geocoder: 0 unverifiable households and 0 recorded failed verification attempts. Revisit only if a guest reports being unable to get in.
+Both sections are sorted newest-first, with a search box that filters by household name or text, and a toggle to hide test households (hidden by default, same as the attendee report).
+
+Empty states read plainly ("No notes yet") rather than showing blank panels.
+
+## Exports
+
+- **Copy song list** — plain text, one per line.
+- **Download CSV** — household, status, song request, note, submitted date.
+- **Print / Save PDF** — same print styling used by the attendee report.
+
+## Design
+
+Reuses the existing stationery look: current cards, hairline borders, semantic tokens, serif headings, `DiamondDivider` between sections. English and Spanish labels via the existing dictionary.
+
+## Technical notes
+
+- New route `src/routes/_authenticated/portal-ga-2026/notes.tsx`, sitting under the existing authenticated layout, so the same admin gate applies.
+- Data comes from the existing admin server function `listGuestsWithRsvps` (already `requireSupabaseAuth` + `ensureAdmin`); `song_request` and `message` are already returned. No schema change, no new server function, no migration.
+- CSV via the shared `escCsv`/`downloadCsv` helpers in `src/lib/csv.ts`.
+- Print CSS mirrors the pattern in `attendees.tsx`.
+- Copy strings added to `src/i18n/dictionaries.ts` (EN + ES).
+- Dashboard gets one link added; no other dashboard behavior changes (existing "Has song request" filter stays).
+- Docs: update `ONBOARDING.md` and `HANDOFF.md` with the new route and bump "Last verified".
+
+## Verification
+
+- `bun run build:dev`.
+- Authenticated Playwright pass at 1280 and 440 plus print emulation; confirm counts match a direct database query of non-empty `song_request` / `message` rows.
