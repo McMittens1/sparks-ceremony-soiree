@@ -166,6 +166,18 @@ export interface Dict {
     headcountMaxPossible: string;
     headcountNamesPending: string;
     reportLink: string;
+    notesLink: string;
+    notesTitle: string;
+    notesSubtitle: string;
+    notesSearch: string;
+    notesMessagesTitle: string;
+    notesSongsTitle: string;
+    notesCopySongs: string;
+    notesCopied: string;
+    notesNoMessages: string;
+    notesNoSongs: string;
+    notesCountMessages: string;
+    notesCountSongs: string;
     reportTitle: string;
     reportSubtitle: string;
     reportGeneratedOn: string;
@@ -409,6 +421,18 @@ const en: Dict = {
     headcountMaxPossible: "Maximum possible",
     headcountNamesPending: "Names pending",
     reportLink: "Attendee report",
+    notesLink: "Notes & songs",
+    notesTitle: "Notes & Song Requests",
+    notesSubtitle: "Everything guests wrote when they RSVP'd",
+    notesSearch: "Search names, notes, or songs",
+    notesMessagesTitle: "Messages",
+    notesSongsTitle: "Song requests",
+    notesCopySongs: "Copy song list",
+    notesCopied: "Copied to clipboard.",
+    notesNoMessages: "No notes yet.",
+    notesNoSongs: "No song requests yet.",
+    notesCountMessages: "Households with a note",
+    notesCountSongs: "Song requests",
     reportTitle: "All Possible Attendees",
     reportSubtitle: "Everyone known by name, and the true ceiling",
     reportGeneratedOn: "Generated {date}",
@@ -652,6 +676,18 @@ const es: Dict = {
     headcountMaxPossible: "Máximo posible",
     headcountNamesPending: "Nombres pendientes",
     reportLink: "Informe de asistentes",
+    notesLink: "Notas y canciones",
+    notesTitle: "Notas y canciones pedidas",
+    notesSubtitle: "Todo lo que escribieron los invitados al confirmar",
+    notesSearch: "Buscar nombres, notas o canciones",
+    notesMessagesTitle: "Mensajes",
+    notesSongsTitle: "Canciones pedidas",
+    notesCopySongs: "Copiar lista de canciones",
+    notesCopied: "Copiado al portapapeles.",
+    notesNoMessages: "Todavía no hay notas.",
+    notesNoSongs: "Todavía no hay canciones pedidas.",
+    notesCountMessages: "Grupos con nota",
+    notesCountSongs: "Canciones pedidas",
     reportTitle: "Todos los asistentes posibles",
     reportSubtitle: "Personas conocidas por nombre y el máximo posible",
     reportGeneratedOn: "Generado el {date}",
