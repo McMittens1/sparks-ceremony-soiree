@@ -14,6 +14,10 @@ Live check first: 157 households, 33 RSVPs in (32 attending, 1 declined), 124 st
 
 The real problem is not a bug: **only 14 households have an email address at all, and an email reminder campaign therefore has almost no possible recipients.** Of the 124 non-responders, 41 have a phone number and 83 are address-only. So the chase has to be a texting/calling/paper workflow driven from the admin dashboard, not an email blast.
 
+### Notes & song requests page (2026-09-07)
+
+`/portal-ga-2026/notes` exists because the free-text guests leave — the note and the song request — was only reachable by scrolling the big RSVPs table or opening a household. Those two fields are the sentimental/vendor-facing output of the whole RSVP flow, so they get their own clean reading surface: notes as cards in serif type, songs as a scannable table with a one-click "copy song list" for handing to the DJ. It is deliberately read-only and derives everything from data the dashboard already fetches, so it can't drift from the RSVPs tab and adds no query load. Same print/PDF and CSV affordances as the attendee report, same test-household toggle.
+
 ### Attendee report (2026-09-02)
 
 `/portal-ga-2026/attendees` answers the question the capacity-based headcount panel couldn't: how many actual people do we know by name? The rule that drove the design is that a plus-one slot is not a person until a name exists, so named totals and unused capacity are never mixed. `computeNamedAttendees()` dedupes names per household (invitation members plus RSVP-added names, blanks and "name to come" placeholders excluded) and reports named / unnamed-remaining / max-possible separately. It is print-styled so it can be saved as a PDF for vendors, and exports CSV. Test households are excluded unless you tick the toggle.

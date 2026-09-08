@@ -373,6 +373,7 @@ This is the living sprint plan. Pick up the next uncompleted sprint rather than 
 | `src/routes/_authenticated/route.tsx` | Auth + admin-role route guard for `/portal-ga-2026/dashboard`. |
 | `src/routes/_authenticated/portal-ga-2026/dashboard.tsx` | Admin dashboard (RSVPs + Photos + Features + Emails tabs). |
 | `src/routes/_authenticated/portal-ga-2026/attendees.tsx` | "All Possible Attendees" report (print/PDF + CSV). |
+| `src/routes/_authenticated/portal-ga-2026/notes.tsx` | Notes & song requests reader (print/PDF + CSV + copy song list). |
 | `src/lib/csv.ts` | Shared CSV escape/download helpers. |
 | `src/routes/rsvp.tsx` | Public RSVP page — reads `rsvp_open` via the feature-flag hook. |
 | `src/routes/rsvp/edit.$token.tsx` | Signed-token RSVP edit page — intentionally not flag-gated. |
