@@ -698,6 +698,12 @@ function RsvpsPanel() {
             >
               {t.admin.reportLink}
             </Link>
+            <Link
+              to="/portal-ga-2026/notes"
+              className="whitespace-nowrap border border-border/60 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground hover:text-primary"
+            >
+              {t.admin.notesLink}
+            </Link>
           </div>
         </div>
 
